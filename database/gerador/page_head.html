@@ -1,0 +1,46 @@
+<title>Modelo ER da Igreja</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: coluna única de leitura, diagramas em painéis com scroll horizontal próprio */
+:root{
+  --bg:#f7f6f2; --surface:#ffffff; --fg:#1f2421; --muted:#5d6660; --line:#d9dcd4;
+  --accent:#2f6b4f; --accent-soft:#e3efe8; --warn:#8a5a12; --warn-soft:#f6ecd9;
+  --display:"Fraunces",Georgia,serif; --body:"Source Sans 3",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141816; --surface:#1c211e; --fg:#e7ebe8; --muted:#a2aca6; --line:#323a35;
+  --accent:#7cc5a0; --accent-soft:#213229; --warn:#e3b46a; --warn-soft:#33291a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141816; --surface:#1c211e; --fg:#e7ebe8; --muted:#a2aca6; --line:#323a35;
+  --accent:#7cc5a0; --accent-soft:#213229; --warn:#e3b46a; --warn-soft:#33291a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2.1rem;line-height:1.15}
+h2{font-size:1.4rem}
+.lead{color:var(--muted);max-width:65ch;margin:10px 0 0}
+section{display:grid;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto;padding:16px}
+.panel pre.mermaid{margin:0;min-width:900px;background:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.85rem}
+.chip{font-family:var(--mono);font-size:.78rem;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.chip.w{background:var(--warn-soft);color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl{overflow-x:auto}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td code{font-family:var(--mono);font-size:.85rem}
+td:first-child{white-space:nowrap}
+h3{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;min-width:0}
+.note p{margin:0}
+.mini td{padding:5px 6px;font-size:.9rem}
+.mini td:first-child{white-space:normal}
+.small{font-size:.85rem;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+details .tbl{margin-top:10px}
+</style>

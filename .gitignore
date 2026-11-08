@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.exemplo
+__pycache__/
+database/gerador/out/
+database/tests/resultado/
+*.log
+.DS_Store
