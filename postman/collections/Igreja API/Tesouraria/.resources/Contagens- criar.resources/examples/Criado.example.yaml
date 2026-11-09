@@ -1,0 +1,72 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/contagens"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "contaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "data": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "contador1MembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "contador2MembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "totalContado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "ocasiao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "conferidoPorUsuarioId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2696,
+        "igrejaId": 2881,
+        "contaId": 5409,
+        "data": "1999-10-01",
+        "ocasiao": "string",
+        "contador1MembroId": 8474,
+        "contador2MembroId": 4239,
+        "totalContado": "650.00",
+        "conferidoPorUsuarioId": 1043,
+        "estado": "<string>",
+        "criadoEm": "1999-02-17T06:20:23.119Z",
+        "modificadoEm": "1974-08-25T19:03:28.149Z",
+        "endDate": "1995-09-27T03:53:16.247Z",
+        "criadoPor": 9071,
+        "modificadoPor": 1055
+      }
+order: 1000

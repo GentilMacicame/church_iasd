@@ -1,0 +1,27 @@
+$kind: collection
+description: 'Contrato gerado a partir do esquema da base de dados (database/gerador/defs.py). Campos = colunas sem o prefixo, em camelCase. Nada se apaga: use /terminar. As regras e as permissões são aplicadas pela base de dados; `x-permissao` diz qual é exigida, `x-funcao-bd` a função usada, `x-vista` a vista lida.
+
+
+  Começar: preencha as variáveis login e senha, envie "Autenticação / Entrar" (guarda o token) e depois qualquer pedido. igrejaId diz a igreja.'
+variables:
+- key: baseUrl
+  value: http://localhost:9080
+  description: 'Endereço da API (local: ./mvnw liberty:dev)'
+- key: igrejaId
+  value: '1'
+  description: Igreja usada nas listagens, relatórios e criações
+- key: login
+  value: ''
+  description: E-mail ou telefone do utilizador (preencher no Postman)
+- key: senha
+  value: ''
+  description: Preencher no Postman; não guardar a senha no git
+- key: bearerToken
+  value: ''
+  description: Preenchido pelo pedido "Entrar" (válido 15 minutos)
+auth:
+- id: 45e9c624-242c-46dd-bc2c-a12789bbef63
+  type: bearer
+  name: bearer auth
+  credentials:
+    token: '{{bearerToken}}'

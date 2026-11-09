@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Linhas transacao: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/linhas-transacao/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Linhas transacao- terminar.resources/examples
+order: 88000

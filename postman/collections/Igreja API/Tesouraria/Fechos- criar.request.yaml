@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Fechos: criar'
+description: 'Meses fechados: movimentos bloqueados (reabrir = preencher end_date)'
+url: '{{baseUrl}}/v1/tesouraria/fechos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "ano": 1,
+      "mes": 1
+    }
+settings: {}
+examples: ./.resources/Fechos- criar.resources/examples
+order: 59000

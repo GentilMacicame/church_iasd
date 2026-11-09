@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Documentos: ler um'
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/documentos/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Documentos- ler um.resources/examples
+order: 43000

@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/extractos/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 9058,
+        "contaId": 8867,
+        "data": "1952-12-24",
+        "descricao": "string",
+        "referencia": "string",
+        "valor": "650.00",
+        "transacaoId": 2529,
+        "estado": "<string>",
+        "criadoEm": "2010-12-13T11:53:13.996Z",
+        "modificadoEm": "1980-05-03T09:46:46.938Z",
+        "endDate": "1978-08-19T02:37:27.239Z",
+        "criadoPor": 2171,
+        "modificadoPor": 5314
+      }
+order: 1000

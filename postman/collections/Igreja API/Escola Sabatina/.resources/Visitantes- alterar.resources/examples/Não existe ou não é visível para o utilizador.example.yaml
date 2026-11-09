@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/visitantes/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "relatorioId": 6464,
+        "nome": "string",
+        "telefone": "string",
+        "convidadoPorMembroId": 9428,
+        "tornouSeMembroId": 6533,
+        "anonimizadoEm": "2002-08-30T08:05:40.814Z",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 5000

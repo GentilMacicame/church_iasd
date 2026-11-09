@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/disciplinas/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4193,
+        "membroId": 7406,
+        "votoId": 1193,
+        "dataInicio": "1981-11-29",
+        "dataFim": "1965-08-25",
+        "encarregadoNotificado": true,
+        "motivo": "string",
+        "estado": "<string>",
+        "criadoEm": "2020-11-11T15:31:52.937Z",
+        "modificadoEm": "1977-04-16T03:22:01.775Z",
+        "endDate": "1994-05-17T09:38:04.232Z",
+        "criadoPor": 7337,
+        "modificadoPor": 1131
+      }
+order: 1000

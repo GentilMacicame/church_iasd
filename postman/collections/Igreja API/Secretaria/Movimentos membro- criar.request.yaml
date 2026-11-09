@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Movimentos membro: criar'
+description: 'Livro de membros: cada entrada e saída, com o voto que a autoriza'
+url: '{{baseUrl}}/v1/secretaria/movimentos-membro'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "membroId": 1,
+      "igrejaId": {{igrejaId}},
+      "tipo": "BAPTISMO",
+      "data": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Movimentos membro- criar.resources/examples
+order: 45000

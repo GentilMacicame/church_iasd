@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/materiais/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1147,
+        "actividadeId": 3847,
+        "descricao": "string",
+        "quantidade": "-01393.5106",
+        "precoUnitario": "650.00",
+        "estado": "<string>",
+        "criadoEm": "2023-11-08T23:09:34.912Z",
+        "modificadoEm": "1970-04-09T08:09:31.880Z",
+        "endDate": "2001-07-14T12:04:25.791Z",
+        "criadoPor": 1868,
+        "modificadoPor": 6125
+      }
+order: 1000

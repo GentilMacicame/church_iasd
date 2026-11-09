@@ -1,0 +1,69 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/linhas-transacao"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "transacaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "fundoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "categoriaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "valor": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "departamentoIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "actividadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "descricao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4413,
+        "transacaoId": 8247,
+        "igrejaId": 8584,
+        "fundoId": 5727,
+        "categoriaId": 9324,
+        "departamentoIgrejaId": 4228,
+        "actividadeId": 5638,
+        "valor": "650.00",
+        "descricao": "string",
+        "estado": "<string>",
+        "criadoEm": "1964-03-30T14:01:00.185Z",
+        "modificadoEm": "1996-11-06T15:03:30.488Z",
+        "endDate": "1965-12-14T15:06:51.546Z",
+        "criadoPor": 9381,
+        "modificadoPor": 650
+      }
+order: 1000

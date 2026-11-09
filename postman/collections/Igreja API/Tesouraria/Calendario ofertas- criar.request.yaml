@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Calendario ofertas: criar'
+description: Calendário de ofertas especiais definido pela Divisão/União/Associação
+url: '{{baseUrl}}/v1/tesouraria/calendario-ofertas'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "entidadeId": 1,
+      "data": "2026-11-14",
+      "fundoId": 1,
+      "descricao": "texto"
+    }
+settings: {}
+examples: ./.resources/Calendario ofertas- criar.resources/examples
+order: 8000

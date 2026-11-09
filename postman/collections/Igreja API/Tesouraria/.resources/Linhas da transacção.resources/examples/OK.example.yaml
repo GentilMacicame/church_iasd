@@ -1,0 +1,123 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/transacoes/:id/linhas"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "id": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "transacaoId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "igrejaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "fundoId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "categoriaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "departamentoIgrejaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "actividadeId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "valor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "descricao": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "estado": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "endDate": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          }
+        },
+        {
+          "id": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "transacaoId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "igrejaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "fundoId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "categoriaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "departamentoIgrejaId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "actividadeId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "valor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "descricao": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "estado": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "endDate": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          }
+        }
+      ]
+order: 1000

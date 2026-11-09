@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/recibos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "transacaoId": 8477,
+        "igrejaId": 4487,
+        "ano": 1348,
+        "numero": 6872,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

@@ -1,0 +1,72 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/votos"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "reuniaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numero": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "assunto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "texto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "leitura": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "aFavor": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "contra": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "abstencoes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 9248,
+        "reuniaoId": 6322,
+        "numero": "string",
+        "tipo": "<string>",
+        "assunto": "string",
+        "texto": "string",
+        "leitura": 732,
+        "aFavor": 5085,
+        "contra": 5638,
+        "abstencoes": 8557,
+        "estado": "<string>",
+        "criadoEm": "1967-01-05T09:01:40.006Z",
+        "modificadoEm": "1987-07-01T10:55:35.655Z",
+        "endDate": "1982-05-14T04:15:57.771Z",
+        "criadoPor": 4555,
+        "modificadoPor": 6643
+      }
+order: 1000

@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Pesos pontuacao: criar'
+description: Pesos da pontuação (sem trimestre = pesos por defeito)
+url: '{{baseUrl}}/v1/escola-sabatina/pesos-pontuacao'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {}
+settings: {}
+examples: ./.resources/Pesos pontuacao- criar.resources/examples
+order: 24000

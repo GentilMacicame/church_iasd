@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/mpesa/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 8736,
+        "transacaoId": 4682,
+        "direccao": "str",
+        "msisdn": "string",
+        "valor": "650.00",
+        "taxa": "650.00",
+        "transactionReference": "string",
+        "thirdPartyReference": "string",
+        "serviceProviderCode": "string",
+        "responseCode": "string",
+        "responseDesc": "string",
+        "mpesaTransactionId": "string",
+        "conversationId": "string",
+        "pedidoEm": "1947-04-24T00:59:14.986Z",
+        "respondidoEm": "2003-06-02T00:46:46.968Z",
+        "ultimaConsultaEm": "1947-03-30T12:15:55.412Z",
+        "tentativasConsulta": 7393,
+        "estado": "<string>",
+        "criadoEm": "2021-04-17T14:27:01.283Z",
+        "modificadoEm": "1959-10-03T04:19:05.754Z",
+        "endDate": "1948-10-29T05:58:34.436Z",
+        "criadoPor": 310,
+        "modificadoPor": 6083
+      }
+order: 1000

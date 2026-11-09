@@ -1,0 +1,19 @@
+$kind: http-request
+name: Pedir código de recuperação (resposta igual exista ou não o login)
+description: ''
+url: '{{baseUrl}}/v1/auth/recuperar'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "login": "{{login}}"
+    }
+settings: {}
+examples: ./.resources/Pedir código de recuperação (resposta igual exista ou não o.resources/examples
+order: 2000

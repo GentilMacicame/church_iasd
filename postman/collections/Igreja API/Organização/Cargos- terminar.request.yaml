@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Cargos: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/organizacao/cargos/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Cargos- terminar.resources/examples
+order: 6000

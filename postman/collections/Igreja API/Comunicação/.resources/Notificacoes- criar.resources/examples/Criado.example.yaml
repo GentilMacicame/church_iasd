@@ -1,0 +1,88 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/notificacoes"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "canal": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "destino": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "mensagem": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "assunto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "agendadaPara": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "enviadaEm": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tentativas": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "erro": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "origemTabela": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "origemId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "chave": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 9170,
+        "igrejaId": 1162,
+        "membroId": 6740,
+        "canal": "<string>",
+        "destino": "string",
+        "assunto": "string",
+        "mensagem": "string",
+        "agendadaPara": "1973-04-13T21:46:41.776Z",
+        "enviadaEm": "2021-06-22T13:25:37.423Z",
+        "tentativas": 7766,
+        "erro": "string",
+        "origemTabela": "string",
+        "origemId": 889,
+        "chave": "string",
+        "estado": "<string>",
+        "criadoEm": "2013-11-20T19:54:18.899Z",
+        "modificadoEm": "1993-01-23T08:00:29.743Z",
+        "endDate": "1995-03-09T08:47:39.587Z",
+        "criadoPor": 2397,
+        "modificadoPor": 2556
+      }
+order: 1000

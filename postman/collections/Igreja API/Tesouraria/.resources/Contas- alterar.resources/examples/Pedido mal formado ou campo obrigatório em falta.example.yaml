@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/contas/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 6149,
+        "tipo": "<string>",
+        "nome": "string",
+        "numero": "string",
+        "titular": "string",
+        "banco": "string",
+        "moeda": "str",
+        "saldoInicial": "650.00",
+        "dataSaldoInicial": "1973-07-23",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 2000

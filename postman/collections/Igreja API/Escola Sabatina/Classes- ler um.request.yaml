@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Classes: ler um'
+description: ''
+url: '{{baseUrl}}/v1/escola-sabatina/classes/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Classes- ler um.resources/examples
+order: 9000

@@ -1,0 +1,43 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/departamentos-igreja/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 1622,
+        "departamentoId": 3818,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5917,
+        "igrejaId": 6446,
+        "departamentoId": 5319,
+        "estado": "<string>",
+        "criadoEm": "1992-01-28T20:20:15.836Z",
+        "modificadoEm": "1986-12-01T05:49:30.033Z",
+        "endDate": "1959-03-17T19:00:57.155Z",
+        "criadoPor": 8889,
+        "modificadoPor": 2094
+      }
+order: 1000

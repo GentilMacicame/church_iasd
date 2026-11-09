@@ -1,0 +1,19 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/auth/renovar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+settings: {}
+examples: ./.resources/Renovar o token (cookie de renovação).resources/examples
+order: 4000
+scripts:
+- type: afterResponse
+  code: |-
+    const r = pm.response.json();
+    pm.test('devolve o token de acesso', () => pm.expect(r.tokenAcesso).to.be.a('string'));
+    if (r.tokenAcesso) {
+        pm.collectionVariables.set('bearerToken', r.tokenAcesso);
+    }
+  language: text/javascript

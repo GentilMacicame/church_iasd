@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Planos escala: alterar'
+description: Só os campos enviados mudam.
+url: '{{baseUrl}}/v1/actividades/planos-escala/:id'
+method: PATCH
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {}
+settings: {}
+examples: ./.resources/Planos escala- alterar.resources/examples
+order: 30000

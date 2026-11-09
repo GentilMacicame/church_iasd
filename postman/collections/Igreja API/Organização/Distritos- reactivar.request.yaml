@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Distritos: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/organizacao/distritos/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Distritos- reactivar.resources/examples
+order: 23000

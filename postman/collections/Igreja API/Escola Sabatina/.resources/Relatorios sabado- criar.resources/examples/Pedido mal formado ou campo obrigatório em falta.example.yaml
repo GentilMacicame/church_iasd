@@ -1,0 +1,69 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "classeTrimestreId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "sabadoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membrosPresentes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membrosMatriculados": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estudoDiario": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "visitantes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "filiais": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "oferta": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "oferta13Sabado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "ofertaDespesas": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "transacaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "observacoes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 2000

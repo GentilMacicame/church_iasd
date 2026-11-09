@@ -1,0 +1,72 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/notificacoes"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "canal": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "destino": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "mensagem": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "assunto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "agendadaPara": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "enviadaEm": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tentativas": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "erro": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "origemTabela": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "origemId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "chave": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

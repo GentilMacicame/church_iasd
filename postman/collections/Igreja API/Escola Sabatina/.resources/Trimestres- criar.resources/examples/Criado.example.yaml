@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/trimestres"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "ano": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numero": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataInicio": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataFim": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numSabados": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "temaLicao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 8378,
+        "ano": 1040,
+        "numero": 6825,
+        "temaLicao": "string",
+        "dataInicio": "2012-07-22",
+        "dataFim": "2019-08-27",
+        "numSabados": 9183,
+        "estado": "<string>",
+        "criadoEm": "2019-07-29T17:04:58.752Z",
+        "modificadoEm": "2006-03-26T03:15:51.027Z",
+        "endDate": "1966-04-23T00:02:15.563Z",
+        "criadoPor": 8279,
+        "modificadoPor": 4210
+      }
+order: 1000

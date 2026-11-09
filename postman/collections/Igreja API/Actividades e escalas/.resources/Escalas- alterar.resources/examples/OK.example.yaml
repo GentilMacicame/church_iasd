@@ -1,0 +1,55 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/escalas/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 8364,
+        "data": "2025-07-16",
+        "funcao": "<string>",
+        "membroId": 9497,
+        "actividadeId": 9113,
+        "substitutoMembroId": 7355,
+        "observacoes": "string",
+        "escalaDiaId": 8958,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7815,
+        "igrejaId": 3579,
+        "data": "1963-11-20",
+        "funcao": "<string>",
+        "membroId": 858,
+        "actividadeId": 4938,
+        "substitutoMembroId": 5257,
+        "observacoes": "string",
+        "escalaDiaId": 9781,
+        "estado": "<string>",
+        "criadoEm": "1991-01-25T02:47:25.401Z",
+        "modificadoEm": "1956-06-27T22:27:32.737Z",
+        "endDate": "2021-11-17T00:17:45.806Z",
+        "criadoPor": 6348,
+        "modificadoPor": 3257
+      }
+order: 1000

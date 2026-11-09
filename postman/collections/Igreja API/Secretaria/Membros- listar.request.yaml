@@ -1,0 +1,57 @@
+$kind: http-request
+name: 'Membros: listar'
+description: Membros, interessados e visitantes regulares (estado muda só por movimento)
+url: '{{baseUrl}}/v1/secretaria/membros?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: familiaId
+  value: ''
+  disabled: true
+- key: sexo
+  value: F
+  disabled: true
+- key: estadoCivil
+  value: VIUVO
+  disabled: true
+- key: modoEntrada
+  value: FALECIMENTO
+  disabled: true
+- key: encarregadoMembroId
+  value: ''
+  disabled: true
+- key: validacao
+  value: APROVADO
+  disabled: true
+- key: validadoPorUsuarioId
+  value: ''
+  disabled: true
+- key: estado
+  value: INTERESSADO
+  disabled: true
+- key: q
+  value: ''
+  disabled: true
+  description: Procura por nome ou apelido
+settings: {}
+examples: ./.resources/Membros- listar.resources/examples
+order: 35000

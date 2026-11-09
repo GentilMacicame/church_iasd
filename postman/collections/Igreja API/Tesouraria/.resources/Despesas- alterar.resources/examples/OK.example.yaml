@@ -1,0 +1,65 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/despesas/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 5285,
+        "departamentoIgrejaId": 6736,
+        "actividadeId": 5452,
+        "categoriaId": 7906,
+        "fundoId": 7113,
+        "descricao": "string",
+        "fornecedor": "string",
+        "valorSolicitado": "650.00",
+        "valorAprovado": "650.00",
+        "solicitadoPorUsuarioId": 9576,
+        "votoId": 1079,
+        "motivoRejeicao": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6103,
+        "igrejaId": 8686,
+        "departamentoIgrejaId": 4584,
+        "actividadeId": 8528,
+        "categoriaId": 3018,
+        "fundoId": 475,
+        "descricao": "string",
+        "fornecedor": "string",
+        "valorSolicitado": "650.00",
+        "valorAprovado": "650.00",
+        "solicitadoPorUsuarioId": 4596,
+        "aprovadoPorUsuarioId": 9138,
+        "votoId": 9867,
+        "aprovadoEm": "2004-04-08T05:04:19.096Z",
+        "motivoRejeicao": "string",
+        "estado": "<string>",
+        "criadoEm": "1953-05-13T00:47:43.489Z",
+        "modificadoEm": "1990-10-10T20:21:18.823Z",
+        "endDate": "1969-10-10T05:58:40.698Z",
+        "criadoPor": 51,
+        "modificadoPor": 7374
+      }
+order: 1000

@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/usuarios-entidade/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7573,
+        "usuarioId": 7146,
+        "entidadeId": 4003,
+        "perfilId": 2462,
+        "estado": "<string>",
+        "criadoEm": "1973-11-15T14:59:51.036Z",
+        "modificadoEm": "1996-09-25T00:26:00.827Z",
+        "endDate": "1968-01-03T03:06:05.070Z",
+        "criadoPor": 1204,
+        "modificadoPor": 1403
+      }
+order: 1000

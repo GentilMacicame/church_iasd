@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/permissoes"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "codigo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "descricao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 8284,
+        "codigo": "string",
+        "descricao": "string",
+        "estado": "<string>",
+        "criadoEm": "2020-05-09T15:54:55.734Z",
+        "modificadoEm": "1957-02-04T23:02:38.812Z",
+        "endDate": "1957-11-23T22:59:09.262Z",
+        "criadoPor": 7061,
+        "modificadoPor": 6775
+      }
+order: 1000

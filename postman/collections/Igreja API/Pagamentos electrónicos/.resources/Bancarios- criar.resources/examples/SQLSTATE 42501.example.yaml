@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/bancarios"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "transacaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nib": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "titular": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "banco": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "referenciaBancaria": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

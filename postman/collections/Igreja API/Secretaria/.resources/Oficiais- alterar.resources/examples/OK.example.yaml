@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/oficiais/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": 8198,
+        "cargoId": 6470,
+        "igrejaId": 6050,
+        "votoId": 321,
+        "dataInicio": "1984-04-22",
+        "dataFim": "1949-10-30",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6598,
+        "membroId": 7403,
+        "cargoId": 423,
+        "igrejaId": 5660,
+        "votoId": 5016,
+        "dataInicio": "1954-07-07",
+        "dataFim": "1975-12-29",
+        "estado": "<string>",
+        "criadoEm": "1964-11-12T05:15:27.276Z",
+        "modificadoEm": "1964-10-04T10:00:33.932Z",
+        "endDate": "1970-08-04T12:33:53.971Z",
+        "criadoPor": 1003,
+        "modificadoPor": 1063
+      }
+order: 1000

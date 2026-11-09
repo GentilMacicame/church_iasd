@@ -1,0 +1,3 @@
+$kind: collection
+description: Integração com M-Pesa e bancos (parte da tesouraria).
+order: 8000

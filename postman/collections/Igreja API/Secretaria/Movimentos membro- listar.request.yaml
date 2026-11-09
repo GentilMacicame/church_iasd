@@ -1,0 +1,50 @@
+$kind: http-request
+name: 'Movimentos membro: listar'
+description: 'Livro de membros: cada entrada e saída, com o voto que a autoriza'
+url: '{{baseUrl}}/v1/secretaria/movimentos-membro?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: tipo
+  value: ''
+  disabled: true
+- key: votoId
+  value: ''
+  disabled: true
+- key: transferenciaId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Movimentos membro- listar.resources/examples
+order: 44000

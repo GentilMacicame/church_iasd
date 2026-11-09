@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Relatório: Conferencia ofertas'
+description: Lido da vista escola_sabatina.vw_conferencia_ofertas.
+url: '{{baseUrl}}/v1/escola-sabatina/conferencia-ofertas?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Conferencia ofertas.resources/examples
+order: 14000

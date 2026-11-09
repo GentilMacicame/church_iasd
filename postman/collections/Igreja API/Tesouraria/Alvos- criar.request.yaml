@@ -1,0 +1,27 @@
+$kind: http-request
+name: 'Alvos: criar'
+description: Alvos de arrecadação por fundo
+url: '{{baseUrl}}/v1/tesouraria/alvos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "fundoId": 1,
+      "valorAlvo": "650.00",
+      "dataInicio": "2026-11-14",
+      "dataFim": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Alvos- criar.resources/examples
+order: 2000

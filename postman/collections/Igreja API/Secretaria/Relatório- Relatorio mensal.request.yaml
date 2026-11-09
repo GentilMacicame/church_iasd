@@ -1,0 +1,24 @@
+$kind: http-request
+name: 'Relatório: Relatorio mensal'
+description: Lido da vista secretaria.vw_relatorio_mensal_membros.
+url: '{{baseUrl}}/v1/secretaria/relatorio-mensal?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: ano
+  value: ''
+  disabled: true
+- key: mes
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Relatorio mensal.resources/examples
+order: 56000

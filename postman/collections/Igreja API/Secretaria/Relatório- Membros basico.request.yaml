@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Membros basico'
+description: Lido da vista secretaria.vw_membro_basico.
+url: '{{baseUrl}}/v1/secretaria/membros-basico?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Membros basico.resources/examples
+order: 37000

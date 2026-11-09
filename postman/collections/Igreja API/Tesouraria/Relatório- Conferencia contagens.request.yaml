@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Conferencia contagens'
+description: Lido da vista tesouraria.vw_contagem_conferencia.
+url: '{{baseUrl}}/v1/tesouraria/conferencia-contagens?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Conferencia contagens.resources/examples
+order: 19000

@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Mpesa callbacks: criar'
+description: Tudo o que a API M-Pesa envia, em bruto (callbacks repetidos são ignorados)
+url: '{{baseUrl}}/v1/tesouraria/mpesa-callbacks'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tipo": "texto",
+      "chaveIdempotencia": "texto",
+      "payload": {}
+    }
+settings: {}
+examples: ./.resources/Mpesa callbacks- criar.resources/examples
+order: 10000

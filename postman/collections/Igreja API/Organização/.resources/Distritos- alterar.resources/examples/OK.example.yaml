@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/distritos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "entidadeId": 3956,
+        "nome": "string",
+        "pastorUsuarioId": 8337,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 9446,
+        "entidadeId": 4853,
+        "nome": "string",
+        "pastorUsuarioId": 6449,
+        "estado": "<string>",
+        "criadoEm": "1948-04-24T04:48:18.280Z",
+        "modificadoEm": "1967-01-03T13:42:50.284Z",
+        "endDate": "1995-11-27T17:20:21.746Z",
+        "criadoPor": 6877,
+        "modificadoPor": 6802
+      }
+order: 1000

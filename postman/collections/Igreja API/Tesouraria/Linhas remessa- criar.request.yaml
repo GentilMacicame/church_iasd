@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Linhas remessa: criar'
+description: Valor remetido por fundo
+url: '{{baseUrl}}/v1/tesouraria/linhas-remessa'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "remessaId": 1,
+      "fundoId": 1,
+      "valor": "650.00"
+    }
+settings: {}
+examples: ./.resources/Linhas remessa- criar.resources/examples
+order: 78000

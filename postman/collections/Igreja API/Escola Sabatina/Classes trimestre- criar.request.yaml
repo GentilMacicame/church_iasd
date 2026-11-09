@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Classes trimestre: criar'
+description: 'Classe num trimestre: professor e alvos (ACTIVO/INACTIVO = Activo/Desactivado da planilha)'
+url: '{{baseUrl}}/v1/escola-sabatina/classes-trimestre'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "classeId": 1,
+      "trimestreId": 1
+    }
+settings: {}
+examples: ./.resources/Classes trimestre- criar.resources/examples
+order: 4000

@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Escalas: criar'
+description: Escalas de serviço (pregador, diáconos, recepção, ...)
+url: '{{baseUrl}}/v1/actividades/escalas'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "funcao": "PREGADOR",
+      "membroId": 1
+    }
+settings: {}
+examples: ./.resources/Escalas- criar.resources/examples
+order: 15000

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Linhas transacao: ler um'
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/linhas-transacao/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Linhas transacao- ler um.resources/examples
+order: 85000

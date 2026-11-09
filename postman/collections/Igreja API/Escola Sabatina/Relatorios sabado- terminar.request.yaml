@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Relatorios sabado: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Relatorios sabado- terminar.resources/examples
+order: 46000

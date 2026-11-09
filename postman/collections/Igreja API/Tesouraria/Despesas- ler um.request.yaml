@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Despesas: ler um'
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/despesas/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Despesas- ler um.resources/examples
+order: 36000

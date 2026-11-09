@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Escalas proximas'
+description: Lido da vista actividades.vw_escala_proximas.
+url: '{{baseUrl}}/v1/actividades/escalas-proximas?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Escalas proximas.resources/examples
+order: 16000

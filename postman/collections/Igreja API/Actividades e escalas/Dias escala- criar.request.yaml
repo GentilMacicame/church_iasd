@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Dias escala: criar'
+description: 'Um dia (culto) da escala: grupo coral, departamento ou evento especial'
+url: '{{baseUrl}}/v1/actividades/dias-escala'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "escalaPlanoId": 1,
+      "data": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Dias escala- criar.resources/examples
+order: 8000

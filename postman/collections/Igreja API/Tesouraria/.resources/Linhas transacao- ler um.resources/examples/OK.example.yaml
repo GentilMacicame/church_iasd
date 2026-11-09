@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/linhas-transacao/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4413,
+        "transacaoId": 8247,
+        "igrejaId": 8584,
+        "fundoId": 5727,
+        "categoriaId": 9324,
+        "departamentoIgrejaId": 4228,
+        "actividadeId": 5638,
+        "valor": "650.00",
+        "descricao": "string",
+        "estado": "<string>",
+        "criadoEm": "1964-03-30T14:01:00.185Z",
+        "modificadoEm": "1996-11-06T15:03:30.488Z",
+        "endDate": "1965-12-14T15:06:51.546Z",
+        "criadoPor": 9381,
+        "modificadoPor": 650
+      }
+order: 1000

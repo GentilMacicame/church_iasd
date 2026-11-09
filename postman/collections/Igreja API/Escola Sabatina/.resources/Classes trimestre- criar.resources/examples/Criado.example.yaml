@@ -1,0 +1,77 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/classes-trimestre"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "classeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "trimestreId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "professorMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "auxiliarMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "secretarioMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoMembros": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoEstudoDiario": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoFiliais": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoOfertaSabado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoBaptismos": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4337,
+        "classeId": 9709,
+        "trimestreId": 5601,
+        "igrejaId": 8764,
+        "professorMembroId": 7448,
+        "auxiliarMembroId": 7630,
+        "secretarioMembroId": 2252,
+        "alvoMembros": 3576,
+        "alvoEstudoDiario": "94.54950428",
+        "alvoFiliais": 8782,
+        "alvoOfertaSabado": "650.00",
+        "alvoBaptismos": 6138,
+        "estado": "<string>",
+        "criadoEm": "1948-01-16T11:20:50.652Z",
+        "modificadoEm": "2001-04-23T11:19:47.371Z",
+        "endDate": "1990-11-09T11:28:43.925Z",
+        "criadoPor": 423,
+        "modificadoPor": 5918
+      }
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Igrejas: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/organizacao/igrejas/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Igrejas- terminar.resources/examples
+order: 37000

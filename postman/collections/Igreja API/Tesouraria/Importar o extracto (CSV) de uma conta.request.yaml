@@ -1,0 +1,19 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/extractos/importar'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "contaId": 1,
+      "csv": "texto"
+    }
+settings: {}
+examples: ./.resources/Importar o extracto (CSV) de uma conta.resources/examples
+order: 52000

@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Linhas orcamento: listar'
+description: Valor previsto por categoria
+url: '{{baseUrl}}/v1/tesouraria/linhas-orcamento?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: orcamentoId
+  value: ''
+  disabled: true
+- key: categoriaId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Linhas orcamento- listar.resources/examples
+order: 71000

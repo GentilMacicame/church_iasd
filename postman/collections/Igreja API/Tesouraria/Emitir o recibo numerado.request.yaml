@@ -1,0 +1,18 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/transacoes/:id/recibo'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Emitir o recibo numerado.resources/examples
+order: 128000

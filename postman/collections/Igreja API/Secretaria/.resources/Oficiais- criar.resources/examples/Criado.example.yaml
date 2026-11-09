@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/oficiais"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "cargoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataInicio": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "votoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataFim": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6598,
+        "membroId": 7403,
+        "cargoId": 423,
+        "igrejaId": 5660,
+        "votoId": 5016,
+        "dataInicio": "1954-07-07",
+        "dataFim": "1975-12-29",
+        "estado": "<string>",
+        "criadoEm": "1964-11-12T05:15:27.276Z",
+        "modificadoEm": "1964-10-04T10:00:33.932Z",
+        "endDate": "1970-08-04T12:33:53.971Z",
+        "criadoPor": 1003,
+        "modificadoPor": 1063
+      }
+order: 1000

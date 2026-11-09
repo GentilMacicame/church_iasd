@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Orcamentos: listar'
+description: Orçamento anual da igreja local (aprovado pela igreja)
+url: '{{baseUrl}}/v1/tesouraria/orcamentos?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: departamentoIgrejaId
+  value: ''
+  disabled: true
+- key: votoId
+  value: ''
+  disabled: true
+- key: estado
+  value: ENCERRADO
+  disabled: true
+settings: {}
+examples: ./.resources/Orcamentos- listar.resources/examples
+order: 89000

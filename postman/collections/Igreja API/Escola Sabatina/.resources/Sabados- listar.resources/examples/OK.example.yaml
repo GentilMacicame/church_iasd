@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/sabados?limite=50&depois=string&ordem=string&incluirTerminados=false&trimestreId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  queryParams:
+    limite: "50"
+    depois: string
+    ordem: string
+    incluirTerminados: "false"
+    trimestreId: "301"
+    estado: <string>
+    desde: 1986-03-12
+    ate: 1986-03-12
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "dados": [
+          {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          }
+        ],
+        "proximo": "string"
+      }
+order: 1000

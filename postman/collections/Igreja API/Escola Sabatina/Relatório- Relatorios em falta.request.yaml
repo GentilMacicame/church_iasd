@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Relatório: Relatorios em falta'
+description: Lido da vista escola_sabatina.vw_relatorios_em_falta.
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-em-falta?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Relatorios em falta.resources/examples
+order: 36000

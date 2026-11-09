@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Fundos: listar'
+description: 'Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais'
+url: '{{baseUrl}}/v1/tesouraria/fundos?limite=50&igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: tipo
+  value: ES_MISSOES
+  disabled: true
+- key: destinoEntidadeId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Fundos- listar.resources/examples
+order: 65000

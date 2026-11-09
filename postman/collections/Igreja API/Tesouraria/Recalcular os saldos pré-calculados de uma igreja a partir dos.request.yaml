@@ -1,0 +1,19 @@
+$kind: http-request
+name: Recalcular os saldos pré-calculados de uma igreja a partir dos movimentos (auditoria, depois de importações)
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/recalcular-saldos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}}
+    }
+settings: {}
+examples: ./.resources/Recalcular os saldos pré-calculados de uma igreja a partir dos.resources/examples
+order: 97000

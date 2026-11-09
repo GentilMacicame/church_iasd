@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/linhas-remessa/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "remessaId": 4969,
+        "fundoId": 8347,
+        "valor": "650.00",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2218,
+        "remessaId": 9492,
+        "fundoId": 3240,
+        "valor": "650.00",
+        "estado": "<string>",
+        "criadoEm": "1950-12-02T05:15:49.432Z",
+        "modificadoEm": "1998-03-02T08:03:09.603Z",
+        "endDate": "1968-05-13T11:30:40.577Z",
+        "criadoPor": 2632,
+        "modificadoPor": 3168
+      }
+order: 1000

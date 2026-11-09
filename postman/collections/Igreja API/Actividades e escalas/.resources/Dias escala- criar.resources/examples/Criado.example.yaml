@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/dias-escala"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "escalaPlanoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "data": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "evento": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "grupoCoral": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "departamentoIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "observacoes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7872,
+        "escalaPlanoId": 461,
+        "data": "1952-07-29",
+        "evento": "string",
+        "grupoCoral": "string",
+        "departamentoIgrejaId": 2191,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "2001-03-17T19:22:55.897Z",
+        "modificadoEm": "1961-02-13T05:51:49.069Z",
+        "endDate": "1990-07-23T20:37:08.786Z",
+        "criadoPor": 2155,
+        "modificadoPor": 8298
+      }
+order: 1000

@@ -1,0 +1,32 @@
+$kind: http-request
+name: 'Familias: listar'
+description: Agregados familiares
+url: '{{baseUrl}}/v1/secretaria/familias?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Familias- listar.resources/examples
+order: 27000

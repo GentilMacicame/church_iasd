@@ -1,0 +1,63 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/igrejas"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "entidadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "distritoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "maeIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "codigoAcms": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataOrganizacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "endereco": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "latitude": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "longitude": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 3000

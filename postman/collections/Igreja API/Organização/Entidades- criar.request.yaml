@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Entidades: criar'
+description: 'Níveis da organização: Conferência Geral, Divisão, União, Associação, Missão'
+url: '{{baseUrl}}/v1/organizacao/entidades'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tipo": "CONFERENCIA_GERAL",
+      "nome": "texto"
+    }
+settings: {}
+examples: ./.resources/Entidades- criar.resources/examples
+order: 26000

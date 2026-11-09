@@ -1,0 +1,53 @@
+$kind: http-request
+name: 'Despesas: listar'
+description: Requisições de despesa (quem pede não aprova)
+url: '{{baseUrl}}/v1/tesouraria/despesas?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: departamentoIgrejaId
+  value: ''
+  disabled: true
+- key: actividadeId
+  value: ''
+  disabled: true
+- key: categoriaId
+  value: ''
+  disabled: true
+- key: fundoId
+  value: ''
+  disabled: true
+- key: solicitadoPorUsuarioId
+  value: ''
+  disabled: true
+- key: aprovadoPorUsuarioId
+  value: ''
+  disabled: true
+- key: votoId
+  value: ''
+  disabled: true
+- key: estado
+  value: REJEITADA
+  disabled: true
+settings: {}
+examples: ./.resources/Despesas- listar.resources/examples
+order: 33000

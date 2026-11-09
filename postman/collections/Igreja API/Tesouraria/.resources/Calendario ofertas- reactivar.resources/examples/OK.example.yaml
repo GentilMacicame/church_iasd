@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/calendario-ofertas/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5721,
+        "entidadeId": 5774,
+        "data": "1965-12-22",
+        "fundoId": 5191,
+        "descricao": "string",
+        "estado": "<string>",
+        "criadoEm": "2000-12-11T03:51:25.875Z",
+        "modificadoEm": "2021-07-02T20:55:18.504Z",
+        "endDate": "1959-06-22T18:49:07.063Z",
+        "criadoPor": 2885,
+        "modificadoPor": 4568
+      }
+order: 1000

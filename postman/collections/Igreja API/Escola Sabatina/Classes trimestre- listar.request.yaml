@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'Classes trimestre: listar'
+description: 'Classe num trimestre: professor e alvos (ACTIVO/INACTIVO = Activo/Desactivado da planilha)'
+url: '{{baseUrl}}/v1/escola-sabatina/classes-trimestre?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: classeId
+  value: ''
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+- key: professorMembroId
+  value: ''
+  disabled: true
+- key: auxiliarMembroId
+  value: ''
+  disabled: true
+- key: secretarioMembroId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Classes trimestre- listar.resources/examples
+order: 3000

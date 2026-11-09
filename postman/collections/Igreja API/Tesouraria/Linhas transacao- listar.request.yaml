@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'Linhas transacao: listar'
+description: Divisão do valor por fundo e categoria (soma = valor_total)
+url: '{{baseUrl}}/v1/tesouraria/linhas-transacao?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: transacaoId
+  value: ''
+  disabled: true
+- key: fundoId
+  value: ''
+  disabled: true
+- key: categoriaId
+  value: ''
+  disabled: true
+- key: departamentoIgrejaId
+  value: ''
+  disabled: true
+- key: actividadeId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Linhas transacao- listar.resources/examples
+order: 83000

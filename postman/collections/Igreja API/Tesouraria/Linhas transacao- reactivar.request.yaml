@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Linhas transacao: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/tesouraria/linhas-transacao/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Linhas transacao- reactivar.resources/examples
+order: 87000

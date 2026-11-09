@@ -1,0 +1,41 @@
+$kind: http-request
+name: 'Igrejas: listar'
+description: Igrejas organizadas, grupos organizados e grupos/filiais
+url: '{{baseUrl}}/v1/organizacao/igrejas?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: entidadeId
+  value: ''
+  disabled: true
+- key: distritoId
+  value: ''
+  disabled: true
+- key: tipo
+  value: GRUPO
+  disabled: true
+- key: maeIgrejaId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Igrejas- listar.resources/examples
+order: 32000

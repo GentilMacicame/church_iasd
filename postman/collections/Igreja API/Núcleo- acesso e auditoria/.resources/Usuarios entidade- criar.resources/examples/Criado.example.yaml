@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/usuarios-entidade"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "usuarioId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "entidadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "perfilId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7573,
+        "usuarioId": 7146,
+        "entidadeId": 4003,
+        "perfilId": 2462,
+        "estado": "<string>",
+        "criadoEm": "1973-11-15T14:59:51.036Z",
+        "modificadoEm": "1996-09-25T00:26:00.827Z",
+        "endDate": "1968-01-03T03:06:05.070Z",
+        "criadoPor": 1204,
+        "modificadoPor": 1403
+      }
+order: 1000

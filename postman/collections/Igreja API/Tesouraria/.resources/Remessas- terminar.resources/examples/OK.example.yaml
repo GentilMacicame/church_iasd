@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/remessas/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 146,
+        "igrejaId": 6323,
+        "entidadeId": 655,
+        "ano": 9618,
+        "mes": 314,
+        "transacaoId": 1266,
+        "enviadaEm": "2020-09-25",
+        "estado": "<string>",
+        "criadoEm": "2006-09-16T19:24:49.301Z",
+        "modificadoEm": "2012-12-13T14:03:37.348Z",
+        "endDate": "1958-04-10T10:49:03.372Z",
+        "criadoPor": 214,
+        "modificadoPor": 6801
+      }
+order: 1000

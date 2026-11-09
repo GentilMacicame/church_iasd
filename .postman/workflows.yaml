@@ -1,0 +1,6 @@
+workflows:
+  syncSpecToCollection:
+    - spec: ../api/openapi.yaml
+      collection: ../postman/collections/Igreja API
+      options:
+        folderStrategy: Tags

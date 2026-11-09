@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Usuarios entidade: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/nucleo/usuarios-entidade/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Usuarios entidade- terminar.resources/examples
+order: 28000

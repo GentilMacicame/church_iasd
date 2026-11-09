@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Visitantes a anonimizar'
+description: Lido da vista escola_sabatina.vw_visitantes_a_anonimizar.
+url: '{{baseUrl}}/v1/escola-sabatina/visitantes-a-anonimizar?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Visitantes a anonimizar.resources/examples
+order: 64000

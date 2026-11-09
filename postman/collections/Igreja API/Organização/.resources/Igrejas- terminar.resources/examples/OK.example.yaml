@@ -1,0 +1,46 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/igrejas/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 742,
+        "entidadeId": 5855,
+        "distritoId": 8599,
+        "tipo": "<string>",
+        "maeIgrejaId": 4707,
+        "nome": "string",
+        "codigoAcms": "string",
+        "dataOrganizacao": "1960-06-17",
+        "endereco": "string",
+        "latitude": "-0854267.3453",
+        "longitude": "024100833",
+        "estado": "<string>",
+        "criadoEm": "1969-03-06T22:55:40.917Z",
+        "modificadoEm": "1991-04-16T07:25:27.347Z",
+        "endDate": "1996-06-03T09:36:10.397Z",
+        "criadoPor": 4046,
+        "modificadoPor": 9799
+      }
+order: 1000

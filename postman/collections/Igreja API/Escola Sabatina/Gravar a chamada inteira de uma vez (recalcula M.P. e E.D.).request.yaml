@@ -1,0 +1,25 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id/presencas'
+method: PUT
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    [
+      {
+        "membroId": 1,
+        "presente": true
+      }
+    ]
+settings: {}
+examples: ./.resources/Gravar a chamada inteira de uma vez (recalcula M.P. e E.D.).resources/examples
+order: 43000

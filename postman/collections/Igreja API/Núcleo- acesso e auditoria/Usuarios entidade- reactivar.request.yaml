@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Usuarios entidade: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/nucleo/usuarios-entidade/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Usuarios entidade- reactivar.resources/examples
+order: 27000

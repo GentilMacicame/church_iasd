@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Fundos: criar'
+description: 'Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais'
+url: '{{baseUrl}}/v1/tesouraria/fundos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "codigo": "texto",
+      "nome": "texto",
+      "tipo": "DIZIMO"
+    }
+settings: {}
+examples: ./.resources/Fundos- criar.resources/examples
+order: 66000

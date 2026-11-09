@@ -1,0 +1,65 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/notificacoes/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 8334,
+        "membroId": 5646,
+        "canal": "<string>",
+        "destino": "string",
+        "assunto": "string",
+        "mensagem": "string",
+        "agendadaPara": "1980-08-04T18:17:55.793Z",
+        "enviadaEm": "1999-02-17T03:24:59.718Z",
+        "tentativas": 6537,
+        "erro": "string",
+        "origemTabela": "string",
+        "origemId": 8688,
+        "chave": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 9170,
+        "igrejaId": 1162,
+        "membroId": 6740,
+        "canal": "<string>",
+        "destino": "string",
+        "assunto": "string",
+        "mensagem": "string",
+        "agendadaPara": "1973-04-13T21:46:41.776Z",
+        "enviadaEm": "2021-06-22T13:25:37.423Z",
+        "tentativas": 7766,
+        "erro": "string",
+        "origemTabela": "string",
+        "origemId": 889,
+        "chave": "string",
+        "estado": "<string>",
+        "criadoEm": "2013-11-20T19:54:18.899Z",
+        "modificadoEm": "1993-01-23T08:00:29.743Z",
+        "endDate": "1995-03-09T08:47:39.587Z",
+        "criadoPor": 2397,
+        "modificadoPor": 2556
+      }
+order: 1000

@@ -1,0 +1,47 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/sabados/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "trimestreId": 1417,
+        "numero": 3536,
+        "data": "1968-09-19",
+        "decimoTerceiro": true,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4647,
+        "trimestreId": 2052,
+        "numero": 1280,
+        "data": "1954-07-19",
+        "decimoTerceiro": false,
+        "estado": "<string>",
+        "criadoEm": "1947-03-15T00:39:01.443Z",
+        "modificadoEm": "1990-03-24T17:42:08.562Z",
+        "endDate": "1988-03-28T04:47:49.988Z",
+        "criadoPor": 4923,
+        "modificadoPor": 129
+      }
+order: 1000

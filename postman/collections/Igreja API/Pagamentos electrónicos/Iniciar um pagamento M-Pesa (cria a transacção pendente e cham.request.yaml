@@ -1,0 +1,31 @@
+$kind: http-request
+name: Iniciar um pagamento M-Pesa (cria a transacção pendente e chama a Vodacom)
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/mpesa'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "contaId": 1,
+      "msisdn": "texto",
+      "linhas": [
+        {
+          "fundoId": 1,
+          "categoriaId": 1,
+          "valor": "650.00"
+        }
+      ]
+    }
+settings: {}
+examples: ./.resources/Iniciar um pagamento M-Pesa (cria a transacção pendente e cham.resources/examples
+order: 8000

@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Distritos: listar'
+description: Distritos pastorais de uma Associação/Missão
+url: '{{baseUrl}}/v1/organizacao/distritos?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: entidadeId
+  value: ''
+  disabled: true
+- key: pastorUsuarioId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Distritos- listar.resources/examples
+order: 19000

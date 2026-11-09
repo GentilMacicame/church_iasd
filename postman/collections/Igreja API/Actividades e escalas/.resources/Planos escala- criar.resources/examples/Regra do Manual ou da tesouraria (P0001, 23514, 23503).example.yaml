@@ -1,0 +1,66 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/planos-escala"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "titulo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataInicio": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataFim": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "trimestreId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "localEmissao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataEmissao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "anciaoMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "secretarioMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "publicada": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "observacoes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 422
+  statusText: Unprocessable Entity (WebDAV) (RFC 4918)
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 7000

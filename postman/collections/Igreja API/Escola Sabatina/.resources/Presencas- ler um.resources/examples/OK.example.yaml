@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/presencas/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2469,
+        "relatorioId": 5005,
+        "membroId": 3447,
+        "igrejaId": 9207,
+        "presente": false,
+        "estudouLicao": true,
+        "estado": "<string>",
+        "criadoEm": "1981-07-22T05:05:18.314Z",
+        "modificadoEm": "2012-04-20T14:28:32.121Z",
+        "endDate": "1953-09-18T05:26:45.494Z",
+        "criadoPor": 9787,
+        "modificadoPor": 3951
+      }
+order: 1000

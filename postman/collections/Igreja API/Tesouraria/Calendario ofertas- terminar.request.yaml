@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Calendario ofertas: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/calendario-ofertas/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Calendario ofertas- terminar.resources/examples
+order: 12000

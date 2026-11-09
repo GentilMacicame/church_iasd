@@ -1,0 +1,59 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/transferencias/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": 1747,
+        "origemIgrejaId": 8792,
+        "destinoIgrejaId": 8691,
+        "destinoExterno": "string",
+        "dataPedido": "1968-03-01",
+        "origemVotoId": 6686,
+        "cartaEmitidaEm": "2003-01-01",
+        "destinoVotoId": 1645,
+        "aceiteEm": "2011-09-05",
+        "observacoes": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 3748,
+        "membroId": 4316,
+        "origemIgrejaId": 1206,
+        "destinoIgrejaId": 5314,
+        "destinoExterno": "string",
+        "dataPedido": "1989-08-01",
+        "origemVotoId": 1072,
+        "cartaEmitidaEm": "1991-11-17",
+        "destinoVotoId": 8152,
+        "aceiteEm": "2019-12-04",
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "1986-01-07T20:31:26.932Z",
+        "modificadoEm": "1986-03-04T12:51:07.856Z",
+        "endDate": "1953-05-20T20:06:36.563Z",
+        "criadoPor": 1484,
+        "modificadoPor": 7030
+      }
+order: 1000

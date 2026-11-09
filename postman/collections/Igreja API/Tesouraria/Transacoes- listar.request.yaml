@@ -1,0 +1,68 @@
+$kind: http-request
+name: 'Transacoes: listar'
+description: 'Movimentos: entradas, saídas e transferências (cabeçalho)'
+url: '{{baseUrl}}/v1/tesouraria/transacoes?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: tipo
+  value: ENTRADA
+  disabled: true
+- key: metodo
+  value: EMOLA
+  disabled: true
+- key: contaId
+  value: ''
+  disabled: true
+- key: destinoContaId
+  value: ''
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: familiaId
+  value: ''
+  disabled: true
+- key: contagemId
+  value: ''
+  disabled: true
+- key: despesaId
+  value: ''
+  disabled: true
+- key: estornoTransacaoId
+  value: ''
+  disabled: true
+- key: aprovadoPorUsuarioId
+  value: ''
+  disabled: true
+- key: estado
+  value: PENDENTE
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Transacoes- listar.resources/examples
+order: 119000

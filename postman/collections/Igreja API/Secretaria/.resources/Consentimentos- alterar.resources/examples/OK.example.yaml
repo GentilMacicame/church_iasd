@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/consentimentos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": 1900,
+        "tipo": "<string>",
+        "concedido": true,
+        "data": "2020-09-04",
+        "concedidoPorMembroId": 3415,
+        "observacoes": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5702,
+        "membroId": 138,
+        "tipo": "<string>",
+        "concedido": true,
+        "data": "1994-07-07",
+        "concedidoPorMembroId": 5242,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "2015-04-25T03:45:40.381Z",
+        "modificadoEm": "1973-04-27T16:34:23.407Z",
+        "endDate": "2011-10-02T00:57:26.304Z",
+        "criadoPor": 5856,
+        "modificadoPor": 3214
+      }
+order: 1000

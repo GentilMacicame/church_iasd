@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Documentos: listar'
+description: Comprovativos (facturas, talões, prints M-Pesa)
+url: '{{baseUrl}}/v1/tesouraria/documentos?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: transacaoId
+  value: ''
+  disabled: true
+- key: despesaId
+  value: ''
+  disabled: true
+- key: tipo
+  value: FACTURA
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Documentos- listar.resources/examples
+order: 41000

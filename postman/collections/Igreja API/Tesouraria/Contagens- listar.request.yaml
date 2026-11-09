@@ -1,0 +1,50 @@
+$kind: http-request
+name: 'Contagens: listar'
+description: 'Contagem do dinheiro de um culto (tesoureiro e diácono: dois contadores)'
+url: '{{baseUrl}}/v1/tesouraria/contagens?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: contaId
+  value: ''
+  disabled: true
+- key: contador1MembroId
+  value: ''
+  disabled: true
+- key: contador2MembroId
+  value: ''
+  disabled: true
+- key: conferidoPorUsuarioId
+  value: ''
+  disabled: true
+- key: estado
+  value: CONFERIDA
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Contagens- listar.resources/examples
+order: 20000

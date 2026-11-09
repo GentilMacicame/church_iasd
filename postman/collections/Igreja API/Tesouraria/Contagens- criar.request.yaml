@@ -1,0 +1,28 @@
+$kind: http-request
+name: 'Contagens: criar'
+description: 'Contagem do dinheiro de um culto (tesoureiro e diácono: dois contadores)'
+url: '{{baseUrl}}/v1/tesouraria/contagens'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "contaId": 1,
+      "data": "2026-11-14",
+      "contador1MembroId": 1,
+      "contador2MembroId": 1,
+      "totalContado": "650.00"
+    }
+settings: {}
+examples: ./.resources/Contagens- criar.resources/examples
+order: 21000

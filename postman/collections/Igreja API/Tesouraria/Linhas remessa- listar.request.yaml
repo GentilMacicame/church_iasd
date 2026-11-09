@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Linhas remessa: listar'
+description: Valor remetido por fundo
+url: '{{baseUrl}}/v1/tesouraria/linhas-remessa?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: remessaId
+  value: ''
+  disabled: true
+- key: fundoId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Linhas remessa- listar.resources/examples
+order: 77000

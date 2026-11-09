@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'Reunioes: listar'
+description: 'Reuniões: junta directiva, reunião regular, assembleia administrativa, comissão de nomeações, conselho da ES'
+url: '{{baseUrl}}/v1/secretaria/reunioes?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: tipo
+  value: REUNIAO_REGULAR
+  disabled: true
+- key: presididaPorMembroId
+  value: ''
+  disabled: true
+- key: secretarioMembroId
+  value: ''
+  disabled: true
+- key: estado
+  value: CONVOCADA
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Reunioes- listar.resources/examples
+order: 57000

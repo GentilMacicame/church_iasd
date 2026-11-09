@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Trimestres: ler um'
+description: ''
+url: '{{baseUrl}}/v1/escola-sabatina/trimestres/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Trimestres- ler um.resources/examples
+order: 58000

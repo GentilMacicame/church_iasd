@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Extractos: criar'
+description: Linhas do extracto bancário/M-Pesa para reconciliação
+url: '{{baseUrl}}/v1/tesouraria/extractos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "contaId": 1,
+      "data": "2026-11-14",
+      "valor": "650.00"
+    }
+settings: {}
+examples: ./.resources/Extractos- criar.resources/examples
+order: 50000

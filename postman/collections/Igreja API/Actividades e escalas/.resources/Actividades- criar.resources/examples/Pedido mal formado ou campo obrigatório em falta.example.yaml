@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/actividades"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "departamentoIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataInicio": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "responsavelMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "descricao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "local": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataFim": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataHoraLembrete": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "valorPrevisto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 2000

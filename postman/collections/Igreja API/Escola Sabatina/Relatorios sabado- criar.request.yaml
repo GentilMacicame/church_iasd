@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Relatorios sabado: criar'
+description: Relatório de cada classe em cada sábado (linha da folha "Grupo N")
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-sabado'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "classeTrimestreId": 1,
+      "sabadoId": 1,
+      "membrosPresentes": 1
+    }
+settings: {}
+examples: ./.resources/Relatorios sabado- criar.resources/examples
+order: 38000

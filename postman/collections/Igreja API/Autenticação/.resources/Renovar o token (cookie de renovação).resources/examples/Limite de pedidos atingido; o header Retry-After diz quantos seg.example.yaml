@@ -1,0 +1,30 @@
+$kind: http-example
+name: Limite de pedidos atingido; o header Retry-After diz quantos segundos esperar
+request:
+  url: "{{baseUrl}}/v1/auth/renovar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 429
+  statusText: Too Many Requests
+  headers:
+    Retry-After: "301"
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 8000

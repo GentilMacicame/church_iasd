@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Presencas: criar'
+description: Chamada nominal (opcional); actualiza M.P. e E.D. do relatório
+url: '{{baseUrl}}/v1/escola-sabatina/presencas'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "relatorioId": 1,
+      "membroId": 1,
+      "presente": true
+    }
+settings: {}
+examples: ./.resources/Presencas- criar.resources/examples
+order: 30000

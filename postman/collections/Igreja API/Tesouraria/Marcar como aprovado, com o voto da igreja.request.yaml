@@ -1,0 +1,22 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/orcamentos/:id/aprovar'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "votoId": 1
+    }
+settings: {}
+examples: ./.resources/Marcar como aprovado, com o voto da igreja.resources/examples
+order: 93000

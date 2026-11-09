@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Classes: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/escola-sabatina/classes/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Classes- reactivar.resources/examples
+order: 11000

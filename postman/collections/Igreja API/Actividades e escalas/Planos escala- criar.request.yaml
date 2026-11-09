@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Planos escala: criar'
+description: 'Escala de um período (ex.: escala de pregação do trimestre), assinada e publicada'
+url: '{{baseUrl}}/v1/actividades/planos-escala'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "titulo": "texto",
+      "dataInicio": "2026-11-14",
+      "dataFim": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Planos escala- criar.resources/examples
+order: 28000

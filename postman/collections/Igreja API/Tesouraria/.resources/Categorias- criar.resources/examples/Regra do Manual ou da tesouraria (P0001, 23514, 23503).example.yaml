@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/categorias"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "codigo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "paiCategoriaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "eRemessa": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 422
+  statusText: Unprocessable Entity (WebDAV) (RFC 4918)
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 7000

@@ -1,0 +1,43 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/fundos/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5481,
+        "igrejaId": 5471,
+        "codigo": "string",
+        "nome": "string",
+        "tipo": "<string>",
+        "restrito": false,
+        "percentagemRemessa": "-5.8718",
+        "destinoEntidadeId": 4931,
+        "estado": "<string>",
+        "criadoEm": "1975-08-06T17:42:05.053Z",
+        "modificadoEm": "2013-12-03T20:12:45.776Z",
+        "endDate": "1961-04-30T02:17:08.442Z",
+        "criadoPor": 9560,
+        "modificadoPor": 4588
+      }
+order: 1000

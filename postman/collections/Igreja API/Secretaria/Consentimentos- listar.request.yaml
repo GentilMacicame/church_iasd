@@ -1,0 +1,44 @@
+$kind: http-request
+name: 'Consentimentos: listar'
+description: 'Consentimentos para tratamento de dados (menores: dado pelo encarregado)'
+url: '{{baseUrl}}/v1/secretaria/consentimentos?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: tipo
+  value: CONTACTO_SMS
+  disabled: true
+- key: concedidoPorMembroId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Consentimentos- listar.resources/examples
+order: 9000

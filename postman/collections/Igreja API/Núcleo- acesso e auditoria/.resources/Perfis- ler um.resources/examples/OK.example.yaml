@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/perfis/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7423,
+        "nome": "string",
+        "descricao": "string",
+        "ambito": "string",
+        "estado": "<string>",
+        "criadoEm": "2000-02-01T02:40:34.199Z",
+        "modificadoEm": "1997-09-26T01:05:14.302Z",
+        "endDate": "1961-10-04T05:36:10.361Z",
+        "criadoPor": 4874,
+        "modificadoPor": 2174
+      }
+order: 1000

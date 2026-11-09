@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Remessas: criar'
+description: Remessas mensais à Associação/Missão
+url: '{{baseUrl}}/v1/tesouraria/remessas'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "entidadeId": 1,
+      "ano": 1,
+      "mes": 1
+    }
+settings: {}
+examples: ./.resources/Remessas- criar.resources/examples
+order: 105000

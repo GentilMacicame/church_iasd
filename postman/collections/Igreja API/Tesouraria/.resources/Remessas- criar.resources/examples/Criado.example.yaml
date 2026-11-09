@@ -1,0 +1,64 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/remessas"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "entidadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "ano": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "mes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "transacaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "enviadaEm": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 146,
+        "igrejaId": 6323,
+        "entidadeId": 655,
+        "ano": 9618,
+        "mes": 314,
+        "transacaoId": 1266,
+        "enviadaEm": "2020-09-25",
+        "estado": "<string>",
+        "criadoEm": "2006-09-16T19:24:49.301Z",
+        "modificadoEm": "2012-12-13T14:03:37.348Z",
+        "endDate": "1958-04-10T10:49:03.372Z",
+        "criadoPor": 214,
+        "modificadoPor": 6801
+      }
+order: 1000

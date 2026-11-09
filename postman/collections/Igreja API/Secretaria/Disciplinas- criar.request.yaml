@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Disciplinas: criar'
+description: 'Censuras (1 a 12 meses): sem cargos nem carta de transferência durante a censura'
+url: '{{baseUrl}}/v1/secretaria/disciplinas'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "membroId": 1,
+      "votoId": 1,
+      "dataInicio": "2026-11-14",
+      "dataFim": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Disciplinas- criar.resources/examples
+order: 22000

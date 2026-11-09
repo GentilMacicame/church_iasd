@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/categorias"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "codigo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "paiCategoriaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "eRemessa": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5349,
+        "paiCategoriaId": 1597,
+        "codigo": "string",
+        "nome": "string",
+        "tipo": "<string>",
+        "eRemessa": true,
+        "estado": "<string>",
+        "criadoEm": "2025-05-07T03:20:52.362Z",
+        "modificadoEm": "2009-10-09T02:54:22.294Z",
+        "endDate": "1991-04-23T12:16:59.539Z",
+        "criadoPor": 831,
+        "modificadoPor": 6686
+      }
+order: 1000

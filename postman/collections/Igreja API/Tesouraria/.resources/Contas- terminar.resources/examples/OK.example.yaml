@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/contas/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 8898,
+        "igrejaId": 5216,
+        "tipo": "<string>",
+        "nome": "string",
+        "numero": "string",
+        "titular": "string",
+        "banco": "string",
+        "moeda": "str",
+        "saldoInicial": "650.00",
+        "dataSaldoInicial": "2010-11-16",
+        "estado": "<string>",
+        "criadoEm": "1952-10-19T15:08:14.265Z",
+        "modificadoEm": "1956-07-25T11:15:16.436Z",
+        "endDate": "1968-11-05T21:31:56.266Z",
+        "criadoPor": 564,
+        "modificadoPor": 3921
+      }
+order: 1000

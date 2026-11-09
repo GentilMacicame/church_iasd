@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/contactos"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "valor": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "principal": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1842,
+        "membroId": 8800,
+        "igrejaId": 7227,
+        "tipo": "<string>",
+        "valor": "string",
+        "principal": false,
+        "estado": "<string>",
+        "criadoEm": "1967-10-21T07:24:50.122Z",
+        "modificadoEm": "2022-01-31T14:26:45.610Z",
+        "endDate": "1981-03-25T04:42:50.332Z",
+        "criadoPor": 486,
+        "modificadoPor": 6835
+      }
+order: 1000

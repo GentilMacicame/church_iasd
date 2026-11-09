@@ -1,0 +1,28 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/auth/login'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "login": "{{login}}",
+      "senha": "{{senha}}"
+    }
+settings: {}
+examples: ./.resources/Entrar.resources/examples
+order: 1000
+scripts:
+- type: afterResponse
+  code: |-
+    const r = pm.response.json();
+    pm.test('devolve o token de acesso', () => pm.expect(r.tokenAcesso).to.be.a('string'));
+    if (r.tokenAcesso) {
+        pm.collectionVariables.set('bearerToken', r.tokenAcesso);
+    }
+  language: text/javascript

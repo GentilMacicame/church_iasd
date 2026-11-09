@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Saldos contas'
+description: Lido da vista tesouraria.vw_saldo_conta.
+url: '{{baseUrl}}/v1/tesouraria/saldos-contas?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Saldos contas.resources/examples
+order: 113000

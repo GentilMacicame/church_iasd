@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/baptismos"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "data": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "local": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "oficiante": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "rebaptismo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "classeTrimestreId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2759,
+        "membroId": 216,
+        "data": "1962-11-26",
+        "local": "string",
+        "oficiante": "string",
+        "rebaptismo": true,
+        "classeTrimestreId": 8303,
+        "estado": "<string>",
+        "criadoEm": "1983-05-30T01:52:35.915Z",
+        "modificadoEm": "1996-05-29T10:33:25.737Z",
+        "endDate": "1949-04-02T04:41:16.558Z",
+        "criadoPor": 2742,
+        "modificadoPor": 7887
+      }
+order: 1000

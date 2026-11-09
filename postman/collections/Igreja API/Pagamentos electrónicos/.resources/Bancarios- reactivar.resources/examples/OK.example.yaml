@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/bancarios/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6370,
+        "transacaoId": 1204,
+        "banco": "string",
+        "nib": "string",
+        "titular": "string",
+        "referenciaBancaria": "string",
+        "estado": "<string>",
+        "criadoEm": "1948-04-20T15:03:51.614Z",
+        "modificadoEm": "1960-05-01T16:59:01.370Z",
+        "endDate": "1957-08-12T14:10:15.310Z",
+        "criadoPor": 7818,
+        "modificadoPor": 3735
+      }
+order: 1000

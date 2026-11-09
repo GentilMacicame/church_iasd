@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Contas: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/contas/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Contas- terminar.resources/examples
+order: 31000

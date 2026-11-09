@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Despesas por pagar'
+description: Lido da vista tesouraria.vw_despesas_por_pagar.
+url: '{{baseUrl}}/v1/tesouraria/despesas-por-pagar?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Despesas por pagar.resources/examples
+order: 35000

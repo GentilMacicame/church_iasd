@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/usuarios/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6621,
+        "membroId": 6148,
+        "nome": "string",
+        "email": "string",
+        "telefone": "string",
+        "superAdmin": false,
+        "ultimoLogin": "1993-12-23T00:09:25.955Z",
+        "estado": "<string>",
+        "criadoEm": "2012-11-01T09:26:24.805Z",
+        "modificadoEm": "2007-02-05T01:29:24.637Z",
+        "endDate": "1984-03-04T14:01:09.390Z",
+        "criadoPor": 9731,
+        "modificadoPor": 7535
+      }
+order: 1000

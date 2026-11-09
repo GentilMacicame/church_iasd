@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Remessas: listar'
+description: Remessas mensais à Associação/Missão
+url: '{{baseUrl}}/v1/tesouraria/remessas?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: entidadeId
+  value: ''
+  disabled: true
+- key: transacaoId
+  value: ''
+  disabled: true
+- key: estado
+  value: PREPARADA
+  disabled: true
+settings: {}
+examples: ./.resources/Remessas- listar.resources/examples
+order: 104000

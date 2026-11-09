@@ -1,0 +1,14 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/secretaria/membros/:id/validar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Aprovar o registo do membro.resources/examples
+order: 42000

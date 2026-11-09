@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/escalas?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&funcao=<string>&membroId=301&actividadeId=301&substitutoMembroId=301&escalaDiaId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  queryParams:
+    igrejaId: "301"
+    limite: "50"
+    depois: string
+    ordem: string
+    incluirTerminados: "false"
+    funcao: <string>
+    membroId: "301"
+    actividadeId: "301"
+    substitutoMembroId: "301"
+    escalaDiaId: "301"
+    estado: <string>
+    desde: 1986-03-12
+    ate: 1986-03-12
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 2000

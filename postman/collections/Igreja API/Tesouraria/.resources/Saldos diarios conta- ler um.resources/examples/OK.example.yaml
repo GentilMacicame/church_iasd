@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/saldos-diarios-conta/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6720,
+        "contaId": 9600,
+        "igrejaId": 6395,
+        "data": "1985-08-16",
+        "entradas": "650.00",
+        "saidas": "650.00",
+        "estado": "<string>",
+        "criadoEm": "1959-02-07T21:36:43.158Z",
+        "modificadoEm": "2001-06-19T11:11:23.819Z",
+        "endDate": "1989-08-01T15:23:33.723Z",
+        "criadoPor": 8945,
+        "modificadoPor": 4985
+      }
+order: 1000

@@ -1,0 +1,65 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/membros/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 2141,
+        "familiaId": 7979,
+        "nome": "string",
+        "apelido": "string",
+        "dataNascimento": "1986-10-29",
+        "sexo": "<string>",
+        "estadoCivil": "<string>",
+        "morada": "string",
+        "dataEntrada": "1951-07-13",
+        "modoEntrada": "<string>",
+        "encarregadoMembroId": 2793,
+        "validacao": "<string>",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4279,
+        "igrejaId": 1255,
+        "familiaId": 9078,
+        "nome": "string",
+        "apelido": "string",
+        "dataNascimento": "1978-04-10",
+        "sexo": "<string>",
+        "estadoCivil": "<string>",
+        "morada": "string",
+        "dataEntrada": "1956-10-23",
+        "modoEntrada": "<string>",
+        "encarregadoMembroId": 5399,
+        "validacao": "<string>",
+        "validadoPorUsuarioId": 4035,
+        "dataValidacao": "1986-01-26T09:29:06.386Z",
+        "estado": "<string>",
+        "criadoEm": "1975-01-26T22:01:06.840Z",
+        "modificadoEm": "1951-12-26T09:16:35.928Z",
+        "endDate": "1975-07-15T16:58:14.448Z",
+        "criadoPor": 5684,
+        "modificadoPor": 2520
+      }
+order: 1000

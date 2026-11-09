@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Notificacoes: criar'
+description: Fila de SMS, WhatsApp e e-mail a enviar
+url: '{{baseUrl}}/v1/nucleo/notificacoes'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "canal": "SMS",
+      "destino": "texto",
+      "mensagem": "texto"
+    }
+settings: {}
+examples: ./.resources/Notificacoes- criar.resources/examples
+order: 2000

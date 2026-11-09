@@ -1,0 +1,23 @@
+$kind: http-request
+name: 'Trimestres: criar'
+description: Trimestres da lição
+url: '{{baseUrl}}/v1/escola-sabatina/trimestres'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "ano": 1,
+      "numero": 1,
+      "dataInicio": "2026-11-14",
+      "dataFim": "2026-11-14",
+      "numSabados": 1
+    }
+settings: {}
+examples: ./.resources/Trimestres- criar.resources/examples
+order: 57000

@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Contactos: criar'
+description: Telefones, e-mails e WhatsApp de membros ou igrejas
+url: '{{baseUrl}}/v1/secretaria/contactos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tipo": "TELEFONE",
+      "valor": "texto"
+    }
+settings: {}
+examples: ./.resources/Contactos- criar.resources/examples
+order: 16000

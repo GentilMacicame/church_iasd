@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Linhas transacao: criar'
+description: Divisão do valor por fundo e categoria (soma = valor_total)
+url: '{{baseUrl}}/v1/tesouraria/linhas-transacao'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "transacaoId": 1,
+      "fundoId": 1,
+      "categoriaId": 1,
+      "valor": "650.00"
+    }
+settings: {}
+examples: ./.resources/Linhas transacao- criar.resources/examples
+order: 84000

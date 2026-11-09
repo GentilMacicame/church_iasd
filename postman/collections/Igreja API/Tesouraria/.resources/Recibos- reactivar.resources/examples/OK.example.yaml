@@ -1,0 +1,40 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/recibos/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1558,
+        "transacaoId": 1903,
+        "igrejaId": 8030,
+        "ano": 7550,
+        "numero": 3337,
+        "estado": "<string>",
+        "criadoEm": "2018-07-03T10:53:58.840Z",
+        "modificadoEm": "2019-05-19T10:03:30.258Z",
+        "endDate": "2007-05-16T03:09:31.264Z",
+        "criadoPor": 6188,
+        "modificadoPor": 4116
+      }
+order: 1000

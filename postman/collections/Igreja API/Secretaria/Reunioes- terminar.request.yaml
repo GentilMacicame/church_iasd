@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Reunioes: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/secretaria/reunioes/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Reunioes- terminar.resources/examples
+order: 62000

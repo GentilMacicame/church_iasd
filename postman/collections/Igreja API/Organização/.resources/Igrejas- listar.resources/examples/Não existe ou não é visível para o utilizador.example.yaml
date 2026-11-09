@@ -1,0 +1,38 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/igrejas?limite=50&depois=string&ordem=string&incluirTerminados=false&entidadeId=301&distritoId=301&tipo=<string>&maeIgrejaId=301&estado=<string>"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  queryParams:
+    limite: "50"
+    depois: string
+    ordem: string
+    incluirTerminados: "false"
+    entidadeId: "301"
+    distritoId: "301"
+    tipo: <string>
+    maeIgrejaId: "301"
+    estado: <string>
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 5000

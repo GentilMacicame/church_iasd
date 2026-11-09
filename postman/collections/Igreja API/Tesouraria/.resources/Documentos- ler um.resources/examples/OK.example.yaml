@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/documentos/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2765,
+        "transacaoId": 4412,
+        "despesaId": 9401,
+        "tipo": "<string>",
+        "nomeFicheiro": "string",
+        "url": "string",
+        "estado": "<string>",
+        "criadoEm": "2010-03-09T19:05:31.650Z",
+        "modificadoEm": "1967-06-24T19:10:28.080Z",
+        "endDate": "1970-06-29T00:28:02.210Z",
+        "criadoPor": 6336,
+        "modificadoPor": 86
+      }
+order: 1000

@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/entidades/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1822,
+        "paiEntidadeId": 1655,
+        "tipo": "<string>",
+        "nome": "string",
+        "sigla": "string",
+        "dataCriacao": "1985-04-25",
+        "estado": "<string>",
+        "criadoEm": "1948-02-01T22:07:01.893Z",
+        "modificadoEm": "1949-12-12T22:00:00.735Z",
+        "endDate": "1990-10-28T01:30:44.882Z",
+        "criadoPor": 3526,
+        "modificadoPor": 561
+      }
+order: 1000

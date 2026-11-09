@@ -1,0 +1,25 @@
+$kind: http-request
+name: 'Bancarios: criar'
+description: Detalhe de pagamentos por banco
+url: '{{baseUrl}}/v1/tesouraria/bancarios'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "transacaoId": 1,
+      "nib": "texto",
+      "titular": "texto"
+    }
+settings: {}
+examples: ./.resources/Bancarios- criar.resources/examples
+order: 2000

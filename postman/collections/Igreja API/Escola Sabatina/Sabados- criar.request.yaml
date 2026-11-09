@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Sabados: criar'
+description: Sábados de cada trimestre
+url: '{{baseUrl}}/v1/escola-sabatina/sabados'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "trimestreId": 1,
+      "numero": 1,
+      "data": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Sabados- criar.resources/examples
+order: 51000

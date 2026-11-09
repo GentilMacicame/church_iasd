@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/familias/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6779,
+        "igrejaId": 3082,
+        "nome": "string",
+        "morada": "string",
+        "estado": "<string>",
+        "criadoEm": "1998-04-10T20:27:56.637Z",
+        "modificadoEm": "1995-06-28T06:37:38.897Z",
+        "endDate": "1986-04-27T19:41:19.845Z",
+        "criadoPor": 349,
+        "modificadoPor": 7807
+      }
+order: 1000

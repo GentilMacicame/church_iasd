@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Contas: criar'
+description: Contas onde o dinheiro está (M-Pesa, banco, caixa)
+url: '{{baseUrl}}/v1/tesouraria/contas'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "tipo": "MPESA",
+      "nome": "texto",
+      "dataSaldoInicial": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Contas- criar.resources/examples
+order: 27000

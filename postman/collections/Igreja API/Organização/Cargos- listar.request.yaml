@@ -1,0 +1,32 @@
+$kind: http-request
+name: 'Cargos: listar'
+description: Cargos da igreja (Ancião, Secretário, Tesoureiro, Director da ES, ...)
+url: '{{baseUrl}}/v1/organizacao/cargos?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: departamentoId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Cargos- listar.resources/examples
+order: 1000

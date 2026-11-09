@@ -1,0 +1,23 @@
+$kind: http-request
+name: Criar os fundos-padrão da Associação/Missão (dízimo, ES, ofertas, orçamento local)
+description: ''
+url: '{{baseUrl}}/v1/organizacao/entidades/:id/fundos-padrao'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "percentagemOfertaCombinada": "texto"
+    }
+settings: {}
+examples: ./.resources/Criar os fundos-padrão da Associação-Missão (dízimo, ES, of.resources/examples
+order: 29000

@@ -1,0 +1,47 @@
+$kind: http-request
+name: 'Planos escala: listar'
+description: 'Escala de um período (ex.: escala de pregação do trimestre), assinada e publicada'
+url: '{{baseUrl}}/v1/actividades/planos-escala?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+- key: anciaoMembroId
+  value: ''
+  disabled: true
+- key: secretarioMembroId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Planos escala- listar.resources/examples
+order: 27000

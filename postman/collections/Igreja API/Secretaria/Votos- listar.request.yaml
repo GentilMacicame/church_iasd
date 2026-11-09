@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Votos: listar'
+description: Votos registados em acta (admissões, transferências, remoções, eleições, finanças)
+url: '{{baseUrl}}/v1/secretaria/votos?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: reuniaoId
+  value: ''
+  disabled: true
+- key: tipo
+  value: OUTRO
+  disabled: true
+- key: estado
+  value: ADIADO
+  disabled: true
+settings: {}
+examples: ./.resources/Votos- listar.resources/examples
+order: 74000

@@ -1,0 +1,22 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/extractos/:id/reconciliar'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "transacaoId": 1
+    }
+settings: {}
+examples: ./.resources/Ligar a linha do extracto a uma transacção.resources/examples
+order: 56000

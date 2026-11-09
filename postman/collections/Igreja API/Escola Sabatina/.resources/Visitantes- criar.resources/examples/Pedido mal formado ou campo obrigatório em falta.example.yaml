@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/visitantes"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "relatorioId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "telefone": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "convidadoPorMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tornouSeMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "anonimizadoEm": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 2000

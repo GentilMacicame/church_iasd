@@ -1,0 +1,32 @@
+$kind: http-request
+name: 'Pesos pontuacao: listar'
+description: Pesos da pontuação (sem trimestre = pesos por defeito)
+url: '{{baseUrl}}/v1/escola-sabatina/pesos-pontuacao?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Pesos pontuacao- listar.resources/examples
+order: 23000

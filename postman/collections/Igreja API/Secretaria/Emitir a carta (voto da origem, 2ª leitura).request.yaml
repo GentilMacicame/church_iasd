@@ -1,0 +1,23 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/secretaria/transferencias/:id/emitir-carta'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "votoId": 1,
+      "data": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Emitir a carta (voto da origem, 2ª leitura).resources/examples
+order: 70000

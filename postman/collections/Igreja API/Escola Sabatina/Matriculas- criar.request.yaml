@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Matriculas: criar'
+description: Inscrição nas classes (histórico); membros e não membros
+url: '{{baseUrl}}/v1/escola-sabatina/matriculas'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "classeId": 1,
+      "membroId": 1
+    }
+settings: {}
+examples: ./.resources/Matriculas- criar.resources/examples
+order: 17000

@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Usuarios entidade: criar'
+description: Perfil de um utilizador numa Associação/Missão inteira (vale para todas as igrejas abaixo dela)
+url: '{{baseUrl}}/v1/nucleo/usuarios-entidade'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "usuarioId": 1,
+      "entidadeId": 1,
+      "perfilId": 1
+    }
+settings: {}
+examples: ./.resources/Usuarios entidade- criar.resources/examples
+order: 24000

@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/reunioes/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2564,
+        "igrejaId": 1402,
+        "tipo": "<string>",
+        "data": "2014-04-03T11:50:05.526Z",
+        "local": "string",
+        "presididaPorMembroId": 6174,
+        "secretarioMembroId": 2808,
+        "quorumPresentes": 6583,
+        "actaUrl": "string",
+        "estado": "<string>",
+        "criadoEm": "1986-04-18T10:53:55.829Z",
+        "modificadoEm": "1994-04-28T14:59:58.651Z",
+        "endDate": "1971-01-01T02:45:47.620Z",
+        "criadoPor": 3711,
+        "modificadoPor": 5030
+      }
+order: 1000

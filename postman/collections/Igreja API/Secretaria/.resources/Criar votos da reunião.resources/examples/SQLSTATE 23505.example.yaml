@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/reunioes/:id/votos"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "reuniaoId": 6383,
+        "numero": "string",
+        "tipo": "FINANCEIRO",
+        "assunto": "string",
+        "texto": "string",
+        "leitura": 1256,
+        "aFavor": 9599,
+        "contra": 4673,
+        "abstencoes": 9220,
+        "estado": "REJEITADO"
+      }
+response:
+  statusCode: 409
+  statusText: Conflict
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 6000

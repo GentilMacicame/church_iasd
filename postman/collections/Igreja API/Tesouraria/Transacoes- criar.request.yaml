@@ -1,0 +1,33 @@
+$kind: http-request
+name: 'Transacoes: criar'
+description: 'Movimentos: entradas, saídas e transferências (cabeçalho)'
+url: '{{baseUrl}}/v1/tesouraria/transacoes'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tipo": "ENTRADA",
+      "metodo": "MPESA",
+      "valorTotal": "650.00",
+      "contaId": 1,
+      "linhas": [
+        {
+          "fundoId": 1,
+          "categoriaId": 1,
+          "valor": "650.00"
+        }
+      ]
+    }
+settings: {}
+examples: ./.resources/Transacoes- criar.resources/examples
+order: 120000

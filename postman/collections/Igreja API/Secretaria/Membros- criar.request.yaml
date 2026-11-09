@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Membros: criar'
+description: Membros, interessados e visitantes regulares (estado muda só por movimento)
+url: '{{baseUrl}}/v1/secretaria/membros'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "nome": "texto",
+      "apelido": "texto"
+    }
+settings: {}
+examples: ./.resources/Membros- criar.resources/examples
+order: 36000

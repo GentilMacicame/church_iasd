@@ -1,0 +1,86 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/membros"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "apelido": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "familiaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataNascimento": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "sexo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estadoCivil": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "morada": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataEntrada": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "modoEntrada": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "encarregadoMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "validacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4279,
+        "igrejaId": 1255,
+        "familiaId": 9078,
+        "nome": "string",
+        "apelido": "string",
+        "dataNascimento": "1978-04-10",
+        "sexo": "<string>",
+        "estadoCivil": "<string>",
+        "morada": "string",
+        "dataEntrada": "1956-10-23",
+        "modoEntrada": "<string>",
+        "encarregadoMembroId": 5399,
+        "validacao": "<string>",
+        "validadoPorUsuarioId": 4035,
+        "dataValidacao": "1986-01-26T09:29:06.386Z",
+        "estado": "<string>",
+        "criadoEm": "1975-01-26T22:01:06.840Z",
+        "modificadoEm": "1951-12-26T09:16:35.928Z",
+        "endDate": "1975-07-15T16:58:14.448Z",
+        "criadoPor": 5684,
+        "modificadoPor": 2520
+      }
+order: 1000

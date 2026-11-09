@@ -1,0 +1,28 @@
+$kind: http-request
+name: 'Despesas: criar'
+description: Requisições de despesa (quem pede não aprova)
+url: '{{baseUrl}}/v1/tesouraria/despesas'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "categoriaId": 1,
+      "fundoId": 1,
+      "descricao": "texto",
+      "valorSolicitado": "650.00",
+      "solicitadoPorUsuarioId": 1
+    }
+settings: {}
+examples: ./.resources/Despesas- criar.resources/examples
+order: 34000

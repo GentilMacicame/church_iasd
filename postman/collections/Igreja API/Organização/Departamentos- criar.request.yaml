@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Departamentos: criar'
+description: Departamentos e ministérios (Manual da Igreja)
+url: '{{baseUrl}}/v1/organizacao/departamentos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "texto"
+    }
+settings: {}
+examples: ./.resources/Departamentos- criar.resources/examples
+order: 8000

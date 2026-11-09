@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Usuarios igreja: listar'
+description: Perfil de cada utilizador em cada igreja (base da segurança por igreja)
+url: '{{baseUrl}}/v1/nucleo/usuarios-igreja?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: usuarioId
+  value: ''
+  disabled: true
+- key: perfilId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Usuarios igreja- listar.resources/examples
+order: 29000

@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/entidades"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "paiEntidadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "sigla": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataCriacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1822,
+        "paiEntidadeId": 1655,
+        "tipo": "<string>",
+        "nome": "string",
+        "sigla": "string",
+        "dataCriacao": "1985-04-25",
+        "estado": "<string>",
+        "criadoEm": "1948-02-01T22:07:01.893Z",
+        "modificadoEm": "1949-12-12T22:00:00.735Z",
+        "endDate": "1990-10-28T01:30:44.882Z",
+        "criadoPor": 3526,
+        "modificadoPor": 561
+      }
+order: 1000

@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/usuarios-igreja/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5800,
+        "usuarioId": 1944,
+        "igrejaId": 4916,
+        "perfilId": 8001,
+        "estado": "<string>",
+        "criadoEm": "2010-03-18T07:42:55.816Z",
+        "modificadoEm": "2013-12-25T13:24:26.507Z",
+        "endDate": "1986-01-02T14:19:55.867Z",
+        "criadoPor": 5712,
+        "modificadoPor": 7922
+      }
+order: 1000

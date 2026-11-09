@@ -1,0 +1,53 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/transacoes/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 842,
+        "igrejaId": 2573,
+        "tipo": "<string>",
+        "metodo": "<string>",
+        "valorTotal": "650.00",
+        "contaId": 275,
+        "destinoContaId": 3335,
+        "membroId": 5579,
+        "familiaId": 2582,
+        "anonimo": true,
+        "contagemId": 4202,
+        "despesaId": 1889,
+        "estornoTransacaoId": 2226,
+        "beneficiario": "string",
+        "descricao": "string",
+        "referencia": "string",
+        "dataHora": "2015-02-23T13:53:25.930Z",
+        "aprovadoPorUsuarioId": 4410,
+        "estado": "<string>",
+        "criadoEm": "1953-09-23T08:26:25.875Z",
+        "modificadoEm": "1971-11-26T04:41:22.637Z",
+        "endDate": "1978-02-21T05:42:36.427Z",
+        "criadoPor": 1987,
+        "modificadoPor": 2688
+      }
+order: 1000

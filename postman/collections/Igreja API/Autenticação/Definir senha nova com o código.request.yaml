@@ -1,0 +1,20 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/auth/redefinir'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "login": "{{login}}",
+      "codigo": "123456",
+      "senha": "{{senha}}"
+    }
+settings: {}
+examples: ./.resources/Definir senha nova com o código.resources/examples
+order: 3000

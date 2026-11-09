@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Contribuicoes'
+description: Lido da vista tesouraria.vw_contribuicoes_membro.
+url: '{{baseUrl}}/v1/tesouraria/contribuicoes?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Contribuicoes.resources/examples
+order: 32000

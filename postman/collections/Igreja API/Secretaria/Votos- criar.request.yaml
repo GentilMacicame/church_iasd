@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Votos: criar'
+description: Votos registados em acta (admissões, transferências, remoções, eleições, finanças)
+url: '{{baseUrl}}/v1/secretaria/votos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reuniaoId": 1,
+      "numero": "texto",
+      "tipo": "ADMISSAO",
+      "assunto": "texto"
+    }
+settings: {}
+examples: ./.resources/Votos- criar.resources/examples
+order: 75000

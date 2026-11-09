@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/mpesa/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "transacaoId": 3560,
+        "direccao": "str",
+        "msisdn": "string",
+        "valor": "650.00",
+        "taxa": "650.00",
+        "transactionReference": "string",
+        "thirdPartyReference": "string",
+        "serviceProviderCode": "string",
+        "responseCode": "string",
+        "responseDesc": "string",
+        "mpesaTransactionId": "string",
+        "conversationId": "string",
+        "pedidoEm": "1976-09-02T10:09:55.163Z",
+        "respondidoEm": "2001-03-07T14:22:15.384Z",
+        "ultimaConsultaEm": "1973-06-03T10:45:59.246Z",
+        "tentativasConsulta": 2840,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 3000

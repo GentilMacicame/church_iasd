@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/matriculas"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "classeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "membroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataEntrada": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataSaida": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 3046,
+        "classeId": 5457,
+        "membroId": 7825,
+        "dataEntrada": "2005-07-07",
+        "dataSaida": "1955-03-06",
+        "estado": "<string>",
+        "criadoEm": "1977-04-27T17:21:47.039Z",
+        "modificadoEm": "1966-12-28T02:51:33.275Z",
+        "endDate": "2008-09-30T14:50:43.334Z",
+        "criadoPor": 1756,
+        "modificadoPor": 7594
+      }
+order: 1000

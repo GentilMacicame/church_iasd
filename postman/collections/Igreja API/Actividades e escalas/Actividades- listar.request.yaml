@@ -1,0 +1,41 @@
+$kind: http-request
+name: 'Actividades: listar'
+description: Actividades e eventos dos departamentos
+url: '{{baseUrl}}/v1/actividades/actividades?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: departamentoIgrejaId
+  value: ''
+  disabled: true
+- key: responsavelMembroId
+  value: ''
+  disabled: true
+- key: estado
+  value: CONCLUIDA
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Actividades- listar.resources/examples
+order: 1000

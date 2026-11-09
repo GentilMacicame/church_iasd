@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Despesas: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/tesouraria/despesas/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Despesas- reactivar.resources/examples
+order: 39000

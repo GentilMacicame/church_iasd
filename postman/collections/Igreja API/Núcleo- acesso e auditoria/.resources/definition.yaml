@@ -1,0 +1,4 @@
+$kind: collection
+name: "Núcleo: acesso e auditoria"
+description: Utilizadores, perfis, permissões e o histórico de todas as alterações.
+order: 2000

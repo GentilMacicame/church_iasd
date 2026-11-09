@@ -1,0 +1,64 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "classeTrimestreId": 5316,
+        "sabadoId": 6595,
+        "membrosMatriculados": 3236,
+        "membrosPresentes": 6730,
+        "estudoDiario": 7322,
+        "visitantes": 6323,
+        "filiais": 9726,
+        "oferta": "650.00",
+        "oferta13Sabado": "650.00",
+        "ofertaDespesas": "650.00",
+        "transacaoId": 9694,
+        "observacoes": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 368,
+        "classeTrimestreId": 9202,
+        "sabadoId": 3348,
+        "igrejaId": 5342,
+        "membrosMatriculados": 4519,
+        "membrosPresentes": 5204,
+        "estudoDiario": 3455,
+        "visitantes": 8404,
+        "filiais": 3881,
+        "oferta": "650.00",
+        "oferta13Sabado": "650.00",
+        "ofertaDespesas": "650.00",
+        "transacaoId": 533,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "1998-03-08T09:58:33.807Z",
+        "modificadoEm": "1974-08-04T20:54:24.962Z",
+        "endDate": "2018-07-12T02:21:50.624Z",
+        "criadoPor": 7144,
+        "modificadoPor": 371
+      }
+order: 1000

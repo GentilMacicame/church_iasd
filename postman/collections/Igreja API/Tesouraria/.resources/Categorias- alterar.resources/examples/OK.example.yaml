@@ -1,0 +1,49 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/categorias/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "paiCategoriaId": 8485,
+        "codigo": "string",
+        "nome": "string",
+        "tipo": "<string>",
+        "eRemessa": false,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 5349,
+        "paiCategoriaId": 1597,
+        "codigo": "string",
+        "nome": "string",
+        "tipo": "<string>",
+        "eRemessa": true,
+        "estado": "<string>",
+        "criadoEm": "2025-05-07T03:20:52.362Z",
+        "modificadoEm": "2009-10-09T02:54:22.294Z",
+        "endDate": "1991-04-23T12:16:59.539Z",
+        "criadoPor": 831,
+        "modificadoPor": 6686
+      }
+order: 1000

@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Familias resumo'
+description: Lido da vista secretaria.vw_familia_resumo.
+url: '{{baseUrl}}/v1/secretaria/familias-resumo?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Familias resumo.resources/examples
+order: 29000

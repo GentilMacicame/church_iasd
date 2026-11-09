@@ -1,0 +1,14 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/transacoes/:id/aprovar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Aprovar uma saída pendente (em nome próprio).resources/examples
+order: 123000

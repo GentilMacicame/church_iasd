@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/fechos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": 5290,
+        "ano": 5509,
+        "mes": 4933,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6383,
+        "igrejaId": 9125,
+        "ano": 3368,
+        "mes": 849,
+        "estado": "<string>",
+        "criadoEm": "2022-05-26T09:37:40.609Z",
+        "modificadoEm": "1955-06-04T13:33:11.222Z",
+        "endDate": "1989-04-14T03:49:18.441Z",
+        "criadoPor": 9661,
+        "modificadoPor": 9443
+      }
+order: 1000

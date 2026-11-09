@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Entidades: listar'
+description: 'Níveis da organização: Conferência Geral, Divisão, União, Associação, Missão'
+url: '{{baseUrl}}/v1/organizacao/entidades?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: paiEntidadeId
+  value: ''
+  disabled: true
+- key: tipo
+  value: UNIAO
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Entidades- listar.resources/examples
+order: 25000

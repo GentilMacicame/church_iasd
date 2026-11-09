@@ -1,0 +1,46 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/classes-trimestre/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "classeId": 7851,
+        "trimestreId": 761,
+        "professorMembroId": 3032,
+        "auxiliarMembroId": 8047,
+        "secretarioMembroId": 4421,
+        "alvoMembros": 6576,
+        "alvoEstudoDiario": "-77149331357.00892696373",
+        "alvoFiliais": 3289,
+        "alvoOfertaSabado": "650.00",
+        "alvoBaptismos": 7932,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 5000

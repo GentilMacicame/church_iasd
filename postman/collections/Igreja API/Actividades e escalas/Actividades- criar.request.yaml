@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Actividades: criar'
+description: Actividades e eventos dos departamentos
+url: '{{baseUrl}}/v1/actividades/actividades'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "departamentoIgrejaId": 1,
+      "nome": "texto",
+      "dataInicio": "2026-11-14T09:00:00+02:00"
+    }
+settings: {}
+examples: ./.resources/Actividades- criar.resources/examples
+order: 2000

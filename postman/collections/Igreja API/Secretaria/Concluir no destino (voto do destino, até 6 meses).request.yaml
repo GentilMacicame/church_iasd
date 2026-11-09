@@ -1,0 +1,23 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/secretaria/transferencias/:id/concluir'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "votoId": 1,
+      "data": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Concluir no destino (voto do destino, até 6 meses).resources/examples
+order: 69000

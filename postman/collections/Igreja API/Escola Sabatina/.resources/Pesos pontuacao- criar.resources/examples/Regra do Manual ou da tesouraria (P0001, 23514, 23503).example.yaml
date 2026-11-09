@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/pesos-pontuacao"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "trimestreId": 9103,
+        "pesoPresenca": "14839124885.7",
+        "pesoEstudo": "5282.9938676007",
+        "pesoOfertas": "-527403806.46264",
+        "pesoVisitantes": "91279589.31935654885",
+        "limiteOfertas": "23",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 422
+  statusText: Unprocessable Entity (WebDAV) (RFC 4918)
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 7000

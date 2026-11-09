@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/votos"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "reuniaoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numero": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "assunto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "texto": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "leitura": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "aFavor": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "contra": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "abstencoes": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

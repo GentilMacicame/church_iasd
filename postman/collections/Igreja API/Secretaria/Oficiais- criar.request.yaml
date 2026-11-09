@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Oficiais: criar'
+description: 'Eleições e mandatos: quem ocupou que cargo e quando'
+url: '{{baseUrl}}/v1/secretaria/oficiais'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "membroId": 1,
+      "cargoId": 1,
+      "igrejaId": {{igrejaId}},
+      "dataInicio": "2026-11-14"
+    }
+settings: {}
+examples: ./.resources/Oficiais- criar.resources/examples
+order: 51000

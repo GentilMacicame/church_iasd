@@ -1,0 +1,43 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/movimentos-membro/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6339,
+        "membroId": 3824,
+        "igrejaId": 122,
+        "tipo": "<string>",
+        "data": "2012-03-25",
+        "votoId": 4209,
+        "transferenciaId": 837,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "1970-12-21T12:04:09.892Z",
+        "modificadoEm": "1992-03-24T11:50:15.232Z",
+        "endDate": "1991-07-23T01:10:40.303Z",
+        "criadoPor": 6572,
+        "modificadoPor": 4223
+      }
+order: 1000

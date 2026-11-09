@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/contagens?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&contaId=301&contador1MembroId=301&contador2MembroId=301&conferidoPorUsuarioId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  queryParams:
+    igrejaId: "301"
+    limite: "50"
+    depois: string
+    ordem: string
+    incluirTerminados: "false"
+    contaId: "301"
+    contador1MembroId: "301"
+    contador2MembroId: "301"
+    conferidoPorUsuarioId: "301"
+    estado: <string>
+    desde: 1986-03-12
+    ate: 1986-03-12
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 5000

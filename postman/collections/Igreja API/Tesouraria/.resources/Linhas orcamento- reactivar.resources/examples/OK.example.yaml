@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/linhas-orcamento/:id/reactivar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 179,
+        "orcamentoId": 6671,
+        "categoriaId": 4272,
+        "valorPrevisto": "650.00",
+        "estado": "<string>",
+        "criadoEm": "1975-12-28T09:13:23.687Z",
+        "modificadoEm": "2025-07-07T04:46:40.103Z",
+        "endDate": "2025-04-18T05:40:19.275Z",
+        "criadoPor": 4011,
+        "modificadoPor": 792
+      }
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Mpesa: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/mpesa/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Mpesa- terminar.resources/examples
+order: 20000

@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Relatório: Relatorio associacao'
+description: Lido da vista escola_sabatina.vw_relatorio_associacao.
+url: '{{baseUrl}}/v1/escola-sabatina/relatorio-associacao?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Relatorio associacao.resources/examples
+order: 35000

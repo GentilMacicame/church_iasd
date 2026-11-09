@@ -1,0 +1,32 @@
+$kind: http-request
+name: 'Auditoria: listar'
+description: Histórico de alterações (só os campos que mudaram); particionado por mês
+url: '{{baseUrl}}/v1/nucleo/auditoria?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: usuarioId
+  value: ''
+  disabled: true
+- key: estado
+  value: ACTIVO
+  disabled: true
+settings: {}
+examples: ./.resources/Auditoria- listar.resources/examples
+order: 1000

@@ -1,0 +1,41 @@
+$kind: http-request
+name: 'Calendario ofertas: listar'
+description: Calendário de ofertas especiais definido pela Divisão/União/Associação
+url: '{{baseUrl}}/v1/tesouraria/calendario-ofertas?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: entidadeId
+  value: ''
+  disabled: true
+- key: fundoId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Calendario ofertas- listar.resources/examples
+order: 7000

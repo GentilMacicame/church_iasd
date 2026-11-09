@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Matriculas: listar'
+description: Inscrição nas classes (histórico); membros e não membros
+url: '{{baseUrl}}/v1/escola-sabatina/matriculas?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: classeId
+  value: ''
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Matriculas- listar.resources/examples
+order: 16000

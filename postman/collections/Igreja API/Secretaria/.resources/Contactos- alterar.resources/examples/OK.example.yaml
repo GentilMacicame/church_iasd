@@ -1,0 +1,49 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/secretaria/contactos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "membroId": 6395,
+        "igrejaId": 3955,
+        "tipo": "<string>",
+        "valor": "string",
+        "principal": false,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 1842,
+        "membroId": 8800,
+        "igrejaId": 7227,
+        "tipo": "<string>",
+        "valor": "string",
+        "principal": false,
+        "estado": "<string>",
+        "criadoEm": "1967-10-21T07:24:50.122Z",
+        "modificadoEm": "2022-01-31T14:26:45.610Z",
+        "endDate": "1981-03-25T04:42:50.332Z",
+        "criadoPor": 486,
+        "modificadoPor": 6835
+      }
+order: 1000

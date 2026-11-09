@@ -1,0 +1,41 @@
+$kind: http-request
+name: 'Saldos diarios conta: listar'
+description: Saldo pré-calculado por conta e dia (mantido por triggers; não editar)
+url: '{{baseUrl}}/v1/tesouraria/saldos-diarios-conta?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: contaId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+- key: desde
+  value: 1986-03-12
+  disabled: true
+- key: ate
+  value: 1986-03-12
+  disabled: true
+settings: {}
+examples: ./.resources/Saldos diarios conta- listar.resources/examples
+order: 114000

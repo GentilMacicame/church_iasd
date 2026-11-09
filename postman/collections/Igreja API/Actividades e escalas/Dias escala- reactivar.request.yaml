@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Dias escala: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/actividades/dias-escala/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Dias escala- reactivar.resources/examples
+order: 11000

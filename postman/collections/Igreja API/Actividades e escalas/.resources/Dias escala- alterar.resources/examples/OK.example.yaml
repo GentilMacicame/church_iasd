@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/actividades/dias-escala/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "escalaPlanoId": 636,
+        "data": "2015-05-21",
+        "evento": "string",
+        "grupoCoral": "string",
+        "departamentoIgrejaId": 807,
+        "observacoes": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7872,
+        "escalaPlanoId": 461,
+        "data": "1952-07-29",
+        "evento": "string",
+        "grupoCoral": "string",
+        "departamentoIgrejaId": 2191,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "2001-03-17T19:22:55.897Z",
+        "modificadoEm": "1961-02-13T05:51:49.069Z",
+        "endDate": "1990-07-23T20:37:08.786Z",
+        "criadoPor": 2155,
+        "modificadoPor": 8298
+      }
+order: 1000

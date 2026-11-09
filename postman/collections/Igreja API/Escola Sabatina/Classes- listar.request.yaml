@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Classes: listar'
+description: Classes / unidades de acção, por divisão da Escola Sabatina
+url: '{{baseUrl}}/v1/escola-sabatina/classes?igrejaId={{igrejaId}}&limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: divisao
+  value: JOVENS
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Classes- listar.resources/examples
+order: 1000

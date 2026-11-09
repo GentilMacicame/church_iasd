@@ -1,0 +1,24 @@
+$kind: http-request
+name: 'Orcamentos: criar'
+description: Orçamento anual da igreja local (aprovado pela igreja)
+url: '{{baseUrl}}/v1/tesouraria/orcamentos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "ano": 1
+    }
+settings: {}
+examples: ./.resources/Orcamentos- criar.resources/examples
+order: 90000

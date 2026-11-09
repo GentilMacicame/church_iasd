@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/contagens/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2696,
+        "igrejaId": 2881,
+        "contaId": 5409,
+        "data": "1999-10-01",
+        "ocasiao": "string",
+        "contador1MembroId": 8474,
+        "contador2MembroId": 4239,
+        "totalContado": "650.00",
+        "conferidoPorUsuarioId": 1043,
+        "estado": "<string>",
+        "criadoEm": "1999-02-17T06:20:23.119Z",
+        "modificadoEm": "1974-08-25T19:03:28.149Z",
+        "endDate": "1995-09-27T03:53:16.247Z",
+        "criadoPor": 9071,
+        "modificadoPor": 1055
+      }
+order: 1000

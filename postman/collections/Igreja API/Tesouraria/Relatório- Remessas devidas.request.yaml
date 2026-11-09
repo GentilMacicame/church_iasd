@@ -1,0 +1,24 @@
+$kind: http-request
+name: 'Relatório: Remessas devidas'
+description: Lido da vista tesouraria.vw_remessa_devida.
+url: '{{baseUrl}}/v1/tesouraria/remessas-devidas?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: ano
+  value: ''
+  disabled: true
+- key: mes
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Remessas devidas.resources/examples
+order: 106000

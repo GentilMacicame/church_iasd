@@ -1,0 +1,3 @@
+$kind: collection
+description: Fila de SMS, WhatsApp e e-mail (parte do núcleo).
+order: 9000

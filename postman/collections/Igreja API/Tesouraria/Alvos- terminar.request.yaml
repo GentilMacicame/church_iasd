@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Alvos: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/alvos/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Alvos- terminar.resources/examples
+order: 6000

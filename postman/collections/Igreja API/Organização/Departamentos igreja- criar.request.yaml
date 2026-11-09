@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Departamentos igreja: criar'
+description: Departamento a funcionar numa igreja
+url: '{{baseUrl}}/v1/organizacao/departamentos-igreja'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "departamentoId": 1
+    }
+settings: {}
+examples: ./.resources/Departamentos igreja- criar.resources/examples
+order: 10000

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Visitantes: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/escola-sabatina/visitantes/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Visitantes- terminar.resources/examples
+order: 68000

@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/orcamentos/:id/terminar"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2095,
+        "igrejaId": 2549,
+        "departamentoIgrejaId": 4126,
+        "ano": 9378,
+        "votoId": 2152,
+        "observacoes": "string",
+        "estado": "<string>",
+        "criadoEm": "1956-08-24T06:54:09.754Z",
+        "modificadoEm": "1972-04-24T06:23:39.920Z",
+        "endDate": "2019-10-13T02:10:20.971Z",
+        "criadoPor": 9404,
+        "modificadoPor": 7423
+      }
+order: 1000

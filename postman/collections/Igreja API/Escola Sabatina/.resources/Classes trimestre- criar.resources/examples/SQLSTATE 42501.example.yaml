@@ -1,0 +1,63 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/classes-trimestre"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "classeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "trimestreId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "professorMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "auxiliarMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "secretarioMembroId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoMembros": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoEstudoDiario": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoFiliais": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoOfertaSabado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "alvoBaptismos": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

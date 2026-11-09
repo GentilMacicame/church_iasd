@@ -1,0 +1,29 @@
+$kind: http-request
+name: 'Permissoes: listar'
+description: 'Permissões elementares (ex.: transacao.aprovar)'
+url: '{{baseUrl}}/v1/nucleo/permissoes?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Permissoes- listar.resources/examples
+order: 15000

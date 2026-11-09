@@ -1,0 +1,32 @@
+$kind: http-request
+name: 'Mpesa callbacks: listar'
+description: Tudo o que a API M-Pesa envia, em bruto (callbacks repetidos são ignorados)
+url: '{{baseUrl}}/v1/tesouraria/mpesa-callbacks?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: pagamentoMpesaId
+  value: ''
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Mpesa callbacks- listar.resources/examples
+order: 9000

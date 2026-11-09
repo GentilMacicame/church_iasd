@@ -1,0 +1,14 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/v1/tesouraria/fechos/:id/reabrir'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Reabrir o mês.resources/examples
+order: 62000

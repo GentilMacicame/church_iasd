@@ -1,0 +1,29 @@
+$kind: http-request
+name: 'Perfis: listar'
+description: Perfis de acesso (Admin, Secretário, Tesoureiro, ...)
+url: '{{baseUrl}}/v1/nucleo/perfis?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Perfis- listar.resources/examples
+order: 3000

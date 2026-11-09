@@ -1,0 +1,38 @@
+$kind: http-request
+name: 'Contactos: listar'
+description: Telefones, e-mails e WhatsApp de membros ou igrejas
+url: '{{baseUrl}}/v1/secretaria/contactos?limite=50&igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: tipo
+  value: WHATSAPP
+  disabled: true
+- key: estado
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Contactos- listar.resources/examples
+order: 15000

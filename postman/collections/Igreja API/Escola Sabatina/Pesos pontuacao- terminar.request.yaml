@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Pesos pontuacao: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/escola-sabatina/pesos-pontuacao/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Pesos pontuacao- terminar.resources/examples
+order: 28000

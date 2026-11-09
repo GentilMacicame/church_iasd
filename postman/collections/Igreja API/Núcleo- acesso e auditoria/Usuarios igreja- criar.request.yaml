@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Usuarios igreja: criar'
+description: Perfil de cada utilizador em cada igreja (base da segurança por igreja)
+url: '{{baseUrl}}/v1/nucleo/usuarios-igreja'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "usuarioId": 1,
+      "igrejaId": {{igrejaId}},
+      "perfilId": 1
+    }
+settings: {}
+examples: ./.resources/Usuarios igreja- criar.resources/examples
+order: 30000

@@ -1,0 +1,111 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id/visitantes"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "id": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "relatorioId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "nome": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "telefone": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "convidadoPorMembroId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "tornouSeMembroId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "anonimizadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "estado": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "endDate": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          }
+        },
+        {
+          "id": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "relatorioId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "nome": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "telefone": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "convidadoPorMembroId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "tornouSeMembroId": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "anonimizadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "estado": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoEm": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "endDate": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "criadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          },
+          "modificadoPor": {
+            "value": "<Error: Too many levels of nesting to fake this schema>"
+          }
+        }
+      ]
+order: 1000

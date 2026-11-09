@@ -1,0 +1,30 @@
+$kind: http-request
+name: Tesoureiro lança as ofertas da classe (uma linha por fundo) e liga-as ao relatório
+description: ''
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id/ofertas'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {
+      "contaId": 1,
+      "missoes": "650.00",
+      "decimoTerceiro": "650.00",
+      "despesas": "650.00"
+    }
+settings: {}
+examples: ./.resources/Tesoureiro lança as ofertas da classe (uma linha por fundo) e l.resources/examples
+order: 42000

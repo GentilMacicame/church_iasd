@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Visitantes: criar'
+description: Visitantes com contacto para seguimento
+url: '{{baseUrl}}/v1/escola-sabatina/visitantes'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "relatorioId": 1,
+      "nome": "texto"
+    }
+settings: {}
+examples: ./.resources/Visitantes- criar.resources/examples
+order: 63000

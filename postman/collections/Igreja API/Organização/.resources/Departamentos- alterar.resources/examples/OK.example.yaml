@@ -1,0 +1,43 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/departamentos/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "nome": "string",
+        "descricao": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 3789,
+        "nome": "string",
+        "descricao": "string",
+        "estado": "<string>",
+        "criadoEm": "2026-06-08T02:31:05.677Z",
+        "modificadoEm": "1985-10-06T00:08:48.461Z",
+        "endDate": "1995-11-17T00:10:04.024Z",
+        "criadoPor": 2011,
+        "modificadoPor": 1004
+      }
+order: 1000

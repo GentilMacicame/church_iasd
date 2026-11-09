@@ -1,0 +1,52 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/transacoes/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "tipo": "<string>",
+        "metodo": "<string>",
+        "valorTotal": "650.00",
+        "contaId": 6747,
+        "destinoContaId": 2005,
+        "membroId": 5988,
+        "familiaId": 927,
+        "anonimo": true,
+        "contagemId": 8406,
+        "despesaId": 9158,
+        "estornoTransacaoId": 436,
+        "beneficiario": "string",
+        "descricao": "string",
+        "referencia": "string",
+        "dataHora": "2000-09-02T04:43:02.109Z",
+        "aprovadoPorUsuarioId": 4581,
+        "estado": "<string>"
+      }
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 4000

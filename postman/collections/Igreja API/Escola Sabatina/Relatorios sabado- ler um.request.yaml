@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Relatorios sabado: ler um'
+description: ''
+url: '{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Relatorios sabado- ler um.resources/examples
+order: 39000

@@ -1,0 +1,76 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/organizacao/igrejas"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "entidadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nome": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "distritoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipo": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "maeIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "codigoAcms": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "dataOrganizacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "endereco": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "latitude": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "longitude": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 742,
+        "entidadeId": 5855,
+        "distritoId": 8599,
+        "tipo": "<string>",
+        "maeIgrejaId": 4707,
+        "nome": "string",
+        "codigoAcms": "string",
+        "dataOrganizacao": "1960-06-17",
+        "endereco": "string",
+        "latitude": "-0854267.3453",
+        "longitude": "024100833",
+        "estado": "<string>",
+        "criadoEm": "1969-03-06T22:55:40.917Z",
+        "modificadoEm": "1991-04-16T07:25:27.347Z",
+        "endDate": "1996-06-03T09:36:10.397Z",
+        "criadoPor": 4046,
+        "modificadoPor": 9799
+      }
+order: 1000

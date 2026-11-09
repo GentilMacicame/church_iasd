@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/nucleo/auditoria/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 8271,
+        "usuarioId": 147,
+        "tabela": "string",
+        "registoId": 6719,
+        "accao": "string",
+        "dadosAntes": {},
+        "dadosDepois": {},
+        "estado": "<string>",
+        "criadoEm": "1952-02-18T07:55:09.440Z",
+        "modificadoEm": "2026-10-13T20:16:33.503Z",
+        "endDate": "1974-10-07T02:40:51.966Z",
+        "criadoPor": 9169,
+        "modificadoPor": 396
+      }
+order: 1000

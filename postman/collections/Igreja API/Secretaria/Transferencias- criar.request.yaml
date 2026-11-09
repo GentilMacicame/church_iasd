@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Transferencias: criar'
+description: Cartas de transferência (válidas 6 meses; o membro só sai quando o destino aceita)
+url: '{{baseUrl}}/v1/secretaria/transferencias'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "membroId": 1,
+      "origemIgrejaId": 1
+    }
+settings: {}
+examples: ./.resources/Transferencias- criar.resources/examples
+order: 66000

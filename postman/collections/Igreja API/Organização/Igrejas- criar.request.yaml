@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Igrejas: criar'
+description: Igrejas organizadas, grupos organizados e grupos/filiais
+url: '{{baseUrl}}/v1/organizacao/igrejas'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "entidadeId": 1,
+      "nome": "texto"
+    }
+settings: {}
+examples: ./.resources/Igrejas- criar.resources/examples
+order: 33000

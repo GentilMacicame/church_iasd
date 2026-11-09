@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Contas: alterar'
+description: Só os campos enviados mudam.
+url: '{{baseUrl}}/v1/tesouraria/contas/:id'
+method: PATCH
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+body:
+  type: json
+  content: |-
+    {}
+settings: {}
+examples: ./.resources/Contas- alterar.resources/examples
+order: 29000

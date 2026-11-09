@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Consentimentos: criar'
+description: 'Consentimentos para tratamento de dados (menores: dado pelo encarregado)'
+url: '{{baseUrl}}/v1/secretaria/consentimentos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "membroId": 1,
+      "tipo": "DADOS_PESSOAIS",
+      "concedido": true
+    }
+settings: {}
+examples: ./.resources/Consentimentos- criar.resources/examples
+order: 10000

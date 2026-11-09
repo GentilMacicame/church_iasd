@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Reunioes: criar'
+description: 'Reuniões: junta directiva, reunião regular, assembleia administrativa, comissão de nomeações, conselho da ES'
+url: '{{baseUrl}}/v1/secretaria/reunioes'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "igrejaId": {{igrejaId}},
+      "tipo": "JUNTA_DIRECTIVA",
+      "data": "2026-11-14T09:00:00+02:00"
+    }
+settings: {}
+examples: ./.resources/Reunioes- criar.resources/examples
+order: 58000

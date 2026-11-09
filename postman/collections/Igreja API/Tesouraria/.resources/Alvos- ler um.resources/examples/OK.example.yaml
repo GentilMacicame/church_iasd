@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/alvos/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 7110,
+        "igrejaId": 5083,
+        "fundoId": 3088,
+        "descricao": "string",
+        "valorAlvo": "650.00",
+        "dataInicio": "1970-12-22",
+        "dataFim": "2016-02-23",
+        "estado": "<string>",
+        "criadoEm": "2021-07-20T21:15:28.536Z",
+        "modificadoEm": "2015-10-13T23:53:25.077Z",
+        "endDate": "1952-04-02T07:28:35.473Z",
+        "criadoPor": 7577,
+        "modificadoPor": 7820
+      }
+order: 1000

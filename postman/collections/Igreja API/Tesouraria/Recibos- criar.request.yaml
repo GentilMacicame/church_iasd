@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Recibos: criar'
+description: Recibos numerados por igreja e ano
+url: '{{baseUrl}}/v1/tesouraria/recibos'
+method: POST
+headers:
+- key: Idempotency-Key
+  value: '{{$guid}}'
+  disabled: false
+  description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "transacaoId": 1,
+      "igrejaId": {{igrejaId}},
+      "ano": 1,
+      "numero": 1
+    }
+settings: {}
+examples: ./.resources/Recibos- criar.resources/examples
+order: 99000

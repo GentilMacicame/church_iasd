@@ -1,0 +1,44 @@
+$kind: http-request
+name: 'Transferencias: listar'
+description: Cartas de transferência (válidas 6 meses; o membro só sai quando o destino aceita)
+url: '{{baseUrl}}/v1/secretaria/transferencias?limite=50'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: limite
+  value: '50'
+  disabled: false
+- key: depois
+  value: ''
+  disabled: true
+  description: Cursor devolvido em `proximo`
+- key: ordem
+  value: ''
+  disabled: true
+  description: 'Campo de ordenação; "-" inverte (ex.: -dataHora)'
+- key: incluirTerminados
+  value: 'true'
+  disabled: true
+- key: membroId
+  value: ''
+  disabled: true
+- key: origemIgrejaId
+  value: ''
+  disabled: true
+- key: destinoIgrejaId
+  value: ''
+  disabled: true
+- key: origemVotoId
+  value: ''
+  disabled: true
+- key: destinoVotoId
+  value: ''
+  disabled: true
+- key: estado
+  value: CARTA_EMITIDA
+  disabled: true
+settings: {}
+examples: ./.resources/Transferencias- listar.resources/examples
+order: 65000

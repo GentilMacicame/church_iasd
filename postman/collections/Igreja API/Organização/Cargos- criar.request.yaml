@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Cargos: criar'
+description: Cargos da igreja (Ancião, Secretário, Tesoureiro, Director da ES, ...)
+url: '{{baseUrl}}/v1/organizacao/cargos'
+method: POST
+headers:
+- key: Content-Type
+  value: application/json
+- key: Accept
+  value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "nome": "texto"
+    }
+settings: {}
+examples: ./.resources/Cargos- criar.resources/examples
+order: 2000

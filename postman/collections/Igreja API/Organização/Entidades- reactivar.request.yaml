@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Entidades: reactivar'
+description: Limpa endDate.
+url: '{{baseUrl}}/v1/organizacao/entidades/:id/reactivar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Entidades- reactivar.resources/examples
+order: 30000

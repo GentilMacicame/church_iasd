@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado/:id"
+  method: PATCH
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: json
+    content: |-
+      {
+        "classeTrimestreId": 5316,
+        "sabadoId": 6595,
+        "membrosMatriculados": 3236,
+        "membrosPresentes": 6730,
+        "estudoDiario": 7322,
+        "visitantes": 6323,
+        "filiais": 9726,
+        "oferta": "650.00",
+        "oferta13Sabado": "650.00",
+        "ofertaDespesas": "650.00",
+        "transacaoId": 9694,
+        "observacoes": "string",
+        "estado": "<string>"
+      }
+response:
+  statusCode: 422
+  statusText: Unprocessable Entity (WebDAV) (RFC 4918)
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 7000

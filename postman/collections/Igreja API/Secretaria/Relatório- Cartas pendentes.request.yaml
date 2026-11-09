@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Relatório: Cartas pendentes'
+description: Lido da vista secretaria.vw_cartas_pendentes.
+url: '{{baseUrl}}/v1/secretaria/cartas-pendentes?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Cartas pendentes.resources/examples
+order: 7000

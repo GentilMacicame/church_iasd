@@ -1,0 +1,73 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/tesouraria/despesas"
+  method: POST
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Idempotency-Key
+      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      disabled: false
+      description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
+    - key: Accept
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "igrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "categoriaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "fundoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "descricao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "valorSolicitado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "solicitadoPorUsuarioId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "departamentoIgrejaId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "actividadeId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "fornecedor": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "valorAprovado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "votoId": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "motivoRejeicao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "estado": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        }
+      }
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "erro": "erro_interno",
+        "mensagem": "string",
+        "pedidoId": "string",
+        "campo": "string"
+      }
+order: 3000

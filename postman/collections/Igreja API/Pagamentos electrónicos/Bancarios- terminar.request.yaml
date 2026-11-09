@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Bancarios: terminar'
+description: Preenche endDate; nada se apaga.
+url: '{{baseUrl}}/v1/tesouraria/bancarios/:id/terminar'
+method: POST
+headers:
+- key: Accept
+  value: application/json
+pathVariables:
+- key: id
+  value: '1'
+  disabled: false
+settings: {}
+examples: ./.resources/Bancarios- terminar.resources/examples
+order: 6000

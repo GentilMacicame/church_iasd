@@ -1,0 +1,24 @@
+$kind: http-request
+name: 'Relatório: Extracto anual'
+description: Lido da vista tesouraria.vw_extracto_anual.
+url: '{{baseUrl}}/v1/tesouraria/extracto-anual?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: ano
+  value: ''
+  disabled: true
+- key: mes
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Extracto anual.resources/examples
+order: 48000

@@ -1,0 +1,42 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/v1/escola-sabatina/pesos-pontuacao/:id"
+  method: GET
+  headers:
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+    - key: Accept
+      value: application/json
+  pathVariables:
+    - key: id
+      value: "2712"
+      disabled: false
+      description: "(Required) "
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 6548,
+        "trimestreId": 4270,
+        "pesoPresenca": "9.128683",
+        "pesoEstudo": "-78605194201",
+        "pesoOfertas": "-8.561226771",
+        "pesoVisitantes": "4.573031",
+        "limiteOfertas": "475967",
+        "estado": "<string>",
+        "criadoEm": "2017-04-04T12:31:17.722Z",
+        "modificadoEm": "1970-06-17T21:41:35.434Z",
+        "endDate": "1950-12-03T03:40:27.619Z",
+        "criadoPor": 5044,
+        "modificadoPor": 3054
+      }
+order: 1000

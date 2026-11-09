@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Relatório: Painel'
+description: Lido da vista escola_sabatina.vw_painel.
+url: '{{baseUrl}}/v1/escola-sabatina/painel?igrejaId={{igrejaId}}'
+method: GET
+headers:
+- key: Accept
+  value: application/json
+queryParams:
+- key: igrejaId
+  value: '{{igrejaId}}'
+  disabled: false
+- key: formato
+  value: json
+  disabled: true
+- key: trimestreId
+  value: ''
+  disabled: true
+settings: {}
+examples: ./.resources/Relatório- Painel.resources/examples
+order: 22000
