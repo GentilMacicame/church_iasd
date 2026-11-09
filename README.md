@@ -7,8 +7,8 @@ Secretaria, Escola Sabatina, tesouraria, actividades, M-Pesa e mensagens para ig
 ```bash
 docker compose up -d db
 export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres
-scripts/db-reset.sh     # cria a base "igreja" (migrações V1–V14)
-scripts/db-test.sh      # testes da base de dados (deve dar 4× ok)
+scripts/db-reset.sh     # cria a base "igreja" (migrações V1–V15)
+scripts/db-test.sh      # testes da base de dados (deve dar 5× ok)
 ```
 
 Primeiro utilizador da API (substituir a senha):
@@ -32,6 +32,6 @@ ALTER ROLE api_igreja SET search_path = nucleo, organizacao, secretaria, activid
 Abrir o Claude Code na raiz do repositório; ele lê o `CLAUDE.md` automaticamente. Comandos do projecto:
 `/nova-tabela`, `/novo-endpoint`, `/rever`. Primeiro pedido sugerido:
 
-> Lê o CLAUDE.md e a especificação. Implementa a Fase 0: monorepo com api/ (NestJS) e web/ (React + Vite),
+> Lê o CLAUDE.md e a especificação. Implementa a Fase 0: monorepo com api/ (Jakarta EE 10, Java 21) e web/ (React + Vite),
 > CI, unidade de trabalho com set_config, autenticação completa, GET /v1/eu, tradução de erros,
 > paginação, idempotência e testes com Testcontainers para os 13 perfis.

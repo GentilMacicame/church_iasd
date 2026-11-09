@@ -12,9 +12,9 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 59 tabelas, 8 schemas, migrações V1–V14 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (282 caminhos, 396 operações) |
-| API (NestJS) | **Por fazer.** Começar pela Fase 0 (ver "Plano") |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 59 tabelas, 8 schemas, migrações V1–V15 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (289 caminhos, 403 operações) |
+| API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (projecto em `../church_iasd`, a mover para `api/`): auth, `/v1/eu`, CRUD genérico das 59 tabelas, as 28 vistas como relatórios, acções de negócio, tarefas diárias de manutenção. Por fazer: M-Pesa e PDF (Fase 4), testes HTTP ponta-a-ponta |
 | Frontend (React) | **Por fazer** |
 
 Especificação completa: `docs/especificacao.md` (Markdown, gerado do Word em
@@ -31,12 +31,12 @@ docker-compose.yml        PostgreSQL 16 local
 scripts/db-reset.sh       recria a base a partir das migrações
 scripts/db-test.sh        recria a base de testes e compara os testes SQL com o esperado
 database/
-  migrations/             V1__base.sql … V14__sessoes_e_api.sql  (Flyway: V<n>__<nome>.sql)
+  migrations/             V1__base.sql … V15__perfis_proprios_e_manutencao.sql  (Flyway: V<n>__<nome>.sql)
   tests/                  00–03 testes SQL; esperado/*.out = resultado de referência; carga_*.sql
   gerador/                defs.py (fonte do esquema) + gen.py, seguranca_gen.py, gen_openapi.py
 api/
   openapi.yaml            contrato da API (fonte de verdade para API e frontend)
-  (NestJS a criar aqui)
+  pom.xml, src/          API Jakarta EE (Maven + Open Liberty) — hoje em ../church_iasd, a mover para aqui
 web/                      (React + Vite a criar aqui)
 docs/                     especificação, modelo de dados
 .claude/commands/         comandos do projecto (/nova-tabela, /novo-endpoint, /rever)
@@ -47,8 +47,8 @@ docs/                     especificação, modelo de dados
 ```bash
 docker compose up -d db                       # PostgreSQL 16 em localhost:5432 (postgres/postgres)
 export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres
-scripts/db-reset.sh                           # base "igreja" com V1–V14
-scripts/db-test.sh                            # base "igreja_teste" + testes 00–03 (tem de dar 4× ok)
+scripts/db-reset.sh                           # base "igreja" com V1–V15
+scripts/db-test.sh                            # base "igreja_teste" + testes 00–04 (tem de dar 5× ok)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
 cd database/gerador && python3 gen.py         # regenera V1–V13 em gerador/out/ (não toca em migrations/)
@@ -63,7 +63,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
 
 1. **A base de dados decide.** Regras de negócio e permissões estão no PostgreSQL (triggers, RLS,
    funções). A API e o frontend **não** as reimplementam nem tentam contorná-las. A API pode
-   validar formato (Zod/class-validator) para dar mensagens melhores, nunca regras de negócio.
+   validar formato (Bean Validation) para dar mensagens melhores, nunca regras de negócio.
 2. **Nada se apaga.** Não há `DELETE` nem `TRUNCATE` (triggers bloqueiam, sem GRANT). "Apagar" é
    terminar: `UPDATE ... SET <pfx>_end_date = now()` (endpoint `POST .../{id}/terminar`).
    Dinheiro confirmado nunca se altera: corrige-se com estorno.
@@ -76,10 +76,10 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    -- ... trabalho ...
    COMMIT;
    ```
-   Sem isto a base não devolve linhas e recusa escritas. Implementar **uma vez** (interceptor /
-   unidade de trabalho), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V15__...sql`, `V16__...`.
-6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (Kysely ou `$1`).
+   Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
+   `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V16__...sql`, `V17__...`.
+6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
 ## Convenções da base de dados
@@ -153,9 +153,17 @@ No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função 
 
 ## Convenções da API
 
-- Stack: **Node 22, TypeScript estrito, NestJS, `pg` + Kysely** (sem ORM com migrações próprias:
-  as migrações são SQL/Flyway), **pg-boss** para tarefas, Argon2id, Pino para logs, Jest + Supertest +
-  Testcontainers (PostgreSQL real) para testes.
+- Stack: **Java 21, Jakarta EE 10** (o nome actual do Java EE: JAX-RS, CDI, JSON-B, Bean Validation)
+  + MicroProfile Config, servidor **Open Liberty**, Maven (`./mvnw`). Acesso à base com **JDBC puro**
+  (driver PostgreSQL, datasource `jdbc/igreja`) — sem JPA/ORM nem migrações próprias: as migrações são
+  SQL/Flyway. Argon2id (password4j), JWT HS256 (java-jwt), `java.util.logging`, JUnit 5 + Testcontainers
+  (PostgreSQL real) para testes. Tarefas agendadas: Jakarta Concurrency (`ManagedScheduledExecutorService`).
+- Organização (`mz.org.iasd.igreja`): `controllers/<modulo>/*Controller` (JAX-RS, `@RequestScoped
+  @Transaccional`, caminhos em `Rotas.java`) → `services/<modulo>/*Service` (vários passos) →
+  `repositories/<modulo>/*Repository` (JDBC, recebe a `Connection` de `UnidadeDeTrabalho.ligacao()`).
+  `models/<modulo>/`: um `record` por tabela, igual ao schema do contrato (`@TabelaBd`/`@ColunaBd`),
+  **gerado** por `ferramentas/gen_catalogo.py` a partir de `defs.py` — não editar à mão. Nunca abrir ligações à mão.
+- POST que cria dinheiro: `@Idempotente` e devolver `Response`. Endpoints sem token: `@Publico`.
 - Caminhos: `/v1/<modulo-com-hifen>/<recurso-plural>` (`/v1/escola-sabatina/relatorios-sabado`).
 - Campos JSON em camelCase **sem prefixo**: `mem_data_nascimento` → `dataNascimento`,
   `mem_igr_id` → `igrejaId`, `ect_professor_mem_id` → `professorMembroId`. O mapeamento
@@ -215,7 +223,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 4× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 5× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

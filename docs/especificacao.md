@@ -1072,8 +1072,8 @@ Os testes da API correm sempre contra uma base de dados PostgreSQL real, criada 
 | **Nível**     | **Âmbito**                                                   | **Ferramenta**                  | **Frequência**       |
 |---------------|--------------------------------------------------------------|---------------------------------|----------------------|
 | Base de dados | Regras do Manual, tesouraria, permissões por perfil, sessões | Testes SQL (pasta testes/)      | Cada migração        |
-| Permissões    | Cada endpoint com um perfil autorizado e um não autorizado   | Jest, Supertest, Testcontainers | Cada alteração       |
-| Processos     | Os 13 processos do capítulo 4, de ponta a ponta              | Jest, Supertest                 | Cada alteração       |
+| Permissões    | Cada endpoint com um perfil autorizado e um não autorizado   | JUnit 5, Testcontainers         | Cada alteração       |
+| Processos     | Os 13 processos do capítulo 4, de ponta a ponta              | JUnit 5, REST Assured           | Cada alteração       |
 | Interface     | Componentes e processos P-05, P-06, P-07 no navegador        | Vitest, Playwright              | Cada alteração       |
 | Carga         | 50 utilizadores a consultar e 4 a lançar                     | k6                              | Antes de cada versão |
 | Aceitação     | Processos validados por utilizadores reais da igreja         | Sessões guiadas                 | Fim de cada fase     |
