@@ -10,25 +10,25 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 8334,
-        "membroId": 5646,
+        "igrejaId": 936,
+        "membroId": 6545,
         "canal": "<string>",
         "destino": "string",
         "assunto": "string",
         "mensagem": "string",
-        "agendadaPara": "1980-08-04T18:17:55.793Z",
-        "enviadaEm": "1999-02-17T03:24:59.718Z",
-        "tentativas": 6537,
+        "agendadaPara": "1998-12-27T11:52:32.098Z",
+        "enviadaEm": "2001-09-25T14:25:09.778Z",
+        "tentativas": 4754,
         "erro": "string",
         "origemTabela": "string",
-        "origemId": 8688,
+        "origemId": 3642,
         "chave": "string",
         "estado": "<string>"
       }
@@ -41,25 +41,25 @@ response:
     type: json
     content: |-
       {
-        "id": 9170,
-        "igrejaId": 1162,
-        "membroId": 6740,
+        "id": 8927,
+        "igrejaId": 8947,
+        "membroId": 5409,
         "canal": "<string>",
         "destino": "string",
         "assunto": "string",
         "mensagem": "string",
-        "agendadaPara": "1973-04-13T21:46:41.776Z",
-        "enviadaEm": "2021-06-22T13:25:37.423Z",
-        "tentativas": 7766,
+        "agendadaPara": "1995-12-08T10:41:54.004Z",
+        "enviadaEm": "1947-06-05T14:03:23.483Z",
+        "tentativas": 3472,
         "erro": "string",
         "origemTabela": "string",
-        "origemId": 889,
+        "origemId": 7568,
         "chave": "string",
         "estado": "<string>",
-        "criadoEm": "2013-11-20T19:54:18.899Z",
-        "modificadoEm": "1993-01-23T08:00:29.743Z",
-        "endDate": "1995-03-09T08:47:39.587Z",
-        "criadoPor": 2397,
-        "modificadoPor": 2556
+        "criadoEm": "1950-08-16T21:23:02.471Z",
+        "modificadoEm": "1960-01-01T20:40:54.561Z",
+        "endDate": "2015-08-09T00:04:21.964Z",
+        "criadoPor": 6939,
+        "modificadoPor": 4200
       }
 order: 1000

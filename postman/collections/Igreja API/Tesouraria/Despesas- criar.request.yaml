@@ -17,11 +17,17 @@ body:
   content: |-
     {
       "igrejaId": {{igrejaId}},
+      "departamentoIgrejaId": null,
+      "actividadeId": null,
       "categoriaId": 1,
       "fundoId": 1,
-      "descricao": "texto",
+      "descricao": "",
+      "fornecedor": "texto",
       "valorSolicitado": "650.00",
-      "solicitadoPorUsuarioId": 1
+      "valorAprovado": "650.00",
+      "solicitadoPorUsuarioId": 1,
+      "votoId": null,
+      "motivoRejeicao": "texto"
     }
 settings: {}
 examples: ./.resources/Despesas- criar.resources/examples

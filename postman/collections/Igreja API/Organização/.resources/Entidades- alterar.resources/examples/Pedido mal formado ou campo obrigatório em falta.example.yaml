@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "paiEntidadeId": 1228,
+        "paiEntidadeId": 8213,
         "tipo": "<string>",
         "nome": "string",
         "sigla": "string",
-        "dataCriacao": "1964-06-08",
+        "dataCriacao": "1983-04-04",
         "estado": "<string>"
       }
 response:
@@ -33,7 +33,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

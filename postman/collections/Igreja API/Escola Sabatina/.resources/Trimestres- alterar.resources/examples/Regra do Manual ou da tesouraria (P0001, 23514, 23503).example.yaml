@@ -10,19 +10,19 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "ano": 4025,
-        "numero": 1946,
+        "ano": 3446,
+        "numero": 7947,
         "temaLicao": "string",
-        "dataInicio": "1950-07-06",
-        "dataFim": "1994-08-26",
-        "numSabados": 3939,
+        "dataInicio": "1953-04-16",
+        "dataFim": "2012-01-27",
+        "numSabados": 7957,
         "estado": "<string>"
       }
 response:
@@ -34,7 +34,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

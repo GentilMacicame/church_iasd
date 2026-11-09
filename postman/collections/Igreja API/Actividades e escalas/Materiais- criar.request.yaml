@@ -13,7 +13,9 @@ body:
   content: |-
     {
       "actividadeId": 1,
-      "descricao": "texto"
+      "descricao": "",
+      "quantidade": "texto",
+      "precoUnitario": "650.00"
     }
 settings: {}
 examples: ./.resources/Materiais- criar.resources/examples

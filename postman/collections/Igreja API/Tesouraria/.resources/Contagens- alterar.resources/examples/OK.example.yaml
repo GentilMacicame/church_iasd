@@ -10,21 +10,21 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 1987,
-        "contaId": 6462,
-        "data": "1999-01-30",
+        "igrejaId": 4911,
+        "contaId": 1418,
+        "data": "1979-10-27",
         "ocasiao": "string",
-        "contador1MembroId": 5432,
-        "contador2MembroId": 581,
+        "contador1MembroId": 4640,
+        "contador2MembroId": 2790,
         "totalContado": "650.00",
-        "conferidoPorUsuarioId": 6522,
+        "conferidoPorUsuarioId": 2258,
         "estado": "<string>"
       }
 response:
@@ -36,20 +36,20 @@ response:
     type: json
     content: |-
       {
-        "id": 2696,
-        "igrejaId": 2881,
-        "contaId": 5409,
-        "data": "1999-10-01",
+        "id": 7801,
+        "igrejaId": 5536,
+        "contaId": 3299,
+        "data": "1981-10-06",
         "ocasiao": "string",
-        "contador1MembroId": 8474,
-        "contador2MembroId": 4239,
+        "contador1MembroId": 7300,
+        "contador2MembroId": 6682,
         "totalContado": "650.00",
-        "conferidoPorUsuarioId": 1043,
+        "conferidoPorUsuarioId": 7590,
         "estado": "<string>",
-        "criadoEm": "1999-02-17T06:20:23.119Z",
-        "modificadoEm": "1974-08-25T19:03:28.149Z",
-        "endDate": "1995-09-27T03:53:16.247Z",
-        "criadoPor": 9071,
-        "modificadoPor": 1055
+        "criadoEm": "1990-09-05T09:08:19.494Z",
+        "modificadoEm": "1948-06-23T03:02:53.153Z",
+        "endDate": "2012-04-22T05:19:19.965Z",
+        "criadoPor": 9292,
+        "modificadoPor": 2279
       }
 order: 1000

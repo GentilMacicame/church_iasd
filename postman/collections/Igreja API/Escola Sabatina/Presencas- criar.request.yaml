@@ -14,7 +14,8 @@ body:
     {
       "relatorioId": 1,
       "membroId": 1,
-      "presente": true
+      "presente": true,
+      "estudouLicao": true
     }
 settings: {}
 examples: ./.resources/Presencas- criar.resources/examples

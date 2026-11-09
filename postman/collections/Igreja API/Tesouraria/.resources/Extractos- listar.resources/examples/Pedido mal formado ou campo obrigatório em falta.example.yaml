@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/tesouraria/extractos?limite=50&depois=string&ordem=string&incluirTerminados=false&contaId=301&transacaoId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  url: "{{baseUrl}}/v1/tesouraria/extractos?limite=50&depois=string&ordem=string&incluirTerminados=false&contaId=4192&transacaoId=4192&estado=<string>&desde=1996-08-10&ate=1996-08-10"
   method: GET
   headers:
     - key: Authorization
@@ -13,11 +13,11 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    contaId: "301"
-    transacaoId: "301"
+    contaId: "4192"
+    transacaoId: "4192"
     estado: <string>
-    desde: 1986-03-12
-    ate: 1986-03-12
+    desde: 1996-08-10
+    ate: 1996-08-10
   body:
     type: text
     content: ""
@@ -30,7 +30,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

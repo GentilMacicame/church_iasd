@@ -15,7 +15,12 @@ body:
       "reuniaoId": 1,
       "numero": "texto",
       "tipo": "ADMISSAO",
-      "assunto": "texto"
+      "assunto": "texto",
+      "texto": "texto",
+      "leitura": 1,
+      "aFavor": 1,
+      "contra": 1,
+      "abstencoes": 1
     }
 settings: {}
 examples: ./.resources/Votos- criar.resources/examples

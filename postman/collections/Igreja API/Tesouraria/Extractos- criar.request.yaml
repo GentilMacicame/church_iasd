@@ -18,7 +18,10 @@ body:
     {
       "contaId": 1,
       "data": "2026-11-14",
-      "valor": "650.00"
+      "descricao": "",
+      "referencia": "texto",
+      "valor": "650.00",
+      "transacaoId": null
     }
 settings: {}
 examples: ./.resources/Extractos- criar.resources/examples

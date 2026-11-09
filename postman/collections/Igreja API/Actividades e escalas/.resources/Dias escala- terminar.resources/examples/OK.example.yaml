@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,18 +25,18 @@ response:
     type: json
     content: |-
       {
-        "id": 7872,
-        "escalaPlanoId": 461,
-        "data": "1952-07-29",
+        "id": 1414,
+        "escalaPlanoId": 531,
+        "data": "1974-05-27",
         "evento": "string",
         "grupoCoral": "string",
-        "departamentoIgrejaId": 2191,
+        "departamentoIgrejaId": 2954,
         "observacoes": "string",
         "estado": "<string>",
-        "criadoEm": "2001-03-17T19:22:55.897Z",
-        "modificadoEm": "1961-02-13T05:51:49.069Z",
-        "endDate": "1990-07-23T20:37:08.786Z",
-        "criadoPor": 2155,
-        "modificadoPor": 8298
+        "criadoEm": "1967-10-16T03:33:37.257Z",
+        "modificadoEm": "1947-02-27T20:03:42.196Z",
+        "endDate": "1958-03-25T18:48:57.739Z",
+        "criadoPor": 7774,
+        "modificadoPor": 7033
       }
 order: 1000

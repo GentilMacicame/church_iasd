@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/tesouraria/documentos?limite=50&depois=string&ordem=string&incluirTerminados=false&transacaoId=301&despesaId=301&tipo=<string>&estado=<string>"
+  url: "{{baseUrl}}/v1/tesouraria/documentos?limite=50&depois=string&ordem=string&incluirTerminados=false&transacaoId=4192&despesaId=4192&tipo=<string>&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -13,8 +13,8 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    transacaoId: "301"
-    despesaId: "301"
+    transacaoId: "4192"
+    despesaId: "4192"
     tipo: <string>
     estado: <string>
   body:

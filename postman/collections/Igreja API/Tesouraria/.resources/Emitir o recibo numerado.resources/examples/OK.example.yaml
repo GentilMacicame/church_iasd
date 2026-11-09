@@ -7,14 +7,14 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -29,16 +29,16 @@ response:
     type: json
     content: |-
       {
-        "id": 1558,
-        "transacaoId": 1903,
-        "igrejaId": 8030,
-        "ano": 7550,
-        "numero": 3337,
+        "id": 4131,
+        "transacaoId": 4669,
+        "igrejaId": 7821,
+        "ano": 9919,
+        "numero": 6606,
         "estado": "<string>",
-        "criadoEm": "2018-07-03T10:53:58.840Z",
-        "modificadoEm": "2019-05-19T10:03:30.258Z",
-        "endDate": "2007-05-16T03:09:31.264Z",
-        "criadoPor": 6188,
-        "modificadoPor": 4116
+        "criadoEm": "2009-08-14T11:55:53.695Z",
+        "modificadoEm": "1972-03-24T22:57:31.072Z",
+        "endDate": "1999-05-22T21:05:49.590Z",
+        "criadoPor": 7453,
+        "modificadoPor": 521
       }
 order: 1000

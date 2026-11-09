@@ -12,7 +12,7 @@ request:
     type: json
     content: |-
       {
-        "contaId": 4336,
+        "contaId": 5256,
         "csv": "string"
       }
 response:
@@ -24,7 +24,7 @@ response:
     type: json
     content: |-
       {
-        "importadas": 3966,
-        "repetidas": 1722
+        "importadas": 9789,
+        "repetidas": 1625
       }
 order: 1000

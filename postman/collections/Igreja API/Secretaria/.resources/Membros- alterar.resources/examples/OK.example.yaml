@@ -10,25 +10,38 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 2141,
-        "familiaId": 7979,
+        "igrejaId": 1015,
+        "familiaId": 2212,
         "nome": "string",
         "apelido": "string",
-        "dataNascimento": "1986-10-29",
+        "dataNascimento": "2003-09-08",
         "sexo": "<string>",
         "estadoCivil": "<string>",
         "morada": "string",
-        "dataEntrada": "1951-07-13",
+        "dataEntrada": "2024-10-04",
         "modoEntrada": "<string>",
-        "encarregadoMembroId": 2793,
+        "encarregadoMembroId": 7322,
         "validacao": "<string>",
+        "naturalidade": "string",
+        "nacionalidade": "string",
+        "tipoIdentificacao": "<string>",
+        "numeroIdentificacao": "string",
+        "profissao": "string",
+        "escolaridade": "<string>",
+        "nomePai": "string",
+        "nomeMae": "string",
+        "provincia": "string",
+        "cidadeDistrito": "string",
+        "bairro": "string",
+        "quarteirao": "string",
+        "numeroCasa": "string",
         "estado": "<string>"
       }
 response:
@@ -40,26 +53,39 @@ response:
     type: json
     content: |-
       {
-        "id": 4279,
-        "igrejaId": 1255,
-        "familiaId": 9078,
+        "id": 1542,
+        "igrejaId": 8778,
+        "familiaId": 237,
         "nome": "string",
         "apelido": "string",
-        "dataNascimento": "1978-04-10",
+        "dataNascimento": "2022-10-22",
         "sexo": "<string>",
         "estadoCivil": "<string>",
         "morada": "string",
-        "dataEntrada": "1956-10-23",
+        "dataEntrada": "1995-02-21",
         "modoEntrada": "<string>",
-        "encarregadoMembroId": 5399,
+        "encarregadoMembroId": 3922,
         "validacao": "<string>",
-        "validadoPorUsuarioId": 4035,
-        "dataValidacao": "1986-01-26T09:29:06.386Z",
+        "validadoPorUsuarioId": 3220,
+        "dataValidacao": "1951-09-15T00:17:44.758Z",
+        "naturalidade": "string",
+        "nacionalidade": "string",
+        "tipoIdentificacao": "<string>",
+        "numeroIdentificacao": "string",
+        "profissao": "string",
+        "escolaridade": "<string>",
+        "nomePai": "string",
+        "nomeMae": "string",
+        "provincia": "string",
+        "cidadeDistrito": "string",
+        "bairro": "string",
+        "quarteirao": "string",
+        "numeroCasa": "string",
         "estado": "<string>",
-        "criadoEm": "1975-01-26T22:01:06.840Z",
-        "modificadoEm": "1951-12-26T09:16:35.928Z",
-        "endDate": "1975-07-15T16:58:14.448Z",
-        "criadoPor": 5684,
-        "modificadoPor": 2520
+        "criadoEm": "2020-08-25T21:17:16.860Z",
+        "modificadoEm": "1961-01-04T20:05:34.945Z",
+        "endDate": "2005-01-07T18:31:15.783Z",
+        "criadoPor": 752,
+        "modificadoPor": 1220
       }
 order: 1000

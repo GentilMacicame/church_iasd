@@ -13,7 +13,15 @@ body:
   content: |-
     {
       "classeId": 1,
-      "trimestreId": 1
+      "trimestreId": 1,
+      "professorMembroId": null,
+      "auxiliarMembroId": null,
+      "secretarioMembroId": null,
+      "alvoMembros": 1,
+      "alvoEstudoDiario": "texto",
+      "alvoFiliais": 1,
+      "alvoOfertaSabado": "650.00",
+      "alvoBaptismos": 1
     }
 settings: {}
 examples: ./.resources/Classes trimestre- criar.resources/examples

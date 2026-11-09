@@ -15,7 +15,9 @@ body:
       "membroId": 1,
       "cargoId": 1,
       "igrejaId": {{igrejaId}},
-      "dataInicio": "2026-11-14"
+      "votoId": null,
+      "dataInicio": "2026-11-14",
+      "dataFim": "2026-11-14"
     }
 settings: {}
 examples: ./.resources/Oficiais- criar.resources/examples

@@ -10,20 +10,20 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 838,
+        "igrejaId": 6821,
         "codigo": "string",
         "nome": "string",
         "tipo": "<string>",
         "restrito": false,
-        "percentagemRemessa": "-0184111",
-        "destinoEntidadeId": 3716,
+        "percentagemRemessa": "550.6",
+        "destinoEntidadeId": 3408,
         "estado": "<string>"
       }
 response:
@@ -35,7 +35,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

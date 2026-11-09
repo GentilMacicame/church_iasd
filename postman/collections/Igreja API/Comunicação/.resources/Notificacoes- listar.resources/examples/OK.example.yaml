@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/nucleo/notificacoes?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=301&canal=<string>&estado=<string>"
+  url: "{{baseUrl}}/v1/nucleo/notificacoes?igrejaId=4192&limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=4192&canal=<string>&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -9,12 +9,12 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     limite: "50"
     depois: string
     ordem: string
     incluirTerminados: "false"
-    membroId: "301"
+    membroId: "4192"
     canal: <string>
     estado: <string>
   body:

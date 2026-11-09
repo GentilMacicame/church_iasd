@@ -14,7 +14,14 @@ pathVariables:
 body:
   type: json
   content: |-
-    {}
+    {
+      "relatorioId": null,
+      "nome": "Ana",
+      "telefone": "texto",
+      "convidadoPorMembroId": null,
+      "tornouSeMembroId": null,
+      "anonimizadoEm": "2026-11-14T09:00:00+02:00"
+    }
 settings: {}
 examples: ./.resources/Criar visitantes do relatório.resources/examples
 order: 48000

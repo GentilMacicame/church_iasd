@@ -13,7 +13,9 @@ body:
   content: |-
     {
       "igrejaId": {{igrejaId}},
-      "nome": "texto"
+      "nome": "Ana",
+      "divisao": "ROL_DO_BERCO",
+      "localReuniao": "texto"
     }
 settings: {}
 examples: ./.resources/Classes- criar.resources/examples

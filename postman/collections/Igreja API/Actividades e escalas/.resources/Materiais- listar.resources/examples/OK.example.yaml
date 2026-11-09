@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/actividades/materiais?limite=50&depois=string&ordem=string&incluirTerminados=false&actividadeId=301&estado=<string>"
+  url: "{{baseUrl}}/v1/actividades/materiais?limite=50&depois=string&ordem=string&incluirTerminados=false&actividadeId=4192&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -13,7 +13,7 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    actividadeId: "301"
+    actividadeId: "4192"
     estado: <string>
   body:
     type: text

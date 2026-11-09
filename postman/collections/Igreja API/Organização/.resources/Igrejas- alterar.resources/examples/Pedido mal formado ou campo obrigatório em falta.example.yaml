@@ -10,23 +10,23 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "entidadeId": 8792,
-        "distritoId": 9145,
+        "entidadeId": 5137,
+        "distritoId": 1176,
         "tipo": "<string>",
-        "maeIgrejaId": 6177,
+        "maeIgrejaId": 9212,
         "nome": "string",
         "codigoAcms": "string",
-        "dataOrganizacao": "1992-05-07",
+        "dataOrganizacao": "2008-07-06",
         "endereco": "string",
-        "latitude": "50743",
-        "longitude": "434305887.5020",
+        "latitude": "-7689880.09",
+        "longitude": "96056.08",
         "estado": "<string>"
       }
 response:
@@ -38,7 +38,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

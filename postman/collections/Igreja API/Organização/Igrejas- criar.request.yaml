@@ -13,7 +13,15 @@ body:
   content: |-
     {
       "entidadeId": 1,
-      "nome": "texto"
+      "distritoId": null,
+      "tipo": "IGREJA_ORGANIZADA",
+      "maeIgrejaId": null,
+      "nome": "Ana",
+      "codigoAcms": "texto",
+      "dataOrganizacao": "2026-11-14",
+      "endereco": "texto",
+      "latitude": "texto",
+      "longitude": "texto"
     }
 settings: {}
 examples: ./.resources/Igrejas- criar.resources/examples

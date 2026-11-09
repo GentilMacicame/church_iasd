@@ -13,7 +13,11 @@ body:
   content: |-
     {
       "escalaPlanoId": 1,
-      "data": "2026-11-14"
+      "data": "2026-11-14",
+      "evento": "texto",
+      "grupoCoral": "texto",
+      "departamentoIgrejaId": null,
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Dias escala- criar.resources/examples

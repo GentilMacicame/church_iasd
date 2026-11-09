@@ -10,17 +10,17 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "transacaoId": 8477,
-        "igrejaId": 4487,
-        "ano": 1348,
-        "numero": 6872,
+        "transacaoId": 4419,
+        "igrejaId": 1651,
+        "ano": 222,
+        "numero": 4529,
         "estado": "<string>"
       }
 response:
@@ -32,16 +32,16 @@ response:
     type: json
     content: |-
       {
-        "id": 1558,
-        "transacaoId": 1903,
-        "igrejaId": 8030,
-        "ano": 7550,
-        "numero": 3337,
+        "id": 4131,
+        "transacaoId": 4669,
+        "igrejaId": 7821,
+        "ano": 9919,
+        "numero": 6606,
         "estado": "<string>",
-        "criadoEm": "2018-07-03T10:53:58.840Z",
-        "modificadoEm": "2019-05-19T10:03:30.258Z",
-        "endDate": "2007-05-16T03:09:31.264Z",
-        "criadoPor": 6188,
-        "modificadoPor": 4116
+        "criadoEm": "2009-08-14T11:55:53.695Z",
+        "modificadoEm": "1972-03-24T22:57:31.072Z",
+        "endDate": "1999-05-22T21:05:49.590Z",
+        "criadoPor": 7453,
+        "modificadoPor": 521
       }
 order: 1000

@@ -20,6 +20,18 @@ body:
       "metodo": "MPESA",
       "valorTotal": "650.00",
       "contaId": 1,
+      "destinoContaId": null,
+      "membroId": null,
+      "familiaId": null,
+      "anonimo": true,
+      "contagemId": null,
+      "despesaId": null,
+      "estornoTransacaoId": null,
+      "beneficiario": "texto",
+      "descricao": "",
+      "referencia": "texto",
+      "dataHora": "2026-11-14T09:00:00+02:00",
+      "aprovadoPorUsuarioId": null,
       "linhas": [
         {
           "fundoId": 1,

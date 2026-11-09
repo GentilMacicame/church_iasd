@@ -10,20 +10,20 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 5842,
+        "igrejaId": 4369,
         "tipo": "<string>",
-        "data": "2002-01-19T20:17:01.149Z",
+        "data": "1948-03-13T13:06:21.537Z",
         "local": "string",
-        "presididaPorMembroId": 1340,
-        "secretarioMembroId": 9888,
-        "quorumPresentes": 1549,
+        "presididaPorMembroId": 7250,
+        "secretarioMembroId": 3937,
+        "quorumPresentes": 2431,
         "actaUrl": "string",
         "estado": "<string>"
       }
@@ -36,7 +36,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

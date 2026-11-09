@@ -10,22 +10,22 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "membroId": 1747,
-        "origemIgrejaId": 8792,
-        "destinoIgrejaId": 8691,
+        "membroId": 1949,
+        "origemIgrejaId": 9675,
+        "destinoIgrejaId": 1865,
         "destinoExterno": "string",
-        "dataPedido": "1968-03-01",
-        "origemVotoId": 6686,
-        "cartaEmitidaEm": "2003-01-01",
-        "destinoVotoId": 1645,
-        "aceiteEm": "2011-09-05",
+        "dataPedido": "2005-07-16",
+        "origemVotoId": 176,
+        "cartaEmitidaEm": "2019-11-22",
+        "destinoVotoId": 7304,
+        "aceiteEm": "2003-05-24",
         "observacoes": "string",
         "estado": "<string>"
       }
@@ -38,7 +38,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

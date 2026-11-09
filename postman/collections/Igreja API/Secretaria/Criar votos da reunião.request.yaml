@@ -14,7 +14,17 @@ pathVariables:
 body:
   type: json
   content: |-
-    {}
+    {
+      "reuniaoId": null,
+      "numero": "texto",
+      "tipo": "ADMISSAO",
+      "assunto": "texto",
+      "texto": "texto",
+      "leitura": 1,
+      "aFavor": 1,
+      "contra": 1,
+      "abstencoes": 1
+    }
 settings: {}
 examples: ./.resources/Criar votos da reunião.resources/examples
 order: 64000

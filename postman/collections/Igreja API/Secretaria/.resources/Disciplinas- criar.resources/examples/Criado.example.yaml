@@ -43,18 +43,18 @@ response:
     type: json
     content: |-
       {
-        "id": 4193,
-        "membroId": 7406,
-        "votoId": 1193,
-        "dataInicio": "1981-11-29",
-        "dataFim": "1965-08-25",
+        "id": 19,
+        "membroId": 7804,
+        "votoId": 4578,
+        "dataInicio": "2013-03-01",
+        "dataFim": "1988-12-17",
         "encarregadoNotificado": true,
         "motivo": "string",
         "estado": "<string>",
-        "criadoEm": "2020-11-11T15:31:52.937Z",
-        "modificadoEm": "1977-04-16T03:22:01.775Z",
-        "endDate": "1994-05-17T09:38:04.232Z",
-        "criadoPor": 7337,
-        "modificadoPor": 1131
+        "criadoEm": "2016-06-11T07:40:06.765Z",
+        "modificadoEm": "2013-08-24T04:29:51.117Z",
+        "endDate": "2014-10-23T02:13:06.485Z",
+        "criadoPor": 7322,
+        "modificadoPor": 159
       }
 order: 1000

@@ -37,7 +37,7 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: CARTA_EMITIDA
+  value: CONCLUIDA
   disabled: true
 settings: {}
 examples: ./.resources/Transferencias- listar.resources/examples

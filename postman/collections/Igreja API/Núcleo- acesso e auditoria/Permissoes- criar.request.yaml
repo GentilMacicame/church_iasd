@@ -12,7 +12,8 @@ body:
   type: json
   content: |-
     {
-      "codigo": "texto"
+      "codigo": "texto",
+      "descricao": ""
     }
 settings: {}
 examples: ./.resources/Permissoes- criar.resources/examples

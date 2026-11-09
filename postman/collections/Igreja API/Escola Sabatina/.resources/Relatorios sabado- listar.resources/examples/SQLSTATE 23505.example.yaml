@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&classeTrimestreId=301&sabadoId=301&transacaoId=301&estado=<string>"
+  url: "{{baseUrl}}/v1/escola-sabatina/relatorios-sabado?igrejaId=4192&limite=50&depois=string&ordem=string&incluirTerminados=false&classeTrimestreId=4192&sabadoId=4192&transacaoId=4192&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -9,14 +9,14 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     limite: "50"
     depois: string
     ordem: string
     incluirTerminados: "false"
-    classeTrimestreId: "301"
-    sabadoId: "301"
-    transacaoId: "301"
+    classeTrimestreId: "4192"
+    sabadoId: "4192"
+    transacaoId: "4192"
     estado: <string>
   body:
     type: text
@@ -30,7 +30,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

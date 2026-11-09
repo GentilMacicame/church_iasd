@@ -11,7 +11,14 @@ headers:
 body:
   type: json
   content: |-
-    {}
+    {
+      "trimestreId": null,
+      "pesoPresenca": "texto",
+      "pesoEstudo": "texto",
+      "pesoOfertas": "texto",
+      "pesoVisitantes": "texto",
+      "limiteOfertas": "texto"
+    }
 settings: {}
 examples: ./.resources/Pesos pontuacao- criar.resources/examples
 order: 24000

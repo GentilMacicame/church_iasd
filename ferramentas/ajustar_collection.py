@@ -4,7 +4,8 @@ O gerador do Postman põe valores inventados em tudo; esta ferramenta corrige-os
   - variáveis da collection: baseUrl (API local), igrejaId, login e senha (preenchidas no Postman, nunca no git);
   - "Entrar" e "Renovar" guardam o token em bearerToken (os outros pedidos usam-no: Authorization: Bearer);
   - listagens e relatórios: só igrejaId e limite ligados; os filtros opcionais ficam desligados, prontos a ligar;
-  - criar e acções: corpo só com os campos obrigatórios, com valores válidos (enum, data, dinheiro "650.00");
+  - criar: todos os campos que se podem preencher (os opcionais com exemplos; ids opcionais a null; sem estado
+    nem validacao, que mudam por movimento ou aprovação); acções: só os obrigatórios;
   - alterar (PATCH): corpo {} — enviam-se só os campos a mudar;
   - Idempotency-Key: {{$guid}} (um UUID novo em cada envio); :id = 1.
 
@@ -24,6 +25,15 @@ COLECCAO = RAIZ / 'postman' / 'collections' / 'Igreja API'
 CONTRATO = yaml.safe_load((RAIZ / 'api' / 'openapi.yaml').read_text(encoding='utf-8'))
 COMP = CONTRATO['components']
 IGREJA = '__IGREJA__'   # trocado por {{igrejaId}} sem aspas (número no JSON)
+NAO_PREENCHER = {'estado', 'validacao'}
+EXEMPLOS = {   # valores plausíveis para os campos de texto opcionais (o resto: por tipo)
+    'morada': 'Perto da escola primária', 'naturalidade': 'Xai-Xai, Gaza', 'nacionalidade': 'Moçambicana',
+    'numeroIdentificacao': '110100000000A', 'profissao': 'Professor', 'nomePai': 'João Langa', 'nomeMae': 'Maria Cossa',
+    'provincia': 'Maputo', 'cidadeDistrito': 'Matola', 'bairro': 'Machava', 'quarteirao': '12', 'numeroCasa': '34',
+    'local': 'Rio Matola', 'oficiante': 'Pr. António Mabjaia', 'observacoes': '', 'descricao': '',
+    'nome': 'Ana', 'apelido': 'Langa', 'dataNascimento': '1990-05-20', 'escolaridade': 'SECUNDARIO',
+    'rebaptismo': False,
+}
 
 VARIAVEIS = [
     {'key': 'baseUrl', 'value': 'http://localhost:9080', 'description': 'Endereço da API (local: ./mvnw liberty:dev)'},
@@ -69,13 +79,31 @@ def juntar(s):
     return {'type': 'object', 'properties': props, 'required': list(dict.fromkeys(req))}
 
 
-def exemplo(s, campo=''):
+def exemplo(s, campo='', todos=False):
+    if campo in EXEMPLOS:
+        return EXEMPLOS[campo]
     s = juntar(s)
     if 'enum' in s:
         return s['enum'][0]
     t = s.get('type')
     if t == 'object' or 'properties' in s:
-        return {k: exemplo(s['properties'].get(k, {}), k) for k in s.get('required', [])}
+        obrig = s.get('required', [])
+        if not todos:
+            return {k: exemplo(s['properties'].get(k, {}), k) for k in obrig}
+        out = {}
+        for k, sub in s['properties'].items():
+            sub_r = juntar(sub)
+            if k in obrig:
+                out[k] = exemplo(sub, k)
+            elif sub_r.get('readOnly') or k in NAO_PREENCHER:
+                continue
+            elif k.endswith('Id') and sub_r.get('type') == 'integer':
+                out[k] = None                     # referência opcional: preencher com um id que exista
+            elif k in EXEMPLOS:
+                out[k] = EXEMPLOS[k]
+            else:
+                out[k] = exemplo(sub, k)
+        return out
     if t == 'array':
         return [exemplo(s.get('items', {}), campo)]
     if t == 'integer':
@@ -143,7 +171,8 @@ def corpo(pedido, op):
     if pedido['method'] == 'PATCH':
         texto = '{}'
     else:
-        valor = exemplo(op['requestBody']['content']['application/json']['schema'])
+        todos = op.get('operationId', '').startswith('criar')   # criar de uma tabela (não as acções)
+        valor = exemplo(op['requestBody']['content']['application/json']['schema'], todos=todos)
         texto = json.dumps(valor, ensure_ascii=False, indent=2).replace(f'"{IGREJA}"', '{{igrejaId}}')
     pedido['body'] = {'type': 'json', 'content': Literal(texto)}
 

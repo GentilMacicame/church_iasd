@@ -19,7 +19,7 @@ body:
       "entidadeId": 1,
       "data": "2026-11-14",
       "fundoId": 1,
-      "descricao": "texto"
+      "descricao": ""
     }
 settings: {}
 examples: ./.resources/Calendario ofertas- criar.resources/examples

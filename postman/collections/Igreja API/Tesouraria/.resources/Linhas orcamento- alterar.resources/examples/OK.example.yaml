@@ -10,15 +10,15 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "orcamentoId": 4234,
-        "categoriaId": 473,
+        "orcamentoId": 2908,
+        "categoriaId": 2375,
         "valorPrevisto": "650.00",
         "estado": "<string>"
       }
@@ -31,15 +31,15 @@ response:
     type: json
     content: |-
       {
-        "id": 179,
-        "orcamentoId": 6671,
-        "categoriaId": 4272,
+        "id": 1643,
+        "orcamentoId": 8719,
+        "categoriaId": 5286,
         "valorPrevisto": "650.00",
         "estado": "<string>",
-        "criadoEm": "1975-12-28T09:13:23.687Z",
-        "modificadoEm": "2025-07-07T04:46:40.103Z",
-        "endDate": "2025-04-18T05:40:19.275Z",
-        "criadoPor": 4011,
-        "modificadoPor": 792
+        "criadoEm": "1962-07-23T18:01:50.292Z",
+        "modificadoEm": "2014-06-28T21:40:57.649Z",
+        "endDate": "1946-11-20T08:34:22.492Z",
+        "criadoPor": 4964,
+        "modificadoPor": 1187
       }
 order: 1000

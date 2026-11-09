@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/nucleo/usuarios-entidade?limite=50&depois=string&ordem=string&incluirTerminados=false&usuarioId=301&entidadeId=301&perfilId=301&estado=<string>"
+  url: "{{baseUrl}}/v1/nucleo/usuarios-entidade?limite=50&depois=string&ordem=string&incluirTerminados=false&usuarioId=4192&entidadeId=4192&perfilId=4192&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -13,9 +13,9 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    usuarioId: "301"
-    entidadeId: "301"
-    perfilId: "301"
+    usuarioId: "4192"
+    entidadeId: "4192"
+    perfilId: "4192"
     estado: <string>
   body:
     type: text
@@ -29,7 +29,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

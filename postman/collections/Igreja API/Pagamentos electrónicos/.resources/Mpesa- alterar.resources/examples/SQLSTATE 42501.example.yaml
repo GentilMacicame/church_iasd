@@ -10,14 +10,14 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "transacaoId": 3560,
+        "transacaoId": 2110,
         "direccao": "str",
         "msisdn": "string",
         "valor": "650.00",
@@ -29,10 +29,10 @@ request:
         "responseDesc": "string",
         "mpesaTransactionId": "string",
         "conversationId": "string",
-        "pedidoEm": "1976-09-02T10:09:55.163Z",
-        "respondidoEm": "2001-03-07T14:22:15.384Z",
-        "ultimaConsultaEm": "1973-06-03T10:45:59.246Z",
-        "tentativasConsulta": 2840,
+        "pedidoEm": "1977-03-14T09:28:43.344Z",
+        "respondidoEm": "1988-08-10T16:59:48.137Z",
+        "ultimaConsultaEm": "1988-07-31T08:49:42.812Z",
+        "tentativasConsulta": 146,
         "estado": "<string>"
       }
 response:
@@ -44,7 +44,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

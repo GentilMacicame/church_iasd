@@ -10,16 +10,16 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "entidadeId": 3956,
+        "entidadeId": 1680,
         "nome": "string",
-        "pastorUsuarioId": 8337,
+        "pastorUsuarioId": 6092,
         "estado": "<string>"
       }
 response:
@@ -31,7 +31,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

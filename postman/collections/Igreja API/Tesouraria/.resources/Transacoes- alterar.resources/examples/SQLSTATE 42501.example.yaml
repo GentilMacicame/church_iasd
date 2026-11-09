@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -20,19 +20,19 @@ request:
         "tipo": "<string>",
         "metodo": "<string>",
         "valorTotal": "650.00",
-        "contaId": 6747,
-        "destinoContaId": 2005,
-        "membroId": 5988,
-        "familiaId": 927,
-        "anonimo": true,
-        "contagemId": 8406,
-        "despesaId": 9158,
-        "estornoTransacaoId": 436,
+        "contaId": 137,
+        "destinoContaId": 1194,
+        "membroId": 3070,
+        "familiaId": 7522,
+        "anonimo": false,
+        "contagemId": 947,
+        "despesaId": 156,
+        "estornoTransacaoId": 2504,
         "beneficiario": "string",
         "descricao": "string",
         "referencia": "string",
-        "dataHora": "2000-09-02T04:43:02.109Z",
-        "aprovadoPorUsuarioId": 4581,
+        "dataHora": "1985-06-03T03:22:16.822Z",
+        "aprovadoPorUsuarioId": 695,
         "estado": "<string>"
       }
 response:
@@ -44,7 +44,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

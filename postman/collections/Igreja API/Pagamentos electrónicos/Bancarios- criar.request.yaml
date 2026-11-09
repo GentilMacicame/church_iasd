@@ -17,8 +17,10 @@ body:
   content: |-
     {
       "transacaoId": 1,
+      "banco": "texto",
       "nib": "texto",
-      "titular": "texto"
+      "titular": "texto",
+      "referenciaBancaria": "texto"
     }
 settings: {}
 examples: ./.resources/Bancarios- criar.resources/examples

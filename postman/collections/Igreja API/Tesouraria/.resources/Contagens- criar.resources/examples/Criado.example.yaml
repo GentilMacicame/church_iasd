@@ -7,7 +7,7 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
@@ -53,20 +53,20 @@ response:
     type: json
     content: |-
       {
-        "id": 2696,
-        "igrejaId": 2881,
-        "contaId": 5409,
-        "data": "1999-10-01",
+        "id": 7801,
+        "igrejaId": 5536,
+        "contaId": 3299,
+        "data": "1981-10-06",
         "ocasiao": "string",
-        "contador1MembroId": 8474,
-        "contador2MembroId": 4239,
+        "contador1MembroId": 7300,
+        "contador2MembroId": 6682,
         "totalContado": "650.00",
-        "conferidoPorUsuarioId": 1043,
+        "conferidoPorUsuarioId": 7590,
         "estado": "<string>",
-        "criadoEm": "1999-02-17T06:20:23.119Z",
-        "modificadoEm": "1974-08-25T19:03:28.149Z",
-        "endDate": "1995-09-27T03:53:16.247Z",
-        "criadoPor": 9071,
-        "modificadoPor": 1055
+        "criadoEm": "1990-09-05T09:08:19.494Z",
+        "modificadoEm": "1948-06-23T03:02:53.153Z",
+        "endDate": "2012-04-22T05:19:19.965Z",
+        "criadoPor": 9292,
+        "modificadoPor": 2279
       }
 order: 1000

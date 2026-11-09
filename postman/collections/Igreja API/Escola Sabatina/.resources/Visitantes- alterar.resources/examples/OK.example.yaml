@@ -10,19 +10,19 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "relatorioId": 6464,
+        "relatorioId": 4462,
         "nome": "string",
         "telefone": "string",
-        "convidadoPorMembroId": 9428,
-        "tornouSeMembroId": 6533,
-        "anonimizadoEm": "2002-08-30T08:05:40.814Z",
+        "convidadoPorMembroId": 8237,
+        "tornouSeMembroId": 2909,
+        "anonimizadoEm": "1955-05-03T08:53:11.032Z",
         "estado": "<string>"
       }
 response:
@@ -34,18 +34,18 @@ response:
     type: json
     content: |-
       {
-        "id": 8645,
-        "relatorioId": 9426,
+        "id": 6984,
+        "relatorioId": 4407,
         "nome": "string",
         "telefone": "string",
-        "convidadoPorMembroId": 4422,
-        "tornouSeMembroId": 562,
-        "anonimizadoEm": "1981-03-27T03:17:48.213Z",
+        "convidadoPorMembroId": 7222,
+        "tornouSeMembroId": 6961,
+        "anonimizadoEm": "1967-09-17T14:33:39.242Z",
         "estado": "<string>",
-        "criadoEm": "1992-04-25T04:37:54.775Z",
-        "modificadoEm": "2006-12-18T17:54:58.735Z",
-        "endDate": "2016-09-16T22:31:06.262Z",
-        "criadoPor": 3424,
-        "modificadoPor": 8186
+        "criadoEm": "1970-03-27T07:43:44.409Z",
+        "modificadoEm": "1979-06-29T22:01:11.073Z",
+        "endDate": "1992-11-29T19:23:37.847Z",
+        "criadoPor": 7674,
+        "modificadoPor": 8466
       }
 order: 1000

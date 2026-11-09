@@ -10,25 +10,25 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 8334,
-        "membroId": 5646,
+        "igrejaId": 936,
+        "membroId": 6545,
         "canal": "<string>",
         "destino": "string",
         "assunto": "string",
         "mensagem": "string",
-        "agendadaPara": "1980-08-04T18:17:55.793Z",
-        "enviadaEm": "1999-02-17T03:24:59.718Z",
-        "tentativas": 6537,
+        "agendadaPara": "1998-12-27T11:52:32.098Z",
+        "enviadaEm": "2001-09-25T14:25:09.778Z",
+        "tentativas": 4754,
         "erro": "string",
         "origemTabela": "string",
-        "origemId": 8688,
+        "origemId": 3642,
         "chave": "string",
         "estado": "<string>"
       }
@@ -41,7 +41,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

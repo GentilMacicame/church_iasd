@@ -25,7 +25,7 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: ACTIVO
+  value: INACTIVO
   disabled: true
 settings: {}
 examples: ./.resources/Auditoria- listar.resources/examples

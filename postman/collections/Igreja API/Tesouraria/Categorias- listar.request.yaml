@@ -25,7 +25,7 @@ queryParams:
   value: ''
   disabled: true
 - key: tipo
-  value: RECEITA
+  value: DESPESA
   disabled: true
 - key: estado
   value: ''

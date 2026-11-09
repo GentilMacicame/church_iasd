@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,18 +25,18 @@ response:
     type: json
     content: |-
       {
-        "id": 8271,
-        "usuarioId": 147,
+        "id": 5466,
+        "usuarioId": 6007,
         "tabela": "string",
-        "registoId": 6719,
+        "registoId": 223,
         "accao": "string",
         "dadosAntes": {},
         "dadosDepois": {},
         "estado": "<string>",
-        "criadoEm": "1952-02-18T07:55:09.440Z",
-        "modificadoEm": "2026-10-13T20:16:33.503Z",
-        "endDate": "1974-10-07T02:40:51.966Z",
-        "criadoPor": 9169,
-        "modificadoPor": 396
+        "criadoEm": "2016-03-04T15:01:00.267Z",
+        "modificadoEm": "2013-05-10T17:22:32.856Z",
+        "endDate": "1999-01-31T03:32:23.556Z",
+        "criadoPor": 3303,
+        "modificadoPor": 4939
       }
 order: 1000

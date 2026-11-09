@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "membroId": 1900,
+        "membroId": 2174,
         "tipo": "<string>",
-        "concedido": true,
-        "data": "2020-09-04",
-        "concedidoPorMembroId": 3415,
+        "concedido": false,
+        "data": "1949-07-01",
+        "concedidoPorMembroId": 4301,
         "observacoes": "string",
         "estado": "<string>"
       }
@@ -34,7 +34,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

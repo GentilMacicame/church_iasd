@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "paiCategoriaId": 8485,
+        "paiCategoriaId": 8613,
         "codigo": "string",
         "nome": "string",
         "tipo": "<string>",
-        "eRemessa": false,
+        "eRemessa": true,
         "estado": "<string>"
       }
 response:
@@ -33,7 +33,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

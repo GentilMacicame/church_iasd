@@ -10,14 +10,14 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "transacaoId": 7061,
+        "transacaoId": 4609,
         "banco": "string",
         "nib": "string",
         "titular": "string",
@@ -33,17 +33,17 @@ response:
     type: json
     content: |-
       {
-        "id": 6370,
-        "transacaoId": 1204,
+        "id": 3638,
+        "transacaoId": 2337,
         "banco": "string",
         "nib": "string",
         "titular": "string",
         "referenciaBancaria": "string",
         "estado": "<string>",
-        "criadoEm": "1948-04-20T15:03:51.614Z",
-        "modificadoEm": "1960-05-01T16:59:01.370Z",
-        "endDate": "1957-08-12T14:10:15.310Z",
-        "criadoPor": 7818,
-        "modificadoPor": 3735
+        "criadoEm": "1991-10-18T17:00:02.194Z",
+        "modificadoEm": "1975-09-20T09:49:06.199Z",
+        "endDate": "1954-06-23T16:00:27.421Z",
+        "criadoPor": 1490,
+        "modificadoPor": 2474
       }
 order: 1000

@@ -10,19 +10,21 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "membroId": 5688,
-        "data": "1964-05-04",
+        "membroId": 1826,
+        "data": "1992-02-22",
         "local": "string",
         "oficiante": "string",
-        "rebaptismo": false,
-        "classeTrimestreId": 1870,
+        "rebaptismo": true,
+        "classeTrimestreId": 3144,
+        "localIgrejaId": 825,
+        "oficianteUsuarioId": 5810,
         "estado": "<string>"
       }
 response:
@@ -34,7 +36,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

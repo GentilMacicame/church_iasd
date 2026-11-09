@@ -10,24 +10,24 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "classeTrimestreId": 5316,
-        "sabadoId": 6595,
-        "membrosMatriculados": 3236,
-        "membrosPresentes": 6730,
-        "estudoDiario": 7322,
-        "visitantes": 6323,
-        "filiais": 9726,
+        "classeTrimestreId": 8247,
+        "sabadoId": 5170,
+        "membrosMatriculados": 995,
+        "membrosPresentes": 2811,
+        "estudoDiario": 4121,
+        "visitantes": 9925,
+        "filiais": 8989,
         "oferta": "650.00",
         "oferta13Sabado": "650.00",
         "ofertaDespesas": "650.00",
-        "transacaoId": 9694,
+        "transacaoId": 697,
         "observacoes": "string",
         "estado": "<string>"
       }
@@ -40,25 +40,25 @@ response:
     type: json
     content: |-
       {
-        "id": 368,
-        "classeTrimestreId": 9202,
-        "sabadoId": 3348,
-        "igrejaId": 5342,
-        "membrosMatriculados": 4519,
-        "membrosPresentes": 5204,
-        "estudoDiario": 3455,
-        "visitantes": 8404,
-        "filiais": 3881,
+        "id": 7839,
+        "classeTrimestreId": 7975,
+        "sabadoId": 8042,
+        "igrejaId": 2362,
+        "membrosMatriculados": 7094,
+        "membrosPresentes": 9336,
+        "estudoDiario": 1533,
+        "visitantes": 5449,
+        "filiais": 1530,
         "oferta": "650.00",
         "oferta13Sabado": "650.00",
         "ofertaDespesas": "650.00",
-        "transacaoId": 533,
+        "transacaoId": 5210,
         "observacoes": "string",
         "estado": "<string>",
-        "criadoEm": "1998-03-08T09:58:33.807Z",
-        "modificadoEm": "1974-08-04T20:54:24.962Z",
-        "endDate": "2018-07-12T02:21:50.624Z",
-        "criadoPor": 7144,
-        "modificadoPor": 371
+        "criadoEm": "1948-12-25T01:44:36.256Z",
+        "modificadoEm": "1999-08-30T07:06:39.185Z",
+        "endDate": "2020-12-30T18:04:49.141Z",
+        "criadoPor": 4949,
+        "modificadoPor": 6539
       }
 order: 1000

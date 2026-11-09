@@ -10,19 +10,19 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "contaId": 7587,
-        "data": "1948-11-02",
+        "contaId": 6375,
+        "data": "2015-10-10",
         "descricao": "string",
         "referencia": "string",
         "valor": "650.00",
-        "transacaoId": 5520,
+        "transacaoId": 1043,
         "estado": "<string>"
       }
 response:
@@ -34,7 +34,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

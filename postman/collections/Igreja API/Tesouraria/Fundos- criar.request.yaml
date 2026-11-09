@@ -16,9 +16,13 @@ body:
   type: json
   content: |-
     {
+      "igrejaId": null,
       "codigo": "texto",
-      "nome": "texto",
-      "tipo": "DIZIMO"
+      "nome": "Ana",
+      "tipo": "DIZIMO",
+      "restrito": true,
+      "percentagemRemessa": "texto",
+      "destinoEntidadeId": null
     }
 settings: {}
 examples: ./.resources/Fundos- criar.resources/examples

@@ -10,23 +10,23 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "reuniaoId": 6383,
+        "reuniaoId": 529,
         "numero": "string",
-        "tipo": "FINANCEIRO",
+        "tipo": "DISCIPLINA",
         "assunto": "string",
         "texto": "string",
-        "leitura": 1256,
-        "aFavor": 9599,
-        "contra": 4673,
-        "abstencoes": 9220,
-        "estado": "REJEITADO"
+        "leitura": 1427,
+        "aFavor": 7655,
+        "contra": 474,
+        "abstencoes": 7665,
+        "estado": "APROVADO"
       }
 response:
   statusCode: 422
@@ -37,7 +37,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

@@ -10,24 +10,24 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "classeTrimestreId": 5316,
-        "sabadoId": 6595,
-        "membrosMatriculados": 3236,
-        "membrosPresentes": 6730,
-        "estudoDiario": 7322,
-        "visitantes": 6323,
-        "filiais": 9726,
+        "classeTrimestreId": 8247,
+        "sabadoId": 5170,
+        "membrosMatriculados": 995,
+        "membrosPresentes": 2811,
+        "estudoDiario": 4121,
+        "visitantes": 9925,
+        "filiais": 8989,
         "oferta": "650.00",
         "oferta13Sabado": "650.00",
         "ofertaDespesas": "650.00",
-        "transacaoId": 9694,
+        "transacaoId": 697,
         "observacoes": "string",
         "estado": "<string>"
       }
@@ -40,7 +40,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

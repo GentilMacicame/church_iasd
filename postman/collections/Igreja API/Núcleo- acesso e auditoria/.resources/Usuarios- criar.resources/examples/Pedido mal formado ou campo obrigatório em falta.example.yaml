@@ -12,11 +12,11 @@ request:
     type: json
     content: |-
       {
-        "membroId": 111,
+        "membroId": 381,
         "nome": "string",
         "email": "string",
         "telefone": "string",
-        "superAdmin": false,
+        "superAdmin": true,
         "estado": "<string>"
       }
 response:
@@ -28,7 +28,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

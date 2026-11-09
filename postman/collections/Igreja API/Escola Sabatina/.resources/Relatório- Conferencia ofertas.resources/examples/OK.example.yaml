@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/escola-sabatina/conferencia-ofertas?igrejaId=301&formato=json&trimestreId=301"
+  url: "{{baseUrl}}/v1/escola-sabatina/conferencia-ofertas?igrejaId=4192&formato=json&trimestreId=4192"
   method: GET
   headers:
     - key: Authorization
@@ -9,9 +9,9 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     formato: json
-    trimestreId: "301"
+    trimestreId: "4192"
   body:
     type: text
     content: ""

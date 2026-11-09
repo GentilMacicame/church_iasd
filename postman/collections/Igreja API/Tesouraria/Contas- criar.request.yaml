@@ -18,7 +18,12 @@ body:
     {
       "igrejaId": {{igrejaId}},
       "tipo": "MPESA",
-      "nome": "texto",
+      "nome": "Ana",
+      "numero": "texto",
+      "titular": "texto",
+      "banco": "texto",
+      "moeda": "texto",
+      "saldoInicial": "650.00",
       "dataSaldoInicial": "2026-11-14"
     }
 settings: {}

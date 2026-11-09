@@ -12,8 +12,11 @@ body:
   type: json
   content: |-
     {
+      "membroId": null,
+      "igrejaId": null,
       "tipo": "TELEFONE",
-      "valor": "texto"
+      "valor": "texto",
+      "principal": true
     }
 settings: {}
 examples: ./.resources/Contactos- criar.resources/examples

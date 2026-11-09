@@ -7,7 +7,7 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
@@ -82,7 +82,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

@@ -48,6 +48,45 @@ request:
         "validacao": {
           "value": "<Error: Too many levels of nesting to fake this schema>"
         },
+        "naturalidade": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nacionalidade": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "tipoIdentificacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numeroIdentificacao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "profissao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "escolaridade": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nomePai": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "nomeMae": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "provincia": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "cidadeDistrito": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "bairro": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "quarteirao": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
+        "numeroCasa": {
+          "value": "<Error: Too many levels of nesting to fake this schema>"
+        },
         "estado": {
           "value": "<Error: Too many levels of nesting to fake this schema>"
         }
@@ -61,7 +100,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

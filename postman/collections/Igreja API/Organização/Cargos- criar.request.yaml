@@ -12,7 +12,10 @@ body:
   type: json
   content: |-
     {
-      "nome": "texto"
+      "departamentoId": null,
+      "nome": "Ana",
+      "mandatoAnos": 1,
+      "exigeMembro": true
     }
 settings: {}
 examples: ./.resources/Cargos- criar.resources/examples

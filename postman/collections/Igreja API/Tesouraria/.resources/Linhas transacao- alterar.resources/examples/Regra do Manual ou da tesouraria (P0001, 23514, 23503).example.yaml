@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "transacaoId": 9961,
-        "fundoId": 3689,
-        "categoriaId": 1522,
-        "departamentoIgrejaId": 178,
-        "actividadeId": 3832,
+        "transacaoId": 1025,
+        "fundoId": 3666,
+        "categoriaId": 4008,
+        "departamentoIgrejaId": 6952,
+        "actividadeId": 3852,
         "valor": "650.00",
         "descricao": "string",
         "estado": "<string>"
@@ -35,7 +35,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

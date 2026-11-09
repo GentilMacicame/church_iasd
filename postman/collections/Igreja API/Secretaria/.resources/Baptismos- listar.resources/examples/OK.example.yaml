@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/secretaria/baptismos?limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=301&classeTrimestreId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  url: "{{baseUrl}}/v1/secretaria/baptismos?limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=4192&classeTrimestreId=4192&localIgrejaId=4192&oficianteUsuarioId=4192&estado=<string>&desde=1996-08-10&ate=1996-08-10"
   method: GET
   headers:
     - key: Authorization
@@ -13,11 +13,13 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    membroId: "301"
-    classeTrimestreId: "301"
+    membroId: "4192"
+    classeTrimestreId: "4192"
+    localIgrejaId: "4192"
+    oficianteUsuarioId: "4192"
     estado: <string>
-    desde: 1986-03-12
-    ate: 1986-03-12
+    desde: 1996-08-10
+    ate: 1996-08-10
   body:
     type: text
     content: ""

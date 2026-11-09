@@ -43,18 +43,18 @@ response:
     type: json
     content: |-
       {
-        "id": 6598,
-        "membroId": 7403,
-        "cargoId": 423,
-        "igrejaId": 5660,
-        "votoId": 5016,
-        "dataInicio": "1954-07-07",
-        "dataFim": "1975-12-29",
+        "id": 2329,
+        "membroId": 2751,
+        "cargoId": 7544,
+        "igrejaId": 9763,
+        "votoId": 6008,
+        "dataInicio": "2023-02-19",
+        "dataFim": "1980-01-01",
         "estado": "<string>",
-        "criadoEm": "1964-11-12T05:15:27.276Z",
-        "modificadoEm": "1964-10-04T10:00:33.932Z",
-        "endDate": "1970-08-04T12:33:53.971Z",
-        "criadoPor": 1003,
-        "modificadoPor": 1063
+        "criadoEm": "2025-10-17T01:07:43.978Z",
+        "modificadoEm": "1978-01-12T05:41:17.451Z",
+        "endDate": "2016-03-29T21:43:06.478Z",
+        "criadoPor": 8079,
+        "modificadoPor": 8812
       }
 order: 1000

@@ -13,9 +13,18 @@ body:
   content: |-
     {
       "igrejaId": {{igrejaId}},
+      "membroId": null,
       "canal": "SMS",
       "destino": "texto",
-      "mensagem": "texto"
+      "assunto": "texto",
+      "mensagem": "texto",
+      "agendadaPara": "2026-11-14T09:00:00+02:00",
+      "enviadaEm": "2026-11-14T09:00:00+02:00",
+      "tentativas": 1,
+      "erro": "texto",
+      "origemTabela": "texto",
+      "origemId": null,
+      "chave": "texto"
     }
 settings: {}
 examples: ./.resources/Notificacoes- criar.resources/examples

@@ -16,6 +16,8 @@ body:
   type: json
   content: |-
     {
+      "transacaoId": null,
+      "despesaId": null,
       "tipo": "FACTURA",
       "nomeFicheiro": "texto",
       "url": "texto"

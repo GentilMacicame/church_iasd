@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/actividades/escala-grelha?igrejaId=301&formato=json&planoId=301"
+  url: "{{baseUrl}}/v1/actividades/escala-grelha?igrejaId=4192&formato=json&planoId=4192"
   method: GET
   headers:
     - key: Authorization
@@ -9,9 +9,9 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     formato: json
-    planoId: "301"
+    planoId: "4192"
   body:
     type: text
     content: ""
@@ -24,7 +24,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

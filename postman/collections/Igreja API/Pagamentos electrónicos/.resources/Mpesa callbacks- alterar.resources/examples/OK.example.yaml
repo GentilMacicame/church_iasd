@@ -10,20 +10,20 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "pagamentoMpesaId": 5487,
+        "pagamentoMpesaId": 7021,
         "tipo": "string",
         "chaveIdempotencia": "string",
         "payload": {},
-        "processado": false,
+        "processado": true,
         "erro": "string",
-        "recebidoEm": "2017-06-29T10:08:33.087Z",
+        "recebidoEm": "1948-07-21T01:03:01.238Z",
         "estado": "<string>"
       }
 response:
@@ -35,19 +35,19 @@ response:
     type: json
     content: |-
       {
-        "id": 3752,
-        "pagamentoMpesaId": 1832,
+        "id": 1668,
+        "pagamentoMpesaId": 8611,
         "tipo": "string",
         "chaveIdempotencia": "string",
         "payload": {},
-        "processado": true,
+        "processado": false,
         "erro": "string",
-        "recebidoEm": "1958-03-16T15:17:42.508Z",
+        "recebidoEm": "1948-01-30T13:21:34.967Z",
         "estado": "<string>",
-        "criadoEm": "2003-09-17T08:52:46.708Z",
-        "modificadoEm": "1951-10-20T12:07:59.459Z",
-        "endDate": "2004-12-05T08:06:15.831Z",
-        "criadoPor": 5499,
-        "modificadoPor": 779
+        "criadoEm": "1993-04-28T17:15:11.778Z",
+        "modificadoEm": "1996-10-15T02:29:35.887Z",
+        "endDate": "2001-03-02T11:35:02.284Z",
+        "criadoPor": 1403,
+        "modificadoPor": 4488
       }
 order: 1000

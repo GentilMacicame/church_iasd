@@ -8,7 +8,7 @@ Lista do que tem de estar feito antes de abrir o sistema às igrejas. Os pontos 
 - PostgreSQL 16, com as migrações aplicadas **antes** de instalar a versão nova da API
   (`database/migrations`, por ordem; a API desta versão precisa da V16).
 - O utilizador da API: `scripts/criar-papel-api.sh` (BD_UTILIZADOR / BD_SENHA do `.env`, membro de `app_igreja`, nunca o dono das tabelas).
-- `scripts/db-test.sh` numa cópia da base: tem de dar **7× ok**.
+- `scripts/db-test.sh` numa cópia da base: tem de dar **8× ok**.
 - **Backups (continuidade):**
   - PITR: arquivo contínuo de WAL (ex.: pgBackRest ou o serviço gerido do fornecedor), retenção mínima de 30 dias;
   - cópia lógica diária com `scripts/backup-bd.sh` para outro servidor;

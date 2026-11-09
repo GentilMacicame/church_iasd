@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,20 +25,20 @@ response:
     type: json
     content: |-
       {
-        "id": 9900,
-        "igrejaId": 5255,
-        "fundoId": 7867,
+        "id": 4460,
+        "igrejaId": 6125,
+        "fundoId": 3697,
         "moeda": "str",
-        "data": "2016-07-18",
+        "data": "1962-07-03",
         "entradas": "650.00",
         "saidas": "650.00",
         "estornosEntradas": "650.00",
         "estornosSaidas": "650.00",
         "estado": "<string>",
-        "criadoEm": "1974-04-05T10:38:15.323Z",
-        "modificadoEm": "2003-05-25T16:30:24.828Z",
-        "endDate": "2025-11-14T21:52:58.983Z",
-        "criadoPor": 4508,
-        "modificadoPor": 2268
+        "criadoEm": "1994-04-07T12:28:44.721Z",
+        "modificadoEm": "2013-07-07T07:24:47.162Z",
+        "endDate": "1976-06-30T22:35:54.020Z",
+        "criadoPor": 8281,
+        "modificadoPor": 3985
       }
 order: 1000

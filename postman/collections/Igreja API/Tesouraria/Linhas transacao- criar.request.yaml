@@ -19,7 +19,10 @@ body:
       "transacaoId": 1,
       "fundoId": 1,
       "categoriaId": 1,
-      "valor": "650.00"
+      "departamentoIgrejaId": null,
+      "actividadeId": null,
+      "valor": "650.00",
+      "descricao": ""
     }
 settings: {}
 examples: ./.resources/Linhas transacao- criar.resources/examples

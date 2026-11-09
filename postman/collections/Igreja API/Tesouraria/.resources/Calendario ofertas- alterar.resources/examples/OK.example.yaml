@@ -10,16 +10,16 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "entidadeId": 332,
-        "data": "1984-10-24",
-        "fundoId": 5897,
+        "entidadeId": 831,
+        "data": "1975-02-27",
+        "fundoId": 4314,
         "descricao": "string",
         "estado": "<string>"
       }
@@ -32,16 +32,16 @@ response:
     type: json
     content: |-
       {
-        "id": 5721,
-        "entidadeId": 5774,
-        "data": "1965-12-22",
-        "fundoId": 5191,
+        "id": 6344,
+        "entidadeId": 7649,
+        "data": "1979-08-21",
+        "fundoId": 7555,
         "descricao": "string",
         "estado": "<string>",
-        "criadoEm": "2000-12-11T03:51:25.875Z",
-        "modificadoEm": "2021-07-02T20:55:18.504Z",
-        "endDate": "1959-06-22T18:49:07.063Z",
-        "criadoPor": 2885,
-        "modificadoPor": 4568
+        "criadoEm": "1954-12-05T13:14:49.339Z",
+        "modificadoEm": "1999-12-24T21:17:37.668Z",
+        "endDate": "2024-05-05T05:33:47.338Z",
+        "criadoPor": 6347,
+        "modificadoPor": 7379
       }
 order: 1000

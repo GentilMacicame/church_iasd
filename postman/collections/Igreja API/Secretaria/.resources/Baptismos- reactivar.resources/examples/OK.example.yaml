@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,18 +25,20 @@ response:
     type: json
     content: |-
       {
-        "id": 2759,
-        "membroId": 216,
-        "data": "1962-11-26",
+        "id": 707,
+        "membroId": 3133,
+        "data": "2010-09-03",
         "local": "string",
         "oficiante": "string",
         "rebaptismo": true,
-        "classeTrimestreId": 8303,
+        "classeTrimestreId": 8415,
+        "localIgrejaId": 123,
+        "oficianteUsuarioId": 9265,
         "estado": "<string>",
-        "criadoEm": "1983-05-30T01:52:35.915Z",
-        "modificadoEm": "1996-05-29T10:33:25.737Z",
-        "endDate": "1949-04-02T04:41:16.558Z",
-        "criadoPor": 2742,
-        "modificadoPor": 7887
+        "criadoEm": "1957-10-07T20:54:18.069Z",
+        "modificadoEm": "2003-07-09T17:40:13.887Z",
+        "endDate": "2001-05-29T11:16:54.076Z",
+        "criadoPor": 2587,
+        "modificadoPor": 6718
       }
 order: 1000

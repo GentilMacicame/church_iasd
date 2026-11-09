@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "membroId": 6395,
-        "igrejaId": 3955,
+        "membroId": 1479,
+        "igrejaId": 902,
         "tipo": "<string>",
         "valor": "string",
-        "principal": false,
+        "principal": true,
         "estado": "<string>"
       }
 response:
@@ -33,17 +33,17 @@ response:
     type: json
     content: |-
       {
-        "id": 1842,
-        "membroId": 8800,
-        "igrejaId": 7227,
+        "id": 505,
+        "membroId": 1305,
+        "igrejaId": 4214,
         "tipo": "<string>",
         "valor": "string",
-        "principal": false,
+        "principal": true,
         "estado": "<string>",
-        "criadoEm": "1967-10-21T07:24:50.122Z",
-        "modificadoEm": "2022-01-31T14:26:45.610Z",
-        "endDate": "1981-03-25T04:42:50.332Z",
-        "criadoPor": 486,
-        "modificadoPor": 6835
+        "criadoEm": "1969-09-03T13:53:09.020Z",
+        "modificadoEm": "1947-01-05T09:00:11.596Z",
+        "endDate": "2010-01-29T11:47:21.950Z",
+        "criadoPor": 5270,
+        "modificadoPor": 6632
       }
 order: 1000

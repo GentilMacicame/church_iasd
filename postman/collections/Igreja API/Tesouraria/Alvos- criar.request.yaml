@@ -18,6 +18,7 @@ body:
     {
       "igrejaId": {{igrejaId}},
       "fundoId": 1,
+      "descricao": "",
       "valorAlvo": "650.00",
       "dataInicio": "2026-11-14",
       "dataFim": "2026-11-14"

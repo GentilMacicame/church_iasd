@@ -14,7 +14,12 @@ body:
     {
       "igrejaId": {{igrejaId}},
       "tipo": "JUNTA_DIRECTIVA",
-      "data": "2026-11-14T09:00:00+02:00"
+      "data": "2026-11-14T09:00:00+02:00",
+      "local": "Rio Matola",
+      "presididaPorMembroId": null,
+      "secretarioMembroId": null,
+      "quorumPresentes": 1,
+      "actaUrl": "texto"
     }
 settings: {}
 examples: ./.resources/Reunioes- criar.resources/examples

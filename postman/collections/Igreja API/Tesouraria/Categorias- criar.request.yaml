@@ -16,9 +16,11 @@ body:
   type: json
   content: |-
     {
+      "paiCategoriaId": null,
       "codigo": "texto",
-      "nome": "texto",
-      "tipo": "RECEITA"
+      "nome": "Ana",
+      "tipo": "RECEITA",
+      "eRemessa": true
     }
 settings: {}
 examples: ./.resources/Categorias- criar.resources/examples

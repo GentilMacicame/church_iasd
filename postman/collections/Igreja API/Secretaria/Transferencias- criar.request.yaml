@@ -13,7 +13,15 @@ body:
   content: |-
     {
       "membroId": 1,
-      "origemIgrejaId": 1
+      "origemIgrejaId": 1,
+      "destinoIgrejaId": null,
+      "destinoExterno": "texto",
+      "dataPedido": "2026-11-14",
+      "origemVotoId": null,
+      "cartaEmitidaEm": "2026-11-14",
+      "destinoVotoId": null,
+      "aceiteEm": "2026-11-14",
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Transferencias- criar.resources/examples

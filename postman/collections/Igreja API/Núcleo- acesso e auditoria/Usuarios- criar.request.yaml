@@ -11,7 +11,13 @@ headers:
 body:
   type: json
   content: |-
-    {}
+    {
+      "membroId": null,
+      "nome": "Ana",
+      "email": "texto",
+      "telefone": "texto",
+      "superAdmin": true
+    }
 settings: {}
 examples: ./.resources/Usuarios- criar.resources/examples
 order: 22000

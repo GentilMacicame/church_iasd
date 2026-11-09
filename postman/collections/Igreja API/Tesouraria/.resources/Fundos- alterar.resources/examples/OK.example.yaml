@@ -10,20 +10,20 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 838,
+        "igrejaId": 6821,
         "codigo": "string",
         "nome": "string",
         "tipo": "<string>",
         "restrito": false,
-        "percentagemRemessa": "-0184111",
-        "destinoEntidadeId": 3716,
+        "percentagemRemessa": "550.6",
+        "destinoEntidadeId": 3408,
         "estado": "<string>"
       }
 response:
@@ -35,19 +35,19 @@ response:
     type: json
     content: |-
       {
-        "id": 5481,
-        "igrejaId": 5471,
+        "id": 8104,
+        "igrejaId": 4239,
         "codigo": "string",
         "nome": "string",
         "tipo": "<string>",
-        "restrito": false,
-        "percentagemRemessa": "-5.8718",
-        "destinoEntidadeId": 4931,
+        "restrito": true,
+        "percentagemRemessa": "-852943754.22228059595",
+        "destinoEntidadeId": 6274,
         "estado": "<string>",
-        "criadoEm": "1975-08-06T17:42:05.053Z",
-        "modificadoEm": "2013-12-03T20:12:45.776Z",
-        "endDate": "1961-04-30T02:17:08.442Z",
-        "criadoPor": 9560,
-        "modificadoPor": 4588
+        "criadoEm": "1965-10-07T19:18:35.171Z",
+        "modificadoEm": "1985-11-13T12:40:25.770Z",
+        "endDate": "1988-12-16T13:39:23.524Z",
+        "criadoPor": 35,
+        "modificadoPor": 6622
       }
 order: 1000

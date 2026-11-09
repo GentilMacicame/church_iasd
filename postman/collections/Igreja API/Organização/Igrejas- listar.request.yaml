@@ -28,7 +28,7 @@ queryParams:
   value: ''
   disabled: true
 - key: tipo
-  value: GRUPO
+  value: GRUPO_ORGANIZADO
   disabled: true
 - key: maeIgrejaId
   value: ''

@@ -25,7 +25,7 @@ queryParams:
   value: 'true'
   disabled: true
 - key: tipo
-  value: REUNIAO_REGULAR
+  value: ASSEMBLEIA_ADMINISTRATIVA
   disabled: true
 - key: presididaPorMembroId
   value: ''
@@ -34,13 +34,13 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: CONVOCADA
+  value: CANCELADA
   disabled: true
 - key: desde
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 - key: ate
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 settings: {}
 examples: ./.resources/Reunioes- listar.resources/examples

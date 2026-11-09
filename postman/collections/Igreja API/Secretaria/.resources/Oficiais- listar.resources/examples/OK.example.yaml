@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/secretaria/oficiais?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=301&cargoId=301&votoId=301&estado=<string>&desde=1986-03-12&ate=1986-03-12"
+  url: "{{baseUrl}}/v1/secretaria/oficiais?igrejaId=4192&limite=50&depois=string&ordem=string&incluirTerminados=false&membroId=4192&cargoId=4192&votoId=4192&estado=<string>&desde=1996-08-10&ate=1996-08-10"
   method: GET
   headers:
     - key: Authorization
@@ -9,17 +9,17 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     limite: "50"
     depois: string
     ordem: string
     incluirTerminados: "false"
-    membroId: "301"
-    cargoId: "301"
-    votoId: "301"
+    membroId: "4192"
+    cargoId: "4192"
+    votoId: "4192"
     estado: <string>
-    desde: 1986-03-12
-    ate: 1986-03-12
+    desde: 1996-08-10
+    ate: 1996-08-10
   body:
     type: text
     content: ""

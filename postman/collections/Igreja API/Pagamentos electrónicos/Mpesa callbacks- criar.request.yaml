@@ -16,9 +16,13 @@ body:
   type: json
   content: |-
     {
+      "pagamentoMpesaId": null,
       "tipo": "texto",
       "chaveIdempotencia": "texto",
-      "payload": {}
+      "payload": {},
+      "processado": true,
+      "erro": "texto",
+      "recebidoEm": "2026-11-14T09:00:00+02:00"
     }
 settings: {}
 examples: ./.resources/Mpesa callbacks- criar.resources/examples

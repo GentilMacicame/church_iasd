@@ -12,12 +12,12 @@ request:
     type: json
     content: |-
       {
-        "trimestreId": 9103,
-        "pesoPresenca": "14839124885.7",
-        "pesoEstudo": "5282.9938676007",
-        "pesoOfertas": "-527403806.46264",
-        "pesoVisitantes": "91279589.31935654885",
-        "limiteOfertas": "23",
+        "trimestreId": 5316,
+        "pesoPresenca": "6235140464",
+        "pesoEstudo": "-67493163704",
+        "pesoOfertas": "-62.07613987",
+        "pesoVisitantes": "081418.8559817400",
+        "limiteOfertas": "26846297",
         "estado": "<string>"
       }
 response:
@@ -29,7 +29,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

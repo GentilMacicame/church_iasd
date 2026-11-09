@@ -10,17 +10,17 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "classeId": 874,
-        "membroId": 9848,
-        "dataEntrada": "2005-03-27",
-        "dataSaida": "1996-02-01",
+        "classeId": 1497,
+        "membroId": 522,
+        "dataEntrada": "1967-01-21",
+        "dataSaida": "1973-04-16",
         "estado": "<string>"
       }
 response:
@@ -32,16 +32,16 @@ response:
     type: json
     content: |-
       {
-        "id": 3046,
-        "classeId": 5457,
-        "membroId": 7825,
-        "dataEntrada": "2005-07-07",
-        "dataSaida": "1955-03-06",
+        "id": 1671,
+        "classeId": 1490,
+        "membroId": 8074,
+        "dataEntrada": "1951-03-23",
+        "dataSaida": "2009-12-01",
         "estado": "<string>",
-        "criadoEm": "1977-04-27T17:21:47.039Z",
-        "modificadoEm": "1966-12-28T02:51:33.275Z",
-        "endDate": "2008-09-30T14:50:43.334Z",
-        "criadoPor": 1756,
-        "modificadoPor": 7594
+        "criadoEm": "2023-07-08T03:29:30.193Z",
+        "modificadoEm": "2018-12-09T09:57:45.170Z",
+        "endDate": "2004-01-06T06:45:02.811Z",
+        "criadoPor": 5944,
+        "modificadoPor": 4743
       }
 order: 1000

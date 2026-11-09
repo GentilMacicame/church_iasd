@@ -7,7 +7,7 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
@@ -38,15 +38,15 @@ response:
     type: json
     content: |-
       {
-        "id": 179,
-        "orcamentoId": 6671,
-        "categoriaId": 4272,
+        "id": 1643,
+        "orcamentoId": 8719,
+        "categoriaId": 5286,
         "valorPrevisto": "650.00",
         "estado": "<string>",
-        "criadoEm": "1975-12-28T09:13:23.687Z",
-        "modificadoEm": "2025-07-07T04:46:40.103Z",
-        "endDate": "2025-04-18T05:40:19.275Z",
-        "criadoPor": 4011,
-        "modificadoPor": 792
+        "criadoEm": "1962-07-23T18:01:50.292Z",
+        "modificadoEm": "2014-06-28T21:40:57.649Z",
+        "endDate": "1946-11-20T08:34:22.492Z",
+        "criadoPor": 4964,
+        "modificadoPor": 1187
       }
 order: 1000

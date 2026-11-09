@@ -19,7 +19,9 @@ body:
       "igrejaId": {{igrejaId}},
       "entidadeId": 1,
       "ano": 1,
-      "mes": 1
+      "mes": 1,
+      "transacaoId": null,
+      "enviadaEm": "2026-11-14"
     }
 settings: {}
 examples: ./.resources/Remessas- criar.resources/examples

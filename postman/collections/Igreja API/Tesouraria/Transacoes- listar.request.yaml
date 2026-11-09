@@ -25,10 +25,10 @@ queryParams:
   value: 'true'
   disabled: true
 - key: tipo
-  value: ENTRADA
+  value: TRANSFERENCIA
   disabled: true
 - key: metodo
-  value: EMOLA
+  value: BANCO
   disabled: true
 - key: contaId
   value: ''
@@ -55,13 +55,13 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: PENDENTE
+  value: CONFIRMADA
   disabled: true
 - key: desde
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 - key: ate
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 settings: {}
 examples: ./.resources/Transacoes- listar.resources/examples

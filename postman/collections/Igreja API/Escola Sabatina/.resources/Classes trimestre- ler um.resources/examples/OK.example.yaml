@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,23 +25,23 @@ response:
     type: json
     content: |-
       {
-        "id": 4337,
-        "classeId": 9709,
-        "trimestreId": 5601,
-        "igrejaId": 8764,
-        "professorMembroId": 7448,
-        "auxiliarMembroId": 7630,
-        "secretarioMembroId": 2252,
-        "alvoMembros": 3576,
-        "alvoEstudoDiario": "94.54950428",
-        "alvoFiliais": 8782,
+        "id": 5056,
+        "classeId": 50,
+        "trimestreId": 862,
+        "igrejaId": 8098,
+        "professorMembroId": 1430,
+        "auxiliarMembroId": 4314,
+        "secretarioMembroId": 8254,
+        "alvoMembros": 2818,
+        "alvoEstudoDiario": "-38784025162.3",
+        "alvoFiliais": 4191,
         "alvoOfertaSabado": "650.00",
-        "alvoBaptismos": 6138,
+        "alvoBaptismos": 5810,
         "estado": "<string>",
-        "criadoEm": "1948-01-16T11:20:50.652Z",
-        "modificadoEm": "2001-04-23T11:19:47.371Z",
-        "endDate": "1990-11-09T11:28:43.925Z",
-        "criadoPor": 423,
-        "modificadoPor": 5918
+        "criadoEm": "1963-04-04T06:51:24.843Z",
+        "modificadoEm": "2024-10-10T15:52:07.265Z",
+        "endDate": "2013-01-27T12:59:18.634Z",
+        "criadoPor": 2558,
+        "modificadoPor": 5497
       }
 order: 1000

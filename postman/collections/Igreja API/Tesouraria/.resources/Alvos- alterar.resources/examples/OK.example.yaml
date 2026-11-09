@@ -10,19 +10,19 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 3148,
-        "fundoId": 2240,
+        "igrejaId": 8721,
+        "fundoId": 1447,
         "descricao": "string",
         "valorAlvo": "650.00",
-        "dataInicio": "2018-02-14",
-        "dataFim": "1948-04-17",
+        "dataInicio": "2011-11-29",
+        "dataFim": "1985-03-16",
         "estado": "<string>"
       }
 response:
@@ -34,18 +34,18 @@ response:
     type: json
     content: |-
       {
-        "id": 7110,
-        "igrejaId": 5083,
-        "fundoId": 3088,
+        "id": 7626,
+        "igrejaId": 6384,
+        "fundoId": 4178,
         "descricao": "string",
         "valorAlvo": "650.00",
-        "dataInicio": "1970-12-22",
-        "dataFim": "2016-02-23",
+        "dataInicio": "1993-11-13",
+        "dataFim": "1958-03-03",
         "estado": "<string>",
-        "criadoEm": "2021-07-20T21:15:28.536Z",
-        "modificadoEm": "2015-10-13T23:53:25.077Z",
-        "endDate": "1952-04-02T07:28:35.473Z",
-        "criadoPor": 7577,
-        "modificadoPor": 7820
+        "criadoEm": "1976-09-11T11:37:17.868Z",
+        "modificadoEm": "2004-04-04T05:43:14.655Z",
+        "endDate": "2022-07-17T16:06:26.143Z",
+        "criadoPor": 7324,
+        "modificadoPor": 9805
       }
 order: 1000

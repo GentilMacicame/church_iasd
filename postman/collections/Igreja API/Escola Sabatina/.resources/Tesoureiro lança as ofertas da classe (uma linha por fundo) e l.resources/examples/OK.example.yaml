@@ -7,25 +7,25 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "contaId": 8749,
+        "contaId": 9089,
         "missoes": "650.00",
         "decimoTerceiro": "650.00",
         "despesas": "650.00",
-        "contagemId": 6442
+        "contagemId": 1179
       }
 response:
   statusCode: 200
@@ -36,29 +36,29 @@ response:
     type: json
     content: |-
       {
-        "id": 9009,
-        "igrejaId": 1411,
-        "tipo": "ENTRADA",
-        "metodo": "MPESA",
+        "id": 2382,
+        "igrejaId": 9733,
+        "tipo": "SAIDA",
+        "metodo": "EMOLA",
         "valorTotal": "650.00",
-        "contaId": 2325,
-        "destinoContaId": 9433,
-        "membroId": 7491,
-        "familiaId": 5030,
+        "contaId": 6319,
+        "destinoContaId": 4875,
+        "membroId": 8405,
+        "familiaId": 8281,
         "anonimo": true,
-        "contagemId": 9889,
-        "despesaId": 7877,
-        "estornoTransacaoId": 604,
+        "contagemId": 6462,
+        "despesaId": 2903,
+        "estornoTransacaoId": 2155,
         "beneficiario": "string",
         "descricao": "string",
         "referencia": "string",
-        "dataHora": "1961-03-31T23:05:51.793Z",
-        "aprovadoPorUsuarioId": 923,
-        "estado": "CONFIRMADA",
-        "criadoEm": "1947-10-15T11:58:49.631Z",
-        "modificadoEm": "1956-10-07T13:39:48.099Z",
-        "endDate": "2015-01-05T17:18:56.276Z",
-        "criadoPor": 3639,
-        "modificadoPor": 6495
+        "dataHora": "1998-11-11T22:34:54.712Z",
+        "aprovadoPorUsuarioId": 6256,
+        "estado": "PENDENTE",
+        "criadoEm": "1989-04-09T16:33:20.366Z",
+        "modificadoEm": "1980-01-06T11:53:03.124Z",
+        "endDate": "1962-10-20T10:11:40.698Z",
+        "criadoPor": 9259,
+        "modificadoPor": 5381
       }
 order: 1000

@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,17 +25,17 @@ response:
     type: json
     content: |-
       {
-        "id": 2765,
-        "transacaoId": 4412,
-        "despesaId": 9401,
+        "id": 262,
+        "transacaoId": 4881,
+        "despesaId": 6263,
         "tipo": "<string>",
         "nomeFicheiro": "string",
         "url": "string",
         "estado": "<string>",
-        "criadoEm": "2010-03-09T19:05:31.650Z",
-        "modificadoEm": "1967-06-24T19:10:28.080Z",
-        "endDate": "1970-06-29T00:28:02.210Z",
-        "criadoPor": 6336,
-        "modificadoPor": 86
+        "criadoEm": "1992-10-11T16:19:51.391Z",
+        "modificadoEm": "1966-10-11T16:48:10.897Z",
+        "endDate": "1982-11-28T07:59:11.946Z",
+        "criadoPor": 9260,
+        "modificadoPor": 7970
       }
 order: 1000

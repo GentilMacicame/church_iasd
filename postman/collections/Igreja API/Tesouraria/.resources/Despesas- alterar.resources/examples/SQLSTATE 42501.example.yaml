@@ -10,24 +10,24 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 5285,
-        "departamentoIgrejaId": 6736,
-        "actividadeId": 5452,
-        "categoriaId": 7906,
-        "fundoId": 7113,
+        "igrejaId": 7781,
+        "departamentoIgrejaId": 5524,
+        "actividadeId": 9818,
+        "categoriaId": 8742,
+        "fundoId": 8288,
         "descricao": "string",
         "fornecedor": "string",
         "valorSolicitado": "650.00",
         "valorAprovado": "650.00",
-        "solicitadoPorUsuarioId": 9576,
-        "votoId": 1079,
+        "solicitadoPorUsuarioId": 3232,
+        "votoId": 2083,
         "motivoRejeicao": "string",
         "estado": "<string>"
       }
@@ -40,7 +40,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

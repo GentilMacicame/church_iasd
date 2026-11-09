@@ -20,7 +20,7 @@ variables:
   value: ''
   description: Preenchido pelo pedido "Entrar" (válido 15 minutos)
 auth:
-- id: 45e9c624-242c-46dd-bc2c-a12789bbef63
+- id: c5c9d0f9-c9c7-4fe4-ae9b-4497d3d81196
   type: bearer
   name: bearer auth
   credentials:

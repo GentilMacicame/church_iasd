@@ -13,7 +13,13 @@ body:
   content: |-
     {
       "membroId": 1,
-      "data": "2026-11-14"
+      "data": "2026-11-14",
+      "local": "Rio Matola",
+      "oficiante": "Pr. António Mabjaia",
+      "rebaptismo": false,
+      "classeTrimestreId": null,
+      "localIgrejaId": null,
+      "oficianteUsuarioId": null
     }
 settings: {}
 examples: ./.resources/Baptismos- criar.resources/examples

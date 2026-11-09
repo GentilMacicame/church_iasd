@@ -15,7 +15,10 @@ body:
       "membroId": 1,
       "igrejaId": {{igrejaId}},
       "tipo": "BAPTISMO",
-      "data": "2026-11-14"
+      "data": "2026-11-14",
+      "votoId": null,
+      "transferenciaId": null,
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Movimentos membro- criar.resources/examples

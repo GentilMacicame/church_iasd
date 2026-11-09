@@ -10,17 +10,17 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "transacaoId": 8477,
-        "igrejaId": 4487,
-        "ano": 1348,
-        "numero": 6872,
+        "transacaoId": 4419,
+        "igrejaId": 1651,
+        "ano": 222,
+        "numero": 4529,
         "estado": "<string>"
       }
 response:
@@ -32,7 +32,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

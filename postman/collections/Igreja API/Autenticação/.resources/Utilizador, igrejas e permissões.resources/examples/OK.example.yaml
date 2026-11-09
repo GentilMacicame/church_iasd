@@ -21,9 +21,9 @@ response:
     content: |-
       {
         "usuario": {
-          "id": 9840,
+          "id": 9311,
           "nome": "string",
-          "membroId": 6450
+          "membroId": 9725
         },
         "igrejas": [
           {
@@ -67,14 +67,6 @@ response:
             }
           ],
           "key_2": [
-            {
-              "value": "<Error: Too many levels of nesting to fake this schema>"
-            },
-            {
-              "value": "<Error: Too many levels of nesting to fake this schema>"
-            }
-          ],
-          "key_3": [
             {
               "value": "<Error: Too many levels of nesting to fake this schema>"
             },

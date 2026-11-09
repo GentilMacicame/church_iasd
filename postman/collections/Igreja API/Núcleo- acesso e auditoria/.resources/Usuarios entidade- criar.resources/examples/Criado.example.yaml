@@ -34,15 +34,15 @@ response:
     type: json
     content: |-
       {
-        "id": 7573,
-        "usuarioId": 7146,
-        "entidadeId": 4003,
-        "perfilId": 2462,
+        "id": 9208,
+        "usuarioId": 8068,
+        "entidadeId": 9200,
+        "perfilId": 2584,
         "estado": "<string>",
-        "criadoEm": "1973-11-15T14:59:51.036Z",
-        "modificadoEm": "1996-09-25T00:26:00.827Z",
-        "endDate": "1968-01-03T03:06:05.070Z",
-        "criadoPor": 1204,
-        "modificadoPor": 1403
+        "criadoEm": "1986-06-17T12:47:48.686Z",
+        "modificadoEm": "1982-05-03T20:09:26.240Z",
+        "endDate": "1959-04-17T01:44:02.220Z",
+        "criadoPor": 6171,
+        "modificadoPor": 2299
       }
 order: 1000

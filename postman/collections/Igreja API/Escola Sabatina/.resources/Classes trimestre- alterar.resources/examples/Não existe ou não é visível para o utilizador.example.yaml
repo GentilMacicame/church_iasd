@@ -10,23 +10,23 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "classeId": 7851,
-        "trimestreId": 761,
-        "professorMembroId": 3032,
-        "auxiliarMembroId": 8047,
-        "secretarioMembroId": 4421,
-        "alvoMembros": 6576,
-        "alvoEstudoDiario": "-77149331357.00892696373",
-        "alvoFiliais": 3289,
+        "classeId": 4228,
+        "trimestreId": 9931,
+        "professorMembroId": 6616,
+        "auxiliarMembroId": 4602,
+        "secretarioMembroId": 7001,
+        "alvoMembros": 3425,
+        "alvoEstudoDiario": "66654.275",
+        "alvoFiliais": 7517,
         "alvoOfertaSabado": "650.00",
-        "alvoBaptismos": 7932,
+        "alvoBaptismos": 4782,
         "estado": "<string>"
       }
 response:
@@ -38,7 +38,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

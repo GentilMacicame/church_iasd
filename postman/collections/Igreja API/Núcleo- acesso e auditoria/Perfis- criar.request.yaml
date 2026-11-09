@@ -12,7 +12,9 @@ body:
   type: json
   content: |-
     {
-      "nome": "texto"
+      "nome": "Ana",
+      "descricao": "",
+      "ambito": "texto"
     }
 settings: {}
 examples: ./.resources/Perfis- criar.resources/examples

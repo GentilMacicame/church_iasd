@@ -14,7 +14,10 @@ body:
     {
       "membroId": 1,
       "tipo": "DADOS_PESSOAIS",
-      "concedido": true
+      "concedido": true,
+      "data": "2026-11-14",
+      "concedidoPorMembroId": null,
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Consentimentos- criar.resources/examples

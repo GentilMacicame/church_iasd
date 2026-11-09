@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,8 +25,8 @@ response:
     type: json
     content: |-
       {
-        "id": 8736,
-        "transacaoId": 4682,
+        "id": 8596,
+        "transacaoId": 3291,
         "direccao": "str",
         "msisdn": "string",
         "valor": "650.00",
@@ -38,15 +38,15 @@ response:
         "responseDesc": "string",
         "mpesaTransactionId": "string",
         "conversationId": "string",
-        "pedidoEm": "1947-04-24T00:59:14.986Z",
-        "respondidoEm": "2003-06-02T00:46:46.968Z",
-        "ultimaConsultaEm": "1947-03-30T12:15:55.412Z",
-        "tentativasConsulta": 7393,
+        "pedidoEm": "1986-12-22T03:43:31.354Z",
+        "respondidoEm": "1992-08-31T07:49:55.837Z",
+        "ultimaConsultaEm": "2023-01-14T14:58:42.912Z",
+        "tentativasConsulta": 8468,
         "estado": "<string>",
-        "criadoEm": "2021-04-17T14:27:01.283Z",
-        "modificadoEm": "1959-10-03T04:19:05.754Z",
-        "endDate": "1948-10-29T05:58:34.436Z",
-        "criadoPor": 310,
-        "modificadoPor": 6083
+        "criadoEm": "2006-01-22T08:06:21.135Z",
+        "modificadoEm": "1983-01-09T00:42:24.763Z",
+        "endDate": "1954-02-12T02:55:13.679Z",
+        "criadoPor": 4581,
+        "modificadoPor": 3391
       }
 order: 1000

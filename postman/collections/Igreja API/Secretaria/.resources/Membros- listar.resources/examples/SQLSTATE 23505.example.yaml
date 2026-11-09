@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/secretaria/membros?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&familiaId=301&sexo=<string>&estadoCivil=<string>&modoEntrada=<string>&encarregadoMembroId=301&validacao=<string>&validadoPorUsuarioId=301&estado=<string>&q=string"
+  url: "{{baseUrl}}/v1/secretaria/membros?igrejaId=4192&limite=50&depois=string&ordem=string&incluirTerminados=false&familiaId=4192&sexo=<string>&estadoCivil=<string>&modoEntrada=<string>&encarregadoMembroId=4192&validacao=<string>&validadoPorUsuarioId=4192&tipoIdentificacao=<string>&escolaridade=<string>&estado=<string>&q=string"
   method: GET
   headers:
     - key: Authorization
@@ -9,18 +9,20 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     limite: "50"
     depois: string
     ordem: string
     incluirTerminados: "false"
-    familiaId: "301"
+    familiaId: "4192"
     sexo: <string>
     estadoCivil: <string>
     modoEntrada: <string>
-    encarregadoMembroId: "301"
+    encarregadoMembroId: "4192"
     validacao: <string>
-    validadoPorUsuarioId: "301"
+    validadoPorUsuarioId: "4192"
+    tipoIdentificacao: <string>
+    escolaridade: <string>
     estado: <string>
     q: string
   body:
@@ -35,7 +37,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

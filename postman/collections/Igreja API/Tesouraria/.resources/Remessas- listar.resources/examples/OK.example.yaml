@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/tesouraria/remessas?igrejaId=301&limite=50&depois=string&ordem=string&incluirTerminados=false&entidadeId=301&transacaoId=301&estado=<string>"
+  url: "{{baseUrl}}/v1/tesouraria/remessas?igrejaId=4192&limite=50&depois=string&ordem=string&incluirTerminados=false&entidadeId=4192&transacaoId=4192&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -9,13 +9,13 @@ request:
     - key: Accept
       value: application/json
   queryParams:
-    igrejaId: "301"
+    igrejaId: "4192"
     limite: "50"
     depois: string
     ordem: string
     incluirTerminados: "false"
-    entidadeId: "301"
-    transacaoId: "301"
+    entidadeId: "4192"
+    transacaoId: "4192"
     estado: <string>
   body:
     type: text

@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "escalaPlanoId": 636,
-        "data": "2015-05-21",
+        "escalaPlanoId": 809,
+        "data": "1959-08-24",
         "evento": "string",
         "grupoCoral": "string",
-        "departamentoIgrejaId": 807,
+        "departamentoIgrejaId": 669,
         "observacoes": "string",
         "estado": "<string>"
       }
@@ -34,7 +34,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

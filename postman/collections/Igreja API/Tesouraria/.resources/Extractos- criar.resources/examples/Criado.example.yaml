@@ -7,7 +7,7 @@ request:
       value: Bearer <token>
       description: "Added as a part of security scheme: bearer"
     - key: Idempotency-Key
-      value: be66c6e9-db4c-f0c8-d52e-f60e75819a18
+      value: c966098d-b0d1-9792-7308-91c79fe8dd5f
       disabled: false
       description: UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas
     - key: Accept
@@ -47,18 +47,18 @@ response:
     type: json
     content: |-
       {
-        "id": 9058,
-        "contaId": 8867,
-        "data": "1952-12-24",
+        "id": 4593,
+        "contaId": 9589,
+        "data": "1961-09-21",
         "descricao": "string",
         "referencia": "string",
         "valor": "650.00",
-        "transacaoId": 2529,
+        "transacaoId": 7941,
         "estado": "<string>",
-        "criadoEm": "2010-12-13T11:53:13.996Z",
-        "modificadoEm": "1980-05-03T09:46:46.938Z",
-        "endDate": "1978-08-19T02:37:27.239Z",
-        "criadoPor": 2171,
-        "modificadoPor": 5314
+        "criadoEm": "2019-05-21T07:43:20.881Z",
+        "modificadoEm": "2000-09-08T23:47:21.607Z",
+        "endDate": "1952-01-31T01:11:07.898Z",
+        "criadoPor": 3768,
+        "modificadoPor": 4034
       }
 order: 1000

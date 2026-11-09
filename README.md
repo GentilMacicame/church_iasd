@@ -46,11 +46,11 @@ A configuração (base de dados e API) está **só no `.env`** da raiz, lido pel
 # 1. Configuração: servidor, porta, nome da base, utilizador e senha da API, administrador
 cp .env.exemplo .env                  # e preencher BD_SENHA e BD_ADMIN_SENHA
 
-# 2. Base de dados: PostgreSQL 16, migrações V1–V18 e o utilizador da API
+# 2. Base de dados: PostgreSQL 16, migrações V1–V19 e o utilizador da API
 docker compose up -d db               # ou um PostgreSQL já instalado (os dados de ligação vêm do .env)
 scripts/db-reset.sh                   # cria a base BD_NOME (APAGA-A se existir: só no PC ou na 1.ª instalação)
 scripts/criar-papel-api.sh            # cria BD_UTILIZADOR com a senha BD_SENHA
-scripts/db-test.sh                    # testes SQL na base BD_NOME_TESTE (deve dar 7× ok)
+scripts/db-test.sh                    # testes SQL na base BD_NOME_TESTE (deve dar 8× ok)
 
 # 3. API em modo de desenvolvimento (recompila ao gravar) em http://localhost:9080
 ./mvnw liberty:dev                    # Windows: mvnw.cmd liberty:dev
@@ -70,7 +70,7 @@ Não é preciso instalar Maven nem o servidor: o `mvnw` e o plugin descarregam-n
   limite de pedidos, tamanho do pedido, CSV, IP de origem.
 - `ContratoTest`: as rotas das classes `*Controller` são exactamente as operações do `openapi.yaml` e os
   campos de cada tabela são os do contrato; escreve `docs/ROTAS.md`.
-- Integração (`BaseDadosTest`, 41 testes): aplica as migrações V1–V18 num PostgreSQL real e testa, sempre com o
+- Integração (`BaseDadosTest`, 41 testes): aplica as migrações V1–V19 num PostgreSQL real e testa, sempre com o
   papel da API (nunca o dono): `set_config` por transacção, RLS, permissões dos 13 perfis, erros
   403/422/409, sessões e rotação do token, bloqueio de login, recuperação de senha, idempotência,
   CRUD com perfis, processos P-05 (relatório do sábado) e P-08 (saída avulsa).
@@ -106,8 +106,8 @@ P="/c/Program Files/PostgreSQL/16/bin"            # ou 17, 18
 ## Collection do Postman
 
 `postman/collections/Igreja API/` tem os 417 pedidos da API, por módulo, gerados do contrato (formato v3 do
-Postman: um ficheiro por pedido, para rever no git). Abrir no Postman: **Import → pasta**
-`postman/collections/Igreja API`, ou correr no terminal com o Postman CLI.
+Postman: um ficheiro por pedido, para rever no git). Para o Postman há também um ficheiro único:
+**`postman/Igreja-API.postman_collection.json`** (Postman → **Import** → escolher o ficheiro).
 
 1. Nas variáveis da collection, preencha `login` e `senha` (não as grave no git); `baseUrl` é a API local
    (`http://localhost:9080`) e `igrejaId` a igreja usada nas listagens e criações.
@@ -127,6 +127,7 @@ Quando o contrato mudar, gera-se de novo (os ajustes acima são aplicados pela f
 ```bash
 postman spec generate collection api/openapi.yaml -n "Igreja API" --folder-strategy Tags --force
 python ferramentas/ajustar_collection.py
+python ferramentas/exportar_collection.py      # ficheiro único para importar
 postman collection lint "postman/collections/Igreja API"
 ```
 

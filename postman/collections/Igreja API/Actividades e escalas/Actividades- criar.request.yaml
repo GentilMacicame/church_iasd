@@ -13,8 +13,14 @@ body:
   content: |-
     {
       "departamentoIgrejaId": 1,
-      "nome": "texto",
-      "dataInicio": "2026-11-14T09:00:00+02:00"
+      "responsavelMembroId": null,
+      "nome": "Ana",
+      "descricao": "",
+      "local": "Rio Matola",
+      "dataInicio": "2026-11-14T09:00:00+02:00",
+      "dataFim": "2026-11-14T09:00:00+02:00",
+      "dataHoraLembrete": "2026-11-14T09:00:00+02:00",
+      "valorPrevisto": "650.00"
     }
 settings: {}
 examples: ./.resources/Actividades- criar.resources/examples

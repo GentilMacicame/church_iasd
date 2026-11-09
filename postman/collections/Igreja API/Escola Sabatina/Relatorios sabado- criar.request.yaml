@@ -14,7 +14,16 @@ body:
     {
       "classeTrimestreId": 1,
       "sabadoId": 1,
-      "membrosPresentes": 1
+      "membrosMatriculados": 1,
+      "membrosPresentes": 1,
+      "estudoDiario": 1,
+      "visitantes": 1,
+      "filiais": 1,
+      "oferta": "650.00",
+      "oferta13Sabado": "650.00",
+      "ofertaDespesas": "650.00",
+      "transacaoId": null,
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Relatorios sabado- criar.resources/examples

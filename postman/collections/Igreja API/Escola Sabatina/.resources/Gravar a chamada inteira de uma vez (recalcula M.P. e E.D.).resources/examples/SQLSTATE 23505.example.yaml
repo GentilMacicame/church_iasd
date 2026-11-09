@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -18,14 +18,14 @@ request:
     content: |-
       [
         {
-          "membroId": 4982,
+          "membroId": 7919,
           "presente": false,
           "estudouLicao": true
         },
         {
-          "membroId": 1861,
+          "membroId": 1242,
           "presente": true,
-          "estudouLicao": false
+          "estudouLicao": true
         }
       ]
 response:
@@ -37,7 +37,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

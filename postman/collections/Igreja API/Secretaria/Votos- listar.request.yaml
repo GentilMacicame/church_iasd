@@ -25,10 +25,10 @@ queryParams:
   value: ''
   disabled: true
 - key: tipo
-  value: OUTRO
+  value: TRANSFERENCIA
   disabled: true
 - key: estado
-  value: ADIADO
+  value: REJEITADO
   disabled: true
 settings: {}
 examples: ./.resources/Votos- listar.resources/examples

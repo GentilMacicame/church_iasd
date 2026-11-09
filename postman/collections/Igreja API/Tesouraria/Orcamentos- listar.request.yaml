@@ -31,7 +31,7 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: ENCERRADO
+  value: RASCUNHO
   disabled: true
 settings: {}
 examples: ./.resources/Orcamentos- listar.resources/examples

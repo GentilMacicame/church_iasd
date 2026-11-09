@@ -15,7 +15,14 @@ body:
       "igrejaId": {{igrejaId}},
       "titulo": "texto",
       "dataInicio": "2026-11-14",
-      "dataFim": "2026-11-14"
+      "dataFim": "2026-11-14",
+      "trimestreId": null,
+      "localEmissao": "texto",
+      "dataEmissao": "2026-11-14",
+      "anciaoMembroId": null,
+      "secretarioMembroId": null,
+      "publicada": true,
+      "observacoes": ""
     }
 settings: {}
 examples: ./.resources/Planos escala- criar.resources/examples

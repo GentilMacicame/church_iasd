@@ -10,17 +10,17 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "membroId": 5036,
-        "votoId": 4200,
-        "dataInicio": "2016-06-14",
-        "dataFim": "2014-10-26",
+        "membroId": 3715,
+        "votoId": 7193,
+        "dataInicio": "2015-04-24",
+        "dataFim": "1992-11-23",
         "encarregadoNotificado": false,
         "motivo": "string",
         "estado": "<string>"
@@ -34,7 +34,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

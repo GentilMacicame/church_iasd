@@ -25,7 +25,7 @@ queryParams:
   value: ''
   disabled: true
 - key: tipo
-  value: UNIAO
+  value: ASSOCIACAO
   disabled: true
 - key: estado
   value: ''

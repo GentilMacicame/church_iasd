@@ -12,8 +12,11 @@ body:
   type: json
   content: |-
     {
+      "paiEntidadeId": null,
       "tipo": "CONFERENCIA_GERAL",
-      "nome": "texto"
+      "nome": "Ana",
+      "sigla": "texto",
+      "dataCriacao": "2026-11-14"
     }
 settings: {}
 examples: ./.resources/Entidades- criar.resources/examples

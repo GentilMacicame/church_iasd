@@ -37,16 +37,16 @@ response:
     type: json
     content: |-
       {
-        "id": 4040,
-        "igrejaId": 8879,
+        "id": 8534,
+        "igrejaId": 3217,
         "nome": "string",
         "divisao": "<string>",
         "localReuniao": "string",
         "estado": "<string>",
-        "criadoEm": "1948-06-16T10:23:51.790Z",
-        "modificadoEm": "1975-08-05T10:15:42.363Z",
-        "endDate": "1965-04-01T18:57:30.688Z",
-        "criadoPor": 3145,
-        "modificadoPor": 5755
+        "criadoEm": "2012-07-26T00:45:22.118Z",
+        "modificadoEm": "1959-10-22T00:27:50.745Z",
+        "endDate": "1954-07-02T12:54:41.852Z",
+        "criadoPor": 4248,
+        "modificadoPor": 8945
       }
 order: 1000

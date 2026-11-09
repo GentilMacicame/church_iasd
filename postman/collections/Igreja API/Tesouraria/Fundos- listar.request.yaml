@@ -25,7 +25,7 @@ queryParams:
   value: '{{igrejaId}}'
   disabled: false
 - key: tipo
-  value: ES_MISSOES
+  value: OFERTA_MISSIONARIA
   disabled: true
 - key: destinoEntidadeId
   value: ''

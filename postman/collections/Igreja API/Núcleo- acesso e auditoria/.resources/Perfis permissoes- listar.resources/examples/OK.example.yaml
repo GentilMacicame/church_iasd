@@ -1,6 +1,6 @@
 $kind: http-example
 request:
-  url: "{{baseUrl}}/v1/nucleo/perfis-permissoes?limite=50&depois=string&ordem=string&incluirTerminados=false&perfilId=301&permissaoId=301&estado=<string>"
+  url: "{{baseUrl}}/v1/nucleo/perfis-permissoes?limite=50&depois=string&ordem=string&incluirTerminados=false&perfilId=4192&permissaoId=4192&estado=<string>"
   method: GET
   headers:
     - key: Authorization
@@ -13,8 +13,8 @@ request:
     depois: string
     ordem: string
     incluirTerminados: "false"
-    perfilId: "301"
-    permissaoId: "301"
+    perfilId: "4192"
+    permissaoId: "4192"
     estado: <string>
   body:
     type: text

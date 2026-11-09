@@ -12,11 +12,11 @@ request:
     type: json
     content: |-
       {
-        "membroId": 111,
+        "membroId": 381,
         "nome": "string",
         "email": "string",
         "telefone": "string",
-        "superAdmin": false,
+        "superAdmin": true,
         "estado": "<string>"
       }
 response:
@@ -28,18 +28,18 @@ response:
     type: json
     content: |-
       {
-        "id": 6621,
-        "membroId": 6148,
+        "id": 8440,
+        "membroId": 3275,
         "nome": "string",
         "email": "string",
         "telefone": "string",
         "superAdmin": false,
-        "ultimoLogin": "1993-12-23T00:09:25.955Z",
+        "ultimoLogin": "2000-04-03T15:40:53.590Z",
         "estado": "<string>",
-        "criadoEm": "2012-11-01T09:26:24.805Z",
-        "modificadoEm": "2007-02-05T01:29:24.637Z",
-        "endDate": "1984-03-04T14:01:09.390Z",
-        "criadoPor": 9731,
-        "modificadoPor": 7535
+        "criadoEm": "2018-11-25T13:21:40.055Z",
+        "modificadoEm": "2003-03-16T02:45:06.579Z",
+        "endDate": "1955-10-03T04:21:22.577Z",
+        "criadoPor": 5391,
+        "modificadoPor": 1977
       }
 order: 1000

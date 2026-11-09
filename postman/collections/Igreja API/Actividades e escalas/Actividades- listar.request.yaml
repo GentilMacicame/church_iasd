@@ -28,13 +28,13 @@ queryParams:
   value: ''
   disabled: true
 - key: estado
-  value: CONCLUIDA
+  value: PLANEADA
   disabled: true
 - key: desde
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 - key: ate
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 settings: {}
 examples: ./.resources/Actividades- listar.resources/examples

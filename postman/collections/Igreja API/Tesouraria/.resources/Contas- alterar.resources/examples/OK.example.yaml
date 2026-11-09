@@ -10,14 +10,14 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 6149,
+        "igrejaId": 7231,
         "tipo": "<string>",
         "nome": "string",
         "numero": "string",
@@ -25,7 +25,7 @@ request:
         "banco": "string",
         "moeda": "str",
         "saldoInicial": "650.00",
-        "dataSaldoInicial": "1973-07-23",
+        "dataSaldoInicial": "2005-08-16",
         "estado": "<string>"
       }
 response:
@@ -37,8 +37,8 @@ response:
     type: json
     content: |-
       {
-        "id": 8898,
-        "igrejaId": 5216,
+        "id": 8060,
+        "igrejaId": 7161,
         "tipo": "<string>",
         "nome": "string",
         "numero": "string",
@@ -46,12 +46,12 @@ response:
         "banco": "string",
         "moeda": "str",
         "saldoInicial": "650.00",
-        "dataSaldoInicial": "2010-11-16",
+        "dataSaldoInicial": "2026-01-11",
         "estado": "<string>",
-        "criadoEm": "1952-10-19T15:08:14.265Z",
-        "modificadoEm": "1956-07-25T11:15:16.436Z",
-        "endDate": "1968-11-05T21:31:56.266Z",
-        "criadoPor": 564,
-        "modificadoPor": 3921
+        "criadoEm": "1994-01-31T05:30:56.356Z",
+        "modificadoEm": "2011-11-21T05:50:45.364Z",
+        "endDate": "2026-02-18T16:41:56.886Z",
+        "criadoPor": 6844,
+        "modificadoPor": 5742
       }
 order: 1000

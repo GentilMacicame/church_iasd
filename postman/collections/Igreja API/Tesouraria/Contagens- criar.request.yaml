@@ -19,9 +19,11 @@ body:
       "igrejaId": {{igrejaId}},
       "contaId": 1,
       "data": "2026-11-14",
+      "ocasiao": "texto",
       "contador1MembroId": 1,
       "contador2MembroId": 1,
-      "totalContado": "650.00"
+      "totalContado": "650.00",
+      "conferidoPorUsuarioId": null
     }
 settings: {}
 examples: ./.resources/Contagens- criar.resources/examples

@@ -19,13 +19,13 @@ response:
   statusCode: 429
   statusText: Too Many Requests
   headers:
-    Retry-After: "301"
+    Retry-After: "4192"
     Content-Type: application/json
   body:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

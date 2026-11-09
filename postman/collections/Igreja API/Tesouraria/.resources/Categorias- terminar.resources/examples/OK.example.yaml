@@ -10,7 +10,7 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
@@ -25,17 +25,17 @@ response:
     type: json
     content: |-
       {
-        "id": 5349,
-        "paiCategoriaId": 1597,
+        "id": 5453,
+        "paiCategoriaId": 531,
         "codigo": "string",
         "nome": "string",
         "tipo": "<string>",
-        "eRemessa": true,
+        "eRemessa": false,
         "estado": "<string>",
-        "criadoEm": "2025-05-07T03:20:52.362Z",
-        "modificadoEm": "2009-10-09T02:54:22.294Z",
-        "endDate": "1991-04-23T12:16:59.539Z",
-        "criadoPor": 831,
-        "modificadoPor": 6686
+        "criadoEm": "1952-10-31T09:39:00.164Z",
+        "modificadoEm": "2005-04-30T06:33:42.040Z",
+        "endDate": "2011-09-10T14:59:35.164Z",
+        "criadoPor": 9704,
+        "modificadoPor": 4861
       }
 order: 1000

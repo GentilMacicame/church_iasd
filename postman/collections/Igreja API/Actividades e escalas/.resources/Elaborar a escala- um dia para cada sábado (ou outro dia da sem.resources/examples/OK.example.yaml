@@ -10,14 +10,14 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "diaSemana": 3
+        "diaSemana": 6
       }
 response:
   statusCode: 201
@@ -28,6 +28,6 @@ response:
     type: json
     content: |-
       {
-        "criados": 5660
+        "criados": 7398
       }
 order: 1000

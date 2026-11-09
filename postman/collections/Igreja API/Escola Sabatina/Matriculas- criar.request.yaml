@@ -13,7 +13,9 @@ body:
   content: |-
     {
       "classeId": 1,
-      "membroId": 1
+      "membroId": 1,
+      "dataEntrada": "2026-11-14",
+      "dataSaida": "2026-11-14"
     }
 settings: {}
 examples: ./.resources/Matriculas- criar.resources/examples

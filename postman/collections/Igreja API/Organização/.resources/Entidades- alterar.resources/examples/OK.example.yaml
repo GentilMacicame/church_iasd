@@ -10,18 +10,18 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "paiEntidadeId": 1228,
+        "paiEntidadeId": 8213,
         "tipo": "<string>",
         "nome": "string",
         "sigla": "string",
-        "dataCriacao": "1964-06-08",
+        "dataCriacao": "1983-04-04",
         "estado": "<string>"
       }
 response:
@@ -33,17 +33,17 @@ response:
     type: json
     content: |-
       {
-        "id": 1822,
-        "paiEntidadeId": 1655,
+        "id": 7188,
+        "paiEntidadeId": 5704,
         "tipo": "<string>",
         "nome": "string",
         "sigla": "string",
-        "dataCriacao": "1985-04-25",
+        "dataCriacao": "1971-12-07",
         "estado": "<string>",
-        "criadoEm": "1948-02-01T22:07:01.893Z",
-        "modificadoEm": "1949-12-12T22:00:00.735Z",
-        "endDate": "1990-10-28T01:30:44.882Z",
-        "criadoPor": 3526,
-        "modificadoPor": 561
+        "criadoEm": "1963-09-24T04:27:08.772Z",
+        "modificadoEm": "1996-12-05T04:57:18.063Z",
+        "endDate": "1967-03-30T08:14:24.620Z",
+        "criadoPor": 3525,
+        "modificadoPor": 3952
       }
 order: 1000

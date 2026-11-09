@@ -13,7 +13,8 @@ body:
   content: |-
     {
       "entidadeId": 1,
-      "nome": "texto"
+      "nome": "Ana",
+      "pastorUsuarioId": null
     }
 settings: {}
 examples: ./.resources/Distritos- criar.resources/examples

@@ -13,8 +13,29 @@ body:
   content: |-
     {
       "igrejaId": {{igrejaId}},
-      "nome": "texto",
-      "apelido": "texto"
+      "familiaId": null,
+      "nome": "Ana",
+      "apelido": "Langa",
+      "dataNascimento": "1990-05-20",
+      "sexo": "M",
+      "estadoCivil": "SOLTEIRO",
+      "morada": "Perto da escola primária",
+      "dataEntrada": "2026-11-14",
+      "modoEntrada": "BAPTISMO",
+      "encarregadoMembroId": null,
+      "naturalidade": "Xai-Xai, Gaza",
+      "nacionalidade": "Moçambicana",
+      "tipoIdentificacao": "BI",
+      "numeroIdentificacao": "110100000000A",
+      "profissao": "Professor",
+      "escolaridade": "SECUNDARIO",
+      "nomePai": "João Langa",
+      "nomeMae": "Maria Cossa",
+      "provincia": "Maputo",
+      "cidadeDistrito": "Matola",
+      "bairro": "Machava",
+      "quarteirao": "12",
+      "numeroCasa": "34"
     }
 settings: {}
 examples: ./.resources/Membros- criar.resources/examples

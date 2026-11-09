@@ -12,7 +12,8 @@ body:
   type: json
   content: |-
     {
-      "nome": "texto"
+      "nome": "Ana",
+      "descricao": ""
     }
 settings: {}
 examples: ./.resources/Departamentos- criar.resources/examples

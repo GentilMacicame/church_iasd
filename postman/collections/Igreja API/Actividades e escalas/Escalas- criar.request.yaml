@@ -12,8 +12,14 @@ body:
   type: json
   content: |-
     {
+      "igrejaId": null,
+      "data": "2026-11-14",
       "funcao": "PREGADOR",
-      "membroId": 1
+      "membroId": 1,
+      "actividadeId": null,
+      "substitutoMembroId": null,
+      "observacoes": "",
+      "escalaDiaId": null
     }
 settings: {}
 examples: ./.resources/Escalas- criar.resources/examples

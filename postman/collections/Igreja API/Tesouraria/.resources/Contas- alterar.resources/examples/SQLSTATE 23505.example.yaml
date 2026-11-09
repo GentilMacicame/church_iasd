@@ -10,14 +10,14 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 6149,
+        "igrejaId": 7231,
         "tipo": "<string>",
         "nome": "string",
         "numero": "string",
@@ -25,7 +25,7 @@ request:
         "banco": "string",
         "moeda": "str",
         "saldoInicial": "650.00",
-        "dataSaldoInicial": "1973-07-23",
+        "dataSaldoInicial": "2005-08-16",
         "estado": "<string>"
       }
 response:
@@ -37,7 +37,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

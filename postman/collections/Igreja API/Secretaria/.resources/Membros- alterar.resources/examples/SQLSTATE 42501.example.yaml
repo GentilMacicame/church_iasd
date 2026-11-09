@@ -10,25 +10,38 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "igrejaId": 2141,
-        "familiaId": 7979,
+        "igrejaId": 1015,
+        "familiaId": 2212,
         "nome": "string",
         "apelido": "string",
-        "dataNascimento": "1986-10-29",
+        "dataNascimento": "2003-09-08",
         "sexo": "<string>",
         "estadoCivil": "<string>",
         "morada": "string",
-        "dataEntrada": "1951-07-13",
+        "dataEntrada": "2024-10-04",
         "modoEntrada": "<string>",
-        "encarregadoMembroId": 2793,
+        "encarregadoMembroId": 7322,
         "validacao": "<string>",
+        "naturalidade": "string",
+        "nacionalidade": "string",
+        "tipoIdentificacao": "<string>",
+        "numeroIdentificacao": "string",
+        "profissao": "string",
+        "escolaridade": "<string>",
+        "nomePai": "string",
+        "nomeMae": "string",
+        "provincia": "string",
+        "cidadeDistrito": "string",
+        "bairro": "string",
+        "quarteirao": "string",
+        "numeroCasa": "string",
         "estado": "<string>"
       }
 response:
@@ -40,7 +53,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"

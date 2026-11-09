@@ -28,7 +28,7 @@ queryParams:
   value: ''
   disabled: true
 - key: sexo
-  value: F
+  value: M
   disabled: true
 - key: estadoCivil
   value: VIUVO
@@ -40,10 +40,16 @@ queryParams:
   value: ''
   disabled: true
 - key: validacao
-  value: APROVADO
+  value: PENDENTE
   disabled: true
 - key: validadoPorUsuarioId
   value: ''
+  disabled: true
+- key: tipoIdentificacao
+  value: CARTA_CONDUCAO
+  disabled: true
+- key: escolaridade
+  value: TECNICO_PROFISSIONAL
   disabled: true
 - key: estado
   value: INTERESSADO

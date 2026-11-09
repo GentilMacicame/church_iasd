@@ -13,7 +13,8 @@ body:
   content: |-
     {
       "igrejaId": {{igrejaId}},
-      "nome": "texto"
+      "nome": "Ana",
+      "morada": "Perto da escola primária"
     }
 settings: {}
 examples: ./.resources/Familias- criar.resources/examples

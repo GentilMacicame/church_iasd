@@ -27,14 +27,20 @@ queryParams:
 - key: classeTrimestreId
   value: ''
   disabled: true
+- key: localIgrejaId
+  value: ''
+  disabled: true
+- key: oficianteUsuarioId
+  value: ''
+  disabled: true
 - key: estado
   value: ''
   disabled: true
 - key: desde
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 - key: ate
-  value: 1986-03-12
+  value: 1996-08-10
   disabled: true
 settings: {}
 examples: ./.resources/Baptismos- listar.resources/examples

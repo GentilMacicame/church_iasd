@@ -10,22 +10,22 @@ request:
       value: application/json
   pathVariables:
     - key: id
-      value: "2712"
+      value: "3014"
       disabled: false
       description: "(Required) "
   body:
     type: json
     content: |-
       {
-        "reuniaoId": 5279,
+        "reuniaoId": 6081,
         "numero": "string",
         "tipo": "<string>",
         "assunto": "string",
         "texto": "string",
-        "leitura": 7210,
-        "aFavor": 8992,
-        "contra": 9541,
-        "abstencoes": 2481,
+        "leitura": 8302,
+        "aFavor": 2189,
+        "contra": 5635,
+        "abstencoes": 5089,
         "estado": "<string>"
       }
 response:
@@ -37,7 +37,7 @@ response:
     type: json
     content: |-
       {
-        "erro": "erro_interno",
+        "erro": "nao_disponivel",
         "mensagem": "string",
         "pedidoId": "string",
         "campo": "string"
