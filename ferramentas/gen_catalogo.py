@@ -10,7 +10,7 @@ sql/V1__base.sql) e a mesma regra de nomes dos campos (gen_openapi.campo), para 
 nunca divergirem.
 
 Uso:  python ferramentas/gen_catalogo.py [pasta do gerador]
-      (por defeito ../sistema-igreja/sistema-igreja/database/gerador)
+      (por defeito database/gerador, neste repositório)
 """
 import keyword
 import os
@@ -18,9 +18,7 @@ import re
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
-CANDIDATOS = [os.path.join(AQUI, '..', '..', 'sistema-igreja', 'sistema-igreja', 'database', 'gerador'),
-              os.path.join(AQUI, '..', '..', 'database', 'gerador')]
-GERADOR = sys.argv[1] if len(sys.argv) > 1 else next((c for c in CANDIDATOS if os.path.isdir(c)), CANDIDATOS[0])
+GERADOR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(AQUI, '..', 'database', 'gerador')
 sys.path.insert(0, os.path.abspath(GERADOR))
 from defs import MODULES, SCOPE, SYSTEM_WRITE  # noqa: E402
 from nomes import RES  # noqa: E402

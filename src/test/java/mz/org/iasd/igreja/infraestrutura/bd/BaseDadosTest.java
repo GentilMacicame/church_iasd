@@ -92,7 +92,7 @@ class BaseDadosTest {
 
     @BeforeAll
     static void preparar() throws Exception {
-        Path pasta = Path.of(System.getProperty("migracoes.dir", "../database/migrations"));
+        Path pasta = Path.of(System.getProperty("migracoes.dir", "database/migrations"));
         assumeTrue(Files.isDirectory(pasta), "Pasta das migrações não encontrada: " + pasta.toAbsolutePath()
                 + " (defina -Dmigracoes.dir=...)");
 

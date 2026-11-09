@@ -1,0 +1,90 @@
+1. a API não lê as tabelas de sessão
+psql:database/tests/03_sessoes_e_api.sql:6: ERROR:  permission denied for table sessao
+2. 10 falhas bloqueiam o login
+ bloqueado 
+-----------
+ t
+(1 row)
+
+3. login certo: abre sessão, desbloqueia, regista último login
+ sessao 
+--------
+      1
+(1 row)
+
+ desbloqueado | sessao_de 
+--------------+-----------
+ t            | 
+(1 row)
+
+4. renovar: OK; reutilizar o token antigo: REUTILIZADA e termina tudo; o novo deixa de servir
+ resultado | utilizador | sessao_id 
+-----------+------------+-----------
+ OK        |          2 |         2
+(1 row)
+
+  resultado  | utilizador | sessao_id 
+-------------+------------+-----------
+ REUTILIZADA |          2 |          
+(1 row)
+
+ resultado | utilizador | sessao_id 
+-----------+------------+-----------
+ EXPIRADA  |          2 |          
+(1 row)
+
+ resultado | utilizador | sessao_id 
+-----------+------------+-----------
+ INVALIDA  |            |          
+(1 row)
+
+5. recuperar senha: código errado conta tentativas; certo muda a senha
+ utilizador | telefone 
+------------+----------
+          2 | 
+(1 row)
+
+ fn_redefinir_senha 
+--------------------
+ CODIGO_ERRADO
+(1 row)
+
+ fn_redefinir_senha 
+--------------------
+ OK
+(1 row)
+
+ fn_redefinir_senha 
+--------------------
+ EXPIRADO
+(1 row)
+
+ usu_id | senha_hash | estado 
+--------+------------+--------
+      2 | novohash   | ACTIVO
+(1 row)
+
+6. pedido repetido: guarda e devolve a mesma resposta; repetir a chave falha
+ fn_idempotencia_guardar 
+-------------------------
+ 
+(1 row)
+
+ metodo |          caminho          | estado_http |  resposta  
+--------+---------------------------+-------------+------------
+ POST   | /v1/tesouraria/transacoes |         201 | {"id": 99}
+(1 row)
+
+psql:database/tests/03_sessoes_e_api.sql:28: ERROR:  duplicate key value violates unique constraint "uq_pid_chave"
+7. tesoureiro liga ofertas a um relatório da ES (relatório 2 da classe 1); secretário da ES não pode
+ fn_ligar_ofertas 
+------------------
+ 
+(1 row)
+
+psql:database/tests/03_sessoes_e_api.sql:34: ERROR:  Sem permissão: Criar: Movimentos: entradas, saídas e transferências (cabeçalho) (tesouraria.transacao.criar) na igreja 1
+ ers_estado | ers_tra_id 
+------------+------------
+ FECHADO    |         50
+(1 row)
+

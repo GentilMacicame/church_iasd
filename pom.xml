@@ -18,9 +18,9 @@
         <failOnMissingWebXml>false</failOnMissingWebXml>
 
         <!-- Pasta das migrações SQL (fonte de verdade da base de dados). Usada só pelos testes. -->
-        <migracoes.dir>${project.basedir}/../sistema-igreja/sistema-igreja/database/migrations</migracoes.dir>
+        <migracoes.dir>${project.basedir}/database/migrations</migracoes.dir>
 
-        <openapi.dir>${project.basedir}/../sistema-igreja/sistema-igreja/api</openapi.dir>
+        <openapi.dir>${project.basedir}/api</openapi.dir>
         <openapi.ficheiro>${openapi.dir}/openapi.yaml</openapi.ficheiro>
 
         <versao.liberty>24.0.0.12</versao.liberty>

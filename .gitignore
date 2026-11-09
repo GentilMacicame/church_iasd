@@ -1,10 +1,25 @@
+# API (Maven, Open Liberty)
 target/
-.env
-.env.*
-!.env.exemplo
-*.log
+src/main/liberty/config/server.env
+*.iml
 .idea/
 .vscode/*
 !.vscode/settings.json
-*.iml
-src/main/liberty/config/server.env
+
+# segredos
+.env
+.env.*
+!.env.exemplo
+
+# base de dados (gerador e testes)
+__pycache__/
+database/gerador/out/
+database/tests/resultado/
+
+# frontend
+node_modules/
+dist/
+coverage/
+
+*.log
+.DS_Store

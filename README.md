@@ -1,15 +1,49 @@
-# Sistema de Gestão da Igreja · API (Jakarta EE)
+# Sistema de Gestão da Igreja Adventista
 
-API REST em **Jakarta EE 10** (JAX-RS, CDI, JSON-B, Bean Validation, MicroProfile Config)
-sobre **Java 21**, a correr no **Open Liberty**. Contrato: `api/openapi.yaml` do repositório
-`sistema-igreja`. Regras e permissões ficam no PostgreSQL; a API não as reimplementa.
+Secretaria, Escola Sabatina, tesouraria, actividades, M-Pesa e mensagens para igrejas locais e para a
+Associação/Missão (Moçambique).
+
+- **Base de dados** (PostgreSQL 16): as regras de negócio e as permissões estão aqui (triggers, RLS, funções).
+- **API** (Jakarta EE 10, Java 21, Open Liberty): REST sobre a base, sem reimplementar as regras.
+- **Frontend** (React + Vite): por fazer, em `web/`.
+
+```
+CLAUDE.md                 regras e convenções do projecto (lidas pelo Claude Code)
+docker-compose.yml        PostgreSQL 16 local
+database/
+  migrations/             V1__base.sql … V15__perfis_proprios_e_manutencao.sql
+  tests/                  testes SQL 00–04 e resultado esperado
+  gerador/                defs.py (fonte do esquema) + gen.py, gen_openapi.py
+api/openapi.yaml          contrato da API (gerado de defs.py)
+pom.xml, src/             a API (Maven + Open Liberty)
+ferramentas/              gen_catalogo.py (gera os models da API de defs.py)
+scripts/                  db-reset.sh, db-test.sh, criar-papel-api.sql
+docs/                     especificação, modelo de dados, ROTAS.md
+web/                      frontend (por fazer)
+```
+
+## Documentação
+
+- `docs/Especificacao_Sistema_Igreja_v1.1.docx` — especificação funcional e técnica (fonte); `docs/especificacao.md` — a mesma em Markdown
+- `docs/modelo_dados.html` — modelo de dados navegável
+- `api/openapi.yaml` — contrato da API; `docs/ROTAS.md` — as rotas com a classe Java e a permissão de cada uma
+- `CLAUDE.md` — regras e convenções; comandos do Claude Code: `/nova-tabela`, `/novo-endpoint`, `/rever`
+
+# API
+
+API REST em **Jakarta EE 10** (JAX-RS, CDI, JSON-B, Bean Validation, MicroProfile Config) sobre **Java 21**,
+a correr no **Open Liberty**. Contrato: [api/openapi.yaml](api/openapi.yaml). Regras e permissões ficam no
+PostgreSQL; a API não as reimplementa.
 
 ## Arranque
 
 ```bash
-# 1. Base de dados (no repositório sistema-igreja)
-docker compose up -d db && scripts/db-reset.sh
-psql -v senha="'mudar'" -d igreja -f scripts/criar-papel-api.sql     # deste projecto
+# 1. Base de dados: PostgreSQL 16, migrações V1–V15 e o papel da API
+docker compose up -d db
+export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres
+scripts/db-reset.sh                                                   # base "igreja"
+scripts/db-test.sh                                                    # testes SQL (deve dar 5× ok)
+psql -v senha="'mudar'" -d igreja -f scripts/criar-papel-api.sql      # papel api_igreja
 
 # 2. Configuração: o Open Liberty lê src/main/liberty/config/server.env (não vai para o git)
 cp .env.exemplo src/main/liberty/config/server.env                    # e mudar os segredos
@@ -36,7 +70,7 @@ Não é preciso instalar Maven nem o servidor: o `mvnw` e o plugin descarregam-n
   - com Docker: PostgreSQL 16 descartável (Testcontainers);
   - sem Docker: `BD_TESTE_URL=jdbc:postgresql://localhost:5432/postgres BD_TESTE_SENHA=... ./mvnw test`
     (cria a base `igreja_teste_api` e o papel `api_igreja_teste`);
-  - a pasta das migrações vem de `-Dmigracoes.dir` (por defeito `../sistema-igreja/sistema-igreja/database/migrations`).
+  - a pasta das migrações vem de `-Dmigracoes.dir` (por defeito `database/migrations`).
 
 ## Ver as rotas
 
@@ -105,8 +139,8 @@ Dinheiro é `BigDecimal` com `@JsonbNumberFormat("0.00")` (texto com 2 casas no 
 
 Os models e os enums são **gerados**; não se editam à mão. Para mudar uma tabela:
 
-1. editar `database/gerador/defs.py` e criar a migração nova (no repositório sistema-igreja);
-2. `python3 gen_openapi.py` (contrato);
+1. editar `database/gerador/defs.py` e criar a migração nova (ver CLAUDE.md, "Acrescentar ou alterar uma tabela");
+2. `cd database/gerador && python3 gen_openapi.py` (contrato `api/openapi.yaml`);
 3. `python ferramentas/gen_catalogo.py` (models e enums);
 4. `./mvnw test`: o `ContratoTest` confirma que models, rotas e contrato coincidem.
 

@@ -54,7 +54,7 @@ class ContratoTest {
 
     @BeforeAll
     static void ler() throws IOException {
-        Path f = Path.of(System.getProperty("openapi.ficheiro", "../sistema-igreja/sistema-igreja/api/openapi.yaml"));
+        Path f = Path.of(System.getProperty("openapi.ficheiro", "api/openapi.yaml"));
         assumeTrue(Files.isRegularFile(f), "openapi.yaml não encontrado: " + f.toAbsolutePath());
         contrato = Files.readAllLines(f, StandardCharsets.UTF_8);
     }

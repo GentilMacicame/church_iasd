@@ -1,0 +1,123 @@
+== SECRETARIA
+1. admitir por voto da junta (deve falhar: a junta só recomenda)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:24: ERROR:  Movimento BAPTISMO do membro 103: o voto foi tomado em JUNTA_DIRECTIVA; este acto exige REUNIAO_REGULAR ou ASSEMBLEIA_ADMINISTRATIVA
+2. admitir com voto da igreja (passa) e mudar estado à mão (falha)
+ mem_estado | mem_modo_entrada | mem_data_entrada 
+------------+------------------+------------------
+ ACTIVO     | BAPTISMO         | 2026-10-10
+(1 row)
+
+psql:database/tests/01_regras_manual_e_tesouraria.sql:28: ERROR:  O estado e a igreja do membro só mudam com um movimento no livro de membros (secretaria.movimento_membro)
+3. carta com voto só da 1ª leitura (falha); com a votação (passa)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:31: ERROR:  Carta de transferência: é preciso a votação na segunda leitura (primeira leitura numa semana, voto na seguinte)
+ mem_igr_id | mem_estado 
+------------+------------
+          1 | ACTIVO
+(1 row)
+
+4. aceitar 7 meses depois (falha: carta válida 6 meses); aceitar a tempo (passa)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:35: ERROR:  new row for relation "transferencia_membro" violates check constraint "chk_tme_validade"
+ mem_igr_id | mem_estado |   mem_modo_entrada    
+------------+------------+-----------------------
+          2 | ACTIVO     | TRANSFERENCIA_ENTRADA
+(1 row)
+
+ mmb_igr_id |       mmb_tipo        
+------------+-----------------------
+          1 | TRANSFERENCIA_SAIDA
+          2 | TRANSFERENCIA_ENTRADA
+(2 rows)
+
+5. eleger Rui (passa); censurar Rui -> perde o cargo; carta para Rui sob censura (falha); reeleger (falha)
+ ofi_data_fim 
+--------------
+ 2027-02-01
+(1 row)
+
+psql:database/tests/01_regras_manual_e_tesouraria.sql:43: ERROR:  Um membro sob censura não pode receber carta de transferência
+psql:database/tests/01_regras_manual_e_tesouraria.sql:44: ERROR:  Um membro sob censura não pode ocupar cargos
+6. censura de 14 meses (falha) e censura a menor sem avisar encarregado (falha)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:46: ERROR:  new row for relation "disciplina" violates check constraint "chk_dsc_duracao"
+psql:database/tests/01_regras_manual_e_tesouraria.sql:48: ERROR:  O membro é menor: os pais ou encarregado têm de ser avisados
+7. falecimento sem voto (passa)
+ igr_id | ano  | mes | baptismos | rebaptismos | profissoes_de_fe | transferencias_entrada | transferencias_saida | falecimentos | remocoes | desaparecidos | variacao 
+--------+------+-----+-----------+-------------+------------------+------------------------+----------------------+--------------+----------+---------------+----------
+      1 | 2026 |  10 |         1 |           0 |                0 |                      0 |                    0 |            0 |        0 |             0 |        1
+      1 | 2026 |  11 |         0 |           0 |                0 |                      0 |                    1 |            0 |        0 |             0 |       -1
+      2 | 2026 |  11 |         0 |           0 |                0 |                      1 |                    0 |            0 |        0 |             0 |        1
+      1 | 2027 |   7 |         0 |           0 |                0 |                      0 |                    0 |            1 |        0 |             0 |       -1
+(4 rows)
+
+== TESOURARIA
+ fn_criar_fundos_padrao 
+------------------------
+ 
+(1 row)
+
+8. dízimo + ofertas num só M-Pesa (passa)
+9. gastar o dízimo na igreja (falha); remeter o dízimo à Associação (passa)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:65: ERROR:  O fundo "Dízimo" pertence à Associação: só pode sair como remessa (categoria de remessa) ou estorno
+10. fundo da Associação com percentagem errada (falha)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:72: ERROR:  new row for relation "fundo" violates check constraint "chk_fun_associacao"
+11. ES: fechar relatório com ofertas misturadas num fundo (falha); separadas (passa)
+psql:database/tests/01_regras_manual_e_tesouraria.sql:81: ERROR:  Sem permissão: Fechar o relatório do sábado (escola_sabatina.relatorio_sabado.fechar) na igreja 1
+psql:database/tests/01_regras_manual_e_tesouraria.sql:82: ERROR:  Sem permissão: Fechar o relatório do sábado (escola_sabatina.relatorio_sabado.fechar) na igreja 1
+ ers_estado 
+------------
+ ABERTO
+(1 row)
+
+12. estorno sem aprovação (falha); com aprovação do ancião (passa); transferência caixa->banco
+psql:database/tests/01_regras_manual_e_tesouraria.sql:88: ERROR:  A saída 6 precisa de aprovação (despesa aprovada ou tesouraria.fn_aprovar_saida) antes de ser confirmada
+ fn_aprovar_saida 
+------------------
+ 
+(1 row)
+
+13. pendente -> confirmada mais tarde também entra nos saldos
+== saldos pré-calculados vs. recálculo a partir dos movimentos
+ cfi_nome | saldo  
+----------+--------
+ M-Pesa   | 300.00
+ Caixa    | 200.00
+ BCI      | 600.00
+(3 rows)
+
+ fun_codigo | entradas | saidas | saldo  
+------------+----------+--------+--------
+ DIZ        |   700.00 | 500.00 | 200.00
+ ESM        |   750.00 |   0.00 | 750.00
+ ESD        |    50.00 |   0.00 |  50.00
+ OCOMB      |   100.00 |   0.00 | 100.00
+ OLOC       |    50.00 |  50.00 |   0.00
+(5 rows)
+
+ fn_recalcular_saldos 
+----------------------
+ 
+(1 row)
+
+ linhas |                verificacao                 
+--------+--------------------------------------------
+      8 | saldos pré-calculados = recálculo completo
+(1 row)
+
+ fun_id | ano  | mes | recebido | devido | remetido | em_falta 
+--------+------+-----+----------+--------+----------+----------
+      1 | 2026 |  10 |   700.00 | 700.00 |        0 |   700.00
+      2 | 2026 |   9 |   750.00 | 750.00 |        0 |   750.00
+      6 | 2026 |  10 |   100.00 |  50.00 |        0 |    50.00
+(3 rows)
+
+== SEGURANÇA
+       quem        | membros | transacoes 
+-------------------+---------+------------
+ tesoureiro Matola | Ana,Zé  |          0
+(1 row)
+
+       quem       | membros | transacoes | igrejas 
+------------------+---------+------------+---------
+ pastor distrital |      12 |          7 |       1
+(1 row)
+
+psql:database/tests/01_regras_manual_e_tesouraria.sql:122: ERROR:  permission denied for table transacao_linha

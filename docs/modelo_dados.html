@@ -1,0 +1,1052 @@
+<title>Modelo ER da Igreja</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: coluna única de leitura, diagramas em painéis com scroll horizontal próprio */
+:root{
+  --bg:#f7f6f2; --surface:#ffffff; --fg:#1f2421; --muted:#5d6660; --line:#d9dcd4;
+  --accent:#2f6b4f; --accent-soft:#e3efe8; --warn:#8a5a12; --warn-soft:#f6ecd9;
+  --display:"Fraunces",Georgia,serif; --body:"Source Sans 3",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141816; --surface:#1c211e; --fg:#e7ebe8; --muted:#a2aca6; --line:#323a35;
+  --accent:#7cc5a0; --accent-soft:#213229; --warn:#e3b46a; --warn-soft:#33291a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141816; --surface:#1c211e; --fg:#e7ebe8; --muted:#a2aca6; --line:#323a35;
+  --accent:#7cc5a0; --accent-soft:#213229; --warn:#e3b46a; --warn-soft:#33291a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:2.1rem;line-height:1.15}
+h2{font-size:1.4rem}
+.lead{color:var(--muted);max-width:65ch;margin:10px 0 0}
+section{display:grid;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto;padding:16px}
+.panel pre.mermaid{margin:0;min-width:900px;background:transparent}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.85rem}
+.chip{font-family:var(--mono);font-size:.78rem;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.chip.w{background:var(--warn-soft);color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl{overflow-x:auto}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td code{font-family:var(--mono);font-size:.85rem}
+td:first-child{white-space:nowrap}
+h3{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;min-width:0}
+.note p{margin:0}
+.mini td{padding:5px 6px;font-size:.9rem}
+.mini td:first-child{white-space:normal}
+.small{font-size:.85rem;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+details .tbl{margin-top:10px}
+</style>
+<style>
+.schema{font-family:var(--mono);font-size:.8rem;font-weight:400;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:6px}
+.note ul{margin:0;padding-left:1.1rem;display:grid;gap:4px}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+td:first-child{white-space:normal}
+h3.sub{font-family:var(--display);font-size:1.1rem;margin:8px 0 0}
+.matriz th[scope=row]{white-space:nowrap;text-align:left;vertical-align:top}
+.matriz td{font-size:.82rem;white-space:nowrap;vertical-align:top}
+.matriz td:last-child{white-space:normal;min-width:180px}
+.perfil{display:block;font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--fg)}
+.amb{display:block;font-size:.72rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+.mut{color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Modelo de dados · versão 5</h1>
+    <p class="lead">59 tabelas em 8 módulos (schemas PostgreSQL), com permissões por perfil verificadas pela própria base de dados, conformes ao Manual da Igreja Adventista do Sétimo Dia e testadas com 377 mil movimentos. Corresponde às migrações <code>V1</code> a <code>V13</code> e ao script único <code>schema_igreja_v5.sql</code> (PostgreSQL 15+).</p>
+  </header>
+
+  <section>
+    <h2>Módulos</h2>
+    <div class="tbl"><table><thead><tr><th>Schema</th><th>Módulo</th><th>Tabelas</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>nucleo</code></td><td>Núcleo: acesso e auditoria</td><td>7</td><td>Utilizadores, perfis, permissões e o histórico de todas as alterações.</td></tr><tr><td><code>organizacao</code></td><td>Organização</td><td>6</td><td>Estrutura da denominação (Associação/Missão, distritos, igrejas e grupos), departamentos e cargos.</td></tr><tr><td><code>secretaria</code></td><td>Secretaria</td><td>11</td><td>Membros, famílias, reuniões e votos, movimentos do livro de membros, transferências, disciplina e eleições.</td></tr><tr><td><code>actividades</code></td><td>Actividades e escalas</td><td>3</td><td>Programas dos departamentos, material necessário e escalas de serviço.</td></tr><tr><td><code>escola_sabatina</code></td><td>Escola Sabatina</td><td>9</td><td>Trimestres, sábados, classes (unidades de acção) por divisão, relatórios, chamada, visitantes e pontuação.</td></tr><tr><td><code>tesouraria</code></td><td>Tesouraria</td><td>19</td><td>Contas, fundos (da Associação e locais), movimentos divididos por fundo, despesas, contagens, recibos, remessas, orçamento, fecho mensal e saldos pré-calculados.</td></tr><tr><td><code>pagamentos</code></td><td>Pagamentos electrónicos</td><td>3</td><td>Integração com M-Pesa e bancos.</td></tr><tr><td><code>comunicacao</code></td><td>Comunicação</td><td>1</td><td>Fila de SMS, WhatsApp e e-mail.</td></tr></tbody></table></div>
+    <div class="grid2">
+      <div class="note">
+        <h3>Nomes</h3>
+        <p>Cada coluna começa pelo prefixo de 3 letras da sua tabela (<code>mem_nome</code>). A chave estrangeira diz para onde aponta: <code>ect_professor_mem_id</code>.</p>
+      </div>
+      <div class="note">
+        <h3>Campos em todas as tabelas</h3>
+        <p><code>_estado</code>, <code>_criado_em</code>, <code>_criado_por</code>, <code>_modificado_em</code>, <code>_modificado_por</code> e <code>_end_date</code>. Nada se apaga. Nos diagramas só aparece <code>_estado</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Permissões</h2>
+    <p class="lead">Cada tabela tem quatro permissões (<code>ler</code>, <code>criar</code>, <code>alterar</code>, <code>terminar</code>), com o código <code>&lt;módulo&gt;.&lt;tabela&gt;.&lt;acção&gt;</code>. A estas juntam-se nove acções de negócio. O PostgreSQL verifica-as em cada linha, na igreja a que o registo pertence; a API não consegue contorná-las.</p>
+    <div class="grid2">
+      <div class="note"><h3>De onde vêm as permissões</h3>
+        <ul>
+          <li><b>Perfil numa igreja</b> (<code>nucleo.usuario_igreja</code>).</li>
+          <li><b>Perfil numa Associação/Missão</b> (<code>nucleo.usuario_entidade</code>): vale para todas as igrejas abaixo dela.</li>
+          <li><b>Pastor distrital</b>: perfil PASTOR em todas as igrejas do distrito.</li>
+          <li><b>O próprio membro</b>: vê sempre os seus dados, contribuições, matrículas e escalas, mesmo sem perfil.</li>
+          <li><b>Super-administrador</b>: tudo.</li>
+        </ul></div>
+      <div class="note"><h3>Regras que ninguém contorna</h3>
+        <ul>
+          <li>Ninguém apaga registos; terminar ou reactivar exige a permissão <code>terminar</code>.</li>
+          <li>Quem regista uma saída não a aprova; aprova-se só em nome próprio.</li>
+          <li>Uma saída só é confirmada com despesa aprovada, aprovação de outra pessoa ou se for remessa.</li>
+          <li>Ninguém altera os próprios perfis nem dá a outros um perfil com mais permissões do que as suas.</li>
+          <li>Só um super-administrador cria outro, e só se gerem utilizadores das igrejas que se administram.</li>
+          <li>A senha não é legível pela API; os saldos e o log só são escritos pelo sistema.</li>
+        </ul></div>
+    </div>
+    <h3 class="sub">Matriz por perfil</h3>
+    <p class="small">Em cada módulo, as acções que o perfil tem; "(n/m)" quer dizer que as tem em n das m tabelas do módulo. As tabelas comuns (categorias, departamentos, trimestres, ...) são legíveis por todos.</p>
+    <div class="tbl"><table class="matriz"><thead><tr><th>Perfil</th><th>nucleo</th><th>organizacao</th><th>secretaria</th><th>actividades</th><th>escola_sabatina</th><th>tesouraria</th><th>pagamentos</th><th>comunicacao</th><th>Acções de negócio</th></tr></thead><tbody><tr><th scope="row"><span class="perfil">ADMIN</span><span class="amb">igreja</span></th><td>ler (2/3)<br>criar (2/6)<br>alterar (2/6)<br>terminar (2/6)</td><td>ler<br>criar (1/6)<br>alterar (2/6)<br>terminar (1/6)</td><td>ler (10/11)<br>criar (10/11)<br>alterar (10/11)<br>terminar (10/11)</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">PASTOR</span><span class="amb">igreja</span></th><td>ler</td><td>ler</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler</td><td>ler</td><td>ler</td><td>ler</td><td>membro · validar, transferencia membro · emitir carta, transferencia membro · aceitar, transacao · aprovar, despesa · aprovar, orcamento · aprovar</td></tr><tr><th scope="row"><span class="perfil">ANCIAO</span><span class="amb">igreja</span></th><td>ler (1/3)</td><td>ler</td><td>ler<br>criar (2/11)<br>alterar (2/11)<br>terminar (2/11)</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler</td><td>ler<br>criar (1/17)<br>alterar (3/17)<br>terminar (1/17)</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>transacao · aprovar, despesa · aprovar, orcamento · aprovar</td></tr><tr><th scope="row"><span class="perfil">SECRETARIO</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td>ler</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler (1/3)<br>criar (1/3)<br>alterar (1/3)<br>terminar (1/3)</td><td>ler</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>membro · validar, transferencia membro · emitir carta, transferencia membro · aceitar</td></tr><tr><th scope="row"><span class="perfil">TESOUREIRO</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td>ler</td><td>ler (3/11)</td><td>ler (1/3)</td><td>ler (3/6)</td><td>ler<br>criar<br>alterar<br>terminar (16/17)</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler<br>criar<br>alterar<br>terminar</td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">DIRECTOR_ES</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td>ler (1/2)</td><td>ler (2/11)</td><td>ler (1/3)<br>criar (1/3)<br>alterar (1/3)<br>terminar (1/3)</td><td>ler<br>criar<br>alterar<br>terminar</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>relatorio sabado · fechar, relatorio sabado · reabrir</td></tr><tr><th scope="row"><span class="perfil">SECRETARIO_ES</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td>ler (1/2)</td><td>ler (1/11)</td><td><span class="mut">—</span></td><td>ler<br>criar (4/9)<br>alterar (4/9)<br>terminar (3/9)</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>relatorio sabado · fechar</td></tr><tr><th scope="row"><span class="perfil">DIRECTOR_DEPARTAMENTO</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td>ler</td><td>ler (1/11)</td><td>ler<br>criar<br>alterar</td><td><span class="mut">—</span></td><td>ler (2/15)<br>criar (2/17)</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">MEMBRO</span><span class="amb">igreja</span></th><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">ADMIN_ASSOCIACAO</span><span class="amb">Associação</span></th><td>ler<br>criar (3/6)<br>alterar (3/6)<br>terminar (3/6)</td><td>ler<br>criar<br>alterar<br>terminar</td><td>ler (10/11)</td><td>ler</td><td>ler<br>criar (3/9)<br>alterar (3/9)<br>terminar (3/9)</td><td>ler<br>criar (3/17)<br>alterar (3/17)<br>terminar (3/17)</td><td>ler</td><td>ler</td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">TESOUREIRO_ASSOCIACAO</span><span class="amb">Associação</span></th><td><span class="mut">—</span></td><td>ler</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>ler<br>alterar (1/17)</td><td>ler</td><td><span class="mut">—</span></td><td>remessa · confirmar</td></tr><tr><th scope="row"><span class="perfil">SECRETARIO_ASSOCIACAO</span><span class="amb">Associação</span></th><td><span class="mut">—</span></td><td>ler</td><td>ler (10/11)</td><td><span class="mut">—</span></td><td>ler</td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class=mut>—</span></td></tr><tr><th scope="row"><span class="perfil">INTEGRACAO</span><span class="amb">Associação</span></th><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td><span class="mut">—</span></td><td>ler (1/15)<br>alterar (1/17)</td><td>ler<br>criar<br>alterar</td><td>ler<br>alterar</td><td><span class=mut>—</span></td></tr></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Conformidade com o Manual da Igreja</h2>
+    <div class="tbl"><table><thead><tr><th>Tema</th><th>O que o Manual pede</th><th>Como o sistema o garante</th></tr></thead><tbody><tr><td>Admissão de membros</td><td>Por baptismo, rebaptismo ou profissão de fé, sempre com voto da igreja. A junta directiva só recomenda.</td><td>O movimento no livro de membros exige um voto aprovado numa reunião regular ou assembleia. Um voto da junta é recusado.</td></tr><tr><td>Livro de membros</td><td>O secretário não acrescenta nem retira nomes sem voto da igreja, excepto por falecimento ou pedido escrito do membro.</td><td>O estado e a igreja do membro só mudam através de um movimento com o voto que o autoriza. O falecimento não exige voto; o pedido de saída aceita um voto da junta.</td></tr><tr><td>Carta de transferência</td><td>Primeira leitura e votação na semana seguinte. A carta vale 6 meses e o membro fica na igreja de origem até o destino o aceitar.</td><td>Exige o voto da segunda leitura na origem e no destino. A aceitação fora dos 6 meses é recusada. Ao concluir, a saída e a entrada são registadas nas duas igrejas.</td></tr><tr><td>Censura</td><td>Dura de 1 a 12 meses. Durante a censura o membro não ocupa cargos nem recebe carta de transferência. Nos menores, os pais têm de ser avisados.</td><td>A duração máxima é verificada. A censura termina os cargos activos e bloqueia eleições e cartas. Num menor, é recusada se o encarregado não foi avisado.</td></tr><tr><td>Membros desaparecidos</td><td>Só após 2 anos de buscas sem resultado e voto da assembleia administrativa.</td><td>O movimento DESAPARECIDO exige voto da assembleia administrativa. Os 2 anos de buscas ficam a cargo do secretário.</td></tr><tr><td>Eleições</td><td>Os oficiais são membros em situação regular, eleitos por voto da igreja sobre o relatório da comissão de nomeações.</td><td>O cargo exige um membro activo da igreja, sem censura, e o voto de eleição. Uma vista avisa dos mandatos a terminar.</td></tr><tr><td>Fundos da Associação</td><td>O dízimo e as ofertas missionárias são fundos da Associação: remetidos todos os meses, sem uso local.</td><td>Os fundos de dízimo, missões e 13º sábado têm 100% de remessa obrigatória e só saem como remessa ou estorno. Uma vista calcula o que falta remeter por mês.</td></tr><tr><td>Ofertas da Escola Sabatina</td><td>A oferta para despesas da ES fica separada da oferta missionária; não se juntam nem se dividem por percentagem.</td><td>O relatório separa a oferta missionária, a do 13º sábado e a de despesas, e só fecha se a tesouraria tiver cada uma no seu fundo.</td></tr><tr><td>Estrutura</td><td>Igreja organizada, grupo organizado e filial, dentro de uma Associação ou Missão, de uma União e de uma Divisão.</td><td>A organização é hierárquica, com distritos pastorais e o pastor distrital a ver todas as igrejas do distrito. Há também um calendário de ofertas especiais definido pela Divisão, União ou Associação.</td></tr></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Desempenho medido</h2>
+    <p class="lead">Teste em PostgreSQL 16, numa máquina de 2 processadores: 300 igrejas, 45 mil membros, 377 mil movimentos e 755 mil linhas, cobrindo 2 anos.</p>
+    <div class="tbl"><table><thead><tr><th>Operação</th><th>Tempo</th></tr></thead><tbody>
+      <tr><td>Saldos das contas de uma igreja (tesoureiro, com permissões)</td><td class="num">9 ms</td></tr>
+      <tr><td>Saldos por fundo de uma igreja</td><td class="num">3 ms</td></tr>
+      <tr><td>Remessa devida, 24 meses</td><td class="num">5 ms</td></tr>
+      <tr><td>Últimos 50 movimentos</td><td class="num">3 ms</td></tr>
+      <tr><td>Declaração anual de contribuições de um membro</td><td class="num">8 ms</td></tr>
+      <tr><td>Totais por fundo de 150 igrejas (Associação)</td><td class="num">78 ms</td></tr>
+      <tr><td>Gravação com todas as regras e permissões activas, 4 sessões</td><td class="num">≈ 2 800 movimentos/s</td></tr>
+      <tr><td>Tamanho total da base de dados</td><td class="num">376 MB</td></tr>
+    </tbody></table></div>
+    <div class="grid2">
+      <div class="note"><h3>O que torna isto rápido</h3>
+        <ul>
+          <li>Saldos pré-calculados por dia, para cada conta e cada fundo.</li>
+          <li>A igreja é copiada para as tabelas grandes, para que a segurança filtre por índice.</li>
+          <li>As igrejas onde o utilizador tem cada permissão são calculadas uma vez por consulta, não linha a linha.</li>
+          <li>O log de auditoria é particionado por mês e guarda só os campos alterados.</li>
+          <li>Índices parciais e índices pela igreja e pela data.</li>
+        </ul></div>
+      <div class="note"><h3>Para crescer mais</h3>
+        <ul>
+          <li>Um conjunto de ligações (PgBouncer, modo transacção) é compatível com <code>set_config(…, true)</code>.</li>
+          <li>Os relatórios de União e Divisão podem correr numa réplica de leitura.</li>
+          <li>As partições antigas do log podem ser arquivadas sem bloquear nada.</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Núcleo: acesso e auditoria <span class="schema">nucleo</span></h2>
+    <p class="lead">Utilizadores, perfis, permissões e o histórico de todas as alterações.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  PERFIL ||--o{ PERFIL_PERMISSAO : ""
+  PERMISSAO ||--o{ PERFIL_PERMISSAO : ""
+  MEMBRO |o--o| USUARIO : ""
+  USUARIO ||--o{ USUARIO_IGREJA : ""
+  IGREJA ||--o{ USUARIO_IGREJA : ""
+  PERFIL ||--o{ USUARIO_IGREJA : ""
+  USUARIO ||--o{ USUARIO_ENTIDADE : ""
+  ENTIDADE ||--o{ USUARIO_ENTIDADE : ""
+  PERFIL ||--o{ USUARIO_ENTIDADE : ""
+  USUARIO |o--o{ LOG_AUDITORIA : ""
+  PERFIL {
+    int per_id PK
+    string per_nome UK
+    string per_descricao
+    string per_ambito
+    enum per_estado
+  }
+  PERMISSAO {
+    int prm_id PK
+    string prm_codigo UK
+    string prm_descricao
+    enum prm_estado
+  }
+  PERFIL_PERMISSAO {
+    int ppe_id PK
+    int ppe_per_id FK
+    int ppe_prm_id FK
+    enum ppe_estado
+  }
+  USUARIO {
+    int usu_id PK
+    int usu_mem_id FK,UK
+    string usu_nome
+    string usu_email UK
+    string usu_telefone UK
+    string usu_senha_hash
+    bool usu_super_admin
+    timestamp usu_ultimo_login
+    enum usu_estado
+  }
+  USUARIO_IGREJA {
+    int uig_id PK
+    int uig_usu_id FK
+    int uig_igr_id FK
+    int uig_per_id FK
+    enum uig_estado
+  }
+  USUARIO_ENTIDADE {
+    int uen_id PK
+    int uen_usu_id FK
+    int uen_ent_id FK
+    int uen_per_id FK
+    enum uen_estado
+  }
+  LOG_AUDITORIA {
+    bigint lau_id PK
+    int lau_usu_id FK
+    string lau_tabela
+    bigint lau_registo_id
+    string lau_accao
+    json lau_dados_antes
+    json lau_dados_depois
+    enum lau_estado
+  }
+  ENTIDADE {
+    int ent_id PK
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  MEMBRO {
+    int mem_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (7)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>per_</code></td><td><code>nucleo.perfil</code></td><td>Perfis de acesso (Admin, Secretário, Tesoureiro, ...)</td></tr><tr><td><code>prm_</code></td><td><code>nucleo.permissao</code></td><td>Permissões elementares (ex.: transacao.aprovar)</td></tr><tr><td><code>ppe_</code></td><td><code>nucleo.perfil_permissao</code></td><td>Que permissões cada perfil tem</td></tr><tr><td><code>usu_</code></td><td><code>nucleo.usuario</code></td><td>Contas de acesso ao sistema</td></tr><tr><td><code>uig_</code></td><td><code>nucleo.usuario_igreja</code></td><td>Perfil de cada utilizador em cada igreja (base da segurança por igreja)</td></tr><tr><td><code>uen_</code></td><td><code>nucleo.usuario_entidade</code></td><td>Perfil de um utilizador numa Associação/Missão inteira (vale para todas as igrejas abaixo dela)</td></tr><tr><td><code>lau_</code></td><td><code>nucleo.log_auditoria</code></td><td>Histórico de alterações (só os campos que mudaram); particionado por mês</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>2. Organização <span class="schema">organizacao</span></h2>
+    <p class="lead">Estrutura da denominação (Associação/Missão, distritos, igrejas e grupos), departamentos e cargos.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  ENTIDADE |o--o{ ENTIDADE : "pai"
+  ENTIDADE ||--o{ DISTRITO : ""
+  USUARIO |o--o{ DISTRITO : "pastor"
+  ENTIDADE ||--o{ IGREJA : ""
+  DISTRITO |o--o{ IGREJA : ""
+  IGREJA |o--o{ IGREJA : "mae"
+  IGREJA ||--o{ IGREJA_DEPARTAMENTO : ""
+  DEPARTAMENTO ||--o{ IGREJA_DEPARTAMENTO : ""
+  DEPARTAMENTO |o--o{ CARGO : ""
+  ENTIDADE {
+    int ent_id PK
+    int ent_pai_ent_id FK
+    enum ent_tipo
+    string ent_nome
+    string ent_sigla
+    date ent_data_criacao
+    enum ent_estado
+  }
+  DISTRITO {
+    int dst_id PK
+    int dst_ent_id FK
+    string dst_nome
+    int dst_pastor_usu_id FK
+    enum dst_estado
+  }
+  IGREJA {
+    int igr_id PK
+    int igr_ent_id FK
+    int igr_dst_id FK
+    enum igr_tipo
+    int igr_mae_igr_id FK
+    string igr_nome
+    string igr_codigo_acms UK
+    date igr_data_organizacao
+    string igr_endereco
+    decimal igr_latitude
+    decimal igr_longitude
+    enum igr_estado
+  }
+  DEPARTAMENTO {
+    int dep_id PK
+    string dep_nome UK
+    string dep_descricao
+    enum dep_estado
+  }
+  IGREJA_DEPARTAMENTO {
+    int ide_id PK
+    int ide_igr_id FK
+    int ide_dep_id FK
+    enum ide_estado
+  }
+  CARGO {
+    int car_id PK
+    int car_dep_id FK
+    string car_nome UK
+    int car_mandato_anos
+    bool car_exige_membro
+    enum car_estado
+  }
+  USUARIO {
+    int usu_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (6)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>ent_</code></td><td><code>organizacao.entidade</code></td><td>Níveis da organização: Conferência Geral, Divisão, União, Associação, Missão</td></tr><tr><td><code>dst_</code></td><td><code>organizacao.distrito</code></td><td>Distritos pastorais de uma Associação/Missão</td></tr><tr><td><code>igr_</code></td><td><code>organizacao.igreja</code></td><td>Igrejas organizadas, grupos organizados e grupos/filiais</td></tr><tr><td><code>dep_</code></td><td><code>organizacao.departamento</code></td><td>Departamentos e ministérios (Manual da Igreja)</td></tr><tr><td><code>ide_</code></td><td><code>organizacao.igreja_departamento</code></td><td>Departamento a funcionar numa igreja</td></tr><tr><td><code>car_</code></td><td><code>organizacao.cargo</code></td><td>Cargos da igreja (Ancião, Secretário, Tesoureiro, Director da ES, ...)</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>3. Secretaria <span class="schema">secretaria</span></h2>
+    <p class="lead">Membros, famílias, reuniões e votos, movimentos do livro de membros, transferências, disciplina e eleições.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  IGREJA ||--o{ FAMILIA : ""
+  IGREJA ||--o{ MEMBRO : ""
+  FAMILIA |o--o{ MEMBRO : ""
+  MEMBRO |o--o{ MEMBRO : "encarregado"
+  USUARIO |o--o{ MEMBRO : "validado por"
+  MEMBRO |o--o{ CONTACTO : ""
+  IGREJA |o--o{ CONTACTO : ""
+  MEMBRO ||--o{ CONSENTIMENTO : ""
+  MEMBRO |o--o{ CONSENTIMENTO : "concedido por"
+  IGREJA ||--o{ REUNIAO : ""
+  MEMBRO |o--o{ REUNIAO : "presidida por"
+  MEMBRO |o--o{ REUNIAO : "secretario"
+  REUNIAO ||--o{ VOTO : ""
+  MEMBRO ||--o{ MOVIMENTO_MEMBRO : ""
+  IGREJA ||--o{ MOVIMENTO_MEMBRO : ""
+  VOTO |o--o{ MOVIMENTO_MEMBRO : ""
+  TRANSFERENCIA_MEMBRO |o--o{ MOVIMENTO_MEMBRO : ""
+  MEMBRO ||--o{ TRANSFERENCIA_MEMBRO : ""
+  IGREJA ||--o{ TRANSFERENCIA_MEMBRO : "origem"
+  IGREJA |o--o{ TRANSFERENCIA_MEMBRO : "destino"
+  VOTO |o--o{ TRANSFERENCIA_MEMBRO : "origem"
+  VOTO |o--o{ TRANSFERENCIA_MEMBRO : "destino"
+  MEMBRO ||--o{ DISCIPLINA : ""
+  VOTO ||--o{ DISCIPLINA : ""
+  MEMBRO ||--o{ OFICIAL : ""
+  CARGO ||--o{ OFICIAL : ""
+  IGREJA ||--o{ OFICIAL : ""
+  VOTO |o--o{ OFICIAL : ""
+  MEMBRO ||--o{ BAPTISMO : ""
+  CLASSE_TRIMESTRE |o--o{ BAPTISMO : ""
+  FAMILIA {
+    int fam_id PK
+    int fam_igr_id FK
+    string fam_nome
+    string fam_morada
+    enum fam_estado
+  }
+  MEMBRO {
+    int mem_id PK
+    int mem_igr_id FK
+    int mem_fam_id FK
+    string mem_nome
+    string mem_apelido
+    date mem_data_nascimento
+    enum mem_sexo
+    enum mem_estado_civil
+    string mem_morada
+    date mem_data_entrada
+    enum mem_modo_entrada
+    int mem_encarregado_mem_id FK
+    enum mem_validacao
+    int mem_validado_por_usu_id FK
+    timestamp mem_data_validacao
+    enum mem_estado
+  }
+  CONTACTO {
+    int cto_id PK
+    int cto_mem_id FK
+    int cto_igr_id FK
+    enum cto_tipo
+    string cto_valor
+    bool cto_principal
+    enum cto_estado
+  }
+  CONSENTIMENTO {
+    int cns_id PK
+    int cns_mem_id FK
+    enum cns_tipo
+    bool cns_concedido
+    date cns_data
+    int cns_concedido_por_mem_id FK
+    string cns_observacoes
+    enum cns_estado
+  }
+  REUNIAO {
+    int reu_id PK
+    int reu_igr_id FK
+    enum reu_tipo
+    timestamp reu_data
+    string reu_local
+    int reu_presidida_por_mem_id FK
+    int reu_secretario_mem_id FK
+    int reu_quorum_presentes
+    string reu_acta_url
+    enum reu_estado
+  }
+  VOTO {
+    int vot_id PK
+    int vot_reu_id FK
+    string vot_numero
+    enum vot_tipo
+    string vot_assunto
+    text vot_texto
+    int vot_leitura
+    int vot_a_favor
+    int vot_contra
+    int vot_abstencoes
+    enum vot_estado
+  }
+  MOVIMENTO_MEMBRO {
+    int mmb_id PK
+    int mmb_mem_id FK
+    int mmb_igr_id FK
+    enum mmb_tipo
+    date mmb_data
+    int mmb_vot_id FK
+    int mmb_tme_id FK
+    string mmb_observacoes
+    enum mmb_estado
+  }
+  TRANSFERENCIA_MEMBRO {
+    int tme_id PK
+    int tme_mem_id FK
+    int tme_origem_igr_id FK
+    int tme_destino_igr_id FK
+    string tme_destino_externo
+    date tme_data_pedido
+    int tme_origem_vot_id FK
+    date tme_carta_emitida_em
+    int tme_destino_vot_id FK
+    date tme_aceite_em
+    string tme_observacoes
+    enum tme_estado
+  }
+  DISCIPLINA {
+    int dsc_id PK
+    int dsc_mem_id FK
+    int dsc_vot_id FK
+    date dsc_data_inicio
+    date dsc_data_fim
+    bool dsc_encarregado_notificado
+    text dsc_motivo
+    enum dsc_estado
+  }
+  OFICIAL {
+    int ofi_id PK
+    int ofi_mem_id FK
+    int ofi_car_id FK
+    int ofi_igr_id FK
+    int ofi_vot_id FK
+    date ofi_data_inicio
+    date ofi_data_fim
+    enum ofi_estado
+  }
+  BAPTISMO {
+    int bap_id PK
+    int bap_mem_id FK
+    date bap_data
+    string bap_local
+    string bap_oficiante
+    bool bap_rebaptismo
+    int bap_ect_id FK
+    enum bap_estado
+  }
+  CARGO {
+    int car_id PK
+  }
+  CLASSE_TRIMESTRE {
+    int ect_id PK
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  USUARIO {
+    int usu_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (11)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>fam_</code></td><td><code>secretaria.familia</code></td><td>Agregados familiares</td></tr><tr><td><code>mem_</code></td><td><code>secretaria.membro</code></td><td>Membros, interessados e visitantes regulares (estado muda só por movimento)</td></tr><tr><td><code>cto_</code></td><td><code>secretaria.contacto</code></td><td>Telefones, e-mails e WhatsApp de membros ou igrejas</td></tr><tr><td><code>cns_</code></td><td><code>secretaria.consentimento</code></td><td>Consentimentos para tratamento de dados (menores: dado pelo encarregado)</td></tr><tr><td><code>reu_</code></td><td><code>secretaria.reuniao</code></td><td>Reuniões: junta directiva, reunião regular, assembleia administrativa, comissão de nomeações, conselho da ES</td></tr><tr><td><code>vot_</code></td><td><code>secretaria.voto</code></td><td>Votos registados em acta (admissões, transferências, remoções, eleições, finanças)</td></tr><tr><td><code>mmb_</code></td><td><code>secretaria.movimento_membro</code></td><td>Livro de membros: cada entrada e saída, com o voto que a autoriza</td></tr><tr><td><code>tme_</code></td><td><code>secretaria.transferencia_membro</code></td><td>Cartas de transferência (válidas 6 meses; o membro só sai quando o destino aceita)</td></tr><tr><td><code>dsc_</code></td><td><code>secretaria.disciplina</code></td><td>Censuras (1 a 12 meses): sem cargos nem carta de transferência durante a censura</td></tr><tr><td><code>ofi_</code></td><td><code>secretaria.oficial</code></td><td>Eleições e mandatos: quem ocupou que cargo e quando</td></tr><tr><td><code>bap_</code></td><td><code>secretaria.baptismo</code></td><td>Baptismos e rebaptismos</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>4. Actividades e escalas <span class="schema">actividades</span></h2>
+    <p class="lead">Programas dos departamentos, material necessário e escalas de serviço.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  IGREJA_DEPARTAMENTO ||--o{ ACTIVIDADE : ""
+  MEMBRO |o--o{ ACTIVIDADE : "responsavel"
+  ACTIVIDADE ||--o{ MATERIAL : ""
+  IGREJA ||--o{ ESCALA : ""
+  MEMBRO ||--o{ ESCALA : ""
+  ACTIVIDADE |o--o{ ESCALA : ""
+  MEMBRO |o--o{ ESCALA : "substituto"
+  ACTIVIDADE {
+    int act_id PK
+    int act_ide_id FK
+    int act_responsavel_mem_id FK
+    string act_nome
+    text act_descricao
+    string act_local
+    timestamp act_data_inicio
+    timestamp act_data_fim
+    timestamp act_data_hora_lembrete
+    decimal act_valor_previsto
+    enum act_estado
+  }
+  MATERIAL {
+    int mat_id PK
+    int mat_act_id FK
+    string mat_descricao
+    decimal mat_quantidade
+    decimal mat_preco_unitario
+    enum mat_estado
+  }
+  ESCALA {
+    int esc_id PK
+    int esc_igr_id FK
+    date esc_data
+    enum esc_funcao
+    int esc_mem_id FK
+    int esc_act_id FK
+    int esc_substituto_mem_id FK
+    string esc_observacoes
+    enum esc_estado
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  IGREJA_DEPARTAMENTO {
+    int ide_id PK
+  }
+  MEMBRO {
+    int mem_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (3)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>act_</code></td><td><code>actividades.actividade</code></td><td>Actividades e eventos dos departamentos</td></tr><tr><td><code>mat_</code></td><td><code>actividades.material</code></td><td>Material necessário para uma actividade</td></tr><tr><td><code>esc_</code></td><td><code>actividades.escala</code></td><td>Escalas de serviço (pregador, diáconos, recepção, ...)</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>5. Escola Sabatina <span class="schema">escola_sabatina</span></h2>
+    <p class="lead">Trimestres, sábados, classes (unidades de acção) por divisão, relatórios, chamada, visitantes e pontuação.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  TRIMESTRE ||--o{ SABADO : ""
+  IGREJA ||--o{ CLASSE : ""
+  CLASSE ||--o{ CLASSE_TRIMESTRE : ""
+  TRIMESTRE ||--o{ CLASSE_TRIMESTRE : ""
+  IGREJA ||--o{ CLASSE_TRIMESTRE : ""
+  MEMBRO |o--o{ CLASSE_TRIMESTRE : "professor"
+  MEMBRO |o--o{ CLASSE_TRIMESTRE : "auxiliar"
+  MEMBRO |o--o{ CLASSE_TRIMESTRE : "secretario"
+  CLASSE ||--o{ MATRICULA : ""
+  MEMBRO ||--o{ MATRICULA : ""
+  CLASSE_TRIMESTRE ||--o{ RELATORIO_SABADO : ""
+  SABADO ||--o{ RELATORIO_SABADO : ""
+  IGREJA ||--o{ RELATORIO_SABADO : ""
+  TRANSACAO |o--o{ RELATORIO_SABADO : ""
+  RELATORIO_SABADO ||--o{ PRESENCA : ""
+  MEMBRO ||--o{ PRESENCA : ""
+  IGREJA ||--o{ PRESENCA : ""
+  RELATORIO_SABADO ||--o{ VISITANTE : ""
+  MEMBRO |o--o{ VISITANTE : "convidado por"
+  MEMBRO |o--o{ VISITANTE : "tornou se"
+  TRIMESTRE |o--o{ PONTUACAO_CONFIG : ""
+  TRIMESTRE {
+    int etr_id PK
+    int etr_ano
+    int etr_numero
+    string etr_tema_licao
+    date etr_data_inicio
+    date etr_data_fim
+    int etr_num_sabados
+    enum etr_estado
+  }
+  SABADO {
+    int esa_id PK
+    int esa_etr_id FK
+    int esa_numero
+    date esa_data UK
+    bool esa_decimo_terceiro
+    enum esa_estado
+  }
+  CLASSE {
+    int ecl_id PK
+    int ecl_igr_id FK
+    string ecl_nome
+    enum ecl_divisao
+    string ecl_local_reuniao
+    enum ecl_estado
+  }
+  CLASSE_TRIMESTRE {
+    int ect_id PK
+    int ect_ecl_id FK
+    int ect_etr_id FK
+    int ect_igr_id FK
+    int ect_professor_mem_id FK
+    int ect_auxiliar_mem_id FK
+    int ect_secretario_mem_id FK
+    int ect_alvo_membros
+    decimal ect_alvo_estudo_diario
+    int ect_alvo_filiais
+    decimal ect_alvo_oferta_sabado
+    int ect_alvo_baptismos
+    enum ect_estado
+  }
+  MATRICULA {
+    int ema_id PK
+    int ema_ecl_id FK
+    int ema_mem_id FK
+    date ema_data_entrada
+    date ema_data_saida
+    enum ema_estado
+  }
+  RELATORIO_SABADO {
+    int ers_id PK
+    int ers_ect_id FK
+    int ers_esa_id FK
+    int ers_igr_id FK
+    int ers_membros_matriculados
+    int ers_membros_presentes
+    int ers_estudo_diario
+    int ers_visitantes
+    int ers_filiais
+    decimal ers_oferta
+    decimal ers_oferta_13_sabado
+    decimal ers_oferta_despesas
+    bigint ers_tra_id FK
+    string ers_observacoes
+    enum ers_estado
+  }
+  PRESENCA {
+    bigint epr_id PK
+    int epr_ers_id FK
+    int epr_mem_id FK
+    int epr_igr_id FK
+    bool epr_presente
+    bool epr_estudou_licao
+    enum epr_estado
+  }
+  VISITANTE {
+    int evi_id PK
+    int evi_ers_id FK
+    string evi_nome
+    string evi_telefone
+    int evi_convidado_por_mem_id FK
+    int evi_tornou_se_mem_id FK
+    timestamp evi_anonimizado_em
+    enum evi_estado
+  }
+  PONTUACAO_CONFIG {
+    int epc_id PK
+    int epc_etr_id FK
+    decimal epc_peso_presenca
+    decimal epc_peso_estudo
+    decimal epc_peso_ofertas
+    decimal epc_peso_visitantes
+    decimal epc_limite_ofertas
+    enum epc_estado
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  MEMBRO {
+    int mem_id PK
+  }
+  TRANSACAO {
+    bigint tra_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (9)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>etr_</code></td><td><code>escola_sabatina.trimestre</code></td><td>Trimestres da lição</td></tr><tr><td><code>esa_</code></td><td><code>escola_sabatina.sabado</code></td><td>Sábados de cada trimestre</td></tr><tr><td><code>ecl_</code></td><td><code>escola_sabatina.classe</code></td><td>Classes / unidades de acção, por divisão da Escola Sabatina</td></tr><tr><td><code>ect_</code></td><td><code>escola_sabatina.classe_trimestre</code></td><td>Classe num trimestre: professor e alvos (ACTIVO/INACTIVO = Activo/Desactivado da planilha)</td></tr><tr><td><code>ema_</code></td><td><code>escola_sabatina.matricula</code></td><td>Inscrição nas classes (histórico); membros e não membros</td></tr><tr><td><code>ers_</code></td><td><code>escola_sabatina.relatorio_sabado</code></td><td>Relatório de cada classe em cada sábado (linha da folha &quot;Grupo N&quot;)</td></tr><tr><td><code>epr_</code></td><td><code>escola_sabatina.presenca</code></td><td>Chamada nominal (opcional); actualiza M.P. e E.D. do relatório</td></tr><tr><td><code>evi_</code></td><td><code>escola_sabatina.visitante</code></td><td>Visitantes com contacto para seguimento</td></tr><tr><td><code>epc_</code></td><td><code>escola_sabatina.pontuacao_config</code></td><td>Pesos da pontuação (sem trimestre = pesos por defeito)</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>6. Tesouraria <span class="schema">tesouraria</span></h2>
+    <p class="lead">Contas, fundos (da Associação e locais), movimentos divididos por fundo, despesas, contagens, recibos, remessas, orçamento, fecho mensal e saldos pré-calculados.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  IGREJA ||--o{ CONTA_FINANCEIRA : ""
+  IGREJA |o--o{ FUNDO : ""
+  ENTIDADE |o--o{ FUNDO : "destino"
+  ENTIDADE ||--o{ CALENDARIO_OFERTA : ""
+  FUNDO ||--o{ CALENDARIO_OFERTA : ""
+  CATEGORIA |o--o{ CATEGORIA : "pai"
+  IGREJA ||--o{ ALVO : ""
+  FUNDO ||--o{ ALVO : ""
+  IGREJA ||--o{ ORCAMENTO : ""
+  IGREJA_DEPARTAMENTO |o--o{ ORCAMENTO : ""
+  VOTO |o--o{ ORCAMENTO : ""
+  ORCAMENTO ||--o{ ORCAMENTO_LINHA : ""
+  CATEGORIA ||--o{ ORCAMENTO_LINHA : ""
+  IGREJA ||--o{ DESPESA : ""
+  IGREJA_DEPARTAMENTO |o--o{ DESPESA : ""
+  ACTIVIDADE |o--o{ DESPESA : ""
+  CATEGORIA ||--o{ DESPESA : ""
+  FUNDO ||--o{ DESPESA : ""
+  USUARIO ||--o{ DESPESA : "solicitado por"
+  USUARIO |o--o{ DESPESA : "aprovado por"
+  VOTO |o--o{ DESPESA : ""
+  IGREJA ||--o{ CONTAGEM_NUMERARIO : ""
+  CONTA_FINANCEIRA ||--o{ CONTAGEM_NUMERARIO : ""
+  MEMBRO ||--o{ CONTAGEM_NUMERARIO : "contador1"
+  MEMBRO ||--o{ CONTAGEM_NUMERARIO : "contador2"
+  USUARIO |o--o{ CONTAGEM_NUMERARIO : "conferido por"
+  IGREJA ||--o{ TRANSACAO : ""
+  CONTA_FINANCEIRA ||--o{ TRANSACAO : ""
+  CONTA_FINANCEIRA |o--o{ TRANSACAO : "destino"
+  MEMBRO |o--o{ TRANSACAO : ""
+  FAMILIA |o--o{ TRANSACAO : ""
+  CONTAGEM_NUMERARIO |o--o{ TRANSACAO : ""
+  DESPESA |o--o{ TRANSACAO : ""
+  TRANSACAO |o--o{ TRANSACAO : "estorno"
+  USUARIO |o--o{ TRANSACAO : "aprovado por"
+  TRANSACAO ||--o{ TRANSACAO_LINHA : ""
+  IGREJA ||--o{ TRANSACAO_LINHA : ""
+  FUNDO ||--o{ TRANSACAO_LINHA : ""
+  CATEGORIA ||--o{ TRANSACAO_LINHA : ""
+  IGREJA_DEPARTAMENTO |o--o{ TRANSACAO_LINHA : ""
+  ACTIVIDADE |o--o{ TRANSACAO_LINHA : ""
+  CONTA_FINANCEIRA ||--o{ SALDO_DIARIO_CONTA : ""
+  IGREJA ||--o{ SALDO_DIARIO_CONTA : ""
+  IGREJA ||--o{ SALDO_DIARIO_FUNDO : ""
+  FUNDO ||--o{ SALDO_DIARIO_FUNDO : ""
+  TRANSACAO ||--o| RECIBO : ""
+  IGREJA ||--o{ RECIBO : ""
+  TRANSACAO |o--o{ DOCUMENTO : ""
+  DESPESA |o--o{ DOCUMENTO : ""
+  IGREJA ||--o{ REMESSA : ""
+  ENTIDADE ||--o{ REMESSA : ""
+  TRANSACAO |o--o{ REMESSA : ""
+  REMESSA ||--o{ REMESSA_LINHA : ""
+  FUNDO ||--o{ REMESSA_LINHA : ""
+  IGREJA ||--o{ FECHO_PERIODO : ""
+  CONTA_FINANCEIRA ||--o{ EXTRATO_LINHA : ""
+  TRANSACAO |o--o{ EXTRATO_LINHA : ""
+  CONTA_FINANCEIRA {
+    int cfi_id PK
+    int cfi_igr_id FK
+    enum cfi_tipo
+    string cfi_nome
+    string cfi_numero
+    string cfi_titular
+    string cfi_banco
+    string cfi_moeda
+    decimal cfi_saldo_inicial
+    date cfi_data_saldo_inicial
+    enum cfi_estado
+  }
+  FUNDO {
+    int fun_id PK
+    int fun_igr_id FK
+    string fun_codigo UK
+    string fun_nome
+    enum fun_tipo
+    bool fun_restrito
+    decimal fun_percentagem_remessa
+    int fun_destino_ent_id FK
+    enum fun_estado
+  }
+  CALENDARIO_OFERTA {
+    int cof_id PK
+    int cof_ent_id FK
+    date cof_data
+    int cof_fun_id FK
+    string cof_descricao
+    enum cof_estado
+  }
+  CATEGORIA {
+    int cat_id PK
+    int cat_pai_cat_id FK
+    string cat_codigo UK
+    string cat_nome
+    enum cat_tipo
+    bool cat_e_remessa
+    enum cat_estado
+  }
+  ALVO {
+    int alv_id PK
+    int alv_igr_id FK
+    int alv_fun_id FK
+    string alv_descricao
+    decimal alv_valor_alvo
+    date alv_data_inicio
+    date alv_data_fim
+    enum alv_estado
+  }
+  ORCAMENTO {
+    int orc_id PK
+    int orc_igr_id FK
+    int orc_ide_id FK
+    int orc_ano
+    int orc_vot_id FK
+    string orc_observacoes
+    enum orc_estado
+  }
+  ORCAMENTO_LINHA {
+    int orl_id PK
+    int orl_orc_id FK
+    int orl_cat_id FK
+    decimal orl_valor_previsto
+    enum orl_estado
+  }
+  DESPESA {
+    int des_id PK
+    int des_igr_id FK
+    int des_ide_id FK
+    int des_act_id FK
+    int des_cat_id FK
+    int des_fun_id FK
+    string des_descricao
+    string des_fornecedor
+    decimal des_valor_solicitado
+    decimal des_valor_aprovado
+    int des_solicitado_por_usu_id FK
+    int des_aprovado_por_usu_id FK
+    int des_vot_id FK
+    timestamp des_aprovado_em
+    string des_motivo_rejeicao
+    enum des_estado
+  }
+  CONTAGEM_NUMERARIO {
+    int cnu_id PK
+    int cnu_igr_id FK
+    int cnu_cfi_id FK
+    date cnu_data
+    string cnu_ocasiao
+    int cnu_contador1_mem_id FK
+    int cnu_contador2_mem_id FK
+    decimal cnu_total_contado
+    int cnu_conferido_por_usu_id FK
+    enum cnu_estado
+  }
+  TRANSACAO {
+    bigint tra_id PK
+    int tra_igr_id FK
+    enum tra_tipo
+    enum tra_metodo
+    decimal tra_valor_total
+    int tra_cfi_id FK
+    int tra_destino_cfi_id FK
+    int tra_mem_id FK
+    int tra_fam_id FK
+    bool tra_anonimo
+    int tra_cnu_id FK
+    int tra_des_id FK
+    bigint tra_estorno_tra_id FK
+    string tra_beneficiario
+    string tra_descricao
+    string tra_referencia
+    timestamp tra_data_hora
+    int tra_aprovado_por_usu_id FK
+    enum tra_estado
+  }
+  TRANSACAO_LINHA {
+    bigint tli_id PK
+    bigint tli_tra_id FK
+    int tli_igr_id FK
+    int tli_fun_id FK
+    int tli_cat_id FK
+    int tli_ide_id FK
+    int tli_act_id FK
+    decimal tli_valor
+    string tli_descricao
+    enum tli_estado
+  }
+  SALDO_DIARIO_CONTA {
+    bigint sdc_id PK
+    int sdc_cfi_id FK
+    int sdc_igr_id FK
+    date sdc_data
+    decimal sdc_entradas
+    decimal sdc_saidas
+    enum sdc_estado
+  }
+  SALDO_DIARIO_FUNDO {
+    bigint sdf_id PK
+    int sdf_igr_id FK
+    int sdf_fun_id FK
+    string sdf_moeda
+    date sdf_data
+    decimal sdf_entradas
+    decimal sdf_saidas
+    decimal sdf_estornos_entradas
+    decimal sdf_estornos_saidas
+    enum sdf_estado
+  }
+  RECIBO {
+    bigint rec_id PK
+    bigint rec_tra_id FK,UK
+    int rec_igr_id FK
+    int rec_ano
+    int rec_numero
+    enum rec_estado
+  }
+  DOCUMENTO {
+    int doc_id PK
+    bigint doc_tra_id FK
+    int doc_des_id FK
+    enum doc_tipo
+    string doc_nome_ficheiro
+    string doc_url
+    enum doc_estado
+  }
+  REMESSA {
+    int rem_id PK
+    int rem_igr_id FK
+    int rem_ent_id FK
+    int rem_ano
+    int rem_mes
+    bigint rem_tra_id FK
+    date rem_enviada_em
+    enum rem_estado
+  }
+  REMESSA_LINHA {
+    int rml_id PK
+    int rml_rem_id FK
+    int rml_fun_id FK
+    decimal rml_valor
+    enum rml_estado
+  }
+  FECHO_PERIODO {
+    int fpe_id PK
+    int fpe_igr_id FK
+    int fpe_ano
+    int fpe_mes
+    enum fpe_estado
+  }
+  EXTRATO_LINHA {
+    bigint ext_id PK
+    int ext_cfi_id FK
+    date ext_data
+    string ext_descricao
+    string ext_referencia
+    decimal ext_valor
+    bigint ext_tra_id FK
+    enum ext_estado
+  }
+  ACTIVIDADE {
+    int act_id PK
+  }
+  ENTIDADE {
+    int ent_id PK
+  }
+  FAMILIA {
+    int fam_id PK
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  IGREJA_DEPARTAMENTO {
+    int ide_id PK
+  }
+  MEMBRO {
+    int mem_id PK
+  }
+  USUARIO {
+    int usu_id PK
+  }
+  VOTO {
+    int vot_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (19)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>cfi_</code></td><td><code>tesouraria.conta_financeira</code></td><td>Contas onde o dinheiro está (M-Pesa, banco, caixa)</td></tr><tr><td><code>fun_</code></td><td><code>tesouraria.fundo</code></td><td>Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais</td></tr><tr><td><code>cof_</code></td><td><code>tesouraria.calendario_oferta</code></td><td>Calendário de ofertas especiais definido pela Divisão/União/Associação</td></tr><tr><td><code>cat_</code></td><td><code>tesouraria.categoria</code></td><td>Plano de contas: categorias de receita e despesa</td></tr><tr><td><code>alv_</code></td><td><code>tesouraria.alvo</code></td><td>Alvos de arrecadação por fundo</td></tr><tr><td><code>orc_</code></td><td><code>tesouraria.orcamento</code></td><td>Orçamento anual da igreja local (aprovado pela igreja)</td></tr><tr><td><code>orl_</code></td><td><code>tesouraria.orcamento_linha</code></td><td>Valor previsto por categoria</td></tr><tr><td><code>des_</code></td><td><code>tesouraria.despesa</code></td><td>Requisições de despesa (quem pede não aprova)</td></tr><tr><td><code>cnu_</code></td><td><code>tesouraria.contagem_numerario</code></td><td>Contagem do dinheiro de um culto (tesoureiro e diácono: dois contadores)</td></tr><tr><td><code>tra_</code></td><td><code>tesouraria.transacao</code></td><td>Movimentos: entradas, saídas e transferências (cabeçalho)</td></tr><tr><td><code>tli_</code></td><td><code>tesouraria.transacao_linha</code></td><td>Divisão do valor por fundo e categoria (soma = valor_total)</td></tr><tr><td><code>sdc_</code></td><td><code>tesouraria.saldo_diario_conta</code></td><td>Saldo pré-calculado por conta e dia (mantido por triggers; não editar)</td></tr><tr><td><code>sdf_</code></td><td><code>tesouraria.saldo_diario_fundo</code></td><td>Totais pré-calculados por igreja, fundo, moeda e dia (mantido por triggers; não editar)</td></tr><tr><td><code>rec_</code></td><td><code>tesouraria.recibo</code></td><td>Recibos numerados por igreja e ano</td></tr><tr><td><code>doc_</code></td><td><code>tesouraria.documento</code></td><td>Comprovativos (facturas, talões, prints M-Pesa)</td></tr><tr><td><code>rem_</code></td><td><code>tesouraria.remessa</code></td><td>Remessas mensais à Associação/Missão</td></tr><tr><td><code>rml_</code></td><td><code>tesouraria.remessa_linha</code></td><td>Valor remetido por fundo</td></tr><tr><td><code>fpe_</code></td><td><code>tesouraria.fecho_periodo</code></td><td>Meses fechados: movimentos bloqueados (reabrir = preencher end_date)</td></tr><tr><td><code>ext_</code></td><td><code>tesouraria.extrato_linha</code></td><td>Linhas do extracto bancário/M-Pesa para reconciliação</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>7. Pagamentos electrónicos <span class="schema">pagamentos</span></h2>
+    <p class="lead">Integração com M-Pesa e bancos.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  TRANSACAO ||--o| PAGAMENTO_MPESA : ""
+  PAGAMENTO_MPESA |o--o{ MPESA_CALLBACK_LOG : ""
+  TRANSACAO ||--o| PAGAMENTO_BANCARIO : ""
+  PAGAMENTO_MPESA {
+    bigint pmp_id PK
+    bigint pmp_tra_id FK,UK
+    string pmp_direccao
+    string pmp_msisdn
+    decimal pmp_valor
+    decimal pmp_taxa
+    string pmp_transaction_reference
+    string pmp_third_party_reference UK
+    string pmp_service_provider_code
+    string pmp_response_code
+    string pmp_response_desc
+    string pmp_mpesa_transaction_id UK
+    string pmp_conversation_id
+    timestamp pmp_pedido_em
+    timestamp pmp_respondido_em
+    timestamp pmp_ultima_consulta_em
+    int pmp_tentativas_consulta
+    enum pmp_estado
+  }
+  MPESA_CALLBACK_LOG {
+    bigint mcl_id PK
+    bigint mcl_pmp_id FK
+    string mcl_tipo
+    string mcl_chave_idempotencia UK
+    json mcl_payload
+    bool mcl_processado
+    string mcl_erro
+    timestamp mcl_recebido_em
+    enum mcl_estado
+  }
+  PAGAMENTO_BANCARIO {
+    bigint pba_id PK
+    bigint pba_tra_id FK,UK
+    string pba_banco
+    string pba_nib
+    string pba_titular
+    string pba_referencia_bancaria
+    enum pba_estado
+  }
+  TRANSACAO {
+    bigint tra_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (3)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>pmp_</code></td><td><code>pagamentos.pagamento_mpesa</code></td><td>Pedido e resposta da API M-Pesa</td></tr><tr><td><code>mcl_</code></td><td><code>pagamentos.mpesa_callback_log</code></td><td>Tudo o que a API M-Pesa envia, em bruto (callbacks repetidos são ignorados)</td></tr><tr><td><code>pba_</code></td><td><code>pagamentos.pagamento_bancario</code></td><td>Detalhe de pagamentos por banco</td></tr></tbody></table></div>
+    </details>
+  </section>
+  <section>
+    <h2>8. Comunicação <span class="schema">comunicacao</span></h2>
+    <p class="lead">Fila de SMS, WhatsApp e e-mail.</p>
+    <div class="panel"><pre class="mermaid">
+erDiagram
+  IGREJA ||--o{ NOTIFICACAO : ""
+  MEMBRO |o--o{ NOTIFICACAO : ""
+  NOTIFICACAO {
+    bigint ntf_id PK
+    int ntf_igr_id FK
+    int ntf_mem_id FK
+    enum ntf_canal
+    string ntf_destino
+    string ntf_assunto
+    text ntf_mensagem
+    timestamp ntf_agendada_para
+    timestamp ntf_enviada_em
+    int ntf_tentativas
+    string ntf_erro
+    string ntf_origem_tabela
+    bigint ntf_origem_id
+    enum ntf_estado
+  }
+  IGREJA {
+    int igr_id PK
+  }
+  MEMBRO {
+    int mem_id PK
+  }
+</pre></div>
+    <details><summary>Tabelas e prefixos (1)</summary>
+      <div class="tbl"><table><thead><tr><th>Prefixo</th><th>Tabela</th><th>Para quê</th></tr></thead><tbody><tr><td><code>ntf_</code></td><td><code>comunicacao.notificacao</code></td><td>Fila de SMS, WhatsApp e e-mail a enviar</td></tr></tbody></table></div>
+    </details>
+  </section>
+</div>
