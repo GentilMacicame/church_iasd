@@ -1,0 +1,97 @@
+1. seis schemas (pagamentos e comunicacao já não existem)
+                                  schemas                                  
+---------------------------------------------------------------------------
+ actividades, escola_sabatina, nucleo, organizacao, secretaria, tesouraria
+(1 row)
+
+2. códigos de permissão com o schema novo
+ codigos_antigos | mpesa_e_bancos | fila_mensagens 
+-----------------+----------------+----------------
+               0 |             12 |              4
+(1 row)
+
+3. quem tem as permissões que mudaram de nome (iguais às de antes da V18)
+       per_nome        | mpesa | bancos | fila 
+-----------------------+-------+--------+------
+ ADMIN                 |     4 |      4 |    4
+ ADMIN_ASSOCIACAO      |     1 |      1 |    1
+ INTEGRACAO            |     3 |      3 |    2
+ PASTOR                |     1 |      1 |    1
+ TESOUREIRO            |     4 |      4 |    4
+ TESOUREIRO_ASSOCIACAO |     1 |      1 |    0
+(6 rows)
+
+4. nada ficou a apontar para os schemas antigos (funções, políticas, triggers)
+ funcoes | politicas | triggers 
+---------+-----------+----------
+       0 |         0 |        0
+(1 row)
+
+5. índices (igreja, id) no lugar dos índices (igreja)
+ novos | antigos 
+-------+---------
+    18 |       0
+(1 row)
+
+6. tesoureiro (autorizado): vê a fila de mensagens da igreja e termina uma mensagem
+ ve_a_fila 
+-----------
+ t
+(1 row)
+
+ terminada 
+-----------
+ t
+(1 row)
+
+7. tesoureiro: regista e termina o detalhe bancário de um movimento
+ registado 
+-----------
+ t
+(1 row)
+
+ terminados 
+------------
+          1
+(1 row)
+
+ permissoes_mpesa_e_bancos 
+---------------------------
+                        12
+(1 row)
+
+8. ancião (não autorizado): lê a tesouraria, mas não os pagamentos electrónicos nem a fila
+ ve_movimentos 
+---------------
+ t
+(1 row)
+
+ ve_pagamentos_bancarios 
+-------------------------
+                       0
+(1 row)
+
+ ve_a_fila 
+-----------
+         0
+(1 row)
+
+psql:database/tests/06_juntar_schemas_e_indices.sql:62: ERROR:  new row violates row-level security policy for table "pagamento_bancario"
+ permissoes_mpesa_e_bancos 
+---------------------------
+                         0
+(1 row)
+
+9. secretário (não autorizado): não vê a fila nem consegue terminar mensagens
+ ve_a_fila 
+-----------
+         0
+(1 row)
+
+psql:database/tests/06_juntar_schemas_e_indices.sql:70: ERROR:  new row violates row-level security policy for table "notificacao"
+10. só a mensagem que o tesoureiro terminou está terminada
+ terminadas 
+------------
+          1
+(1 row)
+

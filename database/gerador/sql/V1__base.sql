@@ -7,9 +7,8 @@
 --   secretaria       membros, reuniões e votos, livro de membros, transferências, disciplina, eleições
 --   actividades      actividades, material, escalas
 --   escola_sabatina  trimestres, classes, relatórios, chamada, pontuação
---   tesouraria       contas, fundos, movimentos, despesas, recibos, remessas, orçamento, saldos
---   pagamentos       M-Pesa e bancos
---   comunicacao      fila de SMS, WhatsApp e e-mail
+--   tesouraria       contas, fundos, movimentos, despesas, recibos, remessas, orçamento, saldos, M-Pesa e bancos
+--   (o núcleo também tem a fila de SMS, WhatsApp e e-mail; até à V18 havia os schemas pagamentos e comunicacao)
 --
 -- Convenções
 --   * Colunas com o prefixo de 3 letras da tabela (membro -> mem_). PK: <pfx>_id.
@@ -26,10 +25,8 @@ CREATE SCHEMA IF NOT EXISTS secretaria;
 CREATE SCHEMA IF NOT EXISTS actividades;
 CREATE SCHEMA IF NOT EXISTS escola_sabatina;
 CREATE SCHEMA IF NOT EXISTS tesouraria;
-CREATE SCHEMA IF NOT EXISTS pagamentos;
-CREATE SCHEMA IF NOT EXISTS comunicacao;
 
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 
 -- ---------------------------------------------------------------- tipos (no núcleo)
 CREATE TYPE nucleo.estado_registo_t        AS ENUM ('ACTIVO', 'INACTIVO');
@@ -53,7 +50,9 @@ CREATE TYPE nucleo.tipo_consentimento_t    AS ENUM ('DADOS_PESSOAIS', 'FOTOGRAFI
 CREATE TYPE nucleo.estado_transferencia_t  AS ENUM ('PEDIDA', 'CARTA_EMITIDA', 'CONCLUIDA', 'RECUSADA', 'EXPIRADA');
 CREATE TYPE nucleo.estado_actividade_t     AS ENUM ('PLANEADA', 'EM_CURSO', 'CONCLUIDA', 'CANCELADA');
 CREATE TYPE nucleo.funcao_escala_t         AS ENUM ('PREGADOR', 'ANCIAO_DO_DIA', 'DIACONO', 'DIACONISA', 'RECEPCAO', 'MUSICA',
-                                                    'SONOPLASTIA', 'PROFESSOR_ES', 'DIRECTOR_ES', 'LIMPEZA', 'OUTRA');
+                                                    'SONOPLASTIA', 'PROFESSOR_ES', 'DIRECTOR_ES', 'LIMPEZA', 'OUTRA',
+                                                    -- V17: escala de pregação (tradutor e acompanhantes do pregador)
+                                                    'TRADUTOR', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS', 'ACOMPANHANTE_BOAS_VINDAS');
 CREATE TYPE nucleo.estado_escala_t         AS ENUM ('PREVISTA', 'CONFIRMADA', 'SUBSTITUIDA', 'CUMPRIDA', 'FALTOU');
 CREATE TYPE nucleo.es_divisao_t            AS ENUM ('ROL_DO_BERCO', 'JARDIM_DE_INFANCIA', 'PRIMARIOS', 'JUVENIS',
                                                     'ADOLESCENTES', 'JOVENS', 'ADULTOS');

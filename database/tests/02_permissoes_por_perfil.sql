@@ -1,6 +1,6 @@
 \set ON_ERROR_STOP 0
 \set VERBOSITY terse
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 SELECT set_config('app.usuario_id','1',false) \g /dev/null
 INSERT INTO usuario (usu_id, usu_nome, usu_email, usu_senha_hash, usu_mem_id) VALUES
  (6,'Secretária','sec@x','h',NULL),(7,'Secretário ES','ses@x','h',NULL),(8,'Tito (membro)','tito@x','h',103),

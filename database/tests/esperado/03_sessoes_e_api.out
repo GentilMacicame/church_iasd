@@ -17,12 +17,18 @@ psql:database/tests/03_sessoes_e_api.sql:6: ERROR:  permission denied for table 
  t            | 
 (1 row)
 
-4. renovar: OK; reutilizar o token antigo: REUTILIZADA e termina tudo; o novo deixa de servir
+4. renovar: OK; o mesmo token logo a seguir (outro separador do navegador): CONCORRENTE, não termina nada (V16)
  resultado | utilizador | sessao_id 
 -----------+------------+-----------
  OK        |          2 |         2
 (1 row)
 
+  resultado  | utilizador | sessao_id 
+-------------+------------+-----------
+ CONCORRENTE |          2 |          
+(1 row)
+
+4b. passados 10 segundos, reutilizar o token antigo é roubo: REUTILIZADA e termina tudo; o novo deixa de servir
   resultado  | utilizador | sessao_id 
 -------------+------------+-----------
  REUTILIZADA |          2 |          
@@ -70,19 +76,19 @@ psql:database/tests/03_sessoes_e_api.sql:6: ERROR:  permission denied for table 
  
 (1 row)
 
- metodo |          caminho          | estado_http |  resposta  
---------+---------------------------+-------------+------------
- POST   | /v1/tesouraria/transacoes |         201 | {"id": 99}
+ metodo |          caminho          | estado_http |  resposta  | pedido_hash 
+--------+---------------------------+-------------+------------+-------------
+ POST   | /v1/tesouraria/transacoes |         201 | {"id": 99} | 
 (1 row)
 
-psql:database/tests/03_sessoes_e_api.sql:28: ERROR:  duplicate key value violates unique constraint "uq_pid_chave"
+psql:database/tests/03_sessoes_e_api.sql:31: ERROR:  duplicate key value violates unique constraint "uq_pid_chave"
 7. tesoureiro liga ofertas a um relatório da ES (relatório 2 da classe 1); secretário da ES não pode
  fn_ligar_ofertas 
 ------------------
  
 (1 row)
 
-psql:database/tests/03_sessoes_e_api.sql:34: ERROR:  Sem permissão: Criar: Movimentos: entradas, saídas e transferências (cabeçalho) (tesouraria.transacao.criar) na igreja 1
+psql:database/tests/03_sessoes_e_api.sql:37: ERROR:  Sem permissão: Criar: Movimentos: entradas, saídas e transferências (cabeçalho) (tesouraria.transacao.criar) na igreja 1
  ers_estado | ers_tra_id 
 ------------+------------
  FECHADO    |         50

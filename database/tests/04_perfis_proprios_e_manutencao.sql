@@ -1,6 +1,6 @@
 \set ON_ERROR_STOP 0
 \set VERBOSITY terse
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 
 -- dados: um sábado com mais de 12 meses, com um visitante que não se tornou membro e outro que sim
 INSERT INTO escola_sabatina.trimestre (etr_id, etr_ano, etr_numero, etr_data_inicio, etr_data_fim, etr_num_sabados)

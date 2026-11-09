@@ -1,6 +1,6 @@
 \set ON_ERROR_STOP 0
 \set VERBOSITY terse
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 SET ROLE app_igreja;
 \echo '1. a API não lê as tabelas de sessão'
 SELECT count(*) FROM nucleo.sessao;
@@ -10,8 +10,11 @@ SELECT nucleo.fn_login_bloqueado_ate('TES@x') IS NOT NULL AS bloqueado;
 \echo '3. login certo: abre sessão, desbloqueia, regista último login'
 SELECT nucleo.fn_abrir_sessao(2, 'hashA', '10.0.0.1', 'Firefox') AS sessao;
 SELECT nucleo.fn_login_bloqueado_ate('tes@x') IS NULL AS desbloqueado, current_setting('app.usuario_id', true) AS sessao_de;
-\echo '4. renovar: OK; reutilizar o token antigo: REUTILIZADA e termina tudo; o novo deixa de servir'
+\echo '4. renovar: OK; o mesmo token logo a seguir (outro separador do navegador): CONCORRENTE, não termina nada (V16)'
 SELECT * FROM nucleo.fn_renovar_sessao('hashA', 'hashB');
+SELECT * FROM nucleo.fn_renovar_sessao('hashA', 'hashC');
+\echo '4b. passados 10 segundos, reutilizar o token antigo é roubo: REUTILIZADA e termina tudo; o novo deixa de servir'
+SELECT pg_sleep(11) \g /dev/null
 SELECT * FROM nucleo.fn_renovar_sessao('hashA', 'hashC');
 SELECT * FROM nucleo.fn_renovar_sessao('hashB', 'hashD');
 SELECT * FROM nucleo.fn_renovar_sessao('nao-existe', 'x');

@@ -176,8 +176,24 @@ M('V5__actividades', 'actividades', 'Actividades e escalas',
  T('escala', 'esc', 'Escalas de serviço (pregador, diáconos, recepção, ...)', [
    ('igr_id', 'fk:igreja', NN), ('data', 'DATE', NN), ('funcao', 'funcao_escala_t', NN),
    ('mem_id', 'fk:membro', NN), ('act_id', 'fk:actividade'),
-   ('substituto_mem_id', 'fk:membro'), ('observacoes', 'VARCHAR(255)')],
+   ('substituto_mem_id', 'fk:membro'), ('observacoes', 'VARCHAR(255)'),
+   ('eds_id', 'fk:escala_dia', '', 'Dia da escala (plano) a que pertence; a data e a igreja vêm do dia')],
    uniq=[['igr_id', 'data', 'funcao', 'mem_id']], estado=('estado_escala_t', "'PREVISTA'")),
+ T('escala_plano', 'epl', 'Escala de um período (ex.: escala de pregação do trimestre), assinada e publicada', [
+   ('igr_id', 'fk:igreja', NN), ('titulo', 'VARCHAR(150)', NN, 'Ex.: Escala de Pregação'),
+   ('data_inicio', 'DATE', NN), ('data_fim', 'DATE', NN), ('etr_id', 'fk:trimestre', '', 'Trimestre (opcional)'),
+   ('local_emissao', 'VARCHAR(100)', '', 'Ex.: Matola'), ('data_emissao', 'DATE'),
+   ('anciao_mem_id', 'fk:membro', '', 'Ancião que assina'), ('secretario_mem_id', 'fk:membro', '', 'Secretário que assina'),
+   ('publicada', 'BOOLEAN', 'NOT NULL DEFAULT FALSE', 'Só as escalas publicadas são vistas pelos membros e geram lembretes'),
+   ('observacoes', 'VARCHAR(500)')],
+   checks=[('chk_epl_datas', '@data_fim >= @data_inicio')],
+   extra=['CREATE INDEX idx_epl_igr_periodo ON {t} (@igr_id, @data_inicio) WHERE @end_date IS NULL']),
+ T('escala_dia', 'eds', 'Um dia (culto) da escala: grupo coral, departamento ou evento especial', [
+   ('epl_id', 'fk:escala_plano', NN), ('data', 'DATE', NN),
+   ('evento', 'VARCHAR(200)', '', 'Dia especial que substitui a escala (ex.: Simpósio, 13.º sábado)'),
+   ('grupo_coral', 'VARCHAR(100)'), ('ide_id', 'fk:igreja_departamento', '', 'Departamento responsável'),
+   ('observacoes', 'VARCHAR(255)')],
+   uniq=[['epl_id', 'data']]),
 ])
 
 # ======================================================================= escola_sabatina
@@ -386,8 +402,9 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    uniq=[['cfi_id', 'data', 'referencia', 'valor']], big=True),
 ])
 
-# ======================================================================= pagamentos
-M('V8__pagamentos', 'pagamentos', 'Pagamentos electrónicos', 'Integração com M-Pesa e bancos.', [
+# ======================================================================= tesouraria: pagamentos electrónicos
+# Secção da tesouraria (schema tesouraria desde a V18; antes era o schema pagamentos).
+M('V8__pagamentos', 'tesouraria', 'Pagamentos electrónicos', 'Integração com M-Pesa e bancos (parte da tesouraria).', [
  T('pagamento_mpesa', 'pmp', 'Pedido e resposta da API M-Pesa', [
    ('tra_id', 'fk:transacao', NN), ('direccao', 'VARCHAR(3)', "NOT NULL DEFAULT 'C2B'"),
    ('msisdn', 'VARCHAR(15)', NN), ('valor', 'DECIMAL(14,2)', NN),
@@ -414,19 +431,23 @@ M('V8__pagamentos', 'pagamentos', 'Pagamentos electrónicos', 'Integração com 
    uniq=[['tra_id']], big=True),
 ])
 
-# ======================================================================= comunicacao
-M('V9__comunicacao', 'comunicacao', 'Comunicação', 'Fila de SMS, WhatsApp e e-mail.', [
+# ======================================================================= nucleo: comunicação
+# Secção do núcleo (schema nucleo desde a V18; antes era o schema comunicacao).
+M('V9__comunicacao', 'nucleo', 'Comunicação', 'Fila de SMS, WhatsApp e e-mail (parte do núcleo).', [
  T('notificacao', 'ntf', 'Fila de SMS, WhatsApp e e-mail a enviar', [
    ('igr_id', 'fk:igreja', NN), ('mem_id', 'fk:membro'), ('canal', 'canal_notificacao_t', NN),
    ('destino', 'VARCHAR(150)', NN), ('assunto', 'VARCHAR(150)'), ('mensagem', 'TEXT', NN),
    ('agendada_para', 'TIMESTAMPTZ', 'NOT NULL DEFAULT now()'), ('enviada_em', 'TIMESTAMPTZ'),
    ('tentativas', 'SMALLINT', 'NOT NULL DEFAULT 0'), ('erro', 'VARCHAR(500)'),
-   ('origem_tabela', 'VARCHAR(80)'), ('origem_id', 'BIGINT')],
-   estado=('estado_notificacao_t', "'PENDENTE'"), big=True,
+   ('origem_tabela', 'VARCHAR(80)'), ('origem_id', 'BIGINT'),
+   ('chave', 'VARCHAR(100)', '', 'Evita repetir a mesma notificação (ex.: escala:12:2026-11-11)')],
+   uniq=[['chave']], estado=('estado_notificacao_t', "'PENDENTE'"), big=True,
    extra=["CREATE INDEX idx_ntf_fila ON {t} (@agendada_para) WHERE @estado = 'PENDENTE' AND @end_date IS NULL"]),
 ])
 
-SCHEMAS = [m[1] for m in MODULES]
+SCHEMAS = list(dict.fromkeys(m[1] for m in MODULES))     # 6 schemas (V18 juntou pagamentos e comunicacao)
+# Ficheiro de regras de cada módulo (por defeito sql/<schema>_regras.sql)
+REGRAS = {'V8__pagamentos': 'pagamentos_regras.sql', 'V9__comunicacao': 'comunicacao_regras.sql'}
 
 # Segurança: em que igreja está cada registo --------------------------------
 # ('direct', coluna)            a tabela tem a coluna de igreja
@@ -437,6 +458,7 @@ SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
  'oficial': ('direct', 'igr_id'), 'igreja_departamento': ('direct', 'igr_id'), 'escala': ('direct', 'igr_id'),
+ 'escala_plano': ('direct', 'igr_id'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
  'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'),
  'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'),
@@ -473,7 +495,10 @@ OWNER_READ = {   # (SELECT ...) = calculado uma vez por consulta
  'fundo': 'TRUE',
  'matricula': '@mem_id = (SELECT nucleo.fn_membro_sessao())',
  'presenca': '@mem_id = (SELECT nucleo.fn_membro_sessao())',
- 'escala': '(SELECT nucleo.fn_membro_sessao()) IN (@mem_id, @substituto_mem_id)',
+ 'escala': '(SELECT nucleo.fn_membro_sessao()) IN (@mem_id, @substituto_mem_id) OR @eds_id IN (SELECT d.eds_id FROM actividades.escala_dia d)',
+ # escalas publicadas: os membros da igreja vêem-nas (como a escala afixada na igreja)
+ 'escala_plano': '@publicada AND @igr_id = (SELECT m.mem_igr_id FROM secretaria.membro m WHERE m.mem_id = (SELECT nucleo.fn_membro_sessao()))',
+ 'escala_dia': '@epl_id IN (SELECT p.epl_id FROM actividades.escala_plano p)',
  'usuario': '@id = (SELECT nucleo.fn_usuario_sessao())',
 }
 
@@ -494,7 +519,7 @@ NEGOCIO = [
 # Perfis: regras aplicadas por ordem ('+' acrescenta, '-' retira); padrões do tipo fnmatch
 PERFIS = [
  ('ADMIN', 'IGREJA', 'Administrador do sistema na igreja (não vê a disciplina)', [
-   ('+', '*'), ('-', 'secretaria.disciplina.*'), ('-', 'nucleo.*'), ('+', 'nucleo.usuario.*'), ('+', 'nucleo.usuario_igreja.*'),
+   ('+', '*'), ('-', 'secretaria.disciplina.*'), ('-', 'nucleo.*'), ('+', 'nucleo.usuario.*'), ('+', 'nucleo.usuario_igreja.*'), ('+', 'nucleo.notificacao.*'),
    ('-', 'nucleo.usuario.super_admin'), ('-', '*.aprovar'), ('-', 'tesouraria.remessa.confirmar'), ('-', 'organizacao.*'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja.alterar'), ('+', 'organizacao.igreja_departamento.*'),
    # actos que o Manual reserva ao secretário, tesoureiro e anciãos não são do administrador técnico
@@ -507,21 +532,22 @@ PERFIS = [
  ('ANCIAO', 'IGREJA', 'Ancião: aprova saídas e despesas, fecha e reabre meses, reuniões e votos', [
    ('+', 'secretaria.*.ler'), ('+', 'secretaria.reuniao.*'), ('+', 'secretaria.voto.*'),
    ('+', 'escola_sabatina.*.ler'), ('+', 'actividades.*'), ('+', 'tesouraria.*.ler'),
+   ('-', 'tesouraria.pagamento_mpesa.*'), ('-', 'tesouraria.mpesa_callback_log.*'), ('-', 'tesouraria.pagamento_bancario.*'),
    ('+', 'tesouraria.transacao.aprovar'), ('+', 'tesouraria.despesa.aprovar'), ('+', 'tesouraria.despesa.alterar'),
    ('+', 'tesouraria.orcamento.aprovar'), ('+', 'tesouraria.orcamento.alterar'), ('+', 'tesouraria.fecho_periodo.*'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'nucleo.usuario_igreja.ler')]),
  ('SECRETARIO', 'IGREJA', 'Secretário(a) da igreja: livro de membros, reuniões, votos, transferências, disciplina', [
-   ('+', 'secretaria.*'), ('+', 'actividades.escala.*'), ('+', 'escola_sabatina.*.ler'),
+   ('+', 'secretaria.*'), ('+', 'actividades.escala*'), ('+', 'escola_sabatina.*.ler'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler')]),
  ('TESOUREIRO', 'IGREJA', 'Tesoureiro(a): movimentos, recibos, contagens, despesas, remessas (não aprova o que regista)', [
    ('+', 'tesouraria.*'), ('-', '*.aprovar'), ('-', 'tesouraria.remessa.confirmar'), ('-', 'tesouraria.fecho_periodo.terminar'),
-   ('+', 'pagamentos.*'), ('+', 'comunicacao.notificacao.*'),
+   ('+', 'nucleo.notificacao.*'),
    ('+', 'secretaria.membro.ler'), ('+', 'secretaria.familia.ler'), ('+', 'secretaria.contacto.ler'),
    ('+', 'escola_sabatina.relatorio_sabado.ler'), ('+', 'escola_sabatina.classe*.ler'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'actividades.actividade.ler')]),
  ('DIRECTOR_ES', 'IGREJA', 'Director(a) da Escola Sabatina: classes, alvos, relatórios', [
    ('+', 'escola_sabatina.*'), ('+', 'secretaria.membro.ler'), ('+', 'secretaria.baptismo.ler'),
-   ('+', 'actividades.escala.*'), ('+', 'organizacao.igreja.ler')]),
+   ('+', 'actividades.escala*'), ('+', 'organizacao.igreja.ler')]),
  ('SECRETARIO_ES', 'IGREJA', 'Secretário(a) da Escola Sabatina: relatórios do sábado e chamada', [
    ('+', 'escola_sabatina.*.ler'), ('+', 'escola_sabatina.relatorio_sabado.*'), ('-', 'escola_sabatina.relatorio_sabado.reabrir'),
    ('-', 'escola_sabatina.relatorio_sabado.terminar'),
@@ -538,11 +564,12 @@ PERFIS = [
    ('+', 'tesouraria.categoria.*'), ('+', 'tesouraria.fundo.*'), ('+', 'tesouraria.calendario_oferta.*'),
    ('+', 'nucleo.log_auditoria.ler'), ('+', '*.ler'), ('-', 'secretaria.disciplina.ler')]),
  ('TESOUREIRO_ASSOCIACAO', 'ENTIDADE', 'Tesoureiro(a) da Associação/Missão: lê as tesourarias e confirma remessas', [
-   ('+', 'tesouraria.*.ler'), ('+', 'pagamentos.*.ler'), ('+', 'tesouraria.remessa.confirmar'), ('+', 'tesouraria.remessa.alterar'),
+   ('+', 'tesouraria.*.ler'), ('+', 'tesouraria.remessa.confirmar'), ('+', 'tesouraria.remessa.alterar'),
    ('+', 'organizacao.*.ler')]),
  ('SECRETARIO_ASSOCIACAO', 'ENTIDADE', 'Secretário(a) da Associação/Missão: lê os livros de membros e as estatísticas', [
    ('+', 'secretaria.*.ler'), ('-', 'secretaria.disciplina.ler'), ('+', 'escola_sabatina.*.ler'), ('+', 'organizacao.*.ler')]),
  ('INTEGRACAO', 'ENTIDADE', 'Conta de serviço da API (callbacks M-Pesa, envio de notificações)', [
-   ('+', 'pagamentos.*'), ('-', 'pagamentos.*.terminar'), ('+', 'tesouraria.transacao.ler'), ('+', 'tesouraria.transacao.alterar'),
-   ('+', 'comunicacao.notificacao.ler'), ('+', 'comunicacao.notificacao.alterar')]),
+   ('+', 'tesouraria.pagamento_mpesa.*'), ('+', 'tesouraria.mpesa_callback_log.*'), ('+', 'tesouraria.pagamento_bancario.*'),
+   ('-', 'tesouraria.*.terminar'), ('+', 'tesouraria.transacao.ler'), ('+', 'tesouraria.transacao.alterar'),
+   ('+', 'nucleo.notificacao.ler'), ('+', 'nucleo.notificacao.alterar')]),
 ]

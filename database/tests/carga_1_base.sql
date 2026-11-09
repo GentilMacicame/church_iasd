@@ -1,4 +1,4 @@
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 SELECT set_config('app.usuario_id','1',false);
 INSERT INTO igreja (igr_id, igr_ent_id, igr_nome) SELECT g, 1, 'Igreja ' || g FROM generate_series(10, 309) g;
 SELECT setval(pg_get_serial_sequence('secretaria.membro','mem_id'), 1000);

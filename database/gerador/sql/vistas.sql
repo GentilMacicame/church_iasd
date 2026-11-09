@@ -357,15 +357,45 @@ JOIN tesouraria.conta_financeira c ON c.cfi_id = e.ext_cfi_id
 WHERE e.ext_end_date IS NULL AND e.ext_tra_id IS NULL;
 
 -- ================================================================ pagamentos e comunicação
-CREATE VIEW pagamentos.vw_mpesa_pendentes WITH (security_invoker = true) AS
+CREATE VIEW tesouraria.vw_mpesa_pendentes WITH (security_invoker = true) AS
 SELECT p.pmp_id, p.pmp_tra_id, p.pmp_third_party_reference, p.pmp_pedido_em,
        p.pmp_tentativas_consulta, p.pmp_ultima_consulta_em
-FROM pagamentos.pagamento_mpesa p
+FROM tesouraria.pagamento_mpesa p
 JOIN tesouraria.transacao t ON t.tra_id = p.pmp_tra_id
 WHERE p.pmp_end_date IS NULL AND p.pmp_respondido_em IS NULL AND t.tra_estado = 'PENDENTE'
   AND p.pmp_pedido_em < now() - INTERVAL '5 minutes';
 
-CREATE VIEW comunicacao.vw_notificacoes_a_enviar WITH (security_invoker = true) AS
-SELECT * FROM comunicacao.notificacao
+CREATE VIEW nucleo.vw_notificacoes_a_enviar WITH (security_invoker = true) AS
+SELECT * FROM nucleo.notificacao
 WHERE ntf_end_date IS NULL AND ntf_estado = 'PENDENTE' AND ntf_agendada_para <= now()
 ORDER BY ntf_agendada_para;
+
+-- ================================================================ escala (V17)
+-- A escala como no papel afixado na igreja: um dia por linha e uma coluna por função.
+-- Vista do sistema (não security_invoker) com a regra de quem vê escrita aqui: quem tem
+-- actividades.escala_plano.ler nessa igreja, ou o membro da igreja se a escala estiver publicada
+-- (os nomes dos escalados fazem parte da escala publicada).
+CREATE VIEW actividades.vw_escala_grelha WITH (security_barrier = true) AS
+SELECT p.epl_id AS plano_id, p.epl_igr_id AS igreja_id, p.epl_titulo AS titulo, p.epl_publicada AS publicada,
+       d.eds_id AS dia_id, d.eds_data AS data, d.eds_evento AS evento,
+       string_agg(m.mem_nome || ' ' || m.mem_apelido, ', ') FILTER (WHERE e.esc_funcao::text = 'PREGADOR') AS pregador,
+       string_agg(m.mem_nome || ' ' || m.mem_apelido, ', ') FILTER (WHERE e.esc_funcao::text = 'TRADUTOR') AS tradutor,
+       string_agg(m.mem_nome || ' ' || m.mem_apelido, ', ') FILTER (WHERE e.esc_funcao::text = 'ACOMPANHANTE_VISITAS') AS acompanhante_visitas,
+       string_agg(m.mem_nome || ' ' || m.mem_apelido, ', ') FILTER (WHERE e.esc_funcao::text = 'ACOMPANHANTE_OFERTAS') AS acompanhante_ofertas,
+       string_agg(m.mem_nome || ' ' || m.mem_apelido, ', ') FILTER (WHERE e.esc_funcao::text = 'ACOMPANHANTE_BOAS_VINDAS') AS acompanhante_boas_vindas,
+       string_agg(actividades.fn_funcao_escala_nome(e.esc_funcao) || ': ' || m.mem_nome || ' ' || m.mem_apelido, '; ')
+           FILTER (WHERE e.esc_funcao::text NOT IN ('PREGADOR', 'TRADUTOR', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS',
+                                                     'ACOMPANHANTE_BOAS_VINDAS')) AS outras_funcoes,
+       d.eds_grupo_coral AS grupo_coral, dep.dep_nome AS departamento, d.eds_observacoes AS observacoes
+FROM actividades.escala_dia d
+JOIN actividades.escala_plano p ON p.epl_id = d.eds_epl_id
+LEFT JOIN actividades.escala e ON e.esc_eds_id = d.eds_id AND e.esc_end_date IS NULL
+LEFT JOIN secretaria.membro m ON m.mem_id = COALESCE(e.esc_substituto_mem_id, e.esc_mem_id)
+LEFT JOIN organizacao.igreja_departamento ide ON ide.ide_id = d.eds_ide_id
+LEFT JOIN organizacao.departamento dep ON dep.dep_id = ide.ide_dep_id
+WHERE d.eds_end_date IS NULL AND p.epl_end_date IS NULL
+  AND (p.epl_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.escala_plano.ler'))::INT[])
+       OR (p.epl_publicada AND p.epl_igr_id = (SELECT m2.mem_igr_id FROM secretaria.membro m2
+                                               WHERE m2.mem_id = (SELECT nucleo.fn_membro_sessao()))))
+GROUP BY p.epl_id, p.epl_igr_id, p.epl_titulo, p.epl_publicada, d.eds_id, d.eds_data, d.eds_evento,
+         d.eds_grupo_coral, dep.dep_nome, d.eds_observacoes;

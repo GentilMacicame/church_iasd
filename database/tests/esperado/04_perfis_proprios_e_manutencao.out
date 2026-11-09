@@ -1,0 +1,52 @@
+1. tesoureiro (2) vê os seus próprios perfis; não vê os do ancião (3)
+ uig_usu_id | uig_igr_id |   perfil   
+------------+------------+------------
+          2 |          1 | TESOUREIRO
+(1 row)
+
+ perfis_do_anciao 
+------------------
+                0
+(1 row)
+
+2. sem utilizador na sessão não se vê nenhum perfil
+ perfis 
+--------
+      0
+(1 row)
+
+3. a API cria as partições do log (tarefa mensal) sem ser dona das tabelas
+ particoes_ok 
+--------------
+ t
+(1 row)
+
+4. anonimização: o visitante antigo perde nome e telefone; o que se tornou membro fica igual
+ anonimizou 
+------------
+ t
+(1 row)
+
+ evi_id |     evi_nome     | evi_telefone  | anonimizado 
+--------+------------------+---------------+-------------
+    100 | Anonimizado      |               | t
+    101 | João Novo Membro | +258842222222 | f
+(2 rows)
+
+5. o log da anonimização não guarda o nome antigo
+ lau_accao | sem_valores_antigos | nome_depois 
+-----------+---------------------+-------------
+ UPDATE    | t                   | Anonimizado
+(1 row)
+
+ logs_com_o_nome 
+-----------------
+               0
+(1 row)
+
+6. correr outra vez não volta a mexer no mesmo visitante
+ ja_anonimizados_de_novo 
+-------------------------
+                       0
+(1 row)
+

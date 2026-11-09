@@ -1,0 +1,102 @@
+1. o secretário elabora a escala do IV trimestre e gera os sábados
+ sabados_criados 
+-----------------
+              13
+(1 row)
+
+ criados_de_novo 
+-----------------
+               0
+(1 row)
+
+2. dia fora do período da escala: recusado
+psql:database/tests/05_escalas_e_lembretes.sql:31: ERROR:  O dia 02/01/2027 está fora do período da escala (01/10/2026 a 31/12/2026)
+3. pregador, tradutor e acompanhante do dia 17/10: a data e a igreja vêm do dia
+      esc_funcao      | esc_mem_id |    data    | esc_igr_id 
+----------------------+------------+------------+------------
+ PREGADOR             |        900 | 17/10/2026 |          1
+ TRADUTOR             |        901 | 17/10/2026 |          1
+ ACOMPANHANTE_VISITAS |        902 | 17/10/2026 |          1
+(3 rows)
+
+4. o tesoureiro não elabora escalas nem vê a escala por publicar
+psql:database/tests/05_escalas_e_lembretes.sql:44: ERROR:  new row violates row-level security policy for table "escala_plano"
+ planos_visiveis 
+-----------------
+               0
+(1 row)
+
+5. o membro (sem perfil) não vê a escala por publicar nem pode escalar ninguém
+ dias_visiveis 
+---------------
+             0
+(1 row)
+
+psql:database/tests/05_escalas_e_lembretes.sql:50: ERROR:  new row violates row-level security policy for table "escala"
+6. escala por publicar: na quarta não há lembretes
+ lembretes 
+-----------
+         0
+(1 row)
+
+7. o secretário publica: o membro vê a escala com os nomes, como no papel afixado
+ data  |        evento        |  pregador  |     tradutor      | acompanhante_visitas | grupo_coral 
+-------+----------------------+------------+-------------------+----------------------+-------------
+ 17/10 |                      | Elisa Fumo | Teresa Chichongue | Gabriel Langa        | MA
+ 31/10 | Simpósio da Teologia |            |                   |                      | 
+(2 rows)
+
+ escalas_que_o_membro_ve 
+-------------------------
+                       3
+(1 row)
+
+8. lembretes: quarta e sexta, uma vez por dia, só a quem tem telefone e consentimento
+ quarta 
+--------
+      1
+(1 row)
+
+ quarta_de_novo 
+----------------
+              0
+(1 row)
+
+ quinta 
+--------
+      0
+(1 row)
+
+ sexta_depois_das_20h 
+----------------------
+                    0
+(1 row)
+
+ sexta 
+-------
+     1
+(1 row)
+
+  ntf_destino  |                                                   ntf_mensagem                                                    |    envio    | ntf_estado 
+---------------+-------------------------------------------------------------------------------------------------------------------+-------------+------------
+ +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a). Deus o(a) abençoe. | 14/10 18:00 | PENDENTE
+ +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a). Deus o(a) abençoe. | 16/10 18:00 | PENDENTE
+(2 rows)
+
+9. envio: a fila reserva cada SMS uma vez; enviado → ENVIADA; erro → volta a tentar
+ reservou 
+----------
+ t
+(1 row)
+
+ reservadas_de_novo 
+--------------------
+                  0
+(1 row)
+
+    dia     | ntf_estado | ntf_tentativas |        ntf_erro        | enviada 
+------------+------------+----------------+------------------------+---------
+ 2026-10-14 | ENVIADA    |              1 |                        | t
+ 2026-10-16 | PENDENTE   |              1 | operadora indisponível | f
+(2 rows)
+

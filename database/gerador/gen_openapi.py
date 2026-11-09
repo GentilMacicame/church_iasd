@@ -52,12 +52,13 @@ def enum_name(e): return 'Enum' + ''.join(x.capitalize() for x in e[:-2].split('
 AUTO = {'tra_igr_id', 'tli_igr_id', 'ect_igr_id', 'ers_igr_id', 'epr_igr_id', 'mem_validado_por_usu_id',
         'mem_data_validacao', 'des_aprovado_por_usu_id', 'des_aprovado_em', 'usu_ultimo_login'}
 # NOT NULL sem DEFAULT, mas a base calcula-os se vierem vazios (não são obrigatórios ao criar)
-CALCULADOS = {'ers_membros_matriculados'}
+CALCULADOS = {'ers_membros_matriculados', 'esc_data', 'esc_igr_id'}   # esc_*: vêm do dia da escala (escalaDiaId)
 
 schemas = {enum_name(k): {'type': 'string', 'enum': v} for k, v in ENUMS.items()}
 schemas['Erro'] = {'type': 'object', 'required': ['erro', 'mensagem', 'pedidoId'], 'properties': {
     'erro': {'type': 'string', 'enum': ['sem_permissao', 'regra_negocio', 'validacao', 'duplicado', 'referencia_invalida',
-                                        'campo_obrigatorio', 'tentar_novamente', 'nao_encontrado', 'nao_autenticado', 'pedido_invalido']},
+                                        'campo_obrigatorio', 'tentar_novamente', 'nao_encontrado', 'nao_autenticado', 'pedido_invalido',
+                                        'demasiados_pedidos', 'pedido_demasiado_grande', 'nao_disponivel', 'erro_interno']},
     'mensagem': {'type': 'string', 'description': 'Em português, pronta a mostrar ao utilizador'},
     'campo': {'type': 'string', 'nullable': True, 'description': 'Campo do formulário a que o erro se refere'},
     'pedidoId': {'type': 'string'}}}
@@ -140,24 +141,25 @@ for fname, schema, title, desc, tables in MODULES:
             params.append({'name': 'q', 'in': 'query', 'description': 'Procura por nome ou apelido', 'schema': {'type': 'string'}})
         lista = {'type': 'object', 'required': ['dados', 'proximo'], 'properties': {
             'dados': {'type': 'array', 'items': ref(S)}, 'proximo': {'type': 'string', 'nullable': True}}}
-        paths[base_p] = {'get': op(f'Listar: {t.desc}', tag, f'{code}.ler' if t.name not in GLOBAL_READ else None,
-                                   operationId=f'listar{S}', parameters=params, responses=resp('200', lista))}
+        nome = RES[t.name].replace('-', ' ').capitalize()   # ex.: 'Movimentos membro' (nome do pedido no Postman/Swagger)
+        paths[base_p] = {'get': op(f'{nome}: listar', tag, f'{code}.ler' if t.name not in GLOBAL_READ else None,
+                                   operationId=f'listar{S}', description=t.desc, parameters=params, responses=resp('200', lista))}
         ro = t.name in SYSTEM_WRITE
         if not ro:
-            post_params = [IDEMP] if t.schema in ('tesouraria', 'pagamentos') else []
-            paths[base_p]['post'] = op(f'Criar: {t.desc}', tag, f'{code}.criar', operationId=f'criar{S}',
+            post_params = [IDEMP] if t.schema == 'tesouraria' else []
+            paths[base_p]['post'] = op(f'{nome}: criar', tag, f'{code}.criar', operationId=f'criar{S}', description=t.desc,
                                        parameters=post_params,
                                        requestBody={'required': True, 'content': {'application/json': {'schema': create}}},
                                        responses=resp('201', ref(S), 'Criado'))
         idp = [{'$ref': '#/components/parameters/Id'}]
-        paths[base_p + '/{id}'] = {'get': op(f'Ler um registo', tag, f'{code}.ler' if t.name not in GLOBAL_READ else None,
+        paths[base_p + '/{id}'] = {'get': op(f'{nome}: ler um', tag, f'{code}.ler' if t.name not in GLOBAL_READ else None,
                                               operationId=f'ler{S}', parameters=idp, responses=resp('200', ref(S)))}
         if not ro:
-            paths[base_p + '/{id}']['patch'] = op('Alterar (só os campos enviados)', tag, f'{code}.alterar', operationId=f'alterar{S}',
+            paths[base_p + '/{id}']['patch'] = op(f'{nome}: alterar', tag, f'{code}.alterar', operationId=f'alterar{S}', description='Só os campos enviados mudam.',
                                                   parameters=idp, requestBody={'required': True, 'content': {'application/json': {'schema': ref(S)}}},
                                                   responses=resp('200', ref(S)))
-            for acc, verb in [('terminar', 'Terminar (preenche endDate; nada se apaga)'), ('reactivar', 'Reactivar (limpa endDate)')]:
-                paths[f'{base_p}/{{id}}/{acc}'] = {'post': op(verb, tag, f'{code}.terminar', operationId=f'{acc}{S}',
+            for acc, verb in [('terminar', 'Preenche endDate; nada se apaga.'), ('reactivar', 'Limpa endDate.')]:
+                paths[f'{base_p}/{{id}}/{acc}'] = {'post': op(f'{nome}: {acc}', tag, f'{code}.terminar', operationId=f'{acc}{S}', description=verb,
                                                                parameters=idp, responses=resp('200', ref(S)))}
 
 # ---------------------------------------------------------------- acções de negócio
@@ -186,7 +188,7 @@ paths['/v1/eu'] = {'get': op('Utilizador, igrejas e permissões', A, None, opera
         igrejas={'type': 'array', 'items': obj(['id', 'nome'], id=I, nome=STR, perfis={'type': 'array', 'items': STR})},
         permissoes={'type': 'object', 'additionalProperties': {'type': 'array', 'items': STR}, 'description': 'igrejaId → códigos de permissão'})))}
 
-TITULO = {m[1]: m[2] for m in MODULES}
+TITULO = {m[1]: m[2] for m in reversed(MODULES)}   # título do módulo principal de cada schema
 SEC, ES, TES, PAG = 'Secretaria', 'Escola Sabatina', 'Tesouraria', 'Pagamentos electrónicos'
 VOTO = obj(['votoId', 'data'], votoId=I, data=D)
 acao('/v1/secretaria/membros/{id}/validar', 'Aprovar o registo do membro', SEC, 'secretaria.membro.validar', None, ref('Membro'))
@@ -223,11 +225,11 @@ acao('/v1/organizacao/entidades/{id}/fundos-padrao', 'Criar os fundos-padrão da
          'description': 'Parte da oferta combinada que vai para a Associação (plano de ofertas da União/Divisão), 0 a 100'},
          sufixo={'type': 'string', 'maxLength': 10, 'description': 'Acrescentado aos códigos (DIZ, ESM, ...) quando já existem fundos de outra Associação'}),
      {'type': 'array', 'items': ref('Fundo')}, 'tesouraria.fn_criar_fundos_padrao', code='201')
-acao('/v1/pagamentos/mpesa', 'Iniciar um pagamento M-Pesa (cria a transacção pendente e chama a Vodacom)', PAG, 'pagamentos.pagamento_mpesa.criar',
+acao('/v1/tesouraria/mpesa', 'Iniciar um pagamento M-Pesa (cria a transacção pendente e chama a Vodacom)', PAG, 'tesouraria.pagamento_mpesa.criar',
      obj(['contaId', 'msisdn', 'linhas'], contaId=I, msisdn={'type': 'string', 'pattern': r'^2588[2-7]\d{7}$'}, membroId=I,
          linhas={'type': 'array', 'items': obj(['fundoId', 'categoriaId', 'valor'], fundoId=I, categoriaId=I, valor=MONEY)}),
      obj(['transacaoId', 'estado'], transacaoId=I, estado=ref('EnumEstadoTransacao')), idemp=True, code='202')
-acao('/v1/pagamentos/mpesa/callback', 'Resposta da Vodacom (conta de serviço; idempotente)', PAG, 'perfil INTEGRACAO', {'type': 'object'}, None)
+acao('/v1/tesouraria/mpesa/callback', 'Resposta da Vodacom (conta de serviço; idempotente)', PAG, 'perfil INTEGRACAO', {'type': 'object'}, None)
 
 # rotas aninhadas (atalhos para tabelas-filho)
 def aninhada(path, filho, summary, tag, perm_ler, perm_criar=None):
@@ -246,8 +248,9 @@ aninhada('/v1/tesouraria/transacoes/{id}/linhas', 'TransacaoLinha', 'Linhas da t
 def rel(path, vista, tag, perm, extra=()):
     ps = [{'name': 'igrejaId', 'in': 'query', 'schema': {'type': 'integer'}},
           {'name': 'formato', 'in': 'query', 'schema': {'type': 'string', 'enum': ['json', 'csv', 'pdf'], 'default': 'json'}}] + list(extra)
-    paths[path] = {'get': op(f'Relatório: {vista}', tag, perm, operationId='rel' + re.sub(r'[^A-Za-z]', '', path.title()),
-                             parameters=ps, **{'x-vista': vista},
+    nome = path.rsplit('/', 1)[1].replace('-', ' ').capitalize()   # ex.: 'Relatório: relatorio mensal'
+    paths[path] = {'get': op(f'Relatório: {nome}', tag, perm, operationId='rel' + re.sub(r'[^A-Za-z]', '', path.title()),
+                             description=f'Lido da vista {vista}.', parameters=ps, **{'x-vista': vista},
                              responses=resp('200', {'type': 'array', 'items': {'type': 'object'}}))}
 ANO = [{'name': 'ano', 'in': 'query', 'schema': {'type': 'integer'}}, {'name': 'mes', 'in': 'query', 'schema': {'type': 'integer'}}]
 TRI = [{'name': 'trimestreId', 'in': 'query', 'schema': {'type': 'integer'}}]
@@ -276,17 +279,24 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
 rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
 rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')
-rel('/v1/pagamentos/mpesa-pendentes', 'pagamentos.vw_mpesa_pendentes', PAG, 'pagamentos.pagamento_mpesa.ler')
-rel('/v1/comunicacao/notificacoes-a-enviar', 'comunicacao.vw_notificacoes_a_enviar', TITULO['comunicacao'], 'comunicacao.notificacao.ler')
+rel('/v1/tesouraria/mpesa-pendentes', 'tesouraria.vw_mpesa_pendentes', PAG, 'tesouraria.pagamento_mpesa.ler')
+rel('/v1/nucleo/notificacoes-a-enviar', 'nucleo.vw_notificacoes_a_enviar', 'Comunicação', 'nucleo.notificacao.ler')
+rel('/v1/actividades/escala-grelha', 'actividades.vw_escala_grelha', TITULO['actividades'],
+    'actividades.escala_plano.ler (ou membro da igreja, se a escala estiver publicada)',
+    [{'name': 'planoId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Escala (plano) a mostrar'}])
+acao('/v1/actividades/planos-escala/{id}/gerar-dias', 'Elaborar a escala: um dia para cada sábado (ou outro dia da semana) do período',
+     TITULO['actividades'], 'actividades.escala_dia.criar',
+     obj([], diaSemana={'type': 'integer', 'minimum': 1, 'maximum': 7, 'description': '1 = segunda … 7 = domingo; por defeito 6 (sábado)'}),
+     obj(['criados'], criados=I), 'actividades.fn_gerar_dias_escala', code='201')
 rel('/v1/actividades/escalas-proximas', 'actividades.vw_escala_proximas', 'Actividades e escalas', 'actividades.escala.ler')
 
 doc = {
  'openapi': '3.0.3',
  'info': {'title': 'Sistema de Gestão da Igreja Adventista · API', 'version': '1.0.0',
-          'description': ('Contrato gerado a partir do esquema da base de dados v5 (+ V14). Campos = colunas sem o prefixo, em camelCase. '
+          'description': ('Contrato gerado a partir do esquema da base de dados (database/gerador/defs.py). Campos = colunas sem o prefixo, em camelCase. '
                           'Nada se apaga: use /terminar. As regras e as permissões são aplicadas pela base de dados; '
                           '`x-permissao` diz qual é exigida, `x-funcao-bd` a função usada, `x-vista` a vista lida.')},
- 'servers': [{'url': 'https://api.exemplo.org', 'description': 'Substituir pelo endereço real'}],
+ 'servers': [{'url': 'http://localhost:9080', 'description': 'API local (./mvnw liberty:dev)'}],
  'security': [{'bearer': []}],
  'tags': [{'name': A}] + [{'name': m[2], 'description': m[3]} for m in MODULES],
  'paths': dict(sorted(paths.items())),
@@ -306,10 +316,16 @@ doc = {
      'SemPermissao': {'description': 'SQLSTATE 42501', 'content': {'application/json': {'schema': ref('Erro')}}},
      'NaoEncontrado': {'description': 'Não existe ou não é visível para o utilizador', 'content': {'application/json': {'schema': ref('Erro')}}},
      'Duplicado': {'description': 'SQLSTATE 23505', 'content': {'application/json': {'schema': ref('Erro')}}},
-     'RegraNegocio': {'description': 'Regra do Manual ou da tesouraria (P0001, 23514, 23503)', 'content': {'application/json': {'schema': ref('Erro')}}}},
+     'RegraNegocio': {'description': 'Regra do Manual ou da tesouraria (P0001, 23514, 23503)', 'content': {'application/json': {'schema': ref('Erro')}}},
+     'DemasiadosPedidos': {'description': 'Limite de pedidos atingido; o header Retry-After diz quantos segundos esperar',
+                           'headers': {'Retry-After': {'schema': {'type': 'integer'}}},
+                           'content': {'application/json': {'schema': ref('Erro')}}}},
    'schemas': dict(sorted(schemas.items()))}}
 for p in ['/v1/auth/login', '/v1/auth/renovar', '/v1/auth/recuperar', '/v1/auth/redefinir']:
     paths[p]['post']['security'] = []
+    paths[p]['post']['responses']['429'] = {'$ref': '#/components/responses/DemasiadosPedidos'}
+paths['/v1/auth/renovar']['post']['responses']['409'] = {'description': 'A sessão acabou de ser renovada por outro pedido do mesmo navegador: repetir',
+                                                          'content': {'application/json': {'schema': ref('Erro')}}}
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'api', 'openapi.yaml'), 'w', encoding='utf-8', newline='\n').write(yaml.safe_dump(json.loads(json.dumps(doc)), allow_unicode=True, sort_keys=False, width=140))
 n_ops = sum(len(v) for v in paths.values())
 print('caminhos', len(paths), 'operações', n_ops, 'esquemas', len(schemas))

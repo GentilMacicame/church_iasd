@@ -1,4 +1,4 @@
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 \timing off
 SELECT 'transacoes' t, count(*) FROM tesouraria.transacao UNION ALL SELECT 'linhas', count(*) FROM tesouraria.transacao_linha
 UNION ALL SELECT 'log_auditoria', count(*) FROM nucleo.log_auditoria UNION ALL SELECT 'saldo_diario_fundo', count(*) FROM tesouraria.saldo_diario_fundo;

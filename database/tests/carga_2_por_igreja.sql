@@ -1,4 +1,4 @@
-SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public;
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
 SELECT set_config('app.usuario_id','1',false) \g /dev/null
 BEGIN;
 CREATE TEMP TABLE novos ON COMMIT DROP AS

@@ -1,7 +1,7 @@
 -- Regras de pagamentos ----------------------------------------------------
 
 -- O valor do pedido M-Pesa tem de ser igual ao da transacção
-CREATE FUNCTION pagamentos.fn_pmp_validar() RETURNS trigger AS $$
+CREATE FUNCTION tesouraria.fn_pmp_validar() RETURNS trigger AS $$
 DECLARE v_total NUMERIC;
 BEGIN
     SELECT tra_valor_total INTO v_total FROM tesouraria.transacao WHERE tra_id = NEW.pmp_tra_id;
@@ -12,5 +12,5 @@ BEGIN
 END $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_pmp_10_validar
-    BEFORE INSERT OR UPDATE ON pagamentos.pagamento_mpesa
-    FOR EACH ROW EXECUTE FUNCTION pagamentos.fn_pmp_validar();
+    BEFORE INSERT OR UPDATE ON tesouraria.pagamento_mpesa
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_pmp_validar();

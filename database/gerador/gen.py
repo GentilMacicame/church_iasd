@@ -1,7 +1,7 @@
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import fnmatch
-from defs import MODULES, SCHEMAS, SCOPE, GLOBAL_READ, SYSTEM_WRITE, OWNER_READ, ACCOES, NEGOCIO, PERFIS
+from defs import MODULES, SCHEMAS, SCOPE, GLOBAL_READ, SYSTEM_WRITE, OWNER_READ, ACCOES, NEGOCIO, PERFIS, REGRAS
 
 BASE = os.path.dirname(__file__)
 SQL = os.path.join(BASE, 'sql')
@@ -14,7 +14,7 @@ assert len({t.p for t in ALL}) == len(ALL), 'prefixos repetidos'
 assert len(BY) == len(ALL), 'nomes de tabela repetidos'
 def q(t): return f'{t.schema}.{t.name}'
 
-SEARCH = 'nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, pagamentos, comunicacao, public'
+SEARCH = 'nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public'
 HEADER = f'SET search_path TO {SEARCH};\n'
 
 def sub(t, s):
@@ -68,8 +68,13 @@ def table_sql(t, created, pending):
         iname = (f'uq_{t.p}_' + '_'.join(u))[:63]
         out.append(f'CREATE UNIQUE INDEX {iname} ON {q(t)} ({cols}) WHERE {t.p}_end_date IS NULL;')
     covered = {f'{t.p}_{u[0]}' for u in t.uniq}
+    sc = SCOPE.get(t.name)
+    igrcol = f'{t.p}_{sc[1]}' if sc and sc[0] == 'direct' else None
     for col, ref in fks:
         if col in covered: continue
+        if col == igrcol:   # listagens por igreja, por ordem de id (paginação): a página sai do índice (V18)
+            out.append(f'CREATE INDEX idx_{t.p}_igr_pagina ON {q(t)} ({col}, {t.p}_id);')
+            continue
         out.append(f'CREATE INDEX {("idx_" + col)[:63]} ON {q(t)} ({col});')
     for x in t.extra:
         out.append(sub(t, x) + ';')
@@ -93,7 +98,7 @@ for fname, schema, title, desc, tables in MODULES:
         created.add(t.name)
         if t.name in pending:
             parts.append(f'-- chaves estrangeiras que esperavam por {q(t)}\n' + '\n'.join(pending.pop(t.name)))
-    regras = read(f'{schema}_regras.sql')
+    regras = read(REGRAS.get(fname, f'{schema}_regras.sql'))
     if regras: parts.append(regras)
     files.append((fname + '.sql', '\n\n'.join(parts) + '\n'))
 assert not pending, pending
