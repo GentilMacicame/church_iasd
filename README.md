@@ -12,6 +12,7 @@ CLAUDE.md                 regras e convenções do projecto (lidas pelo Claude C
 docker-compose.yml        PostgreSQL 16 local
 database/
   migrations/             V1__base.sql … V15__perfis_proprios_e_manutencao.sql
+  schema_igreja_v5.sql    script único original (= V1–V13 juntas, igual linha a linha); referência
   tests/                  testes SQL 00–04 e resultado esperado
   gerador/                defs.py (fonte do esquema) + gen.py, gen_openapi.py
 api/openapi.yaml          contrato da API (gerado de defs.py)
