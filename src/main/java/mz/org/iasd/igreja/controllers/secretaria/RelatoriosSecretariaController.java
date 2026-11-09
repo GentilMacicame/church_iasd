@@ -7,8 +7,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
-import mz.org.iasd.igreja.crud.BaseRelatoriosController;
-import mz.org.iasd.igreja.crud.Relatorio;
+import mz.org.iasd.igreja.controllers.base.BaseRelatoriosController;
+import mz.org.iasd.igreja.repositories.base.Relatorio;
 import mz.org.iasd.igreja.Rotas;
 
 /**

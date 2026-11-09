@@ -61,6 +61,10 @@ public final class TradutorErrosSql {
             case "23505" -> new Traducao(409, "duplicado", "Já existe um registo com estes dados", campoDaRestricao(restricao));
             case "23503" -> new Traducao(422, "referencia_invalida", "O registo indicado não existe", campoDaRestricao(restricao));
             case "23502" -> new Traducao(400, "campo_obrigatorio", "Falta preencher um campo obrigatório", Nomes.campo(coluna));
+            case "57014" -> new Traducao(503, "tentar_novamente",
+                    "A operação demorou demasiado e foi interrompida. Tente de novo ou reduza o período pedido.", null);
+            case "55P03" -> new Traducao(503, "tentar_novamente",
+                    "O registo está a ser alterado por outro pedido. Tente de novo.", null);
             case "40001", "40P01" -> new Traducao(503, "tentar_novamente",
                     "O sistema está ocupado com outro pedido igual. Tente de novo.", null);
             case "22P02", "22007", "22008", "22003", "22001" -> new Traducao(400, "pedido_invalido",

@@ -3,9 +3,9 @@ package mz.org.iasd.igreja.controllers.nucleo;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.Path;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.BaseLeituraController;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.controllers.base.BaseLeituraController;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.Rotas;
 import mz.org.iasd.igreja.models.nucleo.LogAuditoria;
 

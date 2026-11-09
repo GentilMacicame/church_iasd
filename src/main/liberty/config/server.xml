@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Open Liberty · servidor da API.
-  Todas as variáveis podem ser substituídas por variáveis de ambiente com o mesmo nome
-  (ex.: BD_SENHA=... ./mvnw liberty:dev). Nunca escrever segredos reais neste ficheiro.
+  As variáveis vêm do .env da raiz (copiado para server.env pelo Maven) ou do ambiente.
+  Nunca escrever segredos reais neste ficheiro.
+  Produção: ver docs/producao/README.md (variáveis obrigatórias, Nginx, backups).
 -->
 <server description="Sistema de Gestão da Igreja · API">
 
@@ -15,17 +16,20 @@
         <feature>servlet-6.0</feature>
         <feature>mpConfig-3.1</feature>
         <feature>concurrent-3.0</feature>
-        <!-- documentação: /openapi (contrato) e /openapi/ui (Swagger UI) -->
+        <!-- /health/ready e /health/live; /metrics (JVM, pool de ligações, pedidos, tarefas diárias) -->
+        <feature>mpHealth-4.0</feature>
+        <feature>mpMetrics-5.1</feature>
+        <!-- documentação: /openapi (contrato) e /openapi/ui (Swagger UI); em produção o Nginx bloqueia -->
         <feature>mpOpenAPI-3.1</feature>
     </featureManager>
 
-    <!-- Base de dados: SEMPRE o utilizador api_igreja (membro de app_igreja), nunca o dono das tabelas -->
-    <variable name="BD_SERVIDOR" defaultValue="localhost"/>
-    <variable name="BD_PORTA" defaultValue="5432"/>
-    <variable name="BD_NOME" defaultValue="igreja"/>
-    <variable name="BD_UTILIZADOR" defaultValue="api_igreja"/>
-    <variable name="BD_SENHA" defaultValue="mudar"/>
+    <!-- Base de dados: SEMPRE o utilizador da API (membro de app_igreja), nunca o dono das tabelas.
+         BD_SERVIDOR, BD_PORTA, BD_NOME, BD_UTILIZADOR e BD_SENHA vêm do .env (ou do ambiente):
+         a configuração da base está só aí, sem valores repetidos neste ficheiro. -->
+    <variable name="BD_POOL_MAX" defaultValue="20"/>
     <variable name="HTTP_PORTA" defaultValue="9080"/>
+    <!-- SIMPLE no PC; JSON em produção (uma linha por mensagem, com o id do pedido, para o agregador de logs) -->
+    <variable name="LOG_FORMATO" defaultValue="SIMPLE"/>
 
     <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="${HTTP_PORTA}" httpsPort="-1"/>
 
@@ -33,13 +37,17 @@
         <fileset dir="${server.config.dir}/jdbc" includes="*.jar"/>
     </library>
 
-    <!-- transactional="false": a API gere a transacção (BEGIN / set_config / COMMIT) em cada pedido -->
+    <!-- transactional="false": a API gere a transacção (BEGIN / set_config / COMMIT) em cada pedido.
+         connectTimeout/socketTimeout (segundos): uma base parada não prende pedidos para sempre
+         (cada instrução tem também statement_timeout, definido pela API). -->
     <dataSource id="igreja" jndiName="jdbc/igreja" transactional="false" isolationLevel="TRANSACTION_READ_COMMITTED">
         <jdbcDriver libraryRef="bibliotecaJdbc"/>
         <properties.postgresql serverName="${BD_SERVIDOR}" portNumber="${BD_PORTA}" databaseName="${BD_NOME}"
                                user="${BD_UTILIZADOR}" password="${BD_SENHA}"
-                               applicationName="igreja-api"/>
-        <connectionManager maxPoolSize="20" minPoolSize="2" connectionTimeout="10s"/>
+                               applicationName="igreja-api" connectTimeout="10" socketTimeout="660"
+                               tcpKeepAlive="true"/>
+        <connectionManager maxPoolSize="${BD_POOL_MAX}" minPoolSize="2" connectionTimeout="10s"
+                           maxIdleTime="10m" agedTimeout="1h"/>
     </dataSource>
 
     <webApplication location="igreja-api.war" contextRoot="/">
@@ -47,5 +55,9 @@
         <classloader commonLibraryRef="bibliotecaJdbc"/>
     </webApplication>
 
-    <logging consoleLogLevel="INFO" consoleFormat="SIMPLE"/>
+    <!-- /metrics sem login de administrador do Liberty: em produção só a rede interna lhe chega (Nginx bloqueia) -->
+    <mpMetrics authentication="false"/>
+
+    <logging consoleLogLevel="INFO" consoleFormat="${LOG_FORMATO}"
+             consoleSource="message,trace,ffdc" messageFormat="${LOG_FORMATO}"/>
 </server>

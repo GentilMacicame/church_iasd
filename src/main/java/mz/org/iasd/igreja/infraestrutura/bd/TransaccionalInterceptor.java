@@ -55,15 +55,16 @@ public class TransaccionalInterceptor {
         String metodo = pedido.getMethod();
         String caminho = pedido.getRequestURI();
         UUID chave = chave(ctx, metodo);
+        String hashPedido = chave == null ? null : hashPedido(ctx);
         try {
-            return ExecutorTransaccao.executar(fonte, contexto.usuarioId(), ligacao -> {
+            return ExecutorTransaccao.executar(fonte, contexto.usuarioId(), contexto.sessaoId(), ligacao -> {
                 unidade.definir(ligacao);
                 try {
                     if (chave != null) {
                         Optional<IdempotenciaRepository.RespostaGuardada> guardada =
                                 IdempotenciaRepository.obter(ligacao, chave);
                         if (guardada.isPresent()) {
-                            return repetir(guardada.get(), metodo, caminho);
+                            return repetir(guardada.get(), metodo, caminho, hashPedido);
                         }
                     }
                     Object resultado = ctx.proceed();
@@ -71,7 +72,8 @@ public class TransaccionalInterceptor {
                         String json = resposta.hasEntity()
                                 ? mz.org.iasd.igreja.config.Json.JSONB.toJson(resposta.getEntity())
                                 : null;
-                        IdempotenciaRepository.guardar(ligacao, chave, metodo, caminho, resposta.getStatus(), json);
+                        IdempotenciaRepository.guardar(ligacao, chave, metodo, caminho, resposta.getStatus(), json,
+                                hashPedido);
                     }
                     return resultado;
                 } finally {
@@ -108,8 +110,15 @@ public class TransaccionalInterceptor {
         }
     }
 
-    private static Response repetir(IdempotenciaRepository.RespostaGuardada guardada, String metodo, String caminho) {
-        if (!guardada.metodo().equals(metodo) || !guardada.caminho().equals(caminho)) {
+    /** SHA-256 dos parâmetros do método (caminho e corpo): a mesma chave com outro pedido é recusada. */
+    static String hashPedido(InvocationContext ctx) {
+        return mz.org.iasd.igreja.infraestrutura.seguranca.Segredos.sha256(java.util.Arrays.deepToString(ctx.getParameters()));
+    }
+
+    private static Response repetir(IdempotenciaRepository.RespostaGuardada guardada, String metodo, String caminho,
+                                    String hashPedido) {
+        if (!guardada.metodo().equals(metodo) || !guardada.caminho().equals(caminho)
+                || (guardada.pedidoHash() != null && !guardada.pedidoHash().equals(hashPedido))) {
             throw new ApiException(422, "regra_negocio",
                     "Esta Idempotency-Key já foi usada noutro pedido; gere uma chave nova", HEADER_IDEMPOTENCIA);
         }

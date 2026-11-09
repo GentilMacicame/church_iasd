@@ -41,16 +41,17 @@ public class FiltroAutenticacao implements ContainerRequestFilter {
             return;
         }
         String cabecalho = pedido.getHeaderString(HttpHeaders.AUTHORIZATION);
-        Integer usuario = null;
+        Tokens.Identidade identidade = null;
         if (cabecalho != null && cabecalho.regionMatches(true, 0, "Bearer ", 0, 7)) {
-            usuario = tokens.verificar(cabecalho.substring(7).trim());
+            identidade = tokens.verificar(cabecalho.substring(7).trim());
         }
-        if (usuario == null) {
+        if (identidade == null) {
             pedido.abortWith(Respostas.erro(401, "nao_autenticado",
                     "Sessão em falta ou expirada. Entre de novo.", null, contexto.pedidoId()));
             return;
         }
-        contexto.definirUsuario(usuario);
+        contexto.definirUsuario(identidade.usuarioId());
+        contexto.definirSessao(identidade.sessaoId());
     }
 
     private boolean ePublico() {

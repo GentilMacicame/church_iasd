@@ -10,6 +10,7 @@ public class ContextoPedido {
 
     private String pedidoId = UUID.randomUUID().toString();
     private Integer usuarioId;
+    private Long sessaoId;
 
     public String pedidoId() {
         return pedidoId;
@@ -26,5 +27,14 @@ public class ContextoPedido {
 
     public void definirUsuario(Integer usuarioId) {
         this.usuarioId = usuarioId;
+    }
+
+    /** @return a sessão de login do token de acesso ({@code sid}), ou {@code null} nos endpoints públicos */
+    public Long sessaoId() {
+        return sessaoId;
+    }
+
+    public void definirSessao(Long sessaoId) {
+        this.sessaoId = sessaoId;
     }
 }

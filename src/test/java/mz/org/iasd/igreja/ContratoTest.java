@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.ws.rs.HttpMethod;
 
-import mz.org.iasd.igreja.crud.CatalogoGerado;
-import mz.org.iasd.igreja.crud.Coluna;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.CatalogoGerado;
+import mz.org.iasd.igreja.models.catalogo.Coluna;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 
 /**
  * A API e o contrato (api/openapi.yaml) coincidem:

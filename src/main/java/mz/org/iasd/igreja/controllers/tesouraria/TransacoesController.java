@@ -13,10 +13,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import mz.org.iasd.igreja.crud.Corpo;
-import mz.org.iasd.igreja.crud.BaseTabelaController;
-import mz.org.iasd.igreja.crud.TabelaRepository;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.controllers.base.Corpo;
+import mz.org.iasd.igreja.controllers.base.BaseTabelaController;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.bd.Idempotente;
 import mz.org.iasd.igreja.Rotas;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;

@@ -10,7 +10,7 @@ import java.util.UUID;
 /** Header {@code Idempotency-Key}: nucleo.fn_idempotencia_obter / fn_idempotencia_guardar (V14). */
 public final class IdempotenciaRepository {
 
-    public record RespostaGuardada(String metodo, String caminho, int estadoHttp, String respostaJson) {
+    public record RespostaGuardada(String metodo, String caminho, int estadoHttp, String respostaJson, String pedidoHash) {
     }
 
     private IdempotenciaRepository() {
@@ -18,26 +18,28 @@ public final class IdempotenciaRepository {
 
     public static Optional<RespostaGuardada> obter(Connection c, UUID chave) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT metodo, caminho, estado_http, resposta::text FROM nucleo.fn_idempotencia_obter(?)")) {
+                "SELECT metodo, caminho, estado_http, resposta::text, pedido_hash FROM nucleo.fn_idempotencia_obter(?)")) {
             ps.setObject(1, chave);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     return Optional.empty();
                 }
-                return Optional.of(new RespostaGuardada(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getString(4)));
+                return Optional.of(new RespostaGuardada(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getString(4),
+                        rs.getString(5)));
             }
         }
     }
 
     public static void guardar(Connection c, UUID chave, String metodo, String caminho, int estadoHttp,
-                               String respostaJson) throws SQLException {
+                               String respostaJson, String pedidoHash) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT nucleo.fn_idempotencia_guardar(?, ?, ?, ?, ?::jsonb)")) {
+                "SELECT nucleo.fn_idempotencia_guardar(?, ?, ?, ?, ?::jsonb, ?)")) {
             ps.setObject(1, chave);
             ps.setString(2, metodo);
             ps.setString(3, caminho);
             ps.setInt(4, estadoHttp);
             ps.setString(5, respostaJson);
+            ps.setString(6, pedidoHash);
             ps.execute();
         }
     }

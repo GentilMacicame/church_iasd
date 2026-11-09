@@ -16,7 +16,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import mz.org.iasd.igreja.Rotas;
-import mz.org.iasd.igreja.crud.Corpo;
+import mz.org.iasd.igreja.controllers.base.Corpo;
 import mz.org.iasd.igreja.infraestrutura.bd.Transaccional;
 import mz.org.iasd.igreja.infraestrutura.bd.UnidadeDeTrabalho;
 
@@ -43,6 +43,10 @@ public class SaldosController {
     public Response recalcular(String corpo) throws SQLException {
         long igreja = Corpo.inteiro(Corpo.objecto(Corpo.ler(corpo)), "igrejaId");
         Connection c = unidade.ligacao();
+        // operação de auditoria rara e pesada (relê todos os movimentos da igreja): mais tempo do que um pedido normal
+        try (PreparedStatement ps = c.prepareStatement("SELECT set_config('statement_timeout', '600000', true)")) {
+            ps.execute();
+        }
         try (PreparedStatement ps = c.prepareStatement("SELECT tesouraria.fn_recalcular_saldos(?::integer)")) {
             ps.setLong(1, igreja);
             ps.execute();

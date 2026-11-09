@@ -2,9 +2,9 @@ package mz.org.iasd.igreja.models.tesouraria;
 
 import java.time.OffsetDateTime;
 
-import mz.org.iasd.igreja.crud.ColunaBd;
-import mz.org.iasd.igreja.crud.TabelaBd;
-import mz.org.iasd.igreja.crud.Tipo;
+import mz.org.iasd.igreja.models.catalogo.ColunaBd;
+import mz.org.iasd.igreja.models.catalogo.TabelaBd;
+import mz.org.iasd.igreja.models.catalogo.Tipo;
 import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
 
 /**

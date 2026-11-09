@@ -5,9 +5,9 @@ import java.time.OffsetDateTime;
 
 import jakarta.json.bind.annotation.JsonbNumberFormat;
 
-import mz.org.iasd.igreja.crud.ColunaBd;
-import mz.org.iasd.igreja.crud.TabelaBd;
-import mz.org.iasd.igreja.crud.Tipo;
+import mz.org.iasd.igreja.models.catalogo.ColunaBd;
+import mz.org.iasd.igreja.models.catalogo.TabelaBd;
+import mz.org.iasd.igreja.models.catalogo.Tipo;
 import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
 
 /**

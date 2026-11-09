@@ -15,12 +15,13 @@ import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.Conversao;
-import mz.org.iasd.igreja.crud.Corpo;
-import mz.org.iasd.igreja.crud.TabelaRepository;
-import mz.org.iasd.igreja.crud.TabelaRepository.Valor;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.comum.FuncoesBd;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.repositories.base.Conversao;
+import mz.org.iasd.igreja.controllers.base.Corpo;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository.Valor;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.models.tesouraria.Transacao;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;
@@ -60,7 +61,7 @@ public final class TransacoesService {
     /** P-08 passo 2: {@code tesouraria.fn_aprovar_saida} (em nome próprio; quem regista não aprova). */
     public static JsonObject aprovar(Connection c, long id) throws SQLException {
         TabelaRepository.obterOu404(c, TRANSACAO, id);
-        funcao(c, "SELECT tesouraria.fn_aprovar_saida(?::bigint)", id);
+        FuncoesBd.chamar(c, "SELECT tesouraria.fn_aprovar_saida(?::bigint)", id);
         return TabelaRepository.obterOu404(c, TRANSACAO, id);
     }
 
@@ -124,16 +125,6 @@ public final class TransacoesService {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(rs.getLong(1)) : Optional.empty();
             }
-        }
-    }
-
-    /** Chama uma função da base de dados com argumentos inteiros (ex.: {@code tesouraria.fn_aprovar_saida}). */
-    public static void funcao(Connection c, String sql, long... args) throws SQLException {
-        try (PreparedStatement ps = c.prepareStatement(sql)) {
-            for (int i = 0; i < args.length; i++) {
-                ps.setLong(i + 1, args[i]);
-            }
-            ps.execute();
         }
     }
 }

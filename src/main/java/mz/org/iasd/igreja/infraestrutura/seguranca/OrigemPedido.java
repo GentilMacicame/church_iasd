@@ -8,13 +8,17 @@ public final class OrigemPedido {
     private OrigemPedido() {
     }
 
-    /** Atrás do Nginx ({@code proxy.confiavel=true}) usa o primeiro endereço de X-Forwarded-For. */
+    /**
+     * Atrás do Nginx ({@code proxy.confiavel=true}) usa o <b>último</b> endereço de X-Forwarded-For: é o que o
+     * Nginx acrescentou (o IP real de quem lhe ligou). Os anteriores vêm do cliente e podem ser inventados.
+     */
     public static String ip(HttpServletRequest pedido, boolean proxyConfiavel) {
         String ip = pedido.getRemoteAddr();
         if (proxyConfiavel) {
             String encaminhado = pedido.getHeader("X-Forwarded-For");
             if (encaminhado != null && !encaminhado.isBlank()) {
-                ip = encaminhado.split(",")[0].trim();
+                String[] cadeia = encaminhado.split(",");
+                ip = cadeia[cadeia.length - 1].trim();
             }
         }
         if (ip == null) {

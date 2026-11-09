@@ -7,8 +7,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
-import mz.org.iasd.igreja.crud.BaseRelatoriosController;
-import mz.org.iasd.igreja.crud.Relatorio;
+import mz.org.iasd.igreja.controllers.base.BaseRelatoriosController;
+import mz.org.iasd.igreja.repositories.base.Relatorio;
 import mz.org.iasd.igreja.Rotas;
 
 /**
@@ -26,6 +26,7 @@ import mz.org.iasd.igreja.Rotas;
  *   GET /v1/tesouraria/conferencia-contagens                 tesouraria.contagem_numerario.ler
  *   GET /v1/tesouraria/despesas-por-pagar                    tesouraria.despesa.ler
  *   GET /v1/tesouraria/extractos-por-reconciliar             tesouraria.extrato_linha.ler
+ *   GET /v1/tesouraria/mpesa-pendentes                       tesouraria.pagamento_mpesa.ler
  * </pre>
  */
 @Path(Rotas.Tesouraria.RELATORIOS)
@@ -49,6 +50,8 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
             "des_igr_id = ?", "des_aprovado_em");
     public static final Relatorio EXTRACTOS_POR_RECONCILIAR = Relatorio.porIgreja("tesouraria.vw_extrato_por_reconciliar",
             "ext_cfi_id IN (SELECT cfi_id FROM tesouraria.conta_financeira WHERE cfi_igr_id = ?)", "ext_data, ext_id");
+    public static final Relatorio MPESA_PENDENTES = Relatorio.porIgreja("tesouraria.vw_mpesa_pendentes",
+            "pmp_tra_id IN (SELECT tra_id FROM tesouraria.transacao WHERE tra_igr_id = ?)", "pmp_pedido_em, pmp_id");
 
     @GET
     @Path(Rotas.Tesouraria.SALDOS_CONTAS)
@@ -111,5 +114,12 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     @Path(Rotas.Tesouraria.EXTRACTOS_POR_RECONCILIAR)
     public Response extractosPorReconciliar() throws SQLException {
         return responder(EXTRACTOS_POR_RECONCILIAR);
+    }
+
+    /** Pedidos M-Pesa a consultar na Vodacom (P-11): a resposta não chegou há mais de 5 minutos. */
+    @GET
+    @Path(Rotas.Tesouraria.MPESA_PENDENTES)
+    public Response mpesaPendentes() throws SQLException {
+        return responder(MPESA_PENDENTES);
     }
 }

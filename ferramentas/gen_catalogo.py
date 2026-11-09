@@ -3,7 +3,7 @@
 Escreve:
   models/<modulo>/<Tabela>.java   um record por tabela (@TabelaBd + @ColunaBd em cada campo)
   models/tipos/<Tipo>.java        um enum por tipo enumerado do PostgreSQL (@TipoBd)
-  crud/CatalogoGerado.java        lista dos models e enums (o catálogo é lido deles)
+  models/catalogo/CatalogoGerado.java   lista dos models e enums (o catálogo é lido deles)
 
 Usa os mesmos ficheiros que geram as migrações e o openapi.yaml (database/gerador/defs.py, nomes.py,
 sql/V1__base.sql) e a mesma regra de nomes dos campos (gen_openapi.campo), para a API e o contrato
@@ -44,9 +44,9 @@ ALIAS = {'contagem_numerario': 'contagem', 'conta_financeira': 'conta', 'relator
 AUTO = {'tra_igr_id', 'tli_igr_id', 'ect_igr_id', 'ers_igr_id', 'epr_igr_id', 'mem_validado_por_usu_id',
         'mem_data_validacao', 'des_aprovado_por_usu_id', 'des_aprovado_em', 'usu_ultimo_login'}
 # iguais a gen_openapi.py: NOT NULL sem DEFAULT, mas a base calcula-os se vierem vazios
-CALCULADOS = {'ers_membros_matriculados'}
+CALCULADOS = {'ers_membros_matriculados', 'esc_data', 'esc_igr_id'}
 
-# Tipo (crud.Tipo) → tipo Java do campo
+# Tipo (models.catalogo.Tipo) → tipo Java do campo
 JTIPO = {'INT': 'Integer', 'BIGINT': 'Long', 'TEXTO': 'String', 'DINHEIRO': 'BigDecimal', 'DECIMAL': 'BigDecimal',
          'DATA': 'LocalDate', 'DATA_HORA': 'OffsetDateTime', 'BOOLEANO': 'Boolean', 'JSON': 'JsonValue'}
 JIMPORT = {'BigDecimal': 'java.math.BigDecimal', 'LocalDate': 'java.time.LocalDate',
@@ -161,7 +161,7 @@ for sql, valores in sorted(ENUMS.items()):
     n = nome_enum(sql)
     escrever(os.path.join(pasta_tipos, f'{n}.java'), f'''package {PKG}.models.tipos;
 
-import {PKG}.crud.TipoBd;
+import {PKG}.models.catalogo.TipoBd;
 
 /**
  * Tipo {{@code nucleo.{sql}}} da base de dados.
@@ -182,7 +182,7 @@ for _f, schema, _ti, _de, tables in MODULES:
     pasta_mod = schema.replace('_', '')
     for t in tables:
         nome = pascal(t.name)
-        imports = {f'{PKG}.crud.ColunaBd', f'{PKG}.crud.TabelaBd', f'{PKG}.crud.Tipo'}
+        imports = {f'{PKG}.models.catalogo.ColunaBd', f'{PKG}.models.catalogo.TabelaBd', f'{PKG}.models.catalogo.Tipo'}
         componentes = []
         params = []
         for (col, cmp, tp, en, escrita, obrig, nn, d) in colunas(t):
@@ -249,7 +249,7 @@ public record {nome}(
 lista_tipos = ',\n            '.join(f'{nome_enum(s)}.class' for s in sorted(ENUMS))
 lista_modelos = ',\n            '.join(f'{m.rsplit(".", 1)[1]}.class' for m in modelos)
 imps = sorted([f'{PKG}.models.tipos.{nome_enum(s)}' for s in ENUMS] + modelos)
-escrever(os.path.join(JAVA, 'crud', 'CatalogoGerado.java'), f'''package {PKG}.crud;
+escrever(os.path.join(JAVA, 'models', 'catalogo', 'CatalogoGerado.java'), f'''package {PKG}.models.catalogo;
 
 import java.util.List;
 import java.util.Map;

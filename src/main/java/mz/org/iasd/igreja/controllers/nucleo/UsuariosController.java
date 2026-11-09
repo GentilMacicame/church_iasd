@@ -9,11 +9,11 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.Path;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.BaseTabelaController;
-import mz.org.iasd.igreja.crud.TabelaRepository;
-import mz.org.iasd.igreja.crud.TabelaRepository.Valor;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.controllers.base.BaseTabelaController;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository.Valor;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Senhas;
 import mz.org.iasd.igreja.Rotas;

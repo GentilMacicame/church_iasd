@@ -26,7 +26,7 @@ class SegurancaTest {
     void tokenDeAcesso() {
         Tokens tokens = new Tokens(SEGREDO, "igreja-api", 15);
         Tokens.TokenEmitido t = tokens.emitir(42, 7L);
-        assertEquals(42, tokens.verificar(t.token()));
+        assertEquals(new Tokens.Identidade(42, 7L), tokens.verificar(t.token()));
         assertNull(tokens.verificar(t.token() + "x"));
         assertNull(new Tokens(SEGREDO + "-outro", "igreja-api", 15).verificar(t.token()));
         assertNull(new Tokens(SEGREDO, "outro-emissor", 15).verificar(t.token()));

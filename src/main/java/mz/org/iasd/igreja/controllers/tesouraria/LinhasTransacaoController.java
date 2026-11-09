@@ -3,9 +3,9 @@ package mz.org.iasd.igreja.controllers.tesouraria;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.Path;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.BaseTabelaController;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.controllers.base.BaseTabelaController;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.bd.Idempotente;
 import mz.org.iasd.igreja.Rotas;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;

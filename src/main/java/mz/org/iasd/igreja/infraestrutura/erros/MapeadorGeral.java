@@ -41,10 +41,18 @@ public class MapeadorGeral implements ExceptionMapper<Throwable> {
                 case 404 -> Respostas.erro(404, "nao_encontrado", "Endereço não encontrado", null, pedidoId);
                 case 405 -> Respostas.erro(405, "pedido_invalido", "Método não permitido neste endereço", null, pedidoId);
                 case 406, 415 -> Respostas.erro(estado, "pedido_invalido", "Use JSON (application/json)", null, pedidoId);
+                case 413 -> Respostas.erro(413, "pedido_demasiado_grande", "O pedido é demasiado grande", null, pedidoId);
                 default -> estado < 500
                         ? Respostas.erro(estado, "pedido_invalido", "Pedido mal formado", null, pedidoId)
                         : interno(e, pedidoId);
             };
+        }
+        // uma ApiException em qualquer ponto da cadeia decide a resposta (ex.: 413 lançado ao ler o corpo,
+        // que o leitor de JSON embrulha numa ProcessingException)
+        for (Throwable x = e; x != null && x.getCause() != x; x = x.getCause()) {
+            if (x instanceof ApiException a) {
+                return Respostas.erro(a.estadoHttp(), a.codigo(), a.getMessage(), a.campo(), pedidoId);
+            }
         }
         for (Throwable x = e; x != null; x = x.getCause()) {
             if (x instanceof JsonbException || x instanceof ProcessingException) {

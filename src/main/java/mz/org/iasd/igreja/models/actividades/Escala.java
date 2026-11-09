@@ -3,9 +3,9 @@ package mz.org.iasd.igreja.models.actividades;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
-import mz.org.iasd.igreja.crud.ColunaBd;
-import mz.org.iasd.igreja.crud.TabelaBd;
-import mz.org.iasd.igreja.crud.Tipo;
+import mz.org.iasd.igreja.models.catalogo.ColunaBd;
+import mz.org.iasd.igreja.models.catalogo.TabelaBd;
+import mz.org.iasd.igreja.models.catalogo.Tipo;
 import mz.org.iasd.igreja.models.tipos.EstadoEscala;
 import mz.org.iasd.igreja.models.tipos.FuncaoEscala;
 
@@ -19,13 +19,14 @@ import mz.org.iasd.igreja.models.tipos.FuncaoEscala;
  * defs.py (e criar a migração nova) e voltar a gerar.
  *
  * @param id Identificador
- * @param igrejaId Referência a organizacao.igreja — obrigatório ao criar
- * @param data coluna {@code esc_data} — obrigatório ao criar
+ * @param igrejaId Referência a organizacao.igreja
+ * @param data coluna {@code esc_data}
  * @param funcao coluna {@code esc_funcao} — obrigatório ao criar
  * @param membroId Referência a secretaria.membro — obrigatório ao criar
  * @param actividadeId Referência a actividades.actividade
  * @param substitutoMembroId Referência a secretaria.membro
  * @param observacoes coluna {@code esc_observacoes}
+ * @param escalaDiaId Dia da escala (plano) a que pertence; a data e a igreja vêm do dia
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -37,9 +38,9 @@ import mz.org.iasd.igreja.models.tipos.FuncaoEscala;
 public record Escala(
         @ColunaBd(value = "esc_id", tipo = Tipo.INT, escrita = false, naoNula = true)
         Integer id,
-        @ColunaBd(value = "esc_igr_id", tipo = Tipo.INT, obrigatoria = true, naoNula = true)
+        @ColunaBd(value = "esc_igr_id", tipo = Tipo.INT, naoNula = true)
         Integer igrejaId,
-        @ColunaBd(value = "esc_data", tipo = Tipo.DATA, obrigatoria = true, naoNula = true)
+        @ColunaBd(value = "esc_data", tipo = Tipo.DATA, naoNula = true)
         LocalDate data,
         @ColunaBd(value = "esc_funcao", tipo = Tipo.ENUM, obrigatoria = true, naoNula = true)
         FuncaoEscala funcao,
@@ -51,6 +52,8 @@ public record Escala(
         Integer substitutoMembroId,
         @ColunaBd(value = "esc_observacoes", tipo = Tipo.TEXTO)
         String observacoes,
+        @ColunaBd(value = "esc_eds_id", tipo = Tipo.INT)
+        Integer escalaDiaId,
         @ColunaBd(value = "esc_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoEscala estado,
         @ColunaBd(value = "esc_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

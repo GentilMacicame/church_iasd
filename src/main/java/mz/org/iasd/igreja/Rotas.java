@@ -19,7 +19,7 @@ public final class Rotas {
     private Rotas() {
     }
 
-    /** Rotas-padrão, herdadas por todos os recursos de tabela (crud/BaseLeituraController, crud/BaseTabelaController). */
+    /** Rotas-padrão, herdadas por todos os recursos de tabela (controllers/base/BaseLeituraController, BaseTabelaController). */
     public static final class Comum {
 
         private Comum() {
@@ -75,7 +75,7 @@ public final class Rotas {
         public static final String EU = "/v1/eu";
     }
 
-    /** Núcleo: utilizadores, perfis, permissões, auditoria. */
+    /** Núcleo: utilizadores, perfis, permissões, auditoria e a fila de mensagens (F-COM). */
     public static final class Nucleo {
 
         private Nucleo() {
@@ -83,6 +83,9 @@ public final class Rotas {
 
         /** AuditoriaController · rotas-padrão: listar, ler */
         public static final String AUDITORIA = "/v1/nucleo/auditoria";
+
+        /** NotificacoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
+        public static final String NOTIFICACOES = "/v1/nucleo/notificacoes";
 
         /** PerfisPermissoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String PERFIS_PERMISSOES = "/v1/nucleo/perfis-permissoes";
@@ -101,6 +104,12 @@ public final class Rotas {
 
         /** UsuariosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String USUARIOS = "/v1/nucleo/usuarios";
+
+        /** RelatoriosNucleoController */
+        public static final String RELATORIOS = "/v1/nucleo";
+
+        /** GET /v1/nucleo/notificacoes-a-enviar  (RelatoriosNucleoController.notificacoesAEnviar) */
+        public static final String NOTIFICACOES_A_ENVIAR = "notificacoes-a-enviar";
     }
 
     /** Organização: Associações/Missões, distritos, igrejas. */
@@ -362,6 +371,21 @@ public final class Rotas {
         /** RecibosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String RECIBOS = "/v1/tesouraria/recibos";
 
+        /** BancariosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar (F-PAG) */
+        public static final String BANCARIOS = "/v1/tesouraria/bancarios";
+
+        /** MpesaCallbacksController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar (F-PAG) */
+        public static final String MPESA_CALLBACKS = "/v1/tesouraria/mpesa-callbacks";
+
+        /** MpesaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar (F-PAG) */
+        public static final String MPESA = "/v1/tesouraria/mpesa";
+
+        /** POST /v1/tesouraria/mpesa/callback  (MpesaController.callback) */
+        public static final String MPESA_CALLBACK = "callback";
+
+        /** GET /v1/tesouraria/mpesa-pendentes  (RelatoriosTesourariaController.mpesaPendentes) */
+        public static final String MPESA_PENDENTES = "mpesa-pendentes";
+
         /** RelatoriosTesourariaController */
         public static final String RELATORIOS = "/v1/tesouraria";
 
@@ -447,51 +471,22 @@ public final class Rotas {
         /** MateriaisController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String MATERIAIS = "/v1/actividades/materiais";
 
+        /** PlanosEscalaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
+        public static final String PLANOS_ESCALA = "/v1/actividades/planos-escala";
+
+        /** POST /v1/actividades/planos-escala/{id}/gerar-dias  (PlanosEscalaController.gerarDias) */
+        public static final String PLANOS_ESCALA_GERAR_DIAS = "{id: \\d+}/gerar-dias";
+
+        /** DiasEscalaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
+        public static final String DIAS_ESCALA = "/v1/actividades/dias-escala";
+
         /** RelatoriosActividadesController */
         public static final String RELATORIOS = "/v1/actividades";
 
         /** GET /v1/actividades/escalas-proximas  (RelatoriosActividadesController.escalasProximas) */
         public static final String ESCALAS_PROXIMAS = "escalas-proximas";
-    }
 
-    /** Pagamentos M-Pesa (F-PAG). */
-    public static final class Pagamentos {
-
-        private Pagamentos() {
-        }
-
-        /** BancariosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
-        public static final String BANCARIOS = "/v1/pagamentos/bancarios";
-
-        /** MpesaCallbacksController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
-        public static final String MPESA_CALLBACKS = "/v1/pagamentos/mpesa-callbacks";
-
-        /** MpesaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
-        public static final String MPESA = "/v1/pagamentos/mpesa";
-
-        /** POST /v1/pagamentos/mpesa/callback  (MpesaController.callback) */
-        public static final String MPESA_CALLBACK = "callback";
-
-        /** RelatoriosPagamentosController */
-        public static final String RELATORIOS = "/v1/pagamentos";
-
-        /** GET /v1/pagamentos/mpesa-pendentes  (RelatoriosPagamentosController.mpesaPendentes) */
-        public static final String MPESA_PENDENTES = "mpesa-pendentes";
-    }
-
-    /** Comunicação: mensagens e notificações (F-COM). */
-    public static final class Comunicacao {
-
-        private Comunicacao() {
-        }
-
-        /** NotificacoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
-        public static final String NOTIFICACOES = "/v1/comunicacao/notificacoes";
-
-        /** RelatoriosComunicacaoController */
-        public static final String RELATORIOS = "/v1/comunicacao";
-
-        /** GET /v1/comunicacao/notificacoes-a-enviar  (RelatoriosComunicacaoController.notificacoesAEnviar) */
-        public static final String NOTIFICACOES_A_ENVIAR = "notificacoes-a-enviar";
+        /** GET /v1/actividades/escala-grelha?planoId=  (RelatoriosActividadesController.escalaGrelha) */
+        public static final String ESCALA_GRELHA = "escala-grelha";
     }
 }

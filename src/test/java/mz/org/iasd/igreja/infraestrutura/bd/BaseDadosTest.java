@@ -47,8 +47,8 @@ import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
 import mz.org.iasd.igreja.repositories.eu.EuRepository;
 import mz.org.iasd.igreja.controllers.tesouraria.RelatoriosTesourariaController;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.TabelaRepository;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Senhas;
 import mz.org.iasd.igreja.infraestrutura.tarefas.TarefasAgendadas;
@@ -56,26 +56,30 @@ import mz.org.iasd.igreja.models.organizacao.Igreja;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;
 import mz.org.iasd.igreja.models.escolasabatina.RelatorioSabado;
 import mz.org.iasd.igreja.models.secretaria.Membro;
+import mz.org.iasd.igreja.models.actividades.Escala;
+import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.secretaria.Familia;
 
 /**
- * Fase 0 contra PostgreSQL real (migrações V1–V15), sempre como {@code api_igreja} (nunca o dono):
+ * Fase 0 contra PostgreSQL real (migrações V1–V17), sempre como {@code api_igreja} (nunca o dono):
  * unidade de trabalho com set_config, permissões dos 13 perfis, tradução de erros, sessões,
  * recuperação de senha, idempotência e paginação.
  *
- * <p>Onde corre:
- * <ul>
- *   <li>com Docker: num PostgreSQL 16 descartável (Testcontainers);</li>
- *   <li>sem Docker: num servidor existente, se definir {@code BD_TESTE_URL} (ex.:
- *       {@code jdbc:postgresql://localhost:5432/postgres}), {@code BD_TESTE_UTILIZADOR} (super-utilizador,
- *       por defeito postgres) e {@code BD_TESTE_SENHA}. É criada (e recriada) a base {@code igreja_teste_api}
- *       e o papel de login {@code api_igreja_teste};</li>
- *   <li>sem nenhum dos dois, os testes são ignorados.</li>
- * </ul>
+ * <p>Onde corre (por esta ordem):
+ * <ol>
+ *   <li>{@code BD_TESTE_URL} (ex.: {@code jdbc:postgresql://localhost:5432/postgres}), com
+ *       {@code BD_TESTE_UTILIZADOR} (super-utilizador, por defeito postgres) e {@code BD_TESTE_SENHA};</li>
+ *   <li>o servidor do {@code .env} (BD_SERVIDOR, BD_PORTA, BD_ADMIN_UTILIZADOR, BD_ADMIN_SENHA), se responder;</li>
+ *   <li>com Docker: um PostgreSQL 16 descartável (Testcontainers);</li>
+ *   <li>sem nenhum, os testes são ignorados.</li>
+ * </ol>
+ * Num servidor existente é criada (e recriada) a base {@code <BD_NOME_TESTE>_api} (nome do {@code .env} ou do
+ * ambiente) e o papel de login
+ * {@code api_igreja_teste}; as outras bases não são tocadas.
  */
 class BaseDadosTest {
 
-    static final String BASE_TESTE = "igreja_teste_api";
+    static String baseTeste;
     static final String PAPEL_API = "api_igreja_teste";
 
     static PostgreSQLContainer<?> contentor;
@@ -97,15 +101,42 @@ class BaseDadosTest {
                 + " (defina -Dmigracoes.dir=...)");
 
         String externo = System.getenv("BD_TESTE_URL");
+        String donoExterno = System.getenv().getOrDefault("BD_TESTE_UTILIZADOR", "postgres");
+        String senhaExterna = System.getenv("BD_TESTE_SENHA");
+        if (externo == null || externo.isBlank()) {
+            // sem BD_TESTE_URL: o servidor e o administrador do .env, se responderem
+            Map<String, String> env = lerEnv(Path.of(".env"));
+            // só o servidor do PC: os testes criam e apagam bases (num servidor remoto, só com BD_TESTE_URL explícito)
+            boolean local = java.util.Set.of("localhost", "127.0.0.1", "::1")
+                    .contains(env.getOrDefault("BD_SERVIDOR", "localhost"));
+            if (local && env.containsKey("BD_ADMIN_UTILIZADOR")) {
+                String candidato = "jdbc:postgresql://" + env.getOrDefault("BD_SERVIDOR", "localhost") + ":"
+                        + env.getOrDefault("BD_PORTA", "5432") + "/postgres";
+                try (Connection teste = DriverManager.getConnection(candidato, env.get("BD_ADMIN_UTILIZADOR"),
+                        env.get("BD_ADMIN_SENHA"))) {
+                    externo = candidato;
+                    donoExterno = env.get("BD_ADMIN_UTILIZADOR");
+                    senhaExterna = env.get("BD_ADMIN_SENHA");
+                } catch (SQLException e) {
+                    System.out.println("BaseDadosTest: o servidor do .env (" + candidato + ") não respondeu: "
+                            + e.getMessage() + " — a tentar o Docker");
+                }
+            }
+        }
         if (externo != null && !externo.isBlank()) {
-            dono = System.getenv().getOrDefault("BD_TESTE_UTILIZADOR", "postgres");
-            senhaDono = System.getenv("BD_TESTE_SENHA");
+            dono = donoExterno;
+            senhaDono = senhaExterna;
+            // o nome vem do .env (ou do ambiente), nunca do código; esta base é apagada e criada de novo
+            String nomeTeste = System.getenv().getOrDefault("BD_NOME_TESTE", lerEnv(Path.of(".env")).get("BD_NOME_TESTE"));
+            assumeTrue(nomeTeste != null && nomeTeste.matches("[A-Za-z_][A-Za-z0-9_]*"),
+                    "Defina BD_NOME_TESTE no .env (só letras, números e _) para os testes de integração");
+            baseTeste = nomeTeste + "_api";
             try (Connection admin = DriverManager.getConnection(externo, dono, senhaDono);
                  Statement st = admin.createStatement()) {
-                st.execute("DROP DATABASE IF EXISTS " + BASE_TESTE + " WITH (FORCE)");
-                st.execute("CREATE DATABASE " + BASE_TESTE);
+                st.execute("DROP DATABASE IF EXISTS " + baseTeste + " WITH (FORCE)");
+                st.execute("CREATE DATABASE " + baseTeste);
             }
-            url = externo.replaceFirst("/[^/?]+(\\?.*)?$", "/" + BASE_TESTE + "$1");
+            url = externo.replaceFirst("/[^/?]+(\\?.*)?$", "/" + baseTeste + "$1");
         } else {
             assumeTrue(DockerClientFactory.instance().isDockerAvailable(),
                     "Sem Docker nem BD_TESTE_URL: testes de integração ignorados");
@@ -124,7 +155,7 @@ class BaseDadosTest {
             st.execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '" + PAPEL_API + "') THEN "
                     + "CREATE ROLE " + PAPEL_API + " LOGIN PASSWORD 'teste' IN ROLE app_igreja; END IF; END $$");
             st.execute("ALTER ROLE " + PAPEL_API + " SET search_path = nucleo, organizacao, secretaria, actividades, "
-                    + "escola_sabatina, tesouraria, pagamentos, comunicacao, public");
+                    + "escola_sabatina, tesouraria, public");
 
             entidade = inserir(dono, "INSERT INTO organizacao.entidade (ent_tipo, ent_nome, ent_sigla) "
                     + "VALUES ('ASSOCIACAO', 'Associação de Teste', 'AT') RETURNING ent_id");
@@ -273,6 +304,16 @@ class BaseDadosTest {
         assertEquals("OK", r1.resultado());
         assertEquals(usu, r1.usuarioId());
 
+        // logo a seguir é um segundo separador do mesmo navegador (V16): CONCORRENTE, nada terminado
+        assertEquals("CONCORRENTE", renovar(t1, Segredos.tokenAleatorio()).resultado());
+        // passado mais de 10 s, o token antigo a voltar é roubo
+        try (Connection dono = ligarComoDono(); Statement st = dono.createStatement()) {
+            // a sessão já está terminada (protegida pelo trigger-padrão): só o dono, só aqui, para simular o tempo
+            st.execute("ALTER TABLE nucleo.sessao DISABLE TRIGGER trg_ses_00_padrao");
+            st.execute("UPDATE nucleo.sessao SET ses_usado_em = now() - INTERVAL '1 minute' WHERE ses_refresh_hash = '"
+                    + Segredos.sha256(t1) + "'");
+            st.execute("ALTER TABLE nucleo.sessao ENABLE TRIGGER trg_ses_00_padrao");
+        }
         var reutilizado = renovar(t1, Segredos.tokenAleatorio());
         assertEquals("REUTILIZADA", reutilizado.resultado());
         // a reutilização terminou todas as sessões, incluindo a de t2
@@ -323,19 +364,20 @@ class BaseDadosTest {
     void idempotencyKeyGuardaARespostaPorUtilizador() throws Exception {
         UUID chave = UUID.randomUUID();
         ExecutorTransaccao.executar(api, tesoureiro, c -> {
-            IdempotenciaRepository.guardar(c, chave, "POST", "/v1/tesouraria/transacoes", 201, "{\"id\": 10}");
+            IdempotenciaRepository.guardar(c, chave, "POST", "/v1/tesouraria/transacoes", 201, "{\"id\": 10}", "hash-a");
             return null;
         });
         var guardada = ExecutorTransaccao.executar(api, tesoureiro, c -> IdempotenciaRepository.obter(c, chave));
         assertEquals(201, guardada.orElseThrow().estadoHttp());
         assertEquals("/v1/tesouraria/transacoes", guardada.get().caminho());
+        assertEquals("hash-a", guardada.get().pedidoHash());
 
         int outro = criarUsuarioComDono("idem@teste.mz", null, "TESOUREIRO");
         assertTrue(ExecutorTransaccao.executar(api, outro, c -> IdempotenciaRepository.obter(c, chave)).isEmpty());
 
         // a mesma chave duas vezes pelo mesmo utilizador → 23505 → 409 duplicado
         SQLException e = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> {
-            IdempotenciaRepository.guardar(c, chave, "POST", "/v1/tesouraria/transacoes", 201, null);
+            IdempotenciaRepository.guardar(c, chave, "POST", "/v1/tesouraria/transacoes", 201, null, null);
             return null;
         }));
         assertEquals(409, TradutorErrosSql.traduzir(e).estadoHttp());
@@ -369,8 +411,13 @@ class BaseDadosTest {
         SQLException e = assertThrows(SQLException.class,
                 () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, familia, corpo)));
         assertEquals(403, TradutorErrosSql.traduzir(e).estadoHttp());
-        // ... nem a vê → 404
-        ApiException naoVe = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+        // o tesoureiro vê as famílias (secretaria.familia.ler) mas não as altera → 403
+        ApiException naoAltera = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, familia, id, Json.createObjectBuilder().add("nome", "X").build())));
+        assertEquals(403, naoAltera.estadoHttp());
+        // o director da ES nem as vê → 404 (não revela que existe)
+        int directorEs = criarUsuarioComDono("director.es.crud@teste.mz", null, "DIRECTOR_ES");
+        ApiException naoVe = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, directorEs,
                 c -> TabelaRepository.alterar(c, familia, id, Json.createObjectBuilder().add("nome", "X").build())));
         assertEquals(404, naoVe.estadoHttp());
 
@@ -611,6 +658,131 @@ class BaseDadosTest {
         assertEquals(403, TradutorErrosSql.traduzir(e).estadoHttp());
     }
 
+    // ------------------------------------------------------------------ V16: correcções da auditoria
+
+    @Test
+    void hashDaSenhaNaoFicaNoLogDeAuditoria() throws Exception {
+        int usuario = criarUsuarioComDono("log.senha.v16@teste.mz", "+258840000161", "SECRETARIO");
+        String codigo = "123456";
+        ExecutorTransaccao.executar(api, null, c -> AuthRepository.pedirRecuperacao(c, "log.senha.v16@teste.mz",
+                Segredos.sha256(codigo)));
+        String r = ExecutorTransaccao.executar(api, null, c -> AuthRepository.redefinirSenha(c, "log.senha.v16@teste.mz",
+                Segredos.sha256(codigo), Senhas.gerarHash("senha-nova-v16")));
+        assertEquals("OK", r);
+        try (Connection dono = ligarComoDono()) {
+            assertEquals(0, contar(dono, "SELECT count(*) FROM nucleo.log_auditoria WHERE lau_tabela = 'nucleo.usuario' "
+                    + "AND lau_registo_id = " + usuario + " AND (coalesce(lau_dados_antes::text, '') || lau_dados_depois::text) LIKE '%$argon2%'"));
+            assertTrue(contar(dono, "SELECT count(*) FROM nucleo.log_auditoria WHERE lau_tabela = 'nucleo.usuario' "
+                    + "AND lau_registo_id = " + usuario + " AND lau_dados_depois ->> 'usu_senha_hash' = '(alterada)'") >= 1);
+        }
+    }
+
+    @Test
+    void tokenDeSessaoTerminadaDeixaDeServir() throws Exception {
+        long sessao = ExecutorTransaccao.executar(api, null,
+                c -> AuthRepository.abrirSessao(c, tesoureiro, Segredos.sha256("refresh-v16-a"), null, null));
+        assertEquals(1, (int) ExecutorTransaccao.executar(api, tesoureiro, sessao, c -> 1));
+        ExecutorTransaccao.executar(api, tesoureiro, c -> {
+            AuthRepository.terminarSessao(c, Segredos.sha256("refresh-v16-a"));
+            return null;
+        });
+        ApiException e = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, sessao, c -> 1));
+        assertEquals(401, e.estadoHttp());
+    }
+
+    @Test
+    void renovacaoSimultaneaNaoTerminaAsSessoes() throws Exception {
+        ExecutorTransaccao.executar(api, null,
+                c -> AuthRepository.abrirSessao(c, tesoureiro, Segredos.sha256("refresh-v16-b"), null, null));
+        assertEquals("OK", renovar("refresh-v16-b", "refresh-v16-c").resultado());
+        // o mesmo token logo a seguir (outro separador do mesmo navegador): CONCORRENTE, não REUTILIZADA
+        assertEquals("CONCORRENTE", renovar("refresh-v16-b", "refresh-v16-x").resultado());
+        assertEquals("OK", renovar("refresh-v16-c", "refresh-v16-d").resultado(), "a sessão nova continua válida");
+    }
+
+    @Test
+    void loginNaoDistingueMaiusculasNoEmail() throws Exception {
+        var cred = ExecutorTransaccao.executar(api, null, c -> AuthRepository.credenciais(c, "TESOUREIRO@Teste.MZ"));
+        assertEquals(tesoureiro, cred.orElseThrow().usuarioId());
+    }
+
+    @Test
+    void pesquisaDeMembrosPorNome() throws Exception {
+        ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.listar(c, Catalogo.de(Membro.class),
+                Map.of("igrejaId", Integer.toString(igrejaCentral), "q", "silva")));
+    }
+
+    // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
+
+    @Test
+    void escalaElaboradaPublicadaComLembreteEnviado() throws Exception {
+        int secretario = criarUsuarioComDono("sec.escala.v17@teste.mz", "+258840000171", "SECRETARIO");
+        int elisa;
+        try (Connection dono = ligarComoDono()) {
+            elisa = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES ("
+                    + igrejaCentral + ", 'Elisa', 'Fumo') RETURNING mem_id");
+            inserir(dono, "INSERT INTO secretaria.contacto (cto_mem_id, cto_tipo, cto_valor, cto_principal) VALUES ("
+                    + elisa + ", 'TELEFONE', '84 111 0000', true) RETURNING cto_id");
+            inserir(dono, "INSERT INTO secretaria.consentimento (cns_mem_id, cns_tipo, cns_concedido) VALUES ("
+                    + elisa + ", 'CONTACTO_SMS', true) RETURNING cns_id");
+        }
+        JsonObject corpoPlano = Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("titulo", "Escala de Pregação")
+                .add("dataInicio", "2026-10-01").add("dataFim", "2026-12-31").build();
+
+        // o tesoureiro não elabora escalas → 403
+        SQLException recusa = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.criar(c, Catalogo.de(EscalaPlano.class), corpoPlano)));
+        assertEquals(403, TradutorErrosSql.traduzir(recusa).estadoHttp());
+
+        long plano = ExecutorTransaccao.executar(api, secretario,
+                c -> TabelaRepository.criar(c, Catalogo.de(EscalaPlano.class), corpoPlano)).getJsonNumber("id").longValue();
+        int sabados = ExecutorTransaccao.executar(api, secretario, c -> {
+            try (Statement st = c.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT actividades.fn_gerar_dias_escala(" + plano + ")")) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        });
+        assertEquals(13, sabados);
+        long dia = ExecutorTransaccao.executar(api, secretario, c -> contar(c,
+                "SELECT eds_id FROM actividades.escala_dia WHERE eds_epl_id = " + plano + " AND eds_data = '2026-10-17'"));
+
+        // a pessoa escalada no dia: a data e a igreja vêm do dia
+        JsonObject escala = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c,
+                Catalogo.de(Escala.class), Json.createObjectBuilder().add("escalaDiaId", dia)
+                        .add("funcao", "PREGADOR").add("membroId", elisa).build()));
+        assertEquals("2026-10-17", escala.getString("data"));
+        assertEquals(igrejaCentral, escala.getInt("igrejaId"));
+
+        // por publicar: sem lembretes; publicada: um lembrete na quarta, sem repetir
+        assertEquals(0, lembretes("2026-10-14 10:00+02"));
+        ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, Catalogo.de(EscalaPlano.class), plano,
+                Json.createObjectBuilder().add("publicada", true).build()));
+        assertEquals(1, lembretes("2026-10-14 10:00+02"));
+        assertEquals(0, lembretes("2026-10-14 11:00+02"));
+
+        // a tarefa de envio manda-o ao fornecedor (aqui: uma lista) e marca-o ENVIADA
+        List<String> enviados = new java.util.ArrayList<>();
+        TarefasAgendadas.enviarFila(api, (destino, texto) -> enviados.add(destino + " " + texto), null);
+        assertTrue(enviados.stream().anyMatch(s -> s.startsWith("84 111 0000 ") && s.contains("pregador(a)")), enviados.toString());
+        try (Connection dono = ligarComoDono()) {
+            assertEquals(1, contar(dono, "SELECT count(*) FROM nucleo.notificacao WHERE ntf_mem_id = " + elisa
+                    + " AND ntf_estado = 'ENVIADA'"));
+        }
+    }
+
+    private static int lembretes(String agora) throws Exception {
+        return ExecutorTransaccao.executar(api, null, c -> {
+            try (PreparedStatement ps = c.prepareStatement("SELECT actividades.fn_lembretes_escala(?::timestamptz)")) {
+                ps.setString(1, agora);
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    return rs.getInt(1);
+                }
+            }
+        });
+    }
+
     private static Tesouraria tesouraria;
 
     /** Conta de caixa na Igreja Central e fundos-padrão da Associação (uma vez por execução). */
@@ -637,6 +809,23 @@ class BaseDadosTest {
     private static AuthRepository.Renovacao renovar(String actual, String novo) throws Exception {
         return ExecutorTransaccao.executar(api, null,
                 c -> AuthRepository.renovarSessao(c, Segredos.sha256(actual), Segredos.sha256(novo), null, null));
+    }
+
+    /** NOME=valor do .env (linhas vazias e comentários ignorados). */
+    static Map<String, String> lerEnv(Path ficheiro) throws java.io.IOException {
+        Map<String, String> r = new java.util.HashMap<>();
+        if (!Files.isRegularFile(ficheiro)) {
+            return r;
+        }
+        for (String linha : Files.readAllLines(ficheiro, StandardCharsets.UTF_8)) {
+            linha = linha.strip();
+            int igual = linha.indexOf('=');
+            if (linha.isEmpty() || linha.startsWith("#") || igual < 1) {
+                continue;
+            }
+            r.put(linha.substring(0, igual).strip(), linha.substring(igual + 1).strip());
+        }
+        return r;
     }
 
     private static List<Path> migracoes(Path pasta) throws Exception {

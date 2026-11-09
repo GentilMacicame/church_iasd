@@ -24,7 +24,11 @@ public class FiltroPedido implements ContainerRequestFilter, ContainerResponseFi
 
     @Override
     public void filter(ContainerRequestContext pedido) {
-        contexto.pedidoId();   // gerado ao criar o contexto do pedido
+        // vindo do Nginx ou de outro serviço: o mesmo id em todos os logs (só UUIDs, para não injectar texto no log)
+        String recebido = pedido.getHeaderString(HEADER);
+        if (recebido != null && recebido.matches("[0-9a-fA-F-]{36}")) {
+            contexto.definirPedidoId(recebido.toLowerCase());
+        }
     }
 
     @Override

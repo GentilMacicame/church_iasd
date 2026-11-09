@@ -1,6 +1,6 @@
 package mz.org.iasd.igreja.models.tipos;
 
-import mz.org.iasd.igreja.crud.TipoBd;
+import mz.org.iasd.igreja.models.catalogo.TipoBd;
 
 /**
  * Tipo {@code nucleo.es_divisao_t} da base de dados.

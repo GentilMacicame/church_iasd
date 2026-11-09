@@ -18,6 +18,10 @@ public final class Tokens {
     public record TokenEmitido(String token, OffsetDateTime expiraEm) {
     }
 
+    /** Quem é e de que sessão de login veio o token (a API confirma na base que a sessão continua activa). */
+    public record Identidade(int usuarioId, Long sessaoId) {
+    }
+
     private final Algorithm algoritmo;
     private final JWTVerifier verificador;
     private final String emissor;
@@ -44,11 +48,15 @@ public final class Tokens {
         return new TokenEmitido(token, OffsetDateTime.ofInstant(expira, ZoneOffset.UTC));
     }
 
-    /** @return o id do utilizador, ou {@code null} se o token for inválido ou estiver expirado */
-    public Integer verificar(String token) {
+    /** @return quem é e a sessão, ou {@code null} se o token for inválido ou estiver expirado */
+    public Identidade verificar(String token) {
         try {
             DecodedJWT jwt = verificador.verify(token);
-            return Integer.valueOf(jwt.getSubject());
+            Long sessao = jwt.getClaim("sid").isMissing() || jwt.getClaim("sid").isNull() ? null : jwt.getClaim("sid").asLong();
+            if (sessao == null) {
+                return null;                       // todos os tokens emitidos têm sid
+            }
+            return new Identidade(Integer.parseInt(jwt.getSubject()), sessao);
         } catch (JWTVerificationException | NumberFormatException e) {
             return null;
         }

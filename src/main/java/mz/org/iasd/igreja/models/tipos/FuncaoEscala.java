@@ -1,6 +1,6 @@
 package mz.org.iasd.igreja.models.tipos;
 
-import mz.org.iasd.igreja.crud.TipoBd;
+import mz.org.iasd.igreja.models.catalogo.TipoBd;
 
 /**
  * Tipo {@code nucleo.funcao_escala_t} da base de dados.
@@ -19,5 +19,9 @@ public enum FuncaoEscala {
     PROFESSOR_ES,
     DIRECTOR_ES,
     LIMPEZA,
-    OUTRA
+    OUTRA,
+    TRADUTOR,
+    ACOMPANHANTE_VISITAS,
+    ACOMPANHANTE_OFERTAS,
+    ACOMPANHANTE_BOAS_VINDAS
 }

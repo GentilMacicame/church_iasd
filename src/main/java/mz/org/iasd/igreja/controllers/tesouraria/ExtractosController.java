@@ -20,12 +20,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.Corpo;
-import mz.org.iasd.igreja.crud.BaseTabelaController;
-import mz.org.iasd.igreja.crud.TabelaRepository;
-import mz.org.iasd.igreja.crud.TabelaRepository.Valor;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.controllers.base.Corpo;
+import mz.org.iasd.igreja.controllers.base.BaseTabelaController;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository.Valor;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.bd.Idempotente;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.Rotas;
@@ -53,6 +53,7 @@ import mz.org.iasd.igreja.models.tesouraria.ExtratoLinha;
 public class ExtractosController extends BaseTabelaController {
 
     private static final Tabela TABELA = Catalogo.de(ExtratoLinha.class);
+    static final int MAX_LINHAS = 20_000;
     private static final DateTimeFormatter DATA_PT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Pattern VALOR = Pattern.compile("^-?\\d{1,14}(\\.\\d{1,2})?$");
 
@@ -73,6 +74,10 @@ public class ExtractosController extends BaseTabelaController {
         JsonObject o = Corpo.objecto(Corpo.ler(corpo));
         long conta = Corpo.inteiro(o, "contaId");
         String[] linhas = Corpo.texto(o, "csv").split("\\R");
+        if (linhas.length > MAX_LINHAS) {
+            throw ApiException.pedidoInvalido("O extracto tem " + linhas.length + " linhas; o máximo por importação é "
+                    + MAX_LINHAS + ". Divida o ficheiro.", "csv");
+        }
         int importadas = 0;
         int repetidas = 0;
         Connection c = ligacao();

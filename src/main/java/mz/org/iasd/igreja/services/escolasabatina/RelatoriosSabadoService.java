@@ -18,11 +18,11 @@ import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 
-import mz.org.iasd.igreja.crud.Catalogo;
-import mz.org.iasd.igreja.crud.Corpo;
-import mz.org.iasd.igreja.crud.TabelaRepository;
-import mz.org.iasd.igreja.crud.TabelaRepository.Valor;
-import mz.org.iasd.igreja.crud.Tabela;
+import mz.org.iasd.igreja.models.catalogo.Catalogo;
+import mz.org.iasd.igreja.controllers.base.Corpo;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.repositories.base.TabelaRepository.Valor;
+import mz.org.iasd.igreja.models.catalogo.Tabela;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
 import mz.org.iasd.igreja.controllers.escolasabatina.RelatoriosSabadoController;
