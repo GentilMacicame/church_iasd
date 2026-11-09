@@ -1006,6 +1006,49 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/comunicacao/notificacoes-a-enviar:
+    get:
+      summary: 'Relatório: comunicacao.vw_notificacoes_a_enviar'
+      tags:
+      - Comunicação
+      x-permissao: comunicacao.notificacao.ler
+      operationId: relVComunicacaoNotificacoesAEnviar
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: comunicacao.vw_notificacoes_a_enviar
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/comunicacao/notificacoes/{id}:
     get:
       summary: Ler um registo
@@ -2534,7 +2577,6 @@ paths:
               required:
               - classeTrimestreId
               - sabadoId
-              - membrosMatriculados
               - membrosPresentes
       responses:
         '201':
@@ -2883,6 +2925,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Visitante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/resumo-classes:
+    get:
+      summary: 'Relatório: escola_sabatina.vw_resumo_classe'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.classe_trimestre.ler
+      operationId: relVEscolaSabatinaResumoClasses
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: trimestreId
+        in: query
+        schema:
+          type: integer
+      x-vista: escola_sabatina.vw_resumo_classe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -3399,6 +3488,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Visitante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/visitantes-a-anonimizar:
+    get:
+      summary: 'Relatório: escola_sabatina.vw_visitantes_a_anonimizar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.visitante.ler
+      operationId: relVEscolaSabatinaVisitantesAAnonimizar
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: escola_sabatina.vw_visitantes_a_anonimizar
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -5851,6 +5983,54 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/entidades/{id}/fundos-padrao:
+    post:
+      summary: Criar os fundos-padrão da Associação/Missão (dízimo, ES, ofertas, orçamento local)
+      tags:
+      - Organização
+      x-permissao: tesouraria.fundo.criar
+      operationId: VOrganizacaoEntidadesIdFundosPadrao
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - percentagemOfertaCombinada
+              properties:
+                percentagemOfertaCombinada:
+                  type: string
+                  pattern: ^\d{1,3}(\.\d{1,2})?$
+                  description: Parte da oferta combinada que vai para a Associação (plano de ofertas da União/Divisão), 0 a 100
+                sufixo:
+                  type: string
+                  maxLength: 10
+                  description: Acrescentado aos códigos (DIZ, ESM, ...) quando já existem fundos de outra Associação
+      x-funcao-bd: tesouraria.fn_criar_fundos_padrao
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fundo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/organizacao/entidades/{id}/reactivar:
     post:
       summary: Reactivar (limpa endDate)
@@ -6640,6 +6820,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MpesaCallbackLog'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/pagamentos/mpesa-pendentes:
+    get:
+      summary: 'Relatório: pagamentos.vw_mpesa_pendentes'
+      tags:
+      - Pagamentos electrónicos
+      x-permissao: pagamentos.pagamento_mpesa.ler
+      operationId: relVPagamentosMpesaPendentes
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: pagamentos.vw_mpesa_pendentes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -8151,6 +8374,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Membro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/membros-basico:
+    get:
+      summary: 'Relatório: secretaria.vw_membro_basico'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.membro.ler
+      operationId: relVSecretariaMembrosBasico
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: secretaria.vw_membro_basico
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -13255,6 +13521,55 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/recalcular-saldos:
+    post:
+      summary: Recalcular os saldos pré-calculados de uma igreja a partir dos movimentos (auditoria, depois de importações)
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.fecho_periodo.criar
+      operationId: VTesourariaRecalcularSaldos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - igrejaId
+              properties:
+                igrejaId:
+                  type: integer
+      x-funcao-bd: tesouraria.fn_recalcular_saldos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - igrejaId
+                - contas
+                - fundos
+                properties:
+                  igrejaId:
+                    type: integer
+                  contas:
+                    type: integer
+                  fundos:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/recibos:
     get:
       summary: 'Listar: Recibos numerados por igreja e ano'
@@ -17437,7 +17752,6 @@ components:
       x-obrigatorios-ao-criar:
       - classeTrimestreId
       - sabadoId
-      - membrosMatriculados
       - membrosPresentes
     Remessa:
       type: object

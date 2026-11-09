@@ -9,7 +9,7 @@ BY = {t.name: t for t in ALL}
 BYP = {t.p: t for t in ALL}
 
 # enumerações
-base = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sql', 'V1__base.sql')).read()
+base = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sql', 'V1__base.sql'), encoding='utf-8').read()
 ENUMS = {m.group(1): re.findall(r"'([A-Z0-9_]+)'", m.group(2))
          for m in re.finditer(r"CREATE TYPE nucleo\.(\w+)\s+AS ENUM \((.*?)\);", base, re.S)}
 
@@ -51,6 +51,8 @@ def enum_name(e): return 'Enum' + ''.join(x.capitalize() for x in e[:-2].split('
 # campos que a base de dados preenche sozinha (igreja copiada, validação, aprovações)
 AUTO = {'tra_igr_id', 'tli_igr_id', 'ect_igr_id', 'ers_igr_id', 'epr_igr_id', 'mem_validado_por_usu_id',
         'mem_data_validacao', 'des_aprovado_por_usu_id', 'des_aprovado_em', 'usu_ultimo_login'}
+# NOT NULL sem DEFAULT, mas a base calcula-os se vierem vazios (não são obrigatórios ao criar)
+CALCULADOS = {'ers_membros_matriculados'}
 
 schemas = {enum_name(k): {'type': 'string', 'enum': v} for k, v in ENUMS.items()}
 schemas['Erro'] = {'type': 'object', 'required': ['erro', 'mensagem', 'pedidoId'], 'properties': {
@@ -99,7 +101,7 @@ for fname, schema, title, desc, tables in MODULES:
                 else: s['description'] = (s.get('description', '') + ' · ' + d).strip(' ·')
             if full in AUTO: s = {**s, 'readOnly': True} if '$ref' not in s else {'allOf': [s], 'readOnly': True}
             props[campo(col)] = s
-            if 'NOT NULL' in opt and 'DEFAULT' not in opt and full not in AUTO:
+            if 'NOT NULL' in opt and 'DEFAULT' not in opt and full not in AUTO and full not in CALCULADOS:
                 req_create.append(campo(col))
         et = t.estado[0]
         props['estado'] = ref(enum_name(et))
@@ -184,6 +186,7 @@ paths['/v1/eu'] = {'get': op('Utilizador, igrejas e permissões', A, None, opera
         igrejas={'type': 'array', 'items': obj(['id', 'nome'], id=I, nome=STR, perfis={'type': 'array', 'items': STR})},
         permissoes={'type': 'object', 'additionalProperties': {'type': 'array', 'items': STR}, 'description': 'igrejaId → códigos de permissão'})))}
 
+TITULO = {m[1]: m[2] for m in MODULES}
 SEC, ES, TES, PAG = 'Secretaria', 'Escola Sabatina', 'Tesouraria', 'Pagamentos electrónicos'
 VOTO = obj(['votoId', 'data'], votoId=I, data=D)
 acao('/v1/secretaria/membros/{id}/validar', 'Aprovar o registo do membro', SEC, 'secretaria.membro.validar', None, ref('Membro'))
@@ -212,6 +215,14 @@ acao('/v1/tesouraria/fechos/{id}/reabrir', 'Reabrir o mês', TES, 'tesouraria.fe
 acao('/v1/tesouraria/extractos/importar', 'Importar o extracto (CSV) de uma conta', TES, 'tesouraria.extrato_linha.criar',
      obj(['contaId', 'csv'], contaId=I, csv={'type': 'string', 'description': 'data;descricao;referencia;valor'}), obj(['importadas', 'repetidas'], importadas=I, repetidas=I))
 acao('/v1/tesouraria/extractos/{id}/reconciliar', 'Ligar a linha do extracto a uma transacção', TES, 'tesouraria.extrato_linha.alterar', obj(['transacaoId'], transacaoId=I), ref('ExtratoLinha'))
+acao('/v1/tesouraria/recalcular-saldos', 'Recalcular os saldos pré-calculados de uma igreja a partir dos movimentos (auditoria, depois de importações)', TES,
+     'tesouraria.fecho_periodo.criar', obj(['igrejaId'], igrejaId=I), obj(['igrejaId', 'contas', 'fundos'], igrejaId=I, contas=I, fundos=I),
+     'tesouraria.fn_recalcular_saldos')
+acao('/v1/organizacao/entidades/{id}/fundos-padrao', 'Criar os fundos-padrão da Associação/Missão (dízimo, ES, ofertas, orçamento local)', TITULO['organizacao'],
+     'tesouraria.fundo.criar', obj(['percentagemOfertaCombinada'], percentagemOfertaCombinada={'type': 'string', 'pattern': r'^\d{1,3}(\.\d{1,2})?$',
+         'description': 'Parte da oferta combinada que vai para a Associação (plano de ofertas da União/Divisão), 0 a 100'},
+         sufixo={'type': 'string', 'maxLength': 10, 'description': 'Acrescentado aos códigos (DIZ, ESM, ...) quando já existem fundos de outra Associação'}),
+     {'type': 'array', 'items': ref('Fundo')}, 'tesouraria.fn_criar_fundos_padrao', code='201')
 acao('/v1/pagamentos/mpesa', 'Iniciar um pagamento M-Pesa (cria a transacção pendente e chama a Vodacom)', PAG, 'pagamentos.pagamento_mpesa.criar',
      obj(['contaId', 'msisdn', 'linhas'], contaId=I, msisdn={'type': 'string', 'pattern': r'^2588[2-7]\d{7}$'}, membroId=I,
          linhas={'type': 'array', 'items': obj(['fundoId', 'categoriaId', 'valor'], fundoId=I, categoriaId=I, valor=MONEY)}),
@@ -262,6 +273,11 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
                      ('despesas-por-pagar', 'vw_despesas_por_pagar', 'tesouraria.despesa.ler'),
                      ('extractos-por-reconciliar', 'vw_extrato_por_reconciliar', 'tesouraria.extrato_linha.ler')]:
     rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual') else ())
+rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
+rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
+rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')
+rel('/v1/pagamentos/mpesa-pendentes', 'pagamentos.vw_mpesa_pendentes', PAG, 'pagamentos.pagamento_mpesa.ler')
+rel('/v1/comunicacao/notificacoes-a-enviar', 'comunicacao.vw_notificacoes_a_enviar', TITULO['comunicacao'], 'comunicacao.notificacao.ler')
 rel('/v1/actividades/escalas-proximas', 'actividades.vw_escala_proximas', 'Actividades e escalas', 'actividades.escala.ler')
 
 doc = {
@@ -294,6 +310,6 @@ doc = {
    'schemas': dict(sorted(schemas.items()))}}
 for p in ['/v1/auth/login', '/v1/auth/renovar', '/v1/auth/recuperar', '/v1/auth/redefinir']:
     paths[p]['post']['security'] = []
-open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'api', 'openapi.yaml'), 'w').write(yaml.safe_dump(json.loads(json.dumps(doc)), allow_unicode=True, sort_keys=False, width=140))
+open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'api', 'openapi.yaml'), 'w', encoding='utf-8', newline='\n').write(yaml.safe_dump(json.loads(json.dumps(doc)), allow_unicode=True, sort_keys=False, width=140))
 n_ops = sum(len(v) for v in paths.values())
 print('caminhos', len(paths), 'operações', n_ops, 'esquemas', len(schemas))
