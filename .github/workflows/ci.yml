@@ -1,0 +1,66 @@
+# Em cada push e pull request: testes SQL (5× ok) e testes da API (unitários, contrato e integração)
+# contra PostgreSQL 16 real. Auditoria C2: nenhuma alteração entra sem passar na base de dados.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  base-de-dados:
+    name: Testes SQL (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          TZ: Africa/Maputo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      BD_NOME_TESTE: ci_testes
+    steps:
+      - uses: actions/checkout@v4
+      - name: scripts/db-test.sh
+        run: scripts/db-test.sh
+      - name: Diferenças (se falhou)
+        if: failure()
+        run: |
+          for f in database/tests/resultado/*.diff; do
+            [ -s "$f" ] || continue
+            echo "::error title=$(basename "$f")::$(head -c 60000 "$f" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
+          done
+
+  api:
+    name: Testes da API (unitários, contrato, integração)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      # Testcontainers arranca um PostgreSQL 16 descartável (o runner tem Docker)
+      - name: ./mvnw test
+        run: ./mvnw -B test
+      - name: Resumo e falhas
+        if: always()
+        run: |
+          for f in target/surefire-reports/*.txt; do
+            linha=$(grep -m1 'Tests run' "$f" || true)
+            echo "$(basename "$f" .txt): $linha"
+            case "$linha" in *"Failures: 0, Errors: 0"*) ;; *)
+              echo "::error title=$(basename "$f" .txt)::$(head -c 60000 "$f" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')";;
+            esac
+          done
+          grep -h 'Tests run' target/surefire-reports/*BaseDadosTest.txt \
+            | grep -q 'Skipped: 0' || echo "::error::BaseDadosTest não correu (sem Docker?)"
