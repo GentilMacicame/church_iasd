@@ -1,0 +1,10 @@
+target/
+.env
+.env.*
+!.env.exemplo
+*.log
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.iml
+src/main/liberty/config/server.env

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Open Liberty · servidor da API.
+  Todas as variáveis podem ser substituídas por variáveis de ambiente com o mesmo nome
+  (ex.: BD_SENHA=... ./mvnw liberty:dev). Nunca escrever segredos reais neste ficheiro.
+-->
+<server description="Sistema de Gestão da Igreja · API">
+
+    <featureManager>
+        <feature>restfulWS-3.1</feature>
+        <feature>jsonb-3.0</feature>
+        <feature>cdi-4.0</feature>
+        <feature>beanValidation-3.0</feature>
+        <feature>jdbc-4.3</feature>
+        <feature>servlet-6.0</feature>
+        <feature>mpConfig-3.1</feature>
+        <feature>concurrent-3.0</feature>
+        <!-- documentação: /openapi (contrato) e /openapi/ui (Swagger UI) -->
+        <feature>mpOpenAPI-3.1</feature>
+    </featureManager>
+
+    <!-- Base de dados: SEMPRE o utilizador api_igreja (membro de app_igreja), nunca o dono das tabelas -->
+    <variable name="BD_SERVIDOR" defaultValue="localhost"/>
+    <variable name="BD_PORTA" defaultValue="5432"/>
+    <variable name="BD_NOME" defaultValue="igreja"/>
+    <variable name="BD_UTILIZADOR" defaultValue="api_igreja"/>
+    <variable name="BD_SENHA" defaultValue="mudar"/>
+    <variable name="HTTP_PORTA" defaultValue="9080"/>
+
+    <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="${HTTP_PORTA}" httpsPort="-1"/>
+
+    <library id="bibliotecaJdbc">
+        <fileset dir="${server.config.dir}/jdbc" includes="*.jar"/>
+    </library>
+
+    <!-- transactional="false": a API gere a transacção (BEGIN / set_config / COMMIT) em cada pedido -->
+    <dataSource id="igreja" jndiName="jdbc/igreja" transactional="false" isolationLevel="TRANSACTION_READ_COMMITTED">
+        <jdbcDriver libraryRef="bibliotecaJdbc"/>
+        <properties.postgresql serverName="${BD_SERVIDOR}" portNumber="${BD_PORTA}" databaseName="${BD_NOME}"
+                               user="${BD_UTILIZADOR}" password="${BD_SENHA}"
+                               applicationName="igreja-api"/>
+        <connectionManager maxPoolSize="20" minPoolSize="2" connectionTimeout="10s"/>
+    </dataSource>
+
+    <webApplication location="igreja-api.war" contextRoot="/">
+        <!-- a aplicação lê os detalhes dos erros do PostgreSQL (PSQLException) -->
+        <classloader commonLibraryRef="bibliotecaJdbc"/>
+    </webApplication>
+
+    <logging consoleLogLevel="INFO" consoleFormat="SIMPLE"/>
+</server>

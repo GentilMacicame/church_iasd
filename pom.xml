@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>mz.org.iasd</groupId>
+    <artifactId>igreja-api</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>Sistema de Gestão da Igreja · API</name>
+    <description>API REST (Jakarta EE 10) sobre a base de dados PostgreSQL do sistema da igreja</description>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+
+        <!-- Pasta das migrações SQL (fonte de verdade da base de dados). Usada só pelos testes. -->
+        <migracoes.dir>${project.basedir}/../sistema-igreja/sistema-igreja/database/migrations</migracoes.dir>
+
+        <openapi.dir>${project.basedir}/../sistema-igreja/sistema-igreja/api</openapi.dir>
+        <openapi.ficheiro>${openapi.dir}/openapi.yaml</openapi.ficheiro>
+
+        <versao.liberty>24.0.0.12</versao.liberty>
+        <versao.postgresql>42.7.4</versao.postgresql>
+        <versao.testcontainers>1.20.4</versao.testcontainers>
+        <versao.junit>5.11.3</versao.junit>
+    </properties>
+
+    <dependencies>
+        <!-- Jakarta EE 10 Web Profile + MicroProfile Config: fornecidos pelo servidor -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-web-api</artifactId>
+            <version>10.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>3.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Driver JDBC: instalado no servidor (copyDependencies), não vai dentro do .war -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${versao.postgresql}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Tokens de acesso (JWT HS256) -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <!-- Senhas Argon2id (Java puro) -->
+        <dependency>
+            <groupId>com.password4j</groupId>
+            <artifactId>password4j</artifactId>
+            <version>1.8.2</version>
+        </dependency>
+
+        <!-- Testes -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${versao.junit}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${versao.testcontainers}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${versao.testcontainers}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- implementação de JSON-P para os testes (no servidor vem do Open Liberty) -->
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <version>1.1.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.16</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>igreja-api</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- o contrato da API vai dentro do .war para o Swagger UI (/openapi/ui) -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copiar-contrato</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${openapi.dir}</directory>
+                                    <includes>
+                                        <include>openapi.yaml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <migracoes.dir>${migracoes.dir}</migracoes.dir>
+                        <openapi.ficheiro>${openapi.ficheiro}</openapi.ficheiro>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- Open Liberty: ./mvnw liberty:dev (desenvolvimento) ou liberty:run -->
+            <plugin>
+                <groupId>io.openliberty.tools</groupId>
+                <artifactId>liberty-maven-plugin</artifactId>
+                <version>3.11.1</version>
+                <configuration>
+                    <runtimeArtifact>
+                        <groupId>io.openliberty</groupId>
+                        <artifactId>openliberty-kernel</artifactId>
+                        <version>${versao.liberty}</version>
+                        <type>zip</type>
+                    </runtimeArtifact>
+                    <copyDependencies>
+                        <dependencyGroup>
+                            <location>jdbc</location>
+                            <dependency>
+                                <groupId>org.postgresql</groupId>
+                                <artifactId>postgresql</artifactId>
+                            </dependency>
+                        </dependencyGroup>
+                    </copyDependencies>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
