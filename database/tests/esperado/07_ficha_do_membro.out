@@ -1,0 +1,45 @@
+1. secretário (autorizado): preenche a ficha da Elisa
+ mem_naturalidade | mem_tipo_identificacao | mem_escolaridade | mem_nome_mae | mem_bairro | mem_numero_casa 
+------------------+------------------------+------------------+--------------+------------+-----------------
+ Xai-Xai, Gaza    | BI                     | SUPERIOR         | Maria Cossa  | Machava    | 34
+(1 row)
+
+2. valor que não existe na lista: recusado
+psql:database/tests/07_ficha_do_membro.sql:24: ERROR:  invalid input value for enum escolaridade_t: "DOUTORAMENTO" at character 49
+3. a alteração fica no histórico (só os campos que mudaram)
+ lau_accao | bairro_no_log | nome_no_log 
+-----------+---------------+-------------
+ UPDATE    | t             | f
+(1 row)
+
+4. secretário: baptismo da Teresa na igreja 1, pelo pastor com conta no sistema
+ bap_local_igr_id | bap_oficiante_usu_id 
+------------------+----------------------
+                1 |                    1
+(1 row)
+
+   igreja que não existe: recusado
+psql:database/tests/07_ficha_do_membro.sql:38: ERROR:  insert or update on table "baptismo" violates foreign key constraint "fk_bap_local_igr_id"
+5. tesoureiro da igreja 1 (não autorizado a alterar): lê a ficha, mas a alteração não passa
+ mem_bairro 
+------------
+ Machava
+(1 row)
+
+ bairro_continua 
+-----------------
+ Machava
+(1 row)
+
+psql:database/tests/07_ficha_do_membro.sql:45: ERROR:  new row violates row-level security policy for table "membro"
+6. tesoureiro de outra igreja: não vê a ficha nem o baptismo
+ ve_a_ficha 
+------------
+          0
+(1 row)
+
+ ve_o_baptismo 
+---------------
+             0
+(1 row)
+

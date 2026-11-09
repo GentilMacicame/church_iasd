@@ -7024,6 +7024,14 @@ paths:
         in: query
         schema:
           type: integer
+      - name: localIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: oficianteUsuarioId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -8323,6 +8331,14 @@ paths:
         in: query
         schema:
           type: integer
+      - name: tipoIdentificacao
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumTipoIdentificacao'
+      - name: escolaridade
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEscolaridade'
       - name: estado
         in: query
         schema:
@@ -15984,6 +16000,14 @@ components:
           type: integer
           format: int32
           description: → escola_sabatina.classe_trimestre · Classe da ES que preparou o candidato
+        localIgrejaId:
+          type: integer
+          format: int32
+          description: '→ organizacao.igreja · Igreja onde foi baptizado, se estiver no sistema (senão: local)'
+        oficianteUsuarioId:
+          type: integer
+          format: int32
+          description: '→ nucleo.usuario · Pastor que baptizou, se tiver conta no sistema (senão: oficiante)'
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -16932,6 +16956,14 @@ components:
       - ADOLESCENTES
       - JOVENS
       - ADULTOS
+    EnumEscolaridade:
+      type: string
+      enum:
+      - NENHUMA
+      - PRIMARIO
+      - SECUNDARIO
+      - TECNICO_PROFISSIONAL
+      - SUPERIOR
     EnumEstadoActividade:
       type: string
       enum:
@@ -17127,6 +17159,15 @@ components:
       - OFERTA_ESPECIAL
       - ORCAMENTO_LOCAL
       - PROJECTO
+    EnumTipoIdentificacao:
+      type: string
+      enum:
+      - BI
+      - PASSAPORTE
+      - DIRE
+      - CEDULA
+      - CARTA_CONDUCAO
+      - OUTRO
     EnumTipoIgreja:
       type: string
       enum:
@@ -17888,6 +17929,47 @@ components:
           type: string
           format: date-time
           readOnly: true
+        naturalidade:
+          type: string
+          maxLength: 150
+          description: Onde nasceu (cidade/distrito, país)
+        nacionalidade:
+          type: string
+          maxLength: 60
+        tipoIdentificacao:
+          $ref: '#/components/schemas/EnumTipoIdentificacao'
+        numeroIdentificacao:
+          type: string
+          maxLength: 30
+          description: Número do BI, passaporte, DIRE ou cédula
+        profissao:
+          type: string
+          maxLength: 100
+        escolaridade:
+          $ref: '#/components/schemas/EnumEscolaridade'
+        nomePai:
+          type: string
+          maxLength: 150
+        nomeMae:
+          type: string
+          maxLength: 150
+        provincia:
+          type: string
+          maxLength: 60
+        cidadeDistrito:
+          type: string
+          maxLength: 100
+          description: Cidade ou distrito
+        bairro:
+          type: string
+          maxLength: 100
+        quarteirao:
+          type: string
+          maxLength: 20
+        numeroCasa:
+          type: string
+          maxLength: 20
+          description: Número da casa ou do talhão
         estado:
           $ref: '#/components/schemas/EnumEstadoMembro'
         criadoEm:

@@ -24,6 +24,8 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param oficiante Pastor ordenado que baptizou
  * @param rebaptismo coluna {@code bap_rebaptismo}
  * @param classeTrimestreId Classe da ES que preparou o candidato
+ * @param localIgrejaId Igreja onde foi baptizado, se estiver no sistema (senão: local)
+ * @param oficianteUsuarioId Pastor que baptizou, se tiver conta no sistema (senão: oficiante)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -47,6 +49,10 @@ public record Baptismo(
         Boolean rebaptismo,
         @ColunaBd(value = "bap_ect_id", tipo = Tipo.INT)
         Integer classeTrimestreId,
+        @ColunaBd(value = "bap_local_igr_id", tipo = Tipo.INT)
+        Integer localIgrejaId,
+        @ColunaBd(value = "bap_oficiante_usu_id", tipo = Tipo.INT)
+        Integer oficianteUsuarioId,
         @ColunaBd(value = "bap_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "bap_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

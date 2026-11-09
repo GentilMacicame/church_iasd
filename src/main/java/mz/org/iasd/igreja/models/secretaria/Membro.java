@@ -6,10 +6,12 @@ import java.time.OffsetDateTime;
 import mz.org.iasd.igreja.models.catalogo.ColunaBd;
 import mz.org.iasd.igreja.models.catalogo.TabelaBd;
 import mz.org.iasd.igreja.models.catalogo.Tipo;
+import mz.org.iasd.igreja.models.tipos.Escolaridade;
 import mz.org.iasd.igreja.models.tipos.EstadoCivil;
 import mz.org.iasd.igreja.models.tipos.EstadoMembro;
 import mz.org.iasd.igreja.models.tipos.EstadoValidacao;
 import mz.org.iasd.igreja.models.tipos.Sexo;
+import mz.org.iasd.igreja.models.tipos.TipoIdentificacao;
 import mz.org.iasd.igreja.models.tipos.TipoMovimento;
 
 /**
@@ -36,6 +38,19 @@ import mz.org.iasd.igreja.models.tipos.TipoMovimento;
  * @param validacao coluna {@code mem_validacao}
  * @param validadoPorUsuarioId Referência a nucleo.usuario (preenchido pela base de dados)
  * @param dataValidacao (preenchido pela base de dados)
+ * @param naturalidade Onde nasceu (cidade/distrito, país)
+ * @param nacionalidade coluna {@code mem_nacionalidade}
+ * @param tipoIdentificacao coluna {@code mem_tipo_identificacao}
+ * @param numeroIdentificacao Número do BI, passaporte, DIRE ou cédula
+ * @param profissao coluna {@code mem_profissao}
+ * @param escolaridade coluna {@code mem_escolaridade}
+ * @param nomePai coluna {@code mem_nome_pai}
+ * @param nomeMae coluna {@code mem_nome_mae}
+ * @param provincia coluna {@code mem_provincia}
+ * @param cidadeDistrito Cidade ou distrito
+ * @param bairro coluna {@code mem_bairro}
+ * @param quarteirao coluna {@code mem_quarteirao}
+ * @param numeroCasa Número da casa ou do talhão
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -75,6 +90,32 @@ public record Membro(
         Integer validadoPorUsuarioId,
         @ColunaBd(value = "mem_data_validacao", tipo = Tipo.DATA_HORA, escrita = false)
         OffsetDateTime dataValidacao,
+        @ColunaBd(value = "mem_naturalidade", tipo = Tipo.TEXTO)
+        String naturalidade,
+        @ColunaBd(value = "mem_nacionalidade", tipo = Tipo.TEXTO)
+        String nacionalidade,
+        @ColunaBd(value = "mem_tipo_identificacao", tipo = Tipo.ENUM)
+        TipoIdentificacao tipoIdentificacao,
+        @ColunaBd(value = "mem_numero_identificacao", tipo = Tipo.TEXTO)
+        String numeroIdentificacao,
+        @ColunaBd(value = "mem_profissao", tipo = Tipo.TEXTO)
+        String profissao,
+        @ColunaBd(value = "mem_escolaridade", tipo = Tipo.ENUM)
+        Escolaridade escolaridade,
+        @ColunaBd(value = "mem_nome_pai", tipo = Tipo.TEXTO)
+        String nomePai,
+        @ColunaBd(value = "mem_nome_mae", tipo = Tipo.TEXTO)
+        String nomeMae,
+        @ColunaBd(value = "mem_provincia", tipo = Tipo.TEXTO)
+        String provincia,
+        @ColunaBd(value = "mem_cidade_distrito", tipo = Tipo.TEXTO)
+        String cidadeDistrito,
+        @ColunaBd(value = "mem_bairro", tipo = Tipo.TEXTO)
+        String bairro,
+        @ColunaBd(value = "mem_quarteirao", tipo = Tipo.TEXTO)
+        String quarteirao,
+        @ColunaBd(value = "mem_numero_casa", tipo = Tipo.TEXTO)
+        String numeroCasa,
         @ColunaBd(value = "mem_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoMembro estado,
         @ColunaBd(value = "mem_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

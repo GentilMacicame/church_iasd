@@ -66,6 +66,7 @@ import mz.org.iasd.igreja.models.tesouraria.Transacao;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;
 import mz.org.iasd.igreja.models.tipos.CanalNotificacao;
 import mz.org.iasd.igreja.models.tipos.EsDivisao;
+import mz.org.iasd.igreja.models.tipos.Escolaridade;
 import mz.org.iasd.igreja.models.tipos.EstadoActividade;
 import mz.org.iasd.igreja.models.tipos.EstadoCivil;
 import mz.org.iasd.igreja.models.tipos.EstadoContagem;
@@ -92,6 +93,7 @@ import mz.org.iasd.igreja.models.tipos.TipoContacto;
 import mz.org.iasd.igreja.models.tipos.TipoDocumento;
 import mz.org.iasd.igreja.models.tipos.TipoEntidade;
 import mz.org.iasd.igreja.models.tipos.TipoFundo;
+import mz.org.iasd.igreja.models.tipos.TipoIdentificacao;
 import mz.org.iasd.igreja.models.tipos.TipoIgreja;
 import mz.org.iasd.igreja.models.tipos.TipoMovimento;
 import mz.org.iasd.igreja.models.tipos.TipoReuniao;
@@ -112,6 +114,7 @@ public final class CatalogoGerado {
     public static final List<Class<? extends Enum<?>>> TIPOS = List.of(
             CanalNotificacao.class,
             EsDivisao.class,
+            Escolaridade.class,
             EstadoActividade.class,
             EstadoCivil.class,
             EstadoContagem.class,
@@ -138,6 +141,7 @@ public final class CatalogoGerado {
             TipoDocumento.class,
             TipoEntidade.class,
             TipoFundo.class,
+            TipoIdentificacao.class,
             TipoIgreja.class,
             TipoMovimento.class,
             TipoReuniao.class,
