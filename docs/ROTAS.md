@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 403 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 417 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -13,6 +13,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/actividades/{id}` | ActividadesController · alterar | `actividades.actividade.alterar` |
 | POST | `/v1/actividades/actividades/{id}/reactivar` | ActividadesController · reactivar | `actividades.actividade.terminar` |
 | POST | `/v1/actividades/actividades/{id}/terminar` | ActividadesController · terminar | `actividades.actividade.terminar` |
+| GET | `/v1/actividades/dias-escala` | DiasEscalaController · listar | `actividades.escala_dia.ler` |
+| POST | `/v1/actividades/dias-escala` | DiasEscalaController · criar | `actividades.escala_dia.criar` |
+| GET | `/v1/actividades/dias-escala/{id}` | DiasEscalaController · obter | `actividades.escala_dia.ler` |
+| PATCH | `/v1/actividades/dias-escala/{id}` | DiasEscalaController · alterar | `actividades.escala_dia.alterar` |
+| POST | `/v1/actividades/dias-escala/{id}/reactivar` | DiasEscalaController · reactivar | `actividades.escala_dia.terminar` |
+| POST | `/v1/actividades/dias-escala/{id}/terminar` | DiasEscalaController · terminar | `actividades.escala_dia.terminar` |
+| GET | `/v1/actividades/escala-grelha` | RelatoriosActividadesController · escalaGrelha | `actividades.escala_plano.ler (ou membro da igreja, se a escala estiver publicada)` |
 | GET | `/v1/actividades/escalas` | EscalasController · listar | `actividades.escala.ler` |
 | POST | `/v1/actividades/escalas` | EscalasController · criar | `actividades.escala.criar` |
 | GET | `/v1/actividades/escalas-proximas` | RelatoriosActividadesController · escalasProximas | `actividades.escala.ler` |
@@ -26,6 +33,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/materiais/{id}` | MateriaisController · alterar | `actividades.material.alterar` |
 | POST | `/v1/actividades/materiais/{id}/reactivar` | MateriaisController · reactivar | `actividades.material.terminar` |
 | POST | `/v1/actividades/materiais/{id}/terminar` | MateriaisController · terminar | `actividades.material.terminar` |
+| GET | `/v1/actividades/planos-escala` | PlanosEscalaController · listar | `actividades.escala_plano.ler` |
+| POST | `/v1/actividades/planos-escala` | PlanosEscalaController · criar | `actividades.escala_plano.criar` |
+| GET | `/v1/actividades/planos-escala/{id}` | PlanosEscalaController · obter | `actividades.escala_plano.ler` |
+| PATCH | `/v1/actividades/planos-escala/{id}` | PlanosEscalaController · alterar | `actividades.escala_plano.alterar` |
+| POST | `/v1/actividades/planos-escala/{id}/gerar-dias` | PlanosEscalaController · gerarDias | `actividades.escala_dia.criar` |
+| POST | `/v1/actividades/planos-escala/{id}/reactivar` | PlanosEscalaController · reactivar | `actividades.escala_plano.terminar` |
+| POST | `/v1/actividades/planos-escala/{id}/terminar` | PlanosEscalaController · terminar | `actividades.escala_plano.terminar` |
 
 ## auth
 
@@ -36,18 +50,6 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/auth/redefinir` | AuthController · redefinir | — |
 | POST | `/v1/auth/renovar` | AuthController · renovar | — |
 | POST | `/v1/auth/sair` | AuthController · sair | — |
-
-## comunicacao
-
-| Método | Caminho | Classe · método | Permissão |
-| --- | --- | --- | --- |
-| GET | `/v1/comunicacao/notificacoes` | NotificacoesController · listar | `comunicacao.notificacao.ler` |
-| POST | `/v1/comunicacao/notificacoes` | NotificacoesController · criar | `comunicacao.notificacao.criar` |
-| GET | `/v1/comunicacao/notificacoes-a-enviar` | RelatoriosComunicacaoController · notificacoesAEnviar | `comunicacao.notificacao.ler` |
-| GET | `/v1/comunicacao/notificacoes/{id}` | NotificacoesController · obter | `comunicacao.notificacao.ler` |
-| PATCH | `/v1/comunicacao/notificacoes/{id}` | NotificacoesController · alterar | `comunicacao.notificacao.alterar` |
-| POST | `/v1/comunicacao/notificacoes/{id}/reactivar` | NotificacoesController · reactivar | `comunicacao.notificacao.terminar` |
-| POST | `/v1/comunicacao/notificacoes/{id}/terminar` | NotificacoesController · terminar | `comunicacao.notificacao.terminar` |
 
 ## escola-sabatina
 
@@ -134,6 +136,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | --- | --- | --- | --- |
 | GET | `/v1/nucleo/auditoria` | AuditoriaController · listar | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/auditoria/{id}` | AuditoriaController · obter | `nucleo.log_auditoria.ler` |
+| GET | `/v1/nucleo/notificacoes` | NotificacoesController · listar | `nucleo.notificacao.ler` |
+| POST | `/v1/nucleo/notificacoes` | NotificacoesController · criar | `nucleo.notificacao.criar` |
+| GET | `/v1/nucleo/notificacoes-a-enviar` | RelatoriosNucleoController · notificacoesAEnviar | `nucleo.notificacao.ler` |
+| GET | `/v1/nucleo/notificacoes/{id}` | NotificacoesController · obter | `nucleo.notificacao.ler` |
+| PATCH | `/v1/nucleo/notificacoes/{id}` | NotificacoesController · alterar | `nucleo.notificacao.alterar` |
+| POST | `/v1/nucleo/notificacoes/{id}/reactivar` | NotificacoesController · reactivar | `nucleo.notificacao.terminar` |
+| POST | `/v1/nucleo/notificacoes/{id}/terminar` | NotificacoesController · terminar | `nucleo.notificacao.terminar` |
 | GET | `/v1/nucleo/perfis` | PerfisController · listar | — |
 | POST | `/v1/nucleo/perfis` | PerfisController · criar | `nucleo.perfil.criar` |
 | GET | `/v1/nucleo/perfis-permissoes` | PerfisPermissoesController · listar | — |
@@ -212,31 +221,6 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/organizacao/igrejas/{id}` | IgrejasController · alterar | `organizacao.igreja.alterar` |
 | POST | `/v1/organizacao/igrejas/{id}/reactivar` | IgrejasController · reactivar | `organizacao.igreja.terminar` |
 | POST | `/v1/organizacao/igrejas/{id}/terminar` | IgrejasController · terminar | `organizacao.igreja.terminar` |
-
-## pagamentos
-
-| Método | Caminho | Classe · método | Permissão |
-| --- | --- | --- | --- |
-| GET | `/v1/pagamentos/bancarios` | BancariosController · listar | `pagamentos.pagamento_bancario.ler` |
-| POST | `/v1/pagamentos/bancarios` | BancariosController · criar | `pagamentos.pagamento_bancario.criar` |
-| GET | `/v1/pagamentos/bancarios/{id}` | BancariosController · obter | `pagamentos.pagamento_bancario.ler` |
-| PATCH | `/v1/pagamentos/bancarios/{id}` | BancariosController · alterar | `pagamentos.pagamento_bancario.alterar` |
-| POST | `/v1/pagamentos/bancarios/{id}/reactivar` | BancariosController · reactivar | `pagamentos.pagamento_bancario.terminar` |
-| POST | `/v1/pagamentos/bancarios/{id}/terminar` | BancariosController · terminar | `pagamentos.pagamento_bancario.terminar` |
-| GET | `/v1/pagamentos/mpesa` | MpesaController · listar | `pagamentos.pagamento_mpesa.ler` |
-| POST | `/v1/pagamentos/mpesa` | MpesaController · criar | `pagamentos.pagamento_mpesa.criar` |
-| GET | `/v1/pagamentos/mpesa-callbacks` | MpesaCallbacksController · listar | `pagamentos.mpesa_callback_log.ler` |
-| POST | `/v1/pagamentos/mpesa-callbacks` | MpesaCallbacksController · criar | `pagamentos.mpesa_callback_log.criar` |
-| GET | `/v1/pagamentos/mpesa-callbacks/{id}` | MpesaCallbacksController · obter | `pagamentos.mpesa_callback_log.ler` |
-| PATCH | `/v1/pagamentos/mpesa-callbacks/{id}` | MpesaCallbacksController · alterar | `pagamentos.mpesa_callback_log.alterar` |
-| POST | `/v1/pagamentos/mpesa-callbacks/{id}/reactivar` | MpesaCallbacksController · reactivar | `pagamentos.mpesa_callback_log.terminar` |
-| POST | `/v1/pagamentos/mpesa-callbacks/{id}/terminar` | MpesaCallbacksController · terminar | `pagamentos.mpesa_callback_log.terminar` |
-| GET | `/v1/pagamentos/mpesa-pendentes` | RelatoriosPagamentosController · mpesaPendentes | `pagamentos.pagamento_mpesa.ler` |
-| POST | `/v1/pagamentos/mpesa/callback` | MpesaController · callback | `perfil INTEGRACAO` |
-| GET | `/v1/pagamentos/mpesa/{id}` | MpesaController · obter | `pagamentos.pagamento_mpesa.ler` |
-| PATCH | `/v1/pagamentos/mpesa/{id}` | MpesaController · alterar | `pagamentos.pagamento_mpesa.alterar` |
-| POST | `/v1/pagamentos/mpesa/{id}/reactivar` | MpesaController · reactivar | `pagamentos.pagamento_mpesa.terminar` |
-| POST | `/v1/pagamentos/mpesa/{id}/terminar` | MpesaController · terminar | `pagamentos.pagamento_mpesa.terminar` |
 
 ## secretaria
 
@@ -332,6 +316,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/tesouraria/alvos/{id}` | AlvosController · alterar | `tesouraria.alvo.alterar` |
 | POST | `/v1/tesouraria/alvos/{id}/reactivar` | AlvosController · reactivar | `tesouraria.alvo.terminar` |
 | POST | `/v1/tesouraria/alvos/{id}/terminar` | AlvosController · terminar | `tesouraria.alvo.terminar` |
+| GET | `/v1/tesouraria/bancarios` | BancariosController · listar | `tesouraria.pagamento_bancario.ler` |
+| POST | `/v1/tesouraria/bancarios` | BancariosController · criar | `tesouraria.pagamento_bancario.criar` |
+| GET | `/v1/tesouraria/bancarios/{id}` | BancariosController · obter | `tesouraria.pagamento_bancario.ler` |
+| PATCH | `/v1/tesouraria/bancarios/{id}` | BancariosController · alterar | `tesouraria.pagamento_bancario.alterar` |
+| POST | `/v1/tesouraria/bancarios/{id}/reactivar` | BancariosController · reactivar | `tesouraria.pagamento_bancario.terminar` |
+| POST | `/v1/tesouraria/bancarios/{id}/terminar` | BancariosController · terminar | `tesouraria.pagamento_bancario.terminar` |
 | GET | `/v1/tesouraria/calendario-ofertas` | CalendarioOfertasController · listar | — |
 | POST | `/v1/tesouraria/calendario-ofertas` | CalendarioOfertasController · criar | `tesouraria.calendario_oferta.criar` |
 | GET | `/v1/tesouraria/calendario-ofertas/{id}` | CalendarioOfertasController · obter | — |
@@ -414,6 +404,20 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/tesouraria/linhas-transacao/{id}` | LinhasTransacaoController · alterar | `tesouraria.transacao_linha.alterar` |
 | POST | `/v1/tesouraria/linhas-transacao/{id}/reactivar` | LinhasTransacaoController · reactivar | `tesouraria.transacao_linha.terminar` |
 | POST | `/v1/tesouraria/linhas-transacao/{id}/terminar` | LinhasTransacaoController · terminar | `tesouraria.transacao_linha.terminar` |
+| GET | `/v1/tesouraria/mpesa` | MpesaController · listar | `tesouraria.pagamento_mpesa.ler` |
+| POST | `/v1/tesouraria/mpesa` | MpesaController · criar | `tesouraria.pagamento_mpesa.criar` |
+| GET | `/v1/tesouraria/mpesa-callbacks` | MpesaCallbacksController · listar | `tesouraria.mpesa_callback_log.ler` |
+| POST | `/v1/tesouraria/mpesa-callbacks` | MpesaCallbacksController · criar | `tesouraria.mpesa_callback_log.criar` |
+| GET | `/v1/tesouraria/mpesa-callbacks/{id}` | MpesaCallbacksController · obter | `tesouraria.mpesa_callback_log.ler` |
+| PATCH | `/v1/tesouraria/mpesa-callbacks/{id}` | MpesaCallbacksController · alterar | `tesouraria.mpesa_callback_log.alterar` |
+| POST | `/v1/tesouraria/mpesa-callbacks/{id}/reactivar` | MpesaCallbacksController · reactivar | `tesouraria.mpesa_callback_log.terminar` |
+| POST | `/v1/tesouraria/mpesa-callbacks/{id}/terminar` | MpesaCallbacksController · terminar | `tesouraria.mpesa_callback_log.terminar` |
+| GET | `/v1/tesouraria/mpesa-pendentes` | RelatoriosTesourariaController · mpesaPendentes | `tesouraria.pagamento_mpesa.ler` |
+| POST | `/v1/tesouraria/mpesa/callback` | MpesaController · callback | `perfil INTEGRACAO` |
+| GET | `/v1/tesouraria/mpesa/{id}` | MpesaController · obter | `tesouraria.pagamento_mpesa.ler` |
+| PATCH | `/v1/tesouraria/mpesa/{id}` | MpesaController · alterar | `tesouraria.pagamento_mpesa.alterar` |
+| POST | `/v1/tesouraria/mpesa/{id}/reactivar` | MpesaController · reactivar | `tesouraria.pagamento_mpesa.terminar` |
+| POST | `/v1/tesouraria/mpesa/{id}/terminar` | MpesaController · terminar | `tesouraria.pagamento_mpesa.terminar` |
 | GET | `/v1/tesouraria/orcamentos` | OrcamentosController · listar | `tesouraria.orcamento.ler` |
 | POST | `/v1/tesouraria/orcamentos` | OrcamentosController · criar | `tesouraria.orcamento.criar` |
 | GET | `/v1/tesouraria/orcamentos/{id}` | OrcamentosController · obter | `tesouraria.orcamento.ler` |

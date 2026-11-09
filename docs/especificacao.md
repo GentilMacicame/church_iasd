@@ -231,7 +231,7 @@ Apoia os departamentos a planear actividades e a organizar as escalas de serviç
 |----------|--------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------|
 | F-ACT-01 | Actividades        | Actividade de um departamento com responsável, local, datas, valor previsto e lembrete automático                    | Directores de departamento     |
 | F-ACT-02 | Material           | Lista do material necessário para cada actividade, com quantidade e preço                                            | Directores de departamento     |
-| F-ACT-03 | Escalas de serviço | Pregador, ancião do dia, diáconos, recepção, música e outras funções por data, com substitutos e lembrete na véspera | Secretário, Ancião, Directores |
+| F-ACT-03 | Escalas de serviço | Escala por período (ex.: escala de pregação do trimestre) com os sábados, dias especiais, grupo coral e departamento; pregador, tradutor, acompanhantes, ancião do dia, diáconos e outras funções, com substitutos; publicada para os membros; lembrete por SMS à quarta e à sexta | Secretário, Ancião, Directores |
 
 *Tabela 10 · Funcionalidades · Actividades*
 
@@ -796,9 +796,9 @@ O membro contribui a partir do telemóvel e recebe o recibo automaticamente.
 
 | **\#** | **Actor** | **Acção**                                                            | **Chamada à API**                  |
 |--------|-----------|----------------------------------------------------------------------|------------------------------------|
-| 1      | Membro    | Indica o número e o valor por fundo                                  | POST /v1/pagamentos/mpesa          |
+| 1      | Membro    | Indica o número e o valor por fundo                                  | POST /v1/tesouraria/mpesa          |
 | 2      | Membro    | Confirma no telemóvel com o PIN                                      | —                                  |
-| 3      | Sistema   | Recebe a resposta, confirma a entrada e emite o recibo               | POST /v1/pagamentos/mpesa/callback |
+| 3      | Sistema   | Recebe a resposta, confirma a entrada e emite o recibo               | POST /v1/tesouraria/mpesa/callback |
 | 4      | Sistema   | Consulta os pedidos sem resposta; após 30 minutos marca como falhado | Tarefa automática                  |
 
 **Excepções e validações**
@@ -873,7 +873,7 @@ A API liga-se sempre com o utilizador api_igreja, membro do papel app_igreja, e 
 >
 > ALTER ROLE api_igreja SET search_path = nucleo, organizacao, secretaria, actividades,
 >
-> escola_sabatina, tesouraria, pagamentos, comunicacao;
+> escola_sabatina, tesouraria;
 
 Cada pedido HTTP é executado numa transacção própria, sempre com os mesmos passos:
 
@@ -954,14 +954,12 @@ O contrato completo (todos os campos, tipos, filtros, respostas e a permissão e
 
 | **Módulo**      | **Caminho**         | **Recursos**                                                                                                                       |
 |-----------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| Núcleo          | /v1/nucleo          | perfis, permissoes, usuarios, usuarios-igreja, usuarios-entidade, auditoria                                                        |
+| Núcleo          | /v1/nucleo          | perfis, permissoes, usuarios, usuarios-igreja, usuarios-entidade, auditoria, notificacoes                                          |
 | Organização     | /v1/organizacao     | entidades, distritos, igrejas, departamentos, departamentos-igreja, cargos                                                         |
 | Secretaria      | /v1/secretaria      | familias, membros, contactos, consentimentos, reunioes, votos, movimentos-membro, transferencias, disciplinas, oficiais, baptismos |
 | Actividades     | /v1/actividades     | actividades, materiais, escalas                                                                                                    |
 | Escola Sabatina | /v1/escola-sabatina | trimestres, sabados, classes, classes-trimestre, matriculas, relatorios-sabado, presencas, visitantes, pesos-pontuacao             |
-| Tesouraria      | /v1/tesouraria      | contas, fundos, categorias, alvos, orcamentos, despesas, contagens, transacoes, recibos, documentos, remessas, fechos, extractos   |
-| Pagamentos      | /v1/pagamentos      | mpesa, bancarios                                                                                                                   |
-| Comunicação     | /v1/comunicacao     | notificacoes                                                                                                                       |
+| Tesouraria      | /v1/tesouraria      | contas, fundos, categorias, alvos, orcamentos, despesas, contagens, transacoes, recibos, documentos, remessas, fechos, extractos, mpesa, bancarios |
 
 *Tabela 19 · Recursos por módulo*
 
@@ -972,7 +970,7 @@ O contrato completo (todos os campos, tipos, filtros, respostas e a permissão e
 | Consulta M-Pesa             | 1 minuto        | Consulta os pagamentos sem resposta; marca como falhados após 30 minutos         |
 | Envio de mensagens          | 1 minuto        | Envia a fila de SMS, WhatsApp e e-mail (3 tentativas)                            |
 | Lembrete da Escola Sabatina | Sábado, 14:00   | Avisa as classes sem relatório                                                   |
-| Escalas da semana           | Quinta, 18:00   | Lembra quem está escalado                                                        |
+| Escalas da semana           | Quarta e sexta, 18:00 | Lembra por SMS quem está escalado para o sábado (só escalas publicadas, com consentimento) |
 | Cartas e mandatos           | Segunda, 08:00  | Cartas a expirar e mandatos a terminar                                           |
 | Remessa do mês              | Dia 3, 08:00    | Lembra o tesoureiro do valor em falta                                            |
 | Manutenção                  | Mensal / diária | Partições do histórico, anonimização de visitantes, limpeza de pedidos repetidos |

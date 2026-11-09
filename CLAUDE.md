@@ -12,9 +12,9 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 59 tabelas, 8 schemas, migrações V1–V15 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (289 caminhos, 403 operações) |
-| API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 59 tabelas, as 28 vistas como relatórios, acções de negócio, tarefas diárias de manutenção. Por fazer: M-Pesa e PDF (Fase 4), testes HTTP ponta-a-ponta |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 61 tabelas, 6 schemas, migrações V1–V18 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (299 caminhos, 417 operações) |
+| API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | **Por fazer** |
 
 Especificação completa: `docs/especificacao.md` (Markdown, gerado do Word em
@@ -31,14 +31,14 @@ docker-compose.yml        PostgreSQL 16 local
 scripts/db-reset.sh       recria a base a partir das migrações
 scripts/db-test.sh        recria a base de testes e compara os testes SQL com o esperado
 database/
-  migrations/             V1__base.sql … V15__perfis_proprios_e_manutencao.sql  (Flyway: V<n>__<nome>.sql)
+  migrations/             V1__base.sql … V16__correccoes_da_auditoria.sql  (Flyway: V<n>__<nome>.sql)
   tests/                  00–04 testes SQL; esperado/*.out = resultado de referência; carga_*.sql
   gerador/                defs.py (fonte do esquema) + gen.py, seguranca_gen.py, gen_openapi.py
 api/openapi.yaml          contrato da API (fonte de verdade para API e frontend)
 pom.xml, mvnw, src/       API Jakarta EE (Maven + Open Liberty); estrutura no README
   src/main/java/mz/org/iasd/igreja/Rotas.java   todas as rotas da API, por módulo
 ferramentas/gen_catalogo.py  gera os models da API (src/.../models/) a partir de defs.py
-scripts/criar-papel-api.sql  papel api_igreja
+scripts/                  db-reset.sh, db-test.sh, criar-papel-api.sh, backup-bd.sh (lêem o .env)
 web/                      (React + Vite a criar aqui)
 docs/                     especificação, modelo de dados, ROTAS.md (gerado pelos testes da API)
 .claude/commands/         comandos do projecto (/nova-tabela, /novo-endpoint, /rever)
@@ -47,13 +47,16 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ## Comandos
 
 ```bash
-docker compose up -d db                       # PostgreSQL 16 em localhost:5432 (postgres/postgres)
-export PGHOST=localhost PGUSER=postgres PGPASSWORD=postgres
-scripts/db-reset.sh                           # base "igreja" com V1–V15
-scripts/db-test.sh                            # base "igreja_teste" + testes 00–04 (tem de dar 5× ok)
+cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
+docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
+scripts/db-reset.sh                           # base BD_NOME com V1–V18 (apaga-a se existir) — SÓ no PC
+scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
+scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–06 (tem de dar 7× ok)
+scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
-cd database/gerador && python3 gen.py         # regenera V1–V13 em gerador/out/ (não toca em migrations/)
+cd database/gerador && python3 gen.py         # regenera o esquema inteiro em gerador/out/ (não toca em migrations/)
 cd database/gerador && python3 gen_openapi.py # regenera api/openapi.yaml (requer pyyaml)
 python3 ferramentas/gen_catalogo.py           # regenera os models e enums da API a partir de defs.py
 
@@ -84,14 +87,17 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V16__...sql`, `V17__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V19__...sql`, `V20__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
 ## Convenções da base de dados
 
-- 8 schemas: `nucleo`, `organizacao`, `secretaria`, `actividades`, `escola_sabatina`,
-  `tesouraria`, `pagamentos`, `comunicacao`. O `search_path` de `api_igreja` inclui todos.
+- 6 schemas: `nucleo` (inclui a fila de mensagens), `organizacao`, `secretaria`, `actividades`,
+  `escola_sabatina`, `tesouraria` (inclui M-Pesa e bancos). Até à V18 havia também `pagamentos` e
+  `comunicacao`. O `search_path` de `api_igreja` inclui todos.
+- Listagens por igreja: a coluna de igreja tem o índice `(igreja, id)` (`idx_<pfx>_igr_pagina`), gerado
+  pelo `gen.py`; a página de 50 sai do índice, sem ler o histórico todo da igreja (V18).
 - **Cada tabela tem um prefixo de 3 letras** e todas as colunas começam por ele:
   `membro` → `mem_`, `transacao` → `tra_`, `transacao_linha` → `tli_`, `igreja` → `igr_`.
   - PK: `<pfx>_id` (INT identity; BIGINT nas tabelas grandes, ex. `tra_id`).
@@ -154,6 +160,9 @@ Usa `/nova-tabela` para seguir este processo.
 | `tesouraria.fn_decidir_despesa(des, aprovar, valor, motivo)` | Aprovar (pode reduzir valor) ou rejeitar |
 | `tesouraria.fn_aprovar_orcamento(orc, vot)` / `fn_confirmar_remessa(rem)` | |
 | `escola_sabatina.fn_ligar_ofertas(ers, tra)` | Liga as ofertas do relatório do sábado à transacção |
+| `actividades.fn_gerar_dias_escala(epl, dia_semana)` | Elaborar a escala: um dia por sábado do período |
+| `actividades.fn_lembretes_escala()` | Tarefa horária: SMS à quarta e à sexta para quem está escalado no sábado |
+| `nucleo.fn_notificacoes_reservar(n)` / `fn_notificacao_resultado(id, ok, erro)` | Envio da fila de SMS (tarefa da API) |
 
 No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função chamada,
 `x-vista` = vista lida. Segue-os.
@@ -170,6 +179,9 @@ No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função 
   `repositories/<modulo>/*Repository` (JDBC, recebe a `Connection` de `UnidadeDeTrabalho.ligacao()`).
   `models/<modulo>/`: um `record` por tabela, igual ao schema do contrato (`@TabelaBd`/`@ColunaBd`),
   **gerado** por `ferramentas/gen_catalogo.py` a partir de `defs.py` — não editar à mão. Nunca abrir ligações à mão.
+  O comum a todas as tabelas fica em `base/` de cada camada: `controllers/base/` (as 6 rotas-padrão,
+  relatórios), `repositories/base/` (`TabelaRepository`, `Relatorio`, `Conversao`), `models/catalogo/` (anotações e
+  catálogo). Um controller de tabela só diz a rota e o model; acrescenta métodos para as acções próprias.
 - POST que cria dinheiro: `@Idempotente` e devolver `Response`. Endpoints sem token: `@Publico`.
 - Caminhos: `/v1/<modulo-com-hifen>/<recurso-plural>` (`/v1/escola-sabatina/relatorios-sabado`).
 - Campos JSON em camelCase **sem prefixo**: `mem_data_nascimento` → `dataNascimento`,
@@ -180,6 +192,13 @@ No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função 
 - Dinheiro em JSON é **string** com 2 casas: `"650.00"`. Nunca `number`/float.
 - Datas ISO 8601 com fuso.
 - `Idempotency-Key` (UUID) obrigatório em POST que criam dinheiro (transacções, remessas, M-Pesa).
+- Configuração: num só sítio, o `.env` da raiz (o Maven usa-o como `server.env` do Liberty; os scripts com
+  `scripts/carregar-env.sh`; o docker compose e os testes lêem-no). Nunca repetir valores da base noutros
+  ficheiros. Perfil `dev` (`MP_CONFIG_PROFILE=dev`) só no PC; em produção não há segredos
+  por defeito e a API recusa arrancar com os de desenvolvimento (`config/Configuracao`). Endpoints públicos
+  com limite de pedidos (`LimitadorPedidos`, 429); cálculo de senhas fora de transacções (`ControloSenhas`).
+  Cada transacção tem `statement_timeout`/`lock_timeout` e confirma a sessão do token (`fn_sessao_activa`).
+  Produção: `docs/producao/README.md`; auditoria: `docs/AUDITORIA.md`.
 - Auth: access token JWT 15 min (header `Authorization: Bearer`); refresh token 30 dias em cookie
   `HttpOnly; Secure; SameSite=Strict`, rodado em cada renovação.
 
@@ -230,7 +249,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 5× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 7× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

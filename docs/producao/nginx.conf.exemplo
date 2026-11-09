@@ -1,0 +1,72 @@
+# Nginx à frente da API (TLS, limites, headers de segurança). Adaptar o domínio e os certificados.
+# Cobre a auditoria: H2 (limite de pedidos global, várias instâncias), L1 (X-Forwarded-For), L4 (HTTPS e
+# headers), M6 (tamanho do pedido), M10 (/openapi e /metrics fora da internet).
+
+limit_req_zone $binary_remote_addr zone=auth:10m rate=20r/m;     # login, recuperar, redefinir, renovar
+limit_req_zone $binary_remote_addr zone=api:10m  rate=20r/s;
+
+upstream igreja_api {
+    server 127.0.0.1:9080 max_fails=3 fail_timeout=10s;
+    # server 10.0.0.12:9080;              # mais instâncias: a API não guarda estado em memória
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name api.exemplo.org;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.exemplo.org;
+    ssl_certificate     /etc/letsencrypt/live/api.exemplo.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.exemplo.org/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 2m;            # igual a PEDIDO_MAX_KB
+    client_body_timeout 15s;
+    proxy_read_timeout 60s;             # > BD_TIMEOUT_CONSULTA_SEGUNDOS
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy no-referrer always;
+
+    # o IP real: o Nginx SUBSTITUI o header (o cliente não o consegue falsificar); a API usa o último valor
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+    proxy_set_header X-Pedido-Id $request_id_uuid;   # ver map abaixo: o mesmo id no log do Nginx e da API
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+
+    # documentação, métricas e saúde: só na rede interna / monitorização
+    location ~ ^/(openapi|metrics|health) {
+        allow 10.0.0.0/8;
+        allow 127.0.0.1;
+        deny all;
+        proxy_pass http://igreja_api;
+    }
+
+    location /v1/auth/ {
+        limit_req zone=auth burst=10 nodelay;
+        limit_req_status 429;
+        proxy_pass http://igreja_api;
+    }
+
+    location /v1/ {
+        limit_req zone=api burst=40 nodelay;
+        limit_req_status 429;
+        proxy_pass http://igreja_api;
+    }
+
+    location / {
+        return 404;
+    }
+}
+
+# $request_id tem 32 hexadecimais; a API aceita o formato UUID
+map $request_id $request_id_uuid {
+    "~^(?<a>.{8})(?<b>.{4})(?<c>.{4})(?<d>.{4})(?<e>.{12})$" "$a-$b-$c-$d-$e";
+}
