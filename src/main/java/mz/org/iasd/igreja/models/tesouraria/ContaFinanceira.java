@@ -31,6 +31,7 @@ import mz.org.iasd.igreja.models.tipos.TipoConta;
  * @param moeda coluna {@code cfi_moeda}
  * @param saldoInicial coluna {@code cfi_saldo_inicial} — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param dataSaldoInicial Movimentos anteriores a esta data não entram no saldo — obrigatório ao criar
+ * @param entidadeId Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -60,6 +61,8 @@ public record ContaFinanceira(
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal saldoInicial,
         @ColunaBd(value = "cfi_data_saldo_inicial", tipo = Tipo.DATA, obrigatoria = true, naoNula = true)
         LocalDate dataSaldoInicial,
+        @ColunaBd(value = "cfi_ent_id", tipo = Tipo.INT)
+        Integer entidadeId,
         @ColunaBd(value = "cfi_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "cfi_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

@@ -275,7 +275,7 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
                      ('conferencia-contagens', 'vw_contagem_conferencia', 'tesouraria.contagem_numerario.ler'),
                      ('despesas-por-pagar', 'vw_despesas_por_pagar', 'tesouraria.despesa.ler'),
                      ('extractos-por-reconciliar', 'vw_extrato_por_reconciliar', 'tesouraria.extrato_linha.ler')]:
-    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual') else ())
+    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual', 'contribuicoes') else ())
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
 rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
 rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')

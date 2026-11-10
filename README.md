@@ -46,7 +46,7 @@ A configuração (base de dados e API) está **só no `.env`** da raiz, lido pel
 # 1. Configuração: servidor, porta, nome da base, utilizador e senha da API, administrador
 cp .env.exemplo .env                  # e preencher BD_SENHA e BD_ADMIN_SENHA
 
-# 2. Base de dados: PostgreSQL 16, migrações V1–V20 e o utilizador da API
+# 2. Base de dados: PostgreSQL 16, migrações V1–V21 e o utilizador da API
 docker compose up -d db               # ou um PostgreSQL já instalado (os dados de ligação vêm do .env)
 scripts/db-reset.sh                   # cria a base BD_NOME (APAGA-A se existir: só no PC ou na 1.ª instalação)
 scripts/criar-papel-api.sh            # cria BD_UTILIZADOR com a senha BD_SENHA
@@ -70,7 +70,7 @@ Não é preciso instalar Maven nem o servidor: o `mvnw` e o plugin descarregam-n
   limite de pedidos, tamanho do pedido, CSV, IP de origem.
 - `ContratoTest`: as rotas das classes `*Controller` são exactamente as operações do `openapi.yaml` e os
   campos de cada tabela são os do contrato; escreve `docs/ROTAS.md`.
-- Integração (`BaseDadosTest`, 41 testes): aplica as migrações V1–V20 num PostgreSQL real e testa, sempre com o
+- Integração (`BaseDadosTest`, 41 testes): aplica as migrações V1–V21 num PostgreSQL real e testa, sempre com o
   papel da API (nunca o dono): `set_config` por transacção, RLS, permissões dos 13 perfis, erros
   403/422/409, sessões e rotação do token, bloqueio de login, recuperação de senha, idempotência,
   CRUD com perfis, processos P-05 (relatório do sábado) e P-08 (saída avulsa).

@@ -290,7 +290,8 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    ('numero', 'VARCHAR(50)'), ('titular', 'VARCHAR(150)'), ('banco', 'VARCHAR(100)'),
    ('moeda', 'CHAR(3)', "NOT NULL DEFAULT 'MZN'"),
    ('saldo_inicial', 'DECIMAL(14,2)', 'NOT NULL DEFAULT 0'),
-   ('data_saldo_inicial', 'DATE', NN, 'Movimentos anteriores a esta data não entram no saldo')],
+   ('data_saldo_inicial', 'DATE', NN, 'Movimentos anteriores a esta data não entram no saldo'),
+   ('ent_id', 'fk:entidade', '', 'Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja')],
    uniq=[['igr_id', 'nome']]),
  T('fundo', 'fun', 'Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais', [
    ('igr_id', 'fk:igreja', '', 'NULL = fundo geral'),
@@ -397,7 +398,7 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
  T('remessa', 'rem', 'Remessas mensais à Associação/Missão', [
    ('igr_id', 'fk:igreja', NN), ('ent_id', 'fk:entidade', NN), ('ano', 'SMALLINT', NN),
    ('mes', 'SMALLINT', NN), ('tra_id', 'fk:transacao'), ('enviada_em', 'DATE')],
-   uniq=[['igr_id', 'ent_id', 'ano', 'mes']], checks=[('chk_rem_mes', '@mes BETWEEN 1 AND 12')],
+   checks=[('chk_rem_mes', '@mes BETWEEN 1 AND 12')],
    estado=('estado_remessa_t', "'PREPARADA'")),
  T('remessa_linha', 'rml', 'Valor remetido por fundo', [
    ('rem_id', 'fk:remessa', NN), ('fun_id', 'fk:fundo', NN), ('valor', 'DECIMAL(14,2)', NN)],

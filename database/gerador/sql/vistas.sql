@@ -238,23 +238,28 @@ WHERE v.evi_end_date IS NULL AND v.evi_anonimizado_em IS NULL AND v.evi_tornou_s
 -- Saldos a partir das tabelas pré-calculadas (rápido mesmo com milhões de movimentos)
 CREATE VIEW tesouraria.vw_saldo_conta WITH (security_invoker = true) AS
 SELECT c.cfi_id, c.cfi_igr_id, c.cfi_nome, c.cfi_tipo, c.cfi_moeda,
-       c.cfi_saldo_inicial + COALESCE(SUM(s.sdc_entradas - s.sdc_saidas), 0) AS saldo
+       c.cfi_saldo_inicial + COALESCE(SUM(s.sdc_entradas - s.sdc_saidas), 0) AS saldo,
+       c.cfi_ent_id AS entidade_id
 FROM tesouraria.conta_financeira c
 LEFT JOIN tesouraria.saldo_diario_conta s
        ON s.sdc_cfi_id = c.cfi_id AND s.sdc_end_date IS NULL AND s.sdc_data >= c.cfi_data_saldo_inicial
 WHERE c.cfi_end_date IS NULL
-GROUP BY c.cfi_id, c.cfi_igr_id, c.cfi_nome, c.cfi_tipo, c.cfi_moeda, c.cfi_saldo_inicial;
+GROUP BY c.cfi_id, c.cfi_igr_id, c.cfi_nome, c.cfi_tipo, c.cfi_moeda, c.cfi_saldo_inicial, c.cfi_ent_id;
 
-CREATE VIEW tesouraria.vw_saldo_fundo WITH (security_invoker = true) AS
-SELECT s.sdf_igr_id AS igr_id, s.sdf_moeda AS moeda, f.fun_id, f.fun_codigo, f.fun_nome, f.fun_tipo, f.fun_restrito,
-       SUM(s.sdf_entradas + s.sdf_estornos_saidas)                                         AS entradas,
-       SUM(s.sdf_saidas + s.sdf_estornos_entradas)                                         AS saidas,
-       SUM(s.sdf_entradas + s.sdf_estornos_saidas - s.sdf_saidas - s.sdf_estornos_entradas) AS saldo,
-       (f.fun_restrito AND SUM(s.sdf_entradas + s.sdf_estornos_saidas - s.sdf_saidas - s.sdf_estornos_entradas) < 0) AS alerta_restrito
-FROM tesouraria.saldo_diario_fundo s
-JOIN tesouraria.fundo f ON f.fun_id = s.sdf_fun_id
-WHERE s.sdf_end_date IS NULL
-GROUP BY s.sdf_igr_id, s.sdf_moeda, f.fun_id, f.fun_codigo, f.fun_nome, f.fun_tipo, f.fun_restrito;
+
+-- Pago directamente na conta da Missão, por igreja, entidade, mês e fundo (estornos descontam)
+CREATE VIEW tesouraria.vw_pago_na_missao WITH (security_invoker = true) AS
+SELECT t.tra_igr_id AS igr_id, c.cfi_ent_id AS ent_id, c.cfi_moeda AS moeda,
+       EXTRACT(YEAR  FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+       EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+       l.tli_fun_id AS fun_id,
+       SUM(CASE WHEN t.tra_tipo = 'ENTRADA' THEN l.tli_valor ELSE -l.tli_valor END) AS pago
+FROM tesouraria.conta_financeira c
+JOIN tesouraria.transacao t       ON t.tra_cfi_id = c.cfi_id AND t.tra_estado = 'CONFIRMADA' AND t.tra_end_date IS NULL
+JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+WHERE c.cfi_ent_id IS NOT NULL
+GROUP BY 1, 2, 3, 4, 5, 6;
+COMMENT ON VIEW tesouraria.vw_pago_na_missao IS 'Contribuições pagas directamente na conta da Associação/Missão (já lá estão: contam como remetidas)';
 
 -- Quanto se deve à Associação/Missão por mês e fundo (estornos de entradas descontam)
 CREATE VIEW tesouraria.vw_remessa_devida WITH (security_invoker = true) AS
@@ -275,13 +280,50 @@ remetido AS (
     JOIN tesouraria.remessa_linha rl ON rl.rml_rem_id = r.rem_id AND rl.rml_end_date IS NULL
     WHERE r.rem_end_date IS NULL AND r.rem_estado IN ('ENVIADA', 'CONFIRMADA')
     GROUP BY 1, 2, 3, 4, 5
+),
+directo AS (
+    SELECT igr_id, ent_id, ano, mes, fun_id, SUM(pago) AS pago_directo
+    FROM tesouraria.vw_pago_na_missao GROUP BY 1, 2, 3, 4, 5
 )
--- (V20) fundo_id, fundo_nome, fundo_codigo e entidade_id no fim: na API, igr_id, fun_id e ent_id davam todos "id"
-SELECT rc.*, COALESCE(rm.remetido, 0) AS remetido, rc.devido - COALESCE(rm.remetido, 0) AS em_falta,
-       rc.fun_id AS fundo_id, f.fun_nome AS fundo_nome, f.fun_codigo AS fundo_codigo, rc.ent_id AS entidade_id
+SELECT rc.*, COALESCE(rm.remetido, 0) AS remetido,
+       rc.devido - COALESCE(rm.remetido, 0) - COALESCE(d.pago_directo, 0) AS em_falta,
+       rc.fun_id AS fundo_id, f.fun_nome AS fundo_nome, f.fun_codigo AS fundo_codigo, rc.ent_id AS entidade_id,
+       COALESCE(d.pago_directo, 0) AS pago_directo
 FROM recebido rc
 LEFT JOIN remetido rm USING (igr_id, ent_id, ano, mes, fun_id)
+LEFT JOIN directo d   USING (igr_id, ent_id, ano, mes, fun_id)
 JOIN tesouraria.fundo f ON f.fun_id = rc.fun_id;
+
+-- saldo = o que está nas contas da igreja (o pago na Missão não conta); disponivel = o que a igreja pode gastar
+CREATE VIEW tesouraria.vw_saldo_fundo WITH (security_invoker = true) AS
+WITH base AS (
+    SELECT s.sdf_igr_id AS igr_id, s.sdf_moeda AS moeda, f.fun_id, f.fun_codigo, f.fun_nome, f.fun_tipo, f.fun_restrito,
+           f.fun_percentagem_remessa,
+           SUM(s.sdf_entradas + s.sdf_estornos_saidas) AS entradas,
+           SUM(s.sdf_saidas + s.sdf_estornos_entradas) AS saidas
+    FROM tesouraria.saldo_diario_fundo s
+    JOIN tesouraria.fundo f ON f.fun_id = s.sdf_fun_id
+    WHERE s.sdf_end_date IS NULL
+    GROUP BY s.sdf_igr_id, s.sdf_moeda, f.fun_id, f.fun_codigo, f.fun_nome, f.fun_tipo, f.fun_restrito, f.fun_percentagem_remessa
+),
+directo AS (
+    SELECT igr_id, moeda, fun_id, SUM(pago) AS pago FROM tesouraria.vw_pago_na_missao GROUP BY 1, 2, 3
+),
+devido AS (
+    SELECT igr_id, fun_id, SUM(em_falta) AS por_remeter FROM tesouraria.vw_remessa_devida GROUP BY 1, 2
+),
+calc AS (
+    SELECT b.*, b.entradas - b.saidas - COALESCE(d.pago, 0) AS saldo, COALESCE(d.pago, 0) AS na_associacao,
+           CASE WHEN b.moeda = 'MZN' THEN COALESCE(p.por_remeter, 0) ELSE 0 END AS por_remeter
+    FROM base b
+    LEFT JOIN directo d ON d.igr_id = b.igr_id AND d.moeda = b.moeda AND d.fun_id = b.fun_id
+    LEFT JOIN devido p  ON p.igr_id = b.igr_id AND p.fun_id = b.fun_id
+)
+SELECT igr_id, moeda, fun_id, fun_codigo, fun_nome, fun_tipo, fun_restrito, entradas, saidas, saldo,
+       (fun_restrito AND saldo < 0) AS alerta_restrito,
+       fun_id AS fundo_id, fun_percentagem_remessa AS percentagem_remessa, na_associacao, por_remeter,
+       LEAST(saldo, saldo - por_remeter) AS disponivel
+FROM calc;
 
 CREATE VIEW tesouraria.vw_execucao_orcamento WITH (security_invoker = true) AS
 SELECT o.orc_id, o.orc_igr_id, o.orc_ano, d.dep_nome AS departamento,
@@ -325,7 +367,10 @@ CREATE VIEW tesouraria.vw_contribuicoes_membro WITH (security_invoker = true) AS
 SELECT t.tra_igr_id, t.tra_mem_id, t.tra_fam_id, t.tra_id, t.tra_data_hora, t.tra_metodo,
        f.fun_nome AS fundo,
        CASE WHEN t.tra_tipo = 'ENTRADA' THEN l.tli_valor ELSE -l.tli_valor END AS valor,
-       (t.tra_estorno_tra_id IS NOT NULL) AS estorno, r.rec_ano, r.rec_numero
+       (t.tra_estorno_tra_id IS NOT NULL) AS estorno, r.rec_ano, r.rec_numero,
+       EXTRACT(YEAR  FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS periodo_ano,
+       EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS periodo_mes,
+       l.tli_fun_id AS fundo_id, tesouraria.fn_conta_da_missao(t.tra_cfi_id) AS pago_na_missao, t.tra_referencia AS referencia
 FROM tesouraria.transacao t
 JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
 JOIN tesouraria.fundo f           ON f.fun_id = l.tli_fun_id

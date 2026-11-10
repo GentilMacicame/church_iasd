@@ -12,7 +12,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 61 tabelas, 6 schemas, migrações V1–V20 |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 61 tabelas, 6 schemas, migrações V1–V21 |
 | Contrato da API | **Concluído.** `api/openapi.yaml` (299 caminhos, 417 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | **Iteração 1 feita** em `web/`: Design System, entrar, Início, Membros (lista, ficha, registo). Ver `web/README.md` |
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V20 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V21 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–07 (tem de dar 8× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–08 (tem de dar 9× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V21__...sql`, `V22__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V22__...sql`, `V23__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -241,6 +241,11 @@ Nunca devolver stack traces nem SQL ao cliente.
 - Tesouraria: transacção = cabeçalho + linhas por fundo (soma tem de bater). Fundos da Associação
   (dízimo, oferta missionária, ES missões, 13.º sábado) saem **só** como remessa. Saídas exigem
   aprovação por outra pessoa (ou despesa aprovada, ou ser remessa). Mês fechado bloqueia movimentos.
+  Fundos repartidos (oferta combinada: 50% Missão, 50% igreja): a igreja só gasta a sua parte (`fn_fundo_disponivel`).
+  No fim do mês deposita-se na conta da Missão 100% do dízimo e a parte da Missão nas ofertas (remessa, com o talão;
+  pode haver remessa complementar no mesmo mês) e envia-se o relatório mensal com os recibos.
+  Membros que pagam directamente na conta da Missão: entrada na conta marcada com `cfi_ent_id` (só entradas, só fundos
+  da Missão, com a referência do comprovativo); conta como contribuição e como já remetido, não como saldo da igreja.
 - ES: três ofertas separadas (missões, 13.º sábado, despesas); relatório fechado só reabre com permissão.
 
 ## Testes e definição de pronto
@@ -249,7 +254,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 8× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 9× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

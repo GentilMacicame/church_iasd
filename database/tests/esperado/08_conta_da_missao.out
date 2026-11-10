@@ -1,0 +1,98 @@
+1. tesoureiro (autorizado): regista a conta bancária da Missão
+       cfi_nome        | cfi_ent_id 
+-----------------------+------------
+ Conta da Missão (BIM) |          1
+(1 row)
+
+   um caixa não pode ser conta da Missão; nem uma entidade que não recebe fundos
+psql:database/tests/08_conta_da_missao.sql:16: ERROR:  Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa
+psql:database/tests/08_conta_da_missao.sql:17: ERROR:  A entidade 2 não recebe nenhum fundo: não pode ter uma conta da Missão
+2. sábado: dízimos e ofertas no caixa da igreja (dízimo 2000, oferta combinada 600)
+3. o Tito pagou dízimo 1000 e oferta 400 na conta da Missão e mandou o comprovativo
+   sem a referência do comprovativo: recusado
+psql:database/tests/08_conta_da_missao.sql:32: ERROR:  Pagamento na conta da Missão: escreva a referência do comprovativo que o membro mandou
+ tra_id | tra_referencia | tra_estado 
+--------+----------------+------------
+    501 | BIM-778812     | CONFIRMADA
+(1 row)
+
+   um fundo que fica na igreja (orçamento local) não entra na conta da Missão: recusado
+psql:database/tests/08_conta_da_missao.sql:47: ERROR:  Na conta da Missão "Conta da Missão (BIM)" só entram fundos da Missão (dízimo, ofertas missionárias, oferta combinada, ...); "Orçamento da igreja local" fica na igreja
+   a igreja não paga nada a partir da conta da Missão, nem transfere para ela
+psql:database/tests/08_conta_da_missao.sql:51: ERROR:  A conta "Conta da Missão (BIM)" é da Missão: regista só o que os membros lá pagaram; a igreja não paga nada a partir dela
+psql:database/tests/08_conta_da_missao.sql:53: ERROR:  Não se transfere de nem para a conta da Missão "Conta da Missão (BIM)": o que a igreja envia à Missão é uma remessa
+4. remessa devida de Dezembro: dízimo 3000 (1000 já pago na Missão), oferta 1000 (50% = 500, 400 já na Missão)
+ fundo_codigo | recebido | devido  | remetido | pago_directo | em_falta 
+--------------+----------+---------+----------+--------------+----------
+ DIZ          |  3000.00 | 3000.00 |        0 |      1000.00 |  2000.00
+ OCOMB        |  1000.00 |  500.00 |        0 |       400.00 |   100.00
+(2 rows)
+
+   a contribuição do Tito aparece como paga na Missão, com o comprovativo
+                fundo                |  valor  | pago_na_missao | referencia 
+-------------------------------------+---------+----------------+------------
+ Dízimo                              | 1000.00 | t              | BIM-778812
+ Oferta combinada / plano de ofertas |  400.00 | t              | BIM-778812
+(2 rows)
+
+   saldo da conta da Missão: marcado com a entidade (não é dinheiro da igreja)
+       cfi_nome        |  saldo  | entidade_id 
+-----------------------+---------+-------------
+ Conta da Missão (BIM) | 1400.00 |           1
+(1 row)
+
+5. parte da igreja na oferta combinada
+   saída de 1 MT acima da parte da igreja, aprovada pelo ancião: recusada ao confirmar
+ aprovada 
+----------
+ t
+(1 row)
+
+psql:database/tests/08_conta_da_missao.sql:76: ERROR:  A parte da igreja no fundo "Oferta combinada / plano de ofertas" não chega para esta saída: 50% é da Missão e ainda não foi remetido. Disponível para a igreja: 550.00 MT
+ continua 
+----------
+ PENDENTE
+(1 row)
+
+   a mesma saída pelo valor exacto da parte da igreja: confirmada
+ tra_estado 
+------------
+ CONFIRMADA
+(1 row)
+
+ fun_codigo | por_remeter | disponivel 
+------------+-------------+------------
+ OCOMB      |      150.00 |       0.00
+(1 row)
+
+6. remessa complementar: duas preparadas do mesmo mês (a segunda falha); depois de enviada a primeira, outra (passa)
+psql:database/tests/08_conta_da_missao.sql:89: ERROR:  duplicate key value violates unique constraint "uq_rem_preparada"
+ rem_id | rem_estado 
+--------+------------
+     91 | PREPARADA
+(1 row)
+
+7. o Tito (membro sem perfil) vê nas suas contribuições que pagou na Missão
+                fundo                |  valor  | pago_na_missao 
+-------------------------------------+---------+----------------
+ Dízimo                              | 1000.00 | t
+ Oferta combinada / plano de ofertas |  400.00 | t
+(2 rows)
+
+ ve_contas 
+-----------
+         0
+(1 row)
+
+8. tesoureiro de outra igreja (não autorizado): não vê a conta da Missão da igreja 1 nem lança nela
+ ve_a_conta 
+------------
+          0
+(1 row)
+
+ ve_pagamentos 
+---------------
+             0
+(1 row)
+
+psql:database/tests/08_conta_da_missao.sql:104: ERROR:  new row violates row-level security policy for table "transacao"

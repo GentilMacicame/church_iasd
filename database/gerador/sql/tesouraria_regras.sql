@@ -377,3 +377,131 @@ BEGIN
     PERFORM nucleo.fn_exigir('tesouraria.remessa.confirmar', r.rem_igr_id);
     UPDATE tesouraria.remessa SET rem_estado = 'CONFIRMADA' WHERE rem_id = p_rem;
 END $$;
+
+-- ---------------------------------------------------------------- conta da Missão (V21)
+CREATE FUNCTION tesouraria.fn_cfi_validar() RETURNS trigger AS $$
+BEGIN
+    IF NEW.cfi_ent_id IS NOT NULL THEN
+        IF NEW.cfi_tipo = 'CAIXA' THEN
+            RAISE EXCEPTION 'Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM tesouraria.fundo WHERE fun_destino_ent_id = NEW.cfi_ent_id AND fun_end_date IS NULL) THEN
+            RAISE EXCEPTION 'A entidade % não recebe nenhum fundo: não pode ter uma conta da Missão', NEW.cfi_ent_id;
+        END IF;
+    END IF;
+    IF TG_OP = 'UPDATE' AND NEW.cfi_ent_id IS DISTINCT FROM OLD.cfi_ent_id
+       AND EXISTS (SELECT 1 FROM tesouraria.transacao WHERE tra_cfi_id = NEW.cfi_id OR tra_destino_cfi_id = NEW.cfi_id) THEN
+        RAISE EXCEPTION 'A conta "%" já tem movimentos: não pode passar a ser (ou deixar de ser) uma conta da Missão', NEW.cfi_nome;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_cfi_10_validar
+    BEFORE INSERT OR UPDATE ON tesouraria.conta_financeira
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cfi_validar();
+
+-- Movimentos na conta da Missão: só entradas (e estornos delas), com o comprovativo; nada se paga nem transfere
+CREATE FUNCTION tesouraria.fn_tra_conta_missao() RETURNS trigger AS $$
+DECLARE
+    v_orig TEXT; v_dest TEXT;
+BEGIN
+    SELECT cfi_nome INTO v_orig FROM tesouraria.conta_financeira WHERE cfi_id = NEW.tra_cfi_id AND cfi_ent_id IS NOT NULL;
+    IF NEW.tra_destino_cfi_id IS NOT NULL THEN
+        SELECT cfi_nome INTO v_dest FROM tesouraria.conta_financeira WHERE cfi_id = NEW.tra_destino_cfi_id AND cfi_ent_id IS NOT NULL;
+    END IF;
+    IF v_dest IS NOT NULL OR (v_orig IS NOT NULL AND NEW.tra_tipo = 'TRANSFERENCIA') THEN
+        RAISE EXCEPTION 'Não se transfere de nem para a conta da Missão "%": o que a igreja envia à Missão é uma remessa', COALESCE(v_dest, v_orig);
+    END IF;
+    IF v_orig IS NULL THEN
+        RETURN NEW;
+    END IF;
+    IF NEW.tra_tipo = 'SAIDA' AND NEW.tra_estorno_tra_id IS NULL THEN
+        RAISE EXCEPTION 'A conta "%" é da Missão: regista só o que os membros lá pagaram; a igreja não paga nada a partir dela', v_orig;
+    END IF;
+    IF NEW.tra_tipo = 'ENTRADA' AND NEW.tra_estorno_tra_id IS NULL AND NULLIF(btrim(NEW.tra_referencia), '') IS NULL THEN
+        RAISE EXCEPTION 'Pagamento na conta da Missão: escreva a referência do comprovativo que o membro mandou';
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_tra_15_conta_missao
+    BEFORE INSERT OR UPDATE ON tesouraria.transacao
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tra_conta_missao();
+
+-- Linhas na conta da Missão: só fundos dessa entidade (dízimo, ofertas missionárias, oferta combinada, ...)
+CREATE FUNCTION tesouraria.fn_tli_conta_missao() RETURNS trigger AS $$
+DECLARE
+    v_ent INT; v_conta TEXT;
+BEGIN
+    SELECT c.cfi_ent_id, c.cfi_nome INTO v_ent, v_conta
+      FROM tesouraria.transacao t JOIN tesouraria.conta_financeira c ON c.cfi_id = t.tra_cfi_id
+     WHERE t.tra_id = NEW.tli_tra_id;
+    IF v_ent IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM tesouraria.fundo WHERE fun_id = NEW.tli_fun_id AND fun_destino_ent_id = v_ent AND fun_percentagem_remessa > 0) THEN
+        RAISE EXCEPTION 'Na conta da Missão "%" só entram fundos da Missão (dízimo, ofertas missionárias, oferta combinada, ...); "%" fica na igreja',
+            v_conta, (SELECT fun_nome FROM tesouraria.fundo WHERE fun_id = NEW.tli_fun_id);
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_tli_15_conta_missao
+    BEFORE INSERT OR UPDATE ON tesouraria.transacao_linha
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tli_conta_missao();
+
+-- Se uma conta é da Missão. SECURITY DEFINER: o membro sem perfil não lê as contas, mas vê nas suas contribuições
+-- que pagou na Missão (só se revela isto, nada da conta).
+CREATE FUNCTION tesouraria.fn_conta_da_missao(p_cfi INT) RETURNS BOOLEAN
+SECURITY DEFINER SET search_path = tesouraria, pg_temp AS $$
+BEGIN
+    RETURN EXISTS (SELECT 1 FROM tesouraria.conta_financeira WHERE cfi_id = p_cfi AND cfi_ent_id IS NOT NULL);
+END $$ LANGUAGE plpgsql STABLE;
+REVOKE ALL ON FUNCTION tesouraria.fn_conta_da_missao(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tesouraria.fn_conta_da_missao(INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- 2. parte da igreja nos fundos repartidos
+-- O que a igreja pode gastar de um fundo: o saldo nas suas contas menos o que ainda deve à Missão desse fundo.
+-- SECURITY DEFINER: a regra vale para todos (o tesoureiro que confirma pode não ler todos os saldos).
+CREATE FUNCTION tesouraria.fn_fundo_disponivel(p_igr INT, p_fun INT) RETURNS NUMERIC
+SECURITY DEFINER SET search_path = tesouraria, pg_temp AS $$
+BEGIN
+    RETURN (SELECT COALESCE(SUM(disponivel), 0) FROM tesouraria.vw_saldo_fundo WHERE igr_id = p_igr AND fun_id = p_fun);
+END $$ LANGUAGE plpgsql STABLE;
+REVOKE ALL ON FUNCTION tesouraria.fn_fundo_disponivel(INT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tesouraria.fn_fundo_disponivel(INT, INT) TO app_igreja;
+
+-- No COMMIT (com os saldos já actualizados): uma saída confirmada de um fundo repartido, que não seja remessa,
+-- não pode deixar a igreja a dever à Missão mais do que tem
+CREATE FUNCTION tesouraria.fn_tra_parte_da_igreja() RETURNS trigger AS $$
+DECLARE l RECORD;
+BEGIN
+    IF NEW.tra_tipo <> 'SAIDA' OR NEW.tra_estado <> 'CONFIRMADA' OR NEW.tra_estorno_tra_id IS NOT NULL OR NEW.tra_end_date IS NOT NULL
+       OR (TG_OP = 'UPDATE' AND OLD.tra_estado = 'CONFIRMADA') THEN
+        RETURN NULL;
+    END IF;
+    FOR l IN SELECT f.fun_id, f.fun_nome, f.fun_percentagem_remessa, SUM(tl.tli_valor) AS valor
+               FROM tesouraria.transacao_linha tl
+               JOIN tesouraria.fundo f ON f.fun_id = tl.tli_fun_id
+               JOIN tesouraria.categoria c ON c.cat_id = tl.tli_cat_id
+              WHERE tl.tli_tra_id = NEW.tra_id AND tl.tli_end_date IS NULL AND NOT c.cat_e_remessa
+                AND f.fun_percentagem_remessa > 0 AND f.fun_percentagem_remessa < 100
+              GROUP BY f.fun_id, f.fun_nome, f.fun_percentagem_remessa LOOP
+        IF tesouraria.fn_fundo_disponivel(NEW.tra_igr_id, l.fun_id) < 0 THEN
+            RAISE EXCEPTION 'A parte da igreja no fundo "%" não chega para esta saída: % é da Missão e ainda não foi remetido. Disponível para a igreja: % MT',
+                l.fun_nome, trim_scale(l.fun_percentagem_remessa)::TEXT || '%',
+                GREATEST(tesouraria.fn_fundo_disponivel(NEW.tra_igr_id, l.fun_id) + l.valor, 0);
+        END IF;
+    END LOOP;
+    RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER trg_tra_91_parte_da_igreja
+    AFTER INSERT OR UPDATE ON tesouraria.transacao
+    DEFERRABLE INITIALLY DEFERRED
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tra_parte_da_igreja();
+
+-- ---------------------------------------------------------------- 4. remessa complementar
+-- O que entra depois do depósito do mês (envelope atrasado, comprovativo que chega tarde) segue numa remessa
+-- complementar do mesmo mês: várias remessas por mês, mas só uma preparada de cada vez (não se duplica).
+CREATE INDEX idx_rem_igr_periodo ON tesouraria.remessa (rem_igr_id, rem_ent_id, rem_ano, rem_mes);
+CREATE UNIQUE INDEX uq_rem_preparada ON tesouraria.remessa (rem_igr_id, rem_ent_id, rem_ano, rem_mes)
+    WHERE rem_end_date IS NULL AND rem_estado = 'PREPARADA';

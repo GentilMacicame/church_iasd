@@ -20,7 +20,7 @@ import mz.org.iasd.igreja.Rotas;
  *   GET /v1/tesouraria/saldos-fundos                         tesouraria.saldo_diario_fundo.ler
  *   GET /v1/tesouraria/remessas-devidas      ?ano=&amp;mes=      tesouraria.saldo_diario_fundo.ler
  *   GET /v1/tesouraria/execucao-orcamento    ?ano=           tesouraria.orcamento.ler
- *   GET /v1/tesouraria/contribuicoes                         tesouraria.transacao.ler (ou o próprio membro)
+ *   GET /v1/tesouraria/contribuicoes      ?ano=&amp;mes=      tesouraria.transacao.ler (ou o próprio membro)
  *   GET /v1/tesouraria/extracto-anual        ?ano=           tesouraria.transacao.ler (ou o próprio membro)
  *   GET /v1/tesouraria/progresso-alvos                       tesouraria.alvo.ler
  *   GET /v1/tesouraria/conferencia-contagens                 tesouraria.contagem_numerario.ler
@@ -40,7 +40,7 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     public static final Relatorio EXECUCAO_ORCAMENTO = Relatorio.porIgreja("tesouraria.vw_execucao_orcamento",
             "orc_igr_id = ?", "orc_ano DESC, cat_codigo").comAnoMes("orc_ano", null);
     public static final Relatorio CONTRIBUICOES = Relatorio.porIgreja("tesouraria.vw_contribuicoes_membro",
-            "tra_igr_id = ?", "tra_data_hora DESC");
+            "tra_igr_id = ?", "tra_data_hora DESC").comAnoMes("periodo_ano", "periodo_mes");
     public static final Relatorio EXTRACTO_ANUAL = Relatorio.porIgreja("tesouraria.vw_extracto_anual",
             "tra_igr_id = ?", "ano DESC, fundo").comAnoMes("ano", null);
     public static final Relatorio PROGRESSO_ALVOS = Relatorio.porIgreja("tesouraria.vw_progresso_alvo", "alv_igr_id = ?", "alv_id");

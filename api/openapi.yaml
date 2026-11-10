@@ -11210,6 +11210,10 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/EnumTipoConta'
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -11426,6 +11430,14 @@ paths:
           - csv
           - pdf
           default: json
+      - name: ano
+        in: query
+        schema:
+          type: integer
+      - name: mes
+        in: query
+        schema:
+          type: integer
       x-vista: tesouraria.vw_contribuicoes_membro
       responses:
         '200':
@@ -16403,6 +16415,11 @@ components:
           type: string
           format: date
           description: Movimentos anteriores a esta data não entram no saldo
+        entidadeId:
+          type: integer
+          format: int32
+          description: '→ organizacao.entidade · Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam
+            directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja'
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
