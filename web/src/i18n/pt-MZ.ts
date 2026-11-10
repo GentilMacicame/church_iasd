@@ -50,6 +50,7 @@ export const t = {
     membros: 'Membros',
     actividades: 'Actividades',
     escalas: 'Escalas',
+    tesouraria: 'Tesouraria',
     sair: 'Sair',
     igreja: 'Igreja',
     mudarIgreja: 'Mudar de igreja',
@@ -128,6 +129,12 @@ export const t = {
     escolher: 'Escolher…',
     nenhum: 'Nenhum',
     procurarMembro: 'Procurar membro pelo nome',
+  },
+  tesouraria: {
+    titulo: 'Tesouraria',
+    entrada: 'Lançar entrada',
+    saida: 'Registar saída',
+    movimentos: 'Movimentos',
   },
   livro: {
     titulo: 'Livro de membros',
@@ -215,6 +222,9 @@ export const rotulos = {
     FINANCEIRO: 'Financeiro', OUTRO: 'Outro',
   },
   resultadoVoto: { APROVADO: 'Aprovado', REJEITADO: 'Rejeitado', ADIADO: 'Adiado' },
+  metodo: { NUMERARIO: 'Numerário', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' } as Record<string, string>,
+  tipoTransacao: { ENTRADA: 'Entrada', SAIDA: 'Saída', TRANSFERENCIA: 'Transferência' } as Record<string, string>,
+  estadoTransacao: { PENDENTE: 'Pendente', CONFIRMADA: 'Confirmada', FALHADA: 'Falhada', ANULADA: 'Anulada' } as Record<string, string>,
   tipoContacto: { TELEFONE: 'Telefone', EMAIL: 'E-mail', WHATSAPP: 'WhatsApp', OUTRO: 'Outro' },
   funcaoEscala: {
     PREGADOR: 'Pregador', ANCIAO_DO_DIA: 'Ancião do dia', DIACONO: 'Diácono', DIACONISA: 'Diaconisa', RECEPCAO: 'Recepção',

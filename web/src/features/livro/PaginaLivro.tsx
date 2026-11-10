@@ -49,7 +49,7 @@ export default function PaginaLivro() {
                     const r = v ? reuniaoPorId.get(v.reuniaoId) : undefined
                     return (
                       <tr key={m.id}>
-                        <td className="num whitespace-nowrap sm:pl-6">{data(m.data)}</td>
+                        <td className="tabular-nums whitespace-nowrap sm:pl-6">{data(m.data)}</td>
                         <td><Link to={`/membros/${m.membroId}`} className="font-medium hover:text-primary">{nomes.get(m.membroId) ?? `Membro ${m.membroId}`}</Link></td>
                         <td><Pilula variante={eEntrada(m.tipo) ? 'success' : 'destructive'}>{rotulos.modoEntrada[m.tipo]}</Pilula></td>
                         <td className="hidden text-muted-foreground md:table-cell sm:pr-6">

@@ -139,7 +139,7 @@ export default function PaginaReunioes() {
                 <tbody>
                   {lista.map((r: Reuniao) => (
                     <tr key={r.id} onClick={() => navigate(`/reunioes/${r.id}`)} className="cursor-pointer">
-                      <td className="num font-medium whitespace-nowrap sm:pl-6"><Link to={`/reunioes/${r.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-primary">{data(r.data)}</Link></td>
+                      <td className="tabular-nums font-medium whitespace-nowrap sm:pl-6"><Link to={`/reunioes/${r.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-primary">{data(r.data)}</Link></td>
                       <td><Pilula variante={varianteReuniao(r.tipo)}>{rotulos.tipoReuniao[r.tipo]}</Pilula></td>
                       <td className="hidden text-muted-foreground md:table-cell">{r.local ?? '—'}</td>
                       <td className="num">{porReuniao.get(r.id) ?? 0}</td>

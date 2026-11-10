@@ -62,7 +62,7 @@ export default function PaginaEscalas() {
                         <Link to={`/escalas/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{p.titulo}</Link>
                         <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:hidden">{data(p.dataInicio)} – {data(p.dataFim)}</span>
                       </td>
-                      <td className="num hidden whitespace-nowrap text-muted-foreground sm:table-cell">{data(p.dataInicio)} – {data(p.dataFim)}</td>
+                      <td className="hidden whitespace-nowrap tabular-nums text-muted-foreground sm:table-cell">{data(p.dataInicio)} – {data(p.dataFim)}</td>
                       <td><EstadoPlano p={p} /></td>
                       <td className="hidden text-muted-foreground md:table-cell">{[p.localEmissao, p.dataEmissao && data(p.dataEmissao)].filter(Boolean).join(', ') || '—'}</td>
                       <td className="w-10 sm:pr-6"><ChevronRight aria-hidden className="size-4 text-muted-foreground" /></td>

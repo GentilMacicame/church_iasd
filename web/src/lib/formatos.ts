@@ -69,3 +69,16 @@ export function tomPessoa(id: number): { fundo: string; tinta: string } {
   const matiz = (id * 137) % 360
   return { fundo: `hsl(${matiz} 45% 93%)`, tinta: `hsl(${matiz} 45% 26%)` }
 }
+
+/** "1500.50" → 150050 cêntimos (inteiro: as somas de dinheiro nunca passam por vírgula flutuante). */
+export function centimos(valorApi: string): number {
+  const m = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(valorApi)
+  if (!m) return 0
+  return (m[1] ? -1 : 1) * (Number(m[2]) * 100 + Number((m[3] ?? '').padEnd(2, '0')))
+}
+
+/** 150050 → "1500.50" (formato da API). */
+export function deCentimos(c: number): string {
+  const a = Math.abs(Math.round(c))
+  return `${c < 0 ? '-' : ''}${Math.floor(a / 100)}.${String(a % 100).padStart(2, '0')}`
+}

@@ -52,6 +52,10 @@ src/
 - **Livro de membros** (P-01): reuniões (junta, regular, assembleia) e votos em acta com numeração anual; entradas
   (baptismo, profissão de fé) e saídas registadas na ficha do membro, com o voto que as autoriza; o livro com os números
   do ano.
+- **Tesouraria** (P-06, P-08): painel (saldo total, do mês, contas, saldos por fundo com o que é da Associação);
+  lançar entrada por fundos (envelope a envelope, total em cêntimos, recibo numerado); registar saída (fica por
+  aprovar: quem regista não aprova; o ancião aprova, o tesoureiro confirma); movimentos do mês com filtros; ficha do
+  movimento (confirmar, aprovar, recibo para imprimir, anular pendente). Pedidos de dinheiro com Idempotency-Key.
 - **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
   (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
   com as assinaturas).

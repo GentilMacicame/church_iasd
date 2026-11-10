@@ -149,7 +149,7 @@ export default function PaginaReuniao() {
                 <tbody>
                   {daReuniao.map((v) => (
                     <tr key={v.id}>
-                      <td className="num font-medium whitespace-nowrap sm:pl-6">{v.numero}</td>
+                      <td className="tabular-nums font-medium whitespace-nowrap sm:pl-6">{v.numero}</td>
                       <td>
                         <p className="font-medium">{v.assunto}</p>
                         {v.leitura === 2 && <p className="text-xs text-muted-foreground">2.ª leitura</p>}

@@ -7,7 +7,7 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  BookOpen, Building2, CalendarDays, Check, Landmark, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
+  Banknote, BookOpen, Building2, CalendarDays, Check, HandCoins, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   UserPlus, Users, X,
 } from 'lucide-react'
 import {
@@ -33,6 +33,15 @@ const NAV: GrupoNav[] = [
       { para: '/membros/novo', rotulo: t.membros.registar, icone: UserPlus, permissao: 'secretaria.membro.criar', fim: true },
       { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
       { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
+    ],
+  },
+  {
+    rotulo: t.nav.tesouraria,
+    itens: [
+      { para: '/tesouraria', rotulo: 'Painel', icone: PiggyBank, permissao: 'tesouraria.conta_financeira.ler', fim: true },
+      { para: '/tesouraria/movimentos', rotulo: t.tesouraria.movimentos, icone: ListOrdered, permissao: 'tesouraria.transacao.ler', fim: false },
+      { para: '/tesouraria/entrada', rotulo: t.tesouraria.entrada, icone: HandCoins, permissao: 'tesouraria.transacao.criar', fim: true },
+      { para: '/tesouraria/saida', rotulo: t.tesouraria.saida, icone: Banknote, permissao: 'tesouraria.transacao.criar', fim: true },
     ],
   },
   {
@@ -156,6 +165,13 @@ function Caminho() {
   if (pathname.startsWith('/reunioes')) {
     partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.livro.reunioes, para: '/reunioes' })
     if (/^\/reunioes\/\d+/.test(pathname)) partes.push({ rotulo: 'Acta' })
+  }
+  if (pathname.startsWith('/tesouraria')) {
+    partes.push({ rotulo: t.nav.tesouraria, para: '/tesouraria' })
+    if (pathname.startsWith('/tesouraria/movimentos')) partes.push({ rotulo: t.tesouraria.movimentos, para: '/tesouraria/movimentos' })
+    if (/^\/tesouraria\/movimentos\/\d+/.test(pathname)) partes.push({ rotulo: 'Movimento' })
+    if (pathname === '/tesouraria/entrada') partes.push({ rotulo: t.tesouraria.entrada })
+    if (pathname === '/tesouraria/saida') partes.push({ rotulo: t.tesouraria.saida })
   }
   if (pathname.startsWith('/escalas')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: t.nav.escalas, para: '/escalas' })
