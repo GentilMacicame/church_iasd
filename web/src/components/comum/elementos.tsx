@@ -156,7 +156,7 @@ export function Campo({ rotulo, children }: { rotulo: string; children?: ReactNo
 /** Tabela no estilo do Design System (cabeçalho com faixa suave, linhas com realce). */
 export function Tabela({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="w-full min-w-0 overflow-x-auto">
+    <div className="relative w-full min-w-0 overflow-x-auto">
       <table className={cn(
         'w-full border-collapse text-sm text-foreground',
         '[&_thead_tr]:border-b [&_th]:h-10 [&_th]:bg-muted/50 [&_th]:px-4 [&_th]:text-left [&_th]:align-middle [&_th]:text-xs [&_th]:font-medium [&_th]:whitespace-nowrap [&_th]:text-muted-foreground',

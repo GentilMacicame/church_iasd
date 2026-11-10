@@ -70,6 +70,12 @@ src/
 - **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
   (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
   com as assinaturas).
+- **Utilizadores e perfis** (F-NUC-03, P-13), como a gestão de contas do SGMS: separadores Utilizadores (indicadores,
+  filtros, pesquisa, perfis nesta igreja, estado: activo / ainda não entrou / desactivado), Perfis (lista, detalhes,
+  novo, editar, activar/desactivar) e Permissões (matriz por módulo: ver, criar, alterar, terminar e acções
+  específicas; só o super-administrador altera). Ficha do utilizador: dados, membro ligado, perfis em cartões, estado da
+  conta, enviar o código por SMS (o "convite": o utilizador define a senha em "Esqueci a senha"), desactivar/reactivar.
+  As regras são da base de dados: ninguém altera os próprios perfis nem dá um perfil com mais permissões do que as suas.
 
 ## Por fazer (próximas iterações)
 

@@ -49,6 +49,8 @@ export const t = {
     secretaria: 'Secretaria',
     membros: 'Membros',
     actividades: 'Actividades',
+    administracao: 'Administração',
+    acessos: 'Utilizadores e perfis',
     escalas: 'Escalas',
     tesouraria: 'Tesouraria',
     sair: 'Sair',

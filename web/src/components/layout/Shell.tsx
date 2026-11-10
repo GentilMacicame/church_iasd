@@ -9,7 +9,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   Banknote, BookOpen, Building2, CalendarDays, Check, HandCoins, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   UserPlus, Users, X,
-  Calculator, CalendarCheck, ClipboardList, FileText, Wallet,
+  Calculator, CalendarCheck, ClipboardList, FileText, KeyRound, Wallet,
 } from 'lucide-react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -54,6 +54,10 @@ const NAV: GrupoNav[] = [
   {
     rotulo: t.nav.actividades,
     itens: [{ para: '/escalas', rotulo: t.nav.escalas, icone: CalendarDays, permissao: 'actividades.escala_plano.ler', fim: false }],
+  },
+  {
+    rotulo: t.nav.administracao,
+    itens: [{ para: '/acessos', rotulo: t.nav.acessos, icone: KeyRound, permissao: 'nucleo.usuario.ler', fim: false }],
   },
 ]
 
@@ -185,6 +189,11 @@ function Caminho() {
     if (pathname === '/tesouraria/fechos') partes.push({ rotulo: t.tesouraria.fechos })
     if (pathname === '/tesouraria/contas') partes.push({ rotulo: t.tesouraria.contas })
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
+  }
+  if (pathname.startsWith('/acessos')) {
+    partes.push({ rotulo: t.nav.administracao }, { rotulo: t.nav.acessos, para: '/acessos' })
+    if (pathname === '/acessos/utilizadores/novo') partes.push({ rotulo: 'Novo utilizador' })
+    else if (/^\/acessos\/utilizadores\/\d+/.test(pathname)) partes.push({ rotulo: 'Utilizador' })
   }
   if (pathname.startsWith('/escalas')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: t.nav.escalas, para: '/escalas' })

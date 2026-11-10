@@ -30,6 +30,8 @@ const PaginaContagens = lazy(() => import('@/features/tesouraria/PaginaContagens
 const PaginaRemessas = lazy(() => import('@/features/tesouraria/PaginaRemessas'))
 const PaginaFechos = lazy(() => import('@/features/tesouraria/PaginaFechos'))
 const PaginaContas = lazy(() => import('@/features/tesouraria/PaginaContas'))
+const PaginaAcessos = lazy(() => import('@/features/acessos/PaginaAcessos'))
+const PaginaUtilizador = lazy(() => import('@/features/acessos/PaginaUtilizador'))
 const PaginaRelatorioMensal = lazy(() => import('@/features/tesouraria/PaginaRelatorioMensal'))
 const PaginaEscalas = lazy(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaNovaEscala = lazy(() => import('@/features/escalas/PaginaNovaEscala'))
@@ -102,6 +104,9 @@ export default function App() {
                   <Route path="tesouraria/fechos" element={<PaginaFechos />} />
                   <Route path="tesouraria/contas" element={<PaginaContas />} />
                   <Route path="tesouraria/relatorio-mensal" element={<PaginaRelatorioMensal />} />
+                  <Route path="acessos" element={<PaginaAcessos />} />
+                  <Route path="acessos/utilizadores/novo" element={<PaginaUtilizador />} />
+                  <Route path="acessos/utilizadores/:id" element={<PaginaUtilizador />} />
                   <Route path="escalas" element={<PaginaEscalas />} />
                   <Route path="escalas/nova" element={<PaginaNovaEscala />} />
                   <Route path="escalas/:id" element={<PaginaEscala />} />
