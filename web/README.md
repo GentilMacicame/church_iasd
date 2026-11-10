@@ -62,6 +62,8 @@ src/
 
 ## Por fazer (próximas iterações)
 
-Transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04), tesouraria (entradas por
-fundo, saídas com aprovação, recibos, remessas: P-06…P-10), Escola Sabatina com o relatório do sábado offline (PWA,
-IndexedDB, P-05), escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).
+- Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).
+- Tesouraria: despesas com requisição (P-07), remessas à Associação (P-09), fecho do mês (P-10), estornos (P-12),
+  contagem do numerário com dois contadores (P-06 passo 1).
+- Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).
+- Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).
