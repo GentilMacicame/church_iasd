@@ -276,9 +276,12 @@ remetido AS (
     WHERE r.rem_end_date IS NULL AND r.rem_estado IN ('ENVIADA', 'CONFIRMADA')
     GROUP BY 1, 2, 3, 4, 5
 )
-SELECT rc.*, COALESCE(rm.remetido, 0) AS remetido, rc.devido - COALESCE(rm.remetido, 0) AS em_falta
+-- (V20) fundo_id, fundo_nome, fundo_codigo e entidade_id no fim: na API, igr_id, fun_id e ent_id davam todos "id"
+SELECT rc.*, COALESCE(rm.remetido, 0) AS remetido, rc.devido - COALESCE(rm.remetido, 0) AS em_falta,
+       rc.fun_id AS fundo_id, f.fun_nome AS fundo_nome, f.fun_codigo AS fundo_codigo, rc.ent_id AS entidade_id
 FROM recebido rc
-LEFT JOIN remetido rm USING (igr_id, ent_id, ano, mes, fun_id);
+LEFT JOIN remetido rm USING (igr_id, ent_id, ano, mes, fun_id)
+JOIN tesouraria.fundo f ON f.fun_id = rc.fun_id;
 
 CREATE VIEW tesouraria.vw_execucao_orcamento WITH (security_invoker = true) AS
 SELECT o.orc_id, o.orc_igr_id, o.orc_ano, d.dep_nome AS departamento,
