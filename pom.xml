@@ -170,7 +170,7 @@
             <plugin>
                 <groupId>io.openliberty.tools</groupId>
                 <artifactId>liberty-maven-plugin</artifactId>
-                <version>3.11.1</version>
+                <version>3.12.5</version>
                 <configuration>
                     <!-- o .env da raiz é o server.env do Open Liberty: a configuração fica num só sítio -->
                     <serverEnvFile>${project.basedir}/.env</serverEnvFile>
