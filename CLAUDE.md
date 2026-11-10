@@ -15,7 +15,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 | Base de dados (PostgreSQL 16) | **Concluída e testada.** 61 tabelas, 6 schemas, migrações V1–V19 |
 | Contrato da API | **Concluído.** `api/openapi.yaml` (299 caminhos, 417 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
-| Frontend (React) | **Por fazer** |
+| Frontend (React) | **Iteração 1 feita** em `web/`: Design System, entrar, Início, Membros (lista, ficha, registo). Ver `web/README.md` |
 
 Especificação completa: `docs/especificacao.md` (Markdown, gerado do Word em
 `docs/Especificacao_Sistema_Igreja_v1.1.docx`). Funcionalidades têm IDs `F-SEC-05`, processos

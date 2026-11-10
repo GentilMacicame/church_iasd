@@ -1,5 +1,60 @@
-# Frontend
+# Frontend · Sistema da Igreja
 
-Ainda por criar. Stack: React 18, Vite, TypeScript, TanStack Query, React Hook Form + Zod, PWA.
+React 18 + Vite + TypeScript, Tailwind CSS 4 + shadcn/ui, ícones Lucide, TanStack Query, React Hook Form + Zod,
+React Router. Tipos e cliente da API gerados de `../api/openapi.yaml` (openapi-typescript + openapi-fetch).
 
-Tipos e cliente gerados de `../api/openapi.yaml`. Ver CLAUDE.md na raiz.
+```bash
+npm install
+npm run gerar:api        # tipos da API a partir do contrato (sempre que o openapi.yaml mudar)
+npm run dev              # http://localhost:5173 (a API tem de estar em http://localhost:9080: ./mvnw liberty:dev)
+npm run build            # tsc + build de produção em dist/
+npm run preview          # serve o dist/ em http://localhost:4173
+```
+
+O Vite encaminha `/v1` para a API (mesma origem: o cookie de renovação `HttpOnly; SameSite=Strict` funciona sem
+CORS). Outra API: `API_URL=http://servidor:9080 npm run dev`.
+
+## Estrutura
+
+```
+src/
+  index.css               DESIGN SYSTEM: tokens (cores, tipo, raios), ligados ao Tailwind e ao shadcn
+  i18n/pt-MZ.ts           todos os textos da interface e os nomes dos valores da base de dados
+  api/                    cliente gerado (esquema.d.ts), sessão no pedido (token em memória, renovação), erros
+  auth/sessao.tsx         entrar, sair, igreja escolhida, permissões (pode(...)) a partir de GET /v1/eu
+  lib/formatos.ts         datas dd/mm/aaaa, dinheiro "1 500,50 MT" (texto, nunca float), iniciais
+  components/ui/          componentes shadcn (Button, Input, Dialog, ...), ajustados ao Design System
+  components/comum/       componentes partilhados: estados (vazio, a carregar, erro), Pilula, Avatar, Painel,
+                          TituloPagina, Dinheiro, CampoFormulario, CampoData (dd/mm/aaaa), Seleccao, DialogoConfirmar
+  components/layout/      Shell (barra lateral; no telemóvel, barra de 48px e menu em folha), Marca
+  features/<modulo>/      uma pasta por módulo: páginas + api.ts (consultas e gravações do módulo)
+```
+
+## Regras
+
+- **Design System** (`src/index.css`): tokens ao estilo shadcn/ui, os mesmos do SGMS (ardósia + azul, Inter, raio 10px,
+  cartões com borda e sombra leve), tema claro e escuro (`.dark`). Componentes partilhados em `components/comum/`:
+  `TituloPagina`, `Indicador`, `Cartao`, `Tabela`, `Pilula`, `EstadoVazio`/`EstadoErro`, `CampoData`, `EscolherMembro`, ...
+- **A base de dados decide.** `pode(...)` só esconde o que o utilizador não pode usar; a base recusa o resto e a sua
+  mensagem (em português) aparece junto ao campo (`campo`) ou no topo do formulário.
+- **Nada fictício**: todos os blocos lêem a API; sem dados mostra-se o estado vazio com uma frase. O menu só tem
+  módulos que existem.
+- **Telemóvel em 3G**: páginas carregadas a pedido (lazy); primeira carga ~175 KB comprimidos. Alvos de toque ≥ 44px.
+- **Datas** no ecrã dd/mm/aaaa (`CampoData`, não o campo nativo, que segue a língua do telemóvel).
+
+## Feito
+
+- **Base**: entrar e recuperar a senha (SMS), moldura (barra lateral que encolhe, gaveta no telemóvel, barra de topo com
+  caminho, tema e utilizador), tema claro/escuro.
+- **Início**: indicadores, o próximo sábado (escala do dia), pendentes da secretaria, livro de membros do ano, saldos.
+- **Membros**: lista com indicadores que filtram, pesquisa, ficha (aprovar, editar, terminar, contactos, baptismo) e
+  formulário completo.
+- **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
+  (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
+  com as assinaturas).
+
+## Por fazer (próximas iterações)
+
+Movimentos do livro de membros (reuniões, votos, admissão, transferências: P-01…P-04), tesouraria (entradas por
+fundo, saídas com aprovação, recibos, remessas: P-06…P-10), Escola Sabatina com o relatório do sábado offline (PWA,
+IndexedDB, P-05), escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

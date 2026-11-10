@@ -23,3 +23,6 @@ coverage/
 
 *.log
 .DS_Store
+
+# ferramentas de design (local)
+.taste-skill/
