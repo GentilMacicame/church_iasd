@@ -6479,6 +6479,11 @@ export interface components {
              * @description Movimentos anteriores a esta data não entram no saldo
              */
             dataSaldoInicial?: string;
+            /**
+             * Format: int32
+             * @description → organizacao.entidade · Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja
+             */
+            entidadeId?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -17661,6 +17666,7 @@ export interface operations {
                 ordem?: components["parameters"]["Ordem"];
                 incluirTerminados?: components["parameters"]["IncluirTerminados"];
                 tipo?: components["schemas"]["EnumTipoConta"];
+                entidadeId?: number;
                 estado?: components["schemas"]["EnumEstadoRegisto"];
             };
             header?: never;
@@ -17843,6 +17849,8 @@ export interface operations {
             query?: {
                 igrejaId?: number;
                 formato?: "json" | "csv" | "pdf";
+                ano?: number;
+                mes?: number;
             };
             header?: never;
             path?: never;

@@ -28,7 +28,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { METODO_DA_CONTA } from './PaginaEntrada'
-import { useCategorias, useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, type Despesa } from './api'
+import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, type Despesa } from './api'
 
 const VALOR = z.string().regex(/^\d{1,14}(\.\d{1,2})?$/, 'Escreva o valor, por exemplo 1 500,00').refine((v) => Number(v) > 0, 'O valor tem de ser maior que zero')
 
@@ -177,7 +177,7 @@ function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boole
   const categorias = useCategorias()
   const { pedir } = useDespesasMut()
   const [erro, setErro] = useState<string | null>(null)
-  const locais = (fundos.data ?? []).filter((f) => !f.destinoEntidadeId)
+  const locais = fundosDaIgreja(fundos.data)
   const cats = (categorias.data ?? []).filter((c) => c.tipo === 'DESPESA' && !c.eRemessa)
   const form = useForm<z.infer<typeof esquemaPedir>>({
     resolver: zodResolver(esquemaPedir),

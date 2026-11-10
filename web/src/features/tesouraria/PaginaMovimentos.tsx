@@ -42,7 +42,10 @@ export default function PaginaMovimentos() {
   const contaDe = useMemo(() => new Map((contas.data ?? []).map((c) => [c.id, c.nome])), [contas.data])
 
   const validos = (q.data ?? []).filter((tr) => !tr.endDate)
-  const confirmados = validos.filter((tr) => tr.estado === 'CONFIRMADA')
+  // o pago directamente na conta da Missão não entrou na igreja: não soma nas entradas da igreja
+  const naMissao = new Set((contas.data ?? []).filter((c) => c.entidadeId != null).map((c) => c.id))
+  const confirmados = validos.filter((tr) => tr.estado === 'CONFIRMADA' && !naMissao.has(tr.contaId ?? 0))
+  const pagoNaMissao = validos.filter((tr) => tr.estado === 'CONFIRMADA' && naMissao.has(tr.contaId ?? 0))
   const soma = (l: Transacao[]) => deCentimos(l.reduce((s, tr) => s + centimos(tr.valorTotal), 0))
   const entradas = confirmados.filter((tr) => tr.tipo === 'ENTRADA')
   const saidas = confirmados.filter((tr) => tr.tipo === 'SAIDA')
@@ -67,7 +70,8 @@ export default function PaginaMovimentos() {
         )} />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-          <Indicador rotulo="Entradas" valor={<Dinheiro valor={soma(entradas)} />} nota={`${entradas.length} confirmada(s)`} icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
+          <Indicador rotulo="Entradas" valor={<Dinheiro valor={soma(entradas)} />}
+            nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={soma(pagoNaMissao.filter((x) => x.tipo === 'ENTRADA'))} /> pagos na Missão</> : `${entradas.length} confirmada(s)`} icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
           <Indicador rotulo="Saídas" valor={<Dinheiro valor={soma(saidas)} />} nota={`${saidas.length} confirmada(s)`} icone={ArrowUpRight} tom="destructive" aCarregar={q.isPending} />
           <Indicador rotulo="Por confirmar" valor={pendentes.length} nota="pendentes ou por aprovar" icone={ShieldAlert} tom="warning" aCarregar={q.isPending}
             aoClicar={() => definir('ver', 'pendentes')} activo={filtro === 'pendentes'} />
@@ -103,7 +107,7 @@ export default function PaginaMovimentos() {
                         <Link to={`/tesouraria/movimentos/${tr.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{quem(tr, (id) => nomes.get(id))}</Link>
                         <p className="text-xs text-muted-foreground">{rotulos.tipoTransacao[tr.tipo]} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
                       </td>
-                      <td className="hidden text-muted-foreground md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}</td>
+                      <td className="hidden text-muted-foreground md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}{naMissao.has(tr.contaId ?? 0) && <span className="block text-xs text-info-text">pago na Missão</span>}</td>
                       <td><PilulaEstado tr={tr} /></td>
                       <td className="num sm:pr-6"><Valor tr={tr} /></td>
                     </tr>

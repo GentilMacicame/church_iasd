@@ -6,10 +6,10 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { CircleCheck, Hourglass, Landmark, Send, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Cartao, Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
@@ -18,29 +18,22 @@ import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoData } from '@/components/comum/CampoData'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
-import { api, dados } from '@/api/cliente'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { METODO_DA_CONTA } from './PaginaEntrada'
 import {
-  useCategorias, useConfirmarRemessa, useContas, useEnviarRemessa, useFundos, useRemessas, useRemessasDevidas,
+  useCategorias, useConfirmarRemessa, useContasIgreja as useContas, useEntidades, useEnviarRemessa, useFundos, useRemessas, useRemessasDevidas,
   type Devida, type EstadoRemessa, type RemessaComLinhas,
 } from './api'
+import { parteDoFundo } from './comum'
 
 export const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
 export const nomeMes = (ano: number, mes: number) => `${MESES[mes - 1]} de ${ano}`
 
-function useEntidades() {
-  return useQuery({
-    queryKey: ['organizacao', 'entidades'],
-    queryFn: async () => (await dados(api.GET('/v1/organizacao/entidades', { params: { query: { limite: 200 } } }))).dados as { id: number; nome: string; sigla?: string | null }[],
-    staleTime: 30 * 60_000,
-  })
-}
 
-interface Periodo { chave: string; ano: number; mes: number; entidadeId: number; linhas: Devida[]; emFalta: string; remessa?: RemessaComLinhas }
+interface Periodo { chave: string; ano: number; mes: number; entidadeId: number; linhas: Devida[]; emFalta: string; remessa?: RemessaComLinhas; complementar?: boolean }
 
 const PILULA: Record<EstadoRemessa, { v: 'warning' | 'info' | 'success'; r: string }> = {
   PREPARADA: { v: 'warning', r: 'Preparada' }, ENVIADA: { v: 'info', r: 'Enviada' }, CONFIRMADA: { v: 'success', r: 'Confirmada' },
@@ -73,6 +66,7 @@ export default function PaginaRemessas() {
       .map((p) => ({
         ...p, emFalta: deCentimos(p.linhas.reduce((s, l) => s + Math.max(0, centimos(l.emFalta)), 0)),
         remessa: preparadas.find((r) => r.ano === p.ano && r.mes === p.mes && r.entidadeId === p.entidadeId),
+        complementar: (remessas.data ?? []).some((r) => !r.endDate && r.estado !== 'PREPARADA' && r.ano === p.ano && r.mes === p.mes && r.entidadeId === p.entidadeId),
       }))
       .filter((p) => centimos(p.emFalta) > 0)
       .sort((a, b) => a.chave.localeCompare(b.chave))
@@ -88,7 +82,7 @@ export default function PaginaRemessas() {
 
   return (
     <>
-      <TituloPagina icone={Landmark} titulo="Remessas" descricao="O que a igreja envia à Associação de cada mês: dízimos e ofertas da Associação" />
+      <TituloPagina icone={Landmark} titulo="Remessas" descricao="No fim de cada mês: 100% dos dízimos e a parte da Missão nas ofertas, depositados na conta da Missão" />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <Indicador rotulo="Por enviar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${porEnviar.length} mês(es)`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
@@ -96,7 +90,7 @@ export default function PaginaRemessas() {
           <Indicador rotulo={`Confirmadas em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${confirmadasAno.length} remessa(s)`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
         </div>
 
-        <Cartao titulo="Por enviar" descricao="Por mês: quanto entrou em cada fundo da Associação e quanto lhe cabe" icone={Hourglass} semMargem>
+        <Cartao titulo="Por enviar" descricao="Por mês: quanto entrou em cada fundo, quanto cabe à Missão e o que os membros já pagaram directamente lá" icone={Hourglass} semMargem>
           {devidas.isPending || remessas.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
             : devidas.isError ? <EstadoErro erro={devidas.error} aoTentar={() => devidas.refetch()} className="mx-6 mb-6" />
             : porEnviar.length === 0 ? <EstadoVazio icone={CircleCheck} titulo="Nada por enviar">Todas as remessas devidas foram enviadas.</EstadoVazio>
@@ -108,7 +102,7 @@ export default function PaginaRemessas() {
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold first-letter:uppercase">{nomeMes(p.ano, p.mes)}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Para {nomeEntidade(p.entidadeId)}{mesActual(p) ? ' · o mês ainda não terminou' : ''}{p.remessa ? ' · remessa preparada, falta pagar' : ''}
+                          Para {nomeEntidade(p.entidadeId)}{mesActual(p) ? ' · o mês ainda não terminou' : ''}{p.remessa ? ' · remessa preparada, falta pagar' : ''}{p.complementar ? ' · entrou mais depois do depósito: remessa complementar' : ''}
                         </p>
                       </div>
                       <span className="num text-lg font-semibold">{dinheiro(p.emFalta)}</span>
@@ -117,13 +111,14 @@ export default function PaginaRemessas() {
                       )}
                     </div>
                     <Tabela className="mt-2">
-                      <thead><tr><th className="sm:pl-6">Fundo</th><th className="num hidden sm:table-cell">Entrou</th><th className="num">Cabe à Associação</th><th className="num hidden sm:table-cell">Já enviado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
+                      <thead><tr><th className="sm:pl-6">Fundo</th><th className="num hidden sm:table-cell">Entrou</th><th className="num">Cabe à Missão</th><th className="num hidden md:table-cell">Pago na Missão</th><th className="num hidden sm:table-cell">Já enviado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
                       <tbody>
                         {p.linhas.map((l) => (
                           <tr key={l.fundoId}>
-                            <td className="font-medium sm:pl-6">{l.fundoNome}</td>
+                            <td className="sm:pl-6"><span className="font-medium">{l.fundoNome}</span><span className="block text-xs text-muted-foreground">{fundos.data && parteDoFundo(fundos.data.find((f) => f.id === l.fundoId) ?? {})}</span></td>
                             <td className="num hidden text-muted-foreground sm:table-cell"><Dinheiro valor={l.recebido} /></td>
                             <td className="num"><Dinheiro valor={l.devido} /></td>
+                            <td className="num hidden text-muted-foreground md:table-cell"><Dinheiro valor={l.pagoDirecto} /></td>
                             <td className="num hidden text-muted-foreground sm:table-cell"><Dinheiro valor={l.remetido} /></td>
                             <td className="num font-medium sm:pr-6"><Dinheiro valor={l.emFalta} /></td>
                           </tr>
@@ -136,7 +131,7 @@ export default function PaginaRemessas() {
             )}
         </Cartao>
 
-        <Cartao titulo="Remessas" descricao="Enviadas e confirmadas pela Associação" icone={Landmark} semMargem>
+        <Cartao titulo="Remessas" descricao="Depositadas na conta da Missão e confirmadas por ela" icone={Landmark} semMargem>
           {remessas.isPending ? <LinhasACarregar linhas={3} />
             : remessas.isError ? <EstadoErro erro={remessas.error} aoTentar={() => remessas.refetch()} className="mx-6 mb-6" />
             : lista.length === 0 ? <EstadoVazio icone={Landmark}>Ainda não foi enviada nenhuma remessa.</EstadoVazio>
@@ -150,7 +145,8 @@ export default function PaginaRemessas() {
                         <p className="font-medium first-letter:uppercase">{nomeMes(r.ano, r.mes)}</p>
                         <p className="text-xs text-muted-foreground">
                           {nomeEntidade(r.entidadeId)}{r.enviadaEm ? ` · enviada em ${data(r.enviadaEm)}` : ''}
-                          {r.transacaoId ? <> · <Link to={`/tesouraria/movimentos/${r.transacaoId}`} className="text-primary hover:underline">pagamento</Link></> : null}
+                          {r.transacaoId ? <> · <Link to={`/tesouraria/movimentos/${r.transacaoId}`} className="text-primary hover:underline">depósito</Link></> : null}
+                          {' · '}<Link to={`/tesouraria/relatorio-mensal?mes=${r.ano}-${String(r.mes).padStart(2, '0')}`} className="text-primary hover:underline">relatório</Link>
                         </p>
                       </td>
                       <td className="hidden text-muted-foreground md:table-cell">{r.linhas.filter((l) => !l.endDate).map((l) => fundoDe(l.fundoId)).join(', ')}</td>
@@ -168,13 +164,13 @@ export default function PaginaRemessas() {
             )}
         </Cartao>
         {enviadas.length > 0 && !pode('tesouraria.remessa.confirmar') && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground"><Undo2 className="size-4" />A tesouraria da Associação confirma a recepção de cada remessa enviada.</p>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground"><Undo2 className="size-4" />Depois do depósito, envie à Missão o relatório do mês com os recibos. A Missão confirma a recepção.</p>
         )}
       </div>
 
       {enviar && <DialogoEnviar p={enviar} entidadeNome={nomeEntidade(enviar.entidadeId)} aoFechar={() => setEnviar(null)} />}
       <DialogoConfirmar aberto={!!aConfirmar} aoMudar={(v) => !v && setAConfirmar(null)} titulo="Confirmar a recepção desta remessa?"
-        texto={aConfirmar ? <>A Associação recebeu {dinheiro(totalDe(aConfirmar))} de {nomeMes(aConfirmar.ano, aConfirmar.mes)}. Depois de confirmada, a remessa não se altera.</> : null}
+        texto={aConfirmar ? <>A Missão recebeu {dinheiro(totalDe(aConfirmar))} de {nomeMes(aConfirmar.ano, aConfirmar.mes)}. Depois de confirmada, a remessa não se altera.</> : null}
         accao="Confirmar recepção" aCorrer={confirmar.isPending}
         aoConfirmar={() => aConfirmar && confirmar.mutate(aConfirmar.id, {
           onSuccess: () => { toast.success('Remessa confirmada.'); setAConfirmar(null) },
@@ -193,9 +189,11 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
   const [contaId, setContaId] = useState('')
   const [metodo, setMetodo] = useState('')
   const [dia, setDia] = useState(hojeIso())
+  const [referencia, setReferencia] = useState('')
   const [erro, setErro] = useState<string | null>(null)
-  const conta = contas.data?.find((c) => String(c.id) === contaId) ?? contas.data?.find((c) => c.tipo !== 'CAIXA') ?? contas.data?.[0]
-  const met = metodo || METODO_DA_CONTA[conta?.tipo ?? 'BANCO']
+  const conta = contas.data?.find((c) => String(c.id) === contaId) ?? contas.data?.find((c) => c.tipo === 'CAIXA') ?? contas.data?.[0]
+  // o numerário do caixa deposita-se no banco: a forma é sempre "Banco", salvo M-Pesa ou e-Mola
+  const met = metodo || (conta?.tipo === 'MPESA' || conta?.tipo === 'EMOLA' ? METODO_DA_CONTA[conta.tipo] : 'BANCO')
   const categoria = categorias.data?.find((c) => c.eRemessa)
   const c = (v?: string) => (!v ? 0 : /^\d{1,14}(\.\d{1,2})?$/.test(v) ? centimos(v) : -1)
   const fundosLinhas = p.remessa ? p.remessa.linhas.map((l) => ({ fundoId: l.fundoId, nome: p.linhas.find((d) => d.fundoId === l.fundoId)?.fundoNome ?? `Fundo ${l.fundoId}`, emFalta: l.valor }))
@@ -208,11 +206,12 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
     if (total <= 0) { setErro('Escreva o valor a enviar.'); return }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hojeIso()) { setErro('A data tem de ser dd/mm/aaaa e não pode ser no futuro.'); return }
     if (!categoria || !conta) { setErro('Falta a categoria de remessa ou uma conta: peça ao administrador.'); return }
+    if (!referencia.trim()) { setErro('Escreva o n.º do talão do depósito (ou o código M-Pesa).'); return }
     try {
       await enviar.mutateAsync({
-        remessa: p.remessa, entidadeId: p.entidadeId, entidadeNome, ano: p.ano, mes: p.mes,
+        remessa: p.remessa, entidadeId: p.entidadeId, entidadeNome, ano: p.ano, mes: p.mes, complementar: p.complementar,
         linhas: fundosLinhas.filter((l) => c(valores[l.fundoId]) > 0).map((l) => ({ fundoId: l.fundoId, valor: valores[l.fundoId] })),
-        contaId: conta.id, metodo: met, data: dia, categoriaRemessaId: categoria.id,
+        contaId: conta.id, metodo: met, data: dia, categoriaRemessaId: categoria.id, referencia: referencia.trim(),
       })
       toast.success(`Remessa de ${nomeMes(p.ano, p.mes)} enviada: ${dinheiro(deCentimos(total))}.`)
       aoFechar()
@@ -225,9 +224,9 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="first-letter:uppercase">Remessa de {nomeMes(p.ano, p.mes)}</DialogTitle>
+          <DialogTitle className="first-letter:uppercase">Remessa {p.complementar ? 'complementar ' : ''}de {nomeMes(p.ano, p.mes)}</DialogTitle>
           <DialogDescription>
-            Para {entidadeNome}. Regista o pagamento (uma saída dos fundos da Associação, que não precisa de outra aprovação) e marca a remessa como enviada.
+            Depósito na conta de {entidadeNome}. Regista a saída do dinheiro da Missão (não precisa de outra aprovação) e marca a remessa como enviada.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
@@ -261,8 +260,12 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
               </Seleccao>
             </div>
             <div className="grid gap-1.5">
-              <label htmlFor="rem-data" className="text-sm font-medium">Data</label>
+              <label htmlFor="rem-data" className="text-sm font-medium">Data do depósito</label>
               <CampoData id="rem-data" value={dia} onChange={setDia} className="alvo" />
+            </div>
+            <div className="grid gap-1.5 sm:col-span-3">
+              <label htmlFor="rem-ref" className="text-sm font-medium">N.º do talão do depósito <span className="text-destructive-text">*</span></label>
+              <Input id="rem-ref" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="ou o código da transacção M-Pesa" className="alvo num uppercase" maxLength={100} />
             </div>
           </div>
         </div>

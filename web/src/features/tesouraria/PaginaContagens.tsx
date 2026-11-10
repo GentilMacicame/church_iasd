@@ -23,7 +23,7 @@ import { t } from '@/i18n/pt-MZ'
 import { centimos, data, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useConferencia, useContagens, useContagensMut, useContas } from './api'
+import { useConferencia, useContagens, useContagensMut, useContasIgreja as useContas } from './api'
 
 export default function PaginaContagens() {
   const { pode } = useSessao()

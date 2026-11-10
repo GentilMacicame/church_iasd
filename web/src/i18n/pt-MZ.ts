@@ -139,6 +139,8 @@ export const t = {
     contagens: 'Contagens',
     remessas: 'Remessas',
     fechos: 'Fecho do mês',
+    contas: 'Contas',
+    relatorioMensal: 'Relatório para a Missão',
   },
   livro: {
     titulo: 'Livro de membros',

@@ -1,7 +1,7 @@
 /**
  * Registar saída (P-08): um pagamento da igreja. Fica PENDENTE até outra pessoa a aprovar (quem regista não
- * aprova) e depois confirma-se. Só fundos que ficam na igreja: os da Associação saem só como remessa (a base
- * de dados recusa o resto, com a mensagem que aparece no topo).
+ * aprova) e depois confirma-se. Só a parte da igreja: os fundos 100% da Missão saem só como remessa, e nos
+ * repartidos (oferta combinada) só o que não é da Missão (a base de dados recusa o resto, com a mensagem no topo).
  */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -19,9 +19,10 @@ import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { Barra, EstadoErro } from '@/components/comum/estados'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { hojeIso } from '@/lib/formatos'
+import { dinheiro, hojeIso } from '@/lib/formatos'
 import { METODO_DA_CONTA } from './PaginaEntrada'
-import { useCategorias, useContas, useCriarMovimento, useFundos } from './api'
+import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useFundos, useSaldosFundos } from './api'
+import { parteDoFundo } from './comum'
 
 const esquema = z.object({
   contaId: z.string().min(1, t.comum.obrigatorio),
@@ -45,7 +46,8 @@ export default function PaginaSaida() {
   const criar = useCriarMovimento()
   const [chave] = useState(() => crypto.randomUUID())
   const [erro, setErro] = useState<string | null>(null)
-  const locais = (fundos.data ?? []).filter((f) => !f.destinoEntidadeId)
+  const saldos = useSaldosFundos()
+  const locais = fundosDaIgreja(fundos.data)
   const despesas = (categorias.data ?? []).filter((c) => c.tipo === 'DESPESA' && !c.eRemessa)
 
   const form = useForm<Valores>({
@@ -59,6 +61,12 @@ export default function PaginaSaida() {
     resetOptions: { keepDirtyValues: true },
   })
   const e = form.formState.errors
+  const ajudaFundo = (id: string) => {
+    const f = locais.find((x) => String(x.id) === id)
+    const s = saldos.data?.find((x) => String(x.fundoId) === id)
+    if (!f) return 'O dízimo e os fundos 100% da Missão só saem como remessa.'
+    return `${parteDoFundo(f)}${s ? ` · a igreja pode gastar ${dinheiro(s.disponivel ?? s.saldo)}` : ''}`
+  }
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
@@ -105,7 +113,7 @@ export default function PaginaSaida() {
               <CampoFormulario rotulo="Categoria" erro={e.categoriaId?.message}>
                 {(p) => <Seleccao {...p} {...form.register('categoriaId')}>{despesas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</Seleccao>}
               </CampoFormulario>
-              <CampoFormulario rotulo="Sai do fundo" erro={e.fundoId?.message} ajuda="Os fundos da Associação só saem como remessa.">
+              <CampoFormulario rotulo="Sai do fundo" erro={e.fundoId?.message} ajuda={ajudaFundo(form.watch('fundoId'))}>
                 {(p) => <Seleccao {...p} {...form.register('fundoId')}>{locais.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</Seleccao>}
               </CampoFormulario>
             </div>

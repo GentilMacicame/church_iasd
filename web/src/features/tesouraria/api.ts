@@ -12,6 +12,8 @@ import { useIgreja } from '@/auth/sessao'
 import { centimos, deCentimos } from '@/lib/formatos'
 
 export type Conta = Esquema<'Conta'> & { id: number; nome: string }
+/** Conta da Missão: regista o que os membros pagam directamente lá (o dinheiro não está na igreja). */
+export const daMissao = (c: { entidadeId?: number | null }) => c.entidadeId != null
 export type Fundo = Esquema<'Fundo'> & { id: number; nome: string; codigo: string; tipo: TipoFundo }
 export type Categoria = Esquema<'Categoria'> & { id: number; nome: string; codigo: string; tipo: 'RECEITA' | 'DESPESA' }
 export type Transacao = Esquema<'Transacao'> & { id: number; tipo: TipoTransacao; valorTotal: string; dataHora: string; estado: EstadoTransacao }
@@ -23,8 +25,16 @@ export type TipoFundo = NonNullable<Esquema<'Fundo'>['tipo']>
 type Corpo<P extends keyof paths, M extends 'post' | 'patch'> = paths[P][M] extends { requestBody?: { content: { 'application/json': infer C } } } ? C : never
 
 /** Linha de GET /v1/tesouraria/saldos-contas e saldos-fundos (vistas). */
-export interface SaldoConta { id: number; nome: string; tipo: string; moeda: string; saldo: string }
-export interface SaldoFundo { fundoId?: number; codigo: string; nome: string; tipo: string; entradas: string; saidas: string; saldo: string; alertaRestrito?: boolean }
+export interface SaldoConta { id: number; nome: string; tipo: string; moeda: string; saldo: string; entidadeId: number | null }
+/**
+ * Saldo de um fundo (V21): saldo = o que está nas contas da igreja; naAssociacao = pago directamente na conta da
+ * Missão; porRemeter = o que ainda se deve à Missão (negativo: a Missão já tem a mais); disponivel = o que a igreja
+ * pode gastar.
+ */
+export interface SaldoFundo {
+  fundoId: number; codigo: string; nome: string; tipo: string; entradas: string; saidas: string; saldo: string; alertaRestrito?: boolean
+  percentagemRemessa: string; naAssociacao: string; porRemeter: string; disponivel: string
+}
 
 /** Categoria sugerida para cada tipo de fundo (o tesoureiro pode mudar). */
 export const CATEGORIA_POR_FUNDO: Record<string, string> = {
@@ -46,12 +56,28 @@ export function useContas() {
   })
 }
 
+/** Só as contas onde está o dinheiro da igreja (sem a conta da Missão): para pagar, depositar, contar. */
+export function useContasIgreja() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'contas'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/contas', { params: { query: { igrejaId: igreja.id, limite: 50 } } }))).dados as Conta[],
+    staleTime: 5 * 60_000,
+    select: (l: Conta[]) => l.filter((c) => !daMissao(c)),
+  })
+}
+
 export function useFundos() {
   return useQuery({
     queryKey: ['tesouraria', 'fundos'],
     queryFn: async () => (await dados(api.GET('/v1/tesouraria/fundos', { params: { query: { limite: 100 } } }))).dados as Fundo[],
     staleTime: 10 * 60_000,
   })
+}
+
+/** Fundos de onde a igreja pode gastar: os seus e os repartidos (a parte da igreja); não os 100% da Missão. */
+export function fundosDaIgreja(l?: Fundo[]) {
+  return (l ?? []).filter((f) => !f.destinoEntidadeId || Number(f.percentagemRemessa ?? 0) < 100)
 }
 
 export function useCategorias() {
@@ -233,7 +259,16 @@ export type Remessa = Esquema<'Remessa'> & { id: number; entidadeId: number; ano
 export type LinhaRemessa = Esquema<'RemessaLinha'> & { id: number; remessaId: number; fundoId: number; valor: string }
 export type RemessaComLinhas = Remessa & { linhas: LinhaRemessa[] }
 /** Linha de GET /v1/tesouraria/remessas-devidas (vista; a V20 acrescentou fundoId, fundoNome, entidadeId). */
-export interface Devida { ano: number; mes: number; recebido: string; devido: string; remetido: string; emFalta: string; fundoId: number; fundoNome: string; fundoCodigo: string; entidadeId: number }
+export interface Devida { ano: number; mes: number; recebido: string; devido: string; remetido: string; emFalta: string; fundoId: number; fundoNome: string; fundoCodigo: string; entidadeId: number; pagoDirecto: string }
+
+/** Associações/Missões (leitura global): para mostrar o nome da Missão. */
+export function useEntidades() {
+  return useQuery({
+    queryKey: ['organizacao', 'entidades'],
+    queryFn: async () => (await dados(api.GET('/v1/organizacao/entidades', { params: { query: { limite: 200 } } }))).dados as { id: number; nome: string; sigla?: string | null }[],
+    staleTime: 30 * 60_000,
+  })
+}
 
 export function useRemessasDevidas() {
   const igreja = useIgreja()
@@ -262,6 +297,10 @@ export interface EnvioRemessa {
   entidadeId: number; entidadeNome: string; ano: number; mes: number
   linhas: { fundoId: number; valor: string }[]
   contaId: number; metodo: string; data: string; categoriaRemessaId: number
+  /** N.º do talão do depósito na conta da Missão (ou código M-Pesa). */
+  referencia?: string
+  /** Já houve um depósito deste mês: esta segue o que entrou depois. */
+  complementar?: boolean
 }
 
 /**
@@ -290,7 +329,7 @@ export function useEnviarRemessa() {
       let tr = (await dados(api.POST('/v1/tesouraria/transacoes', {
         body: {
           igrejaId: igreja.id, tipo: 'SAIDA', metodo: p.metodo, valorTotal: deCentimos(total), contaId: p.contaId, dataHora: `${p.data}T12:00:00+02:00`,
-          beneficiario: p.entidadeNome, descricao: `Remessa de ${String(rem.mes).padStart(2, '0')}/${rem.ano}`,
+          beneficiario: p.entidadeNome, descricao: `Remessa ${p.complementar ? 'complementar ' : ''}de ${String(rem.mes).padStart(2, '0')}/${rem.ano}`, referencia: p.referencia || undefined,
           linhas: rem.linhas.map((l) => ({ fundoId: l.fundoId, categoriaId: p.categoriaRemessaId, valor: l.valor })),
         } as NovaTransacao,
         params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
@@ -390,4 +429,30 @@ export function useEstornosDe(id: number) {
     queryKey: [...k.um(id), 'estornos'],
     queryFn: async () => (await dados(api.GET('/v1/tesouraria/transacoes', { params: { query: { igrejaId: igreja.id, estornoTransacaoId: id, limite: 20 } as never } }))).dados as Transacao[],
   })
+}
+
+/* ===================================================================== contribuições do mês (relatório à Missão) */
+/** Linha de GET /v1/tesouraria/contribuicoes (vista; uma por fundo de cada contribuição de um membro). */
+export interface Contribuicao {
+  id: number; membroId: number | null; familiaId: number | null; dataHora: string; metodo: string; fundo: string; fundoId: number
+  valor: string; estorno: boolean; ano: number | null; numero: number | null; pagoNaMissao: boolean | null; referencia: string | null
+}
+
+export function useContribuicoesDoMes(ano: number, mes: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'contribuicoes', ano, mes],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/contribuicoes', { params: { query: { igrejaId: igreja.id, ano, mes } } }))) as unknown as Contribuicao[],
+  })
+}
+
+/* ===================================================================== contas */
+export function useContasMut() {
+  const invalidar = useInvalidar()
+  const qc = useQueryClient()
+  const criar = useMutation({
+    mutationFn: (corpo: Corpo<'/v1/tesouraria/contas', 'post'>) => dados(api.POST('/v1/tesouraria/contas', { body: corpo })) as Promise<Conta>,
+    onSuccess: () => { invalidar(); qc.invalidateQueries({ queryKey: ['tesouraria'] }) },
+  })
+  return { criar }
 }

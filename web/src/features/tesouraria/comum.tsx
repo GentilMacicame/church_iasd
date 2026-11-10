@@ -31,3 +31,12 @@ export function quem(tr: Transacao, nomeDe: (id: number) => string | undefined):
   if (tr.membroId) return nomeDe(tr.membroId) ?? `Membro ${tr.membroId}`
   return tr.anonimo ? 'Anónimo' : '—'
 }
+
+/** Para quem vai o dinheiro de um fundo: "100% para a Missão", "50% Missão · 50% igreja" ou "Fica na igreja". */
+export function parteDoFundo(f: { percentagemRemessa?: string | number | null; destinoEntidadeId?: number | null }): string {
+  const p = Number(f.percentagemRemessa ?? 0)
+  if (!f.destinoEntidadeId || p <= 0) return 'Fica na igreja'
+  if (p >= 100) return '100% para a Missão'
+  const n = (x: number) => String(Math.round(x * 100) / 100).replace('.', ',')
+  return `${n(p)}% Missão · ${n(100 - p)}% igreja`
+}

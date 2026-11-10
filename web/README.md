@@ -62,6 +62,11 @@ src/
   últimos 12 meses, fechar (avisa dos pendentes), reabrir (fica no histórico). Estornos (P-12) na ficha do movimento,
   por fundo, com motivo; seguem aprovação e confirmação. Contagem do numerário (P-06 passo 1): dois contadores,
   conferência contado × lançado; as entradas em numerário escolhem a contagem.
+  Dízimos e ofertas com a divisão de cada fundo (dízimo 100% Missão, oferta combinada 50/50); a igreja só gasta a sua
+  parte. Pagamentos feitos pelos membros directamente na conta da Missão ("Lançar entrada" → "Pago na conta da
+  Missão", com o comprovativo e recibo): contam como contribuição e como já remetidos. Contas (incl. a conta da
+  Missão). Remessa = depósito na conta da Missão com o n.º do talão (e complementar, se entrar mais depois).
+  Relatório mensal para a Missão (resumo por fundo, depósitos, recibos de cada membro, ofertas sem nome), para imprimir.
 - **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
   (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
   com as assinaturas).
