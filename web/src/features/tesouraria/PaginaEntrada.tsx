@@ -22,9 +22,9 @@ import { Barra, EstadoErro } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, deCentimos, hojeIso } from '@/lib/formatos'
+import { centimos, data as dataEcra, deCentimos, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { CATEGORIA_POR_FUNDO, useCategorias, useContas, useCriarMovimento, useFundos, type Conta } from './api'
+import { CATEGORIA_POR_FUNDO, useCategorias, useContagens, useContas, useCriarMovimento, useFundos, type Conta } from './api'
 
 const valorApi = /^\d{1,14}(\.\d{1,2})?$/
 const esquema = z.object({
@@ -33,6 +33,7 @@ const esquema = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Escreva a data como dd/mm/aaaa').refine((d) => d <= hojeIso(), 'A data não pode ser no futuro'),
   hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora como 10:00'),
   membro: z.number().nullable(),
+  contagemId: z.string(),
   referencia: z.string().trim().max(100),
   descricao: z.string().trim().max(255),
   recibo: z.boolean(),
@@ -50,6 +51,7 @@ export default function PaginaEntrada() {
   const categorias = useCategorias()
   const basicos = useMembrosBasicos()
   const criar = useCriarMovimento()
+  const contagens = useContagens()
   const [chave, setChave] = useState(() => crypto.randomUUID())
   const [erro, setErro] = useState<string | null>(null)
   const [ultimo, setUltimo] = useState<{ id: number; valor: string; recibo?: string } | null>(null)
@@ -65,13 +67,15 @@ export default function PaginaEntrada() {
     resolver: zodResolver(esquema),
     values: {
       contaId: contas.data?.[0] ? String(contas.data[0].id) : '', metodo: METODO_DA_CONTA[contas.data?.[0]?.tipo ?? 'CAIXA'],
-      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: null, referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
+      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: null, contagemId: '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
     },
     resetOptions: { keepDirtyValues: true },
   })
   const { fields } = useFieldArray({ control: form.control, name: 'linhas' })
   const linhas = form.watch('linhas')
   const membro = form.watch('membro')
+  const metodo = form.watch('metodo')
+  const contagensAbertas = (contagens.data ?? []).filter((c) => c.estado === 'ABERTA' && !c.endDate)
   const total = linhas.reduce((s, l) => s + (valorApi.test(l.valor) ? centimos(l.valor) : 0), 0)
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
   const fundoPorId = new Map((fundos.data ?? []).map((f) => [f.id, f]))
@@ -86,7 +90,7 @@ export default function PaginaEntrada() {
         recibo: v.recibo && v.membro != null && pode('tesouraria.recibo.criar'),
         corpo: {
           tipo: 'ENTRADA', metodo: v.metodo as never, valorTotal: deCentimos(total), contaId: Number(v.contaId),
-          membroId: v.membro ?? undefined, anonimo: v.membro == null, dataHora: `${v.data}T${v.hora}:00+02:00`,
+          membroId: v.membro ?? undefined, anonimo: v.membro == null, contagemId: v.metodo === 'NUMERARIO' && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
           referencia: v.referencia || undefined, descricao: v.descricao || undefined,
           linhas: preenchidas.map((l) => ({ fundoId: l.fundoId, categoriaId: Number(l.categoriaId), valor: l.valor })),
         } as never,
@@ -150,6 +154,16 @@ export default function PaginaEntrada() {
                   <CampoMembro id={p.id} valor={field.value} aoMudar={field.onChange} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']} vazio="Anónimo (sem contribuinte)" />
                 )} />}
               </CampoFormulario>
+              {metodo === 'NUMERARIO' && contagensAbertas.length > 0 && (
+                <CampoFormulario rotulo="Contagem do culto" ajuda="O dinheiro contado onde este valor estava: soma na conferência.">
+                  {(p) => (
+                    <Seleccao {...p} {...form.register('contagemId')}>
+                      <option value="">Sem contagem</option>
+                      {contagensAbertas.map((c) => <option key={c.id} value={c.id}>{dataEcra(c.data)} · {c.ocasiao ?? 'Culto'}</option>)}
+                    </Seleccao>
+                  )}
+                </CampoFormulario>
+              )}
               <CampoFormulario rotulo="Referência" ajuda="Código da transacção M-Pesa ou do talão do banco" erro={form.formState.errors.referencia?.message}>
                 {(p) => <Input {...p} {...form.register('referencia')} className="alvo num uppercase" />}
               </CampoFormulario>

@@ -25,6 +25,10 @@ const PaginaMovimentosTes = lazy(() => import('@/features/tesouraria/PaginaMovim
 const PaginaMovimentoTes = lazy(() => import('@/features/tesouraria/PaginaMovimento'))
 const PaginaEntrada = lazy(() => import('@/features/tesouraria/PaginaEntrada'))
 const PaginaSaida = lazy(() => import('@/features/tesouraria/PaginaSaida'))
+const PaginaDespesas = lazy(() => import('@/features/tesouraria/PaginaDespesas'))
+const PaginaContagens = lazy(() => import('@/features/tesouraria/PaginaContagens'))
+const PaginaRemessas = lazy(() => import('@/features/tesouraria/PaginaRemessas'))
+const PaginaFechos = lazy(() => import('@/features/tesouraria/PaginaFechos'))
 const PaginaEscalas = lazy(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaNovaEscala = lazy(() => import('@/features/escalas/PaginaNovaEscala'))
 const PaginaEscala = lazy(() => import('@/features/escalas/PaginaEscala'))
@@ -90,6 +94,10 @@ export default function App() {
                   <Route path="tesouraria/movimentos/:id" element={<PaginaMovimentoTes />} />
                   <Route path="tesouraria/entrada" element={<PaginaEntrada />} />
                   <Route path="tesouraria/saida" element={<PaginaSaida />} />
+                  <Route path="tesouraria/despesas" element={<PaginaDespesas />} />
+                  <Route path="tesouraria/contagens" element={<PaginaContagens />} />
+                  <Route path="tesouraria/remessas" element={<PaginaRemessas />} />
+                  <Route path="tesouraria/fechos" element={<PaginaFechos />} />
                   <Route path="escalas" element={<PaginaEscalas />} />
                   <Route path="escalas/nova" element={<PaginaNovaEscala />} />
                   <Route path="escalas/:id" element={<PaginaEscala />} />

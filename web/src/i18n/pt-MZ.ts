@@ -135,6 +135,10 @@ export const t = {
     entrada: 'Lançar entrada',
     saida: 'Registar saída',
     movimentos: 'Movimentos',
+    despesas: 'Despesas',
+    contagens: 'Contagens',
+    remessas: 'Remessas',
+    fechos: 'Fecho do mês',
   },
   livro: {
     titulo: 'Livro de membros',

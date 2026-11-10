@@ -5,7 +5,7 @@
  */
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Ban, Check, CircleCheck, Printer, Receipt, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowLeft, Ban, Check, CircleCheck, Printer, Receipt, ShieldCheck, Undo2, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Campo, Cartao, Dinheiro, Tabela } from '@/components/comum/elementos'
@@ -16,7 +16,8 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, dinheiro } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useAccao, useCategorias, useContas, useFundos, useLinhas, useRecibo, useTransacao } from './api'
+import { useAccao, useCategorias, useContas, useEstornosDe, useFundos, useLinhas, useRecibo, useTransacao } from './api'
+import { DialogoEstorno } from './Estorno'
 import { PilulaEstado, Valor, quem } from './comum'
 
 export default function PaginaMovimento() {
@@ -32,6 +33,8 @@ export default function PaginaMovimento() {
   const basicos = useMembrosBasicos()
   const accoes = useAccao(id)
   const [anular, setAnular] = useState(false)
+  const [estorno, setEstorno] = useState(false)
+  const estornos = useEstornosDe(id)
   const nomeDe = (mid: number) => { const m = basicos.data?.find((x) => x.id === mid); return m && `${m.nome} ${m.apelido}` }
 
   const voltar = <Link to="/tesouraria/movimentos" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground print:hidden"><ArrowLeft className="size-4" /> {t.tesouraria.movimentos}</Link>
@@ -48,6 +51,8 @@ export default function PaginaMovimento() {
   const podeConfirmar = pendente && pode('tesouraria.transacao.alterar') && (!saida || aprovada)
   const podeAprovar = pendente && saida && !aprovada && pode('tesouraria.transacao.aprovar')
   const podeRecibo = tr.estado === 'CONFIRMADA' && tr.tipo === 'ENTRADA' && !!tr.membroId && !recibo.data && recibo.isSuccess && pode('tesouraria.recibo.criar')
+  const estornosValidos = (estornos.data ?? []).filter((x) => !x.endDate)
+  const podeEstornar = tr.estado === 'CONFIRMADA' && !tr.endDate && !tr.estornoTransacaoId && tr.tipo !== 'TRANSFERENCIA' && pode('tesouraria.transacao.criar') && linhas.isSuccess
   const fundoDe = (fid: number) => fundos.data?.find((f) => f.id === fid)?.nome ?? `Fundo ${fid}`
   const categoriaDe = (cid: number) => categorias.data?.find((c) => c.id === cid)?.nome ?? '—'
   const correr = (m: { mutate: (v: undefined, o: object) => void }, ok: string) =>
@@ -69,7 +74,7 @@ export default function PaginaMovimento() {
             </div>
             <Valor tr={tr} className="text-3xl tracking-tight" />
           </div>
-          {(podeConfirmar || podeAprovar || podeRecibo || recibo.data || (pendente && pode('tesouraria.transacao.terminar'))) && (
+          {(podeConfirmar || podeAprovar || podeRecibo || recibo.data || podeEstornar || (pendente && pode('tesouraria.transacao.terminar'))) && (
             <div className="mt-5 flex flex-wrap gap-2 border-t pt-5">
               {podeAprovar && (
                 <Button className="alvo" disabled={accoes.aprovar.isPending} onClick={() => correr(accoes.aprovar, 'Saída aprovada. Já pode ser confirmada.')}>
@@ -87,6 +92,9 @@ export default function PaginaMovimento() {
                 </Button>
               )}
               {recibo.data && <Button variant="outline" className="alvo" onClick={() => window.print()}><Printer className="size-4" /> Imprimir recibo n.º {recibo.data.numero}/{recibo.data.ano}</Button>}
+              {podeEstornar && (
+                <Button variant="outline" className="alvo" onClick={() => setEstorno(true)}><Undo2 className="size-4" /> Estornar</Button>
+              )}
               {pendente && pode('tesouraria.transacao.terminar') && (
                 <Button variant="outline" className="alvo text-destructive-text hover:text-destructive-text" onClick={() => setAnular(true)}><Ban className="size-4" /> Anular</Button>
               )}
@@ -95,6 +103,17 @@ export default function PaginaMovimento() {
           {pendente && saida && !aprovada && (
             <p className="mt-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-3 text-sm text-warning-text">
               {fuiEu ? 'Foi você que registou esta saída: tem de ser aprovada por outra pessoa (ancião ou pastor).' : 'Esta saída espera aprovação antes de ser confirmada.'}
+            </p>
+          )}
+          {tr.estornoTransacaoId && (
+            <p className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
+              Estorno do <Link to={`/tesouraria/movimentos/${tr.estornoTransacaoId}`} className="font-medium text-primary hover:underline">movimento n.º {tr.estornoTransacaoId}</Link>.
+            </p>
+          )}
+          {estornosValidos.length > 0 && (
+            <p className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
+              Já tem {estornosValidos.length === 1 ? 'um estorno' : `${estornosValidos.length} estornos`}:{' '}
+              {estornosValidos.map((x, i) => <span key={x.id}>{i > 0 && ', '}<Link to={`/tesouraria/movimentos/${x.id}`} className="font-medium text-primary hover:underline">n.º {x.id}</Link> ({dinheiro(x.valorTotal)}, {x.estado === 'CONFIRMADA' ? 'confirmado' : 'pendente'})</span>)}.
             </p>
           )}
           {tr.estado === 'CONFIRMADA' && <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4" />Confirmado: não se altera. Para corrigir, registe um estorno.</p>}
@@ -147,6 +166,8 @@ export default function PaginaMovimento() {
           </div>
         </div>
       )}
+
+      {podeEstornar && estorno && <DialogoEstorno tr={tr} linhas={linhas.data ?? []} fundoDe={fundoDe} aberto={estorno} aoMudar={setEstorno} />}
 
       <DialogoConfirmar aberto={anular} aoMudar={setAnular} titulo="Anular este movimento?"
         texto="O movimento pendente deixa de contar e fica no histórico como anulado. Nada se apaga." accao="Anular" perigo

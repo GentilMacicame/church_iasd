@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, dados, type Esquema } from '@/api/cliente'
 import type { paths } from '@/api/esquema'
 import { useIgreja } from '@/auth/sessao'
+import { centimos, deCentimos } from '@/lib/formatos'
 
 export type Conta = Esquema<'Conta'> & { id: number; nome: string }
 export type Fundo = Esquema<'Fundo'> & { id: number; nome: string; codigo: string; tipo: TipoFundo }
@@ -184,4 +185,209 @@ export function useAccao(id: number) {
     onSuccess: () => invalidar(id),
   })
   return { confirmar, aprovar, recibo, anular }
+}
+
+/* ===================================================================== despesas (P-07) */
+export type EstadoDespesa = 'SUBMETIDA' | 'APROVADA' | 'REJEITADA' | 'PAGA' | 'CANCELADA'
+export type Despesa = Esquema<'Despesa'> & { id: number; descricao: string; valorSolicitado: string; categoriaId: number; fundoId: number; estado: EstadoDespesa }
+
+export function useDespesas() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'despesas'],
+    queryFn: async () => {
+      const out: Despesa[] = []
+      let depois: string | undefined
+      do {
+        const r = await dados(api.GET('/v1/tesouraria/despesas', { params: { query: { igrejaId: igreja.id, limite: 200, ordem: '-id', depois, incluirTerminados: true } as never } }))
+        out.push(...(r.dados as Despesa[]))
+        depois = r.proximo ?? undefined
+      } while (depois && out.length < 1000)
+      return out
+    },
+  })
+}
+
+export function useDespesasMut() {
+  const invalidar = useInvalidar()
+  const pedir = useMutation({
+    mutationFn: (corpo: Corpo<'/v1/tesouraria/despesas', 'post'>) => dados(api.POST('/v1/tesouraria/despesas', { body: corpo })) as Promise<Despesa>,
+    onSuccess: () => invalidar(),
+  })
+  /** Aprovar (pode reduzir o valor) ou rejeitar com motivo: tesouraria.fn_decidir_despesa; quem pede não decide. */
+  const decidir = useMutation({
+    mutationFn: ({ id, ...corpo }: { id: number; aprovar: boolean; valor?: string; motivo?: string }) =>
+      dados(api.POST('/v1/tesouraria/despesas/{id}/decidir', { params: { path: { id } }, body: corpo })),
+    onSuccess: () => invalidar(),
+  })
+  const cancelar = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/despesas/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+  return { pedir, decidir, cancelar }
+}
+
+/* ===================================================================== remessas (P-09) */
+export type EstadoRemessa = 'PREPARADA' | 'ENVIADA' | 'CONFIRMADA'
+export type Remessa = Esquema<'Remessa'> & { id: number; entidadeId: number; ano: number; mes: number; estado: EstadoRemessa }
+export type LinhaRemessa = Esquema<'RemessaLinha'> & { id: number; remessaId: number; fundoId: number; valor: string }
+export type RemessaComLinhas = Remessa & { linhas: LinhaRemessa[] }
+/** Linha de GET /v1/tesouraria/remessas-devidas (vista; a V20 acrescentou fundoId, fundoNome, entidadeId). */
+export interface Devida { ano: number; mes: number; recebido: string; devido: string; remetido: string; emFalta: string; fundoId: number; fundoNome: string; fundoCodigo: string; entidadeId: number }
+
+export function useRemessasDevidas() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'remessas-devidas'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/remessas-devidas', { params: { query: { igrejaId: igreja.id } } }))) as unknown as Devida[],
+  })
+}
+
+export function useRemessas() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'remessas'],
+    queryFn: async (): Promise<RemessaComLinhas[]> => {
+      const rem = (await dados(api.GET('/v1/tesouraria/remessas', { params: { query: { igrejaId: igreja.id, limite: 100, ordem: '-id' } } }))).dados as Remessa[]
+      return Promise.all(rem.map(async (r) => ({
+        ...r,
+        linhas: (await dados(api.GET('/v1/tesouraria/linhas-remessa', { params: { query: { remessaId: r.id, limite: 50 } } }))).dados as LinhaRemessa[],
+      })))
+    },
+  })
+}
+
+export interface EnvioRemessa {
+  remessa?: RemessaComLinhas
+  entidadeId: number; entidadeNome: string; ano: number; mes: number
+  linhas: { fundoId: number; valor: string }[]
+  contaId: number; metodo: string; data: string; categoriaRemessaId: number
+}
+
+/**
+ * Envia a remessa de um mês (P-09 passos 2 e 3): cria a remessa e as linhas por fundo, paga-a com uma saída da
+ * categoria de remessa (não precisa de aprovação: é a obrigação mensal) e marca-a como enviada. Se um passo
+ * falhar, a remessa fica PREPARADA e retoma-se com o mesmo botão (não se cria outra).
+ */
+export function useEnviarRemessa() {
+  const invalidar = useInvalidar()
+  const igreja = useIgreja()
+  return useMutation({
+    mutationFn: async (p: EnvioRemessa) => {
+      let rem = p.remessa
+      if (!rem) {
+        const r = (await dados(api.POST('/v1/tesouraria/remessas', {
+          body: { igrejaId: igreja.id, entidadeId: p.entidadeId, ano: p.ano, mes: p.mes },
+          params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never,
+        }))) as Remessa
+        const ls: LinhaRemessa[] = []
+        for (const l of p.linhas) {
+          ls.push((await dados(api.POST('/v1/tesouraria/linhas-remessa', { body: { remessaId: r.id, fundoId: l.fundoId, valor: l.valor } }))) as LinhaRemessa)
+        }
+        rem = { ...r, linhas: ls }
+      }
+      const total = rem.linhas.reduce((s, l) => s + centimos(l.valor), 0)
+      let tr = (await dados(api.POST('/v1/tesouraria/transacoes', {
+        body: {
+          igrejaId: igreja.id, tipo: 'SAIDA', metodo: p.metodo, valorTotal: deCentimos(total), contaId: p.contaId, dataHora: `${p.data}T12:00:00+02:00`,
+          beneficiario: p.entidadeNome, descricao: `Remessa de ${String(rem.mes).padStart(2, '0')}/${rem.ano}`,
+          linhas: rem.linhas.map((l) => ({ fundoId: l.fundoId, categoriaId: p.categoriaRemessaId, valor: l.valor })),
+        } as NovaTransacao,
+        params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      }))) as Transacao
+      if (tr.estado === 'PENDENTE') tr = (await dados(api.POST('/v1/tesouraria/transacoes/{id}/confirmar', { params: { path: { id: tr.id } } }))) as Transacao
+      await dados(api.POST('/v1/tesouraria/remessas/{id}/enviar', { params: { path: { id: rem.id } }, body: { transacaoId: tr.id, data: p.data } }))
+      return rem
+    },
+    onSettled: () => invalidar(),
+  })
+}
+
+export function useConfirmarRemessa() {
+  const invalidar = useInvalidar()
+  return useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/remessas/{id}/confirmar', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+}
+
+/* ===================================================================== fecho do mês (P-10) */
+export type Fecho = Esquema<'FechoPeriodo'> & { id: number; ano: number; mes: number }
+
+export function useFechos() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'fechos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/fechos', { params: { query: { igrejaId: igreja.id, limite: 100, ordem: '-id', incluirTerminados: true } as never } }))).dados as Fecho[],
+  })
+}
+
+export function useFechosMut() {
+  const invalidar = useInvalidar()
+  const igreja = useIgreja()
+  const fechar = useMutation({
+    mutationFn: ({ ano, mes }: { ano: number; mes: number }) => dados(api.POST('/v1/tesouraria/fechos', { body: { igrejaId: igreja.id, ano, mes } })),
+    onSuccess: () => invalidar(),
+  })
+  /** Reabrir fica registado (o fecho é terminado, nada se apaga). */
+  const reabrir = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/fechos/{id}/reabrir', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+  return { fechar, reabrir }
+}
+
+/* ===================================================================== contagem do numerário (P-06 passo 1) */
+export type EstadoContagem = 'ABERTA' | 'CONFERIDA' | 'DEPOSITADA'
+export type Contagem = Esquema<'Contagem'> & { id: number; data: string; contaId: number; totalContado: string; contador1MembroId: number; contador2MembroId: number; estado: EstadoContagem }
+export interface Conferencia { id: number; data: string; ocasiao: string | null; totalContado: string; totalLancado: string; diferenca: string; estado: EstadoContagem }
+
+export function useContagens() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'contagens'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/contagens', { params: { query: { igrejaId: igreja.id, limite: 100, ordem: '-data' } } }))).dados as Contagem[],
+  })
+}
+
+export function useConferencia() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'conferencia'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/conferencia-contagens', { params: { query: { igrejaId: igreja.id } } }))) as unknown as Conferencia[],
+  })
+}
+
+export function useContagensMut() {
+  const invalidar = useInvalidar()
+  const criar = useMutation({
+    mutationFn: (corpo: Corpo<'/v1/tesouraria/contagens', 'post'>) =>
+      dados(api.POST('/v1/tesouraria/contagens', { body: corpo, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })) as Promise<Contagem>,
+    onSuccess: () => invalidar(),
+  })
+  const mudarEstado = useMutation({
+    mutationFn: ({ id, estado }: { id: number; estado: EstadoContagem }) => dados(api.PATCH('/v1/tesouraria/contagens/{id}', { params: { path: { id } }, body: { estado } })),
+    onSuccess: () => invalidar(),
+  })
+  return { criar, mudarEstado }
+}
+
+/* ===================================================================== estorno (P-12) */
+export function useEstornar(id: number) {
+  const invalidar = useInvalidar()
+  return useMutation({
+    mutationFn: async (corpo: { valor: string; motivo: string; linhas: { fundoId: number; categoriaId: number; valor: string }[] }) =>
+      (await dados(api.POST('/v1/tesouraria/transacoes/{id}/estornar', { params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } } as never, body: corpo }))) as Transacao,
+    onSuccess: () => invalidar(id),
+  })
+}
+
+/** Estornos já feitos de um movimento (para não estornar duas vezes sem ver). */
+export function useEstornosDe(id: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: id > 0,
+    queryKey: [...k.um(id), 'estornos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/transacoes', { params: { query: { igrejaId: igreja.id, estornoTransacaoId: id, limite: 20 } as never } }))).dados as Transacao[],
+  })
 }

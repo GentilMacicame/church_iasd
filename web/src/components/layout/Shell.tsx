@@ -9,6 +9,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   Banknote, BookOpen, Building2, CalendarDays, Check, HandCoins, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   UserPlus, Users, X,
+  Calculator, CalendarCheck, ClipboardList,
 } from 'lucide-react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -42,6 +43,10 @@ const NAV: GrupoNav[] = [
       { para: '/tesouraria/movimentos', rotulo: t.tesouraria.movimentos, icone: ListOrdered, permissao: 'tesouraria.transacao.ler', fim: false },
       { para: '/tesouraria/entrada', rotulo: t.tesouraria.entrada, icone: HandCoins, permissao: 'tesouraria.transacao.criar', fim: true },
       { para: '/tesouraria/saida', rotulo: t.tesouraria.saida, icone: Banknote, permissao: 'tesouraria.transacao.criar', fim: true },
+      { para: '/tesouraria/despesas', rotulo: t.tesouraria.despesas, icone: ClipboardList, permissao: 'tesouraria.despesa.ler', fim: true },
+      { para: '/tesouraria/contagens', rotulo: t.tesouraria.contagens, icone: Calculator, permissao: 'tesouraria.contagem_numerario.ler', fim: true },
+      { para: '/tesouraria/remessas', rotulo: t.tesouraria.remessas, icone: Landmark, permissao: 'tesouraria.remessa.ler', fim: true },
+      { para: '/tesouraria/fechos', rotulo: t.tesouraria.fechos, icone: CalendarCheck, permissao: 'tesouraria.fecho_periodo.ler', fim: true },
     ],
   },
   {
@@ -172,6 +177,10 @@ function Caminho() {
     if (/^\/tesouraria\/movimentos\/\d+/.test(pathname)) partes.push({ rotulo: 'Movimento' })
     if (pathname === '/tesouraria/entrada') partes.push({ rotulo: t.tesouraria.entrada })
     if (pathname === '/tesouraria/saida') partes.push({ rotulo: t.tesouraria.saida })
+    if (pathname === '/tesouraria/despesas') partes.push({ rotulo: t.tesouraria.despesas })
+    if (pathname === '/tesouraria/contagens') partes.push({ rotulo: t.tesouraria.contagens })
+    if (pathname === '/tesouraria/remessas') partes.push({ rotulo: t.tesouraria.remessas })
+    if (pathname === '/tesouraria/fechos') partes.push({ rotulo: t.tesouraria.fechos })
   }
   if (pathname.startsWith('/escalas')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: t.nav.escalas, para: '/escalas' })

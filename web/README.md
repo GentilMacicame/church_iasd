@@ -56,6 +56,12 @@ src/
   lançar entrada por fundos (envelope a envelope, total em cêntimos, recibo numerado); registar saída (fica por
   aprovar: quem regista não aprova; o ancião aprova, o tesoureiro confirma); movimentos do mês com filtros; ficha do
   movimento (confirmar, aprovar, recibo para imprimir, anular pendente). Pedidos de dinheiro com Idempotency-Key.
+  Despesas (P-07): pedir, decidir (aprovar, pode reduzir, ou rejeitar com motivo; quem pede não decide), pagar (a saída
+  confirma-se logo e a despesa passa a paga). Remessas (P-09): o devido por mês e fundo, enviar (remessa + linhas +
+  saída de remessa + enviada; retoma-se se falhar a meio), confirmar a recepção (Associação). Fecho do mês (P-10):
+  últimos 12 meses, fechar (avisa dos pendentes), reabrir (fica no histórico). Estornos (P-12) na ficha do movimento,
+  por fundo, com motivo; seguem aprovação e confirmação. Contagem do numerário (P-06 passo 1): dois contadores,
+  conferência contado × lançado; as entradas em numerário escolhem a contagem.
 - **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
   (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
   com as assinaturas).
@@ -63,7 +69,7 @@ src/
 ## Por fazer (próximas iterações)
 
 - Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).
-- Tesouraria: despesas com requisição (P-07), remessas à Associação (P-09), fecho do mês (P-10), estornos (P-12),
-  contagem do numerário com dois contadores (P-06 passo 1).
+- Tesouraria: orçamento anual (F-TES-11), transferências entre contas, depósito da contagem no banco, relatórios
+  mensais em PDF (Fase 4).
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

@@ -67,7 +67,7 @@ export function Indicador({ rotulo, valor, nota, icone, tom = 'primary', para, a
         {icone && <span className="hidden sm:block"><IconeTom icone={icone} tom={tom} /></span>}
       </div>
       {aCarregar ? <span className="mt-3 block h-9 w-16 rounded-md bg-muted" aria-hidden />
-        : <div className="num mt-2 truncate text-2xl font-bold tracking-tight text-foreground sm:mt-3 sm:text-3xl">{valor}</div>}
+        : <div className="num mt-2 truncate text-xl font-bold tracking-tight text-foreground min-[400px]:text-2xl sm:mt-3 sm:text-3xl">{valor}</div>}
       {nota && <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{nota}</p>}
     </>
   )
