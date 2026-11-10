@@ -129,6 +129,10 @@ export const t = {
     nenhum: 'Nenhum',
     procurarMembro: 'Procurar membro pelo nome',
   },
+  livro: {
+    titulo: 'Livro de membros',
+    reunioes: 'Reuniões e votos',
+  },
   escalas: {
     titulo: 'Escalas',
     nova: 'Nova escala',
@@ -202,6 +206,15 @@ export const rotulos = {
     TRANSFERENCIA_ENTRADA: 'Transferência (entrada)', TRANSFERENCIA_SAIDA: 'Transferência (saída)', FALECIMENTO: 'Falecimento',
     REMOCAO_DISCIPLINA: 'Remoção (disciplina)', REMOCAO_PEDIDO: 'Remoção (a pedido)', DESAPARECIDO: 'Desaparecido',
   },
+  tipoReuniao: {
+    JUNTA_DIRECTIVA: 'Junta directiva', REUNIAO_REGULAR: 'Reunião regular', ASSEMBLEIA_ADMINISTRATIVA: 'Assembleia administrativa',
+    COMISSAO_NOMEACOES: 'Comissão de nomeações', CONSELHO_ES: 'Conselho da Escola Sabatina',
+  },
+  tipoVoto: {
+    ADMISSAO: 'Admissão', TRANSFERENCIA: 'Transferência', REMOCAO: 'Remoção', DISCIPLINA: 'Disciplina', ELEICAO: 'Eleição',
+    FINANCEIRO: 'Financeiro', OUTRO: 'Outro',
+  },
+  resultadoVoto: { APROVADO: 'Aprovado', REJEITADO: 'Rejeitado', ADIADO: 'Adiado' },
   tipoContacto: { TELEFONE: 'Telefone', EMAIL: 'E-mail', WHATSAPP: 'WhatsApp', OUTRO: 'Outro' },
   funcaoEscala: {
     PREGADOR: 'Pregador', ANCIAO_DO_DIA: 'Ancião do dia', DIACONO: 'Diácono', DIACONISA: 'Diaconisa', RECEPCAO: 'Recepção',

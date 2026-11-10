@@ -20,6 +20,7 @@ import { f, rotulos, t } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
 import { PilulasMembro } from './PaginaMembros'
 import { DialogoBaptismo, DialogoContacto } from './Dialogos'
+import { CartaoLivro } from '@/features/livro/MovimentosMembro'
 import { useBaptismos, useContactos, useMembro, useTerminarMembro, useValidarMembro, type Membro } from './api'
 
 const ICONE_CONTACTO = { TELEFONE: Phone, WHATSAPP: MessageCircle, EMAIL: Mail, OUTRO: Phone } as const
@@ -250,6 +251,7 @@ export default function PaginaMembro() {
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <Ficha m={m} />
         <div className="grid gap-6 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4">
+          <CartaoLivro m={m} />
           <Contactos m={m} />
           <Baptismos m={m} />
         </div>

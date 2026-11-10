@@ -49,12 +49,15 @@ src/
 - **Início**: indicadores, o próximo sábado (escala do dia), pendentes da secretaria, livro de membros do ano, saldos.
 - **Membros**: lista com indicadores que filtram, pesquisa, ficha (aprovar, editar, terminar, contactos, baptismo) e
   formulário completo.
+- **Livro de membros** (P-01): reuniões (junta, regular, assembleia) e votos em acta com numeração anual; entradas
+  (baptismo, profissão de fé) e saídas registadas na ficha do membro, com o voto que as autoriza; o livro com os números
+  do ano.
 - **Escalas** (F-ACT-03): lista, nova escala (gera os sábados do período), editor em grelha como a escala em papel
   (escalar, trocar, retirar, dias especiais, grupo coral), publicar (activa os lembretes por SMS) e imprimir (A4 deitado,
   com as assinaturas).
 
 ## Por fazer (próximas iterações)
 
-Movimentos do livro de membros (reuniões, votos, admissão, transferências: P-01…P-04), tesouraria (entradas por
+Transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04), tesouraria (entradas por
 fundo, saídas com aprovação, recibos, remessas: P-06…P-10), Escola Sabatina com o relatório do sábado offline (PWA,
 IndexedDB, P-05), escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

@@ -7,7 +7,7 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  Building2, CalendarDays, Check, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
+  BookOpen, Building2, CalendarDays, Check, Landmark, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   UserPlus, Users, X,
 } from 'lucide-react'
 import {
@@ -31,6 +31,8 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/membros', rotulo: t.nav.membros, icone: Users, permissao: 'secretaria.membro.ler', fim: false },
       { para: '/membros/novo', rotulo: t.membros.registar, icone: UserPlus, permissao: 'secretaria.membro.criar', fim: true },
+      { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
+      { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
     ],
   },
   {
@@ -149,6 +151,11 @@ function Caminho() {
     if (pathname === '/membros/novo') partes.push({ rotulo: t.membros.registar })
     else if (pathname.endsWith('/editar')) partes.push({ rotulo: t.ficha.titulo, para: pathname.replace(/\/editar$/, '') }, { rotulo: t.comum.editar })
     else if (/^\/membros\/\d+/.test(pathname)) partes.push({ rotulo: t.ficha.titulo })
+  }
+  if (pathname.startsWith('/livro')) partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.livro.titulo })
+  if (pathname.startsWith('/reunioes')) {
+    partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.livro.reunioes, para: '/reunioes' })
+    if (/^\/reunioes\/\d+/.test(pathname)) partes.push({ rotulo: 'Acta' })
   }
   if (pathname.startsWith('/escalas')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: t.nav.escalas, para: '/escalas' })

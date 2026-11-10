@@ -17,6 +17,9 @@ const PaginaInicio = lazy(() => import('@/features/inicio/PaginaInicio'))
 const PaginaMembros = lazy(() => import('@/features/membros/PaginaMembros'))
 const PaginaMembro = lazy(() => import('@/features/membros/PaginaMembro'))
 const PaginaFormMembro = lazy(() => import('@/features/membros/PaginaFormMembro'))
+const PaginaLivro = lazy(() => import('@/features/livro/PaginaLivro'))
+const PaginaReunioes = lazy(() => import('@/features/livro/PaginaReunioes'))
+const PaginaReuniao = lazy(() => import('@/features/livro/PaginaReuniao'))
 const PaginaEscalas = lazy(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaNovaEscala = lazy(() => import('@/features/escalas/PaginaNovaEscala'))
 const PaginaEscala = lazy(() => import('@/features/escalas/PaginaEscala'))
@@ -74,6 +77,9 @@ export default function App() {
                   <Route path="membros/novo" element={<PaginaFormMembro />} />
                   <Route path="membros/:id" element={<PaginaMembro />} />
                   <Route path="membros/:id/editar" element={<PaginaFormMembro />} />
+                  <Route path="livro" element={<PaginaLivro />} />
+                  <Route path="reunioes" element={<PaginaReunioes />} />
+                  <Route path="reunioes/:id" element={<PaginaReuniao />} />
                   <Route path="escalas" element={<PaginaEscalas />} />
                   <Route path="escalas/nova" element={<PaginaNovaEscala />} />
                   <Route path="escalas/:id" element={<PaginaEscala />} />
