@@ -3,7 +3,7 @@
  * Dois contadores (tesoureiro e diácono, pessoas diferentes) contam o dinheiro do culto; as entradas em numerário
  * desse culto ligam-se à contagem ao lançar. A conferência compara o contado com o lançado e confirmado.
  */
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calculator, CircleCheck, HandCoins, Plus, Scale } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,10 +20,10 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { centimos, data, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useConferencia, useContagens, useContagensMut, useContasIgreja as useContas } from './api'
+import { PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, type Conferencia } from './api'
 
 export default function PaginaContagens() {
   const { pode } = useSessao()
@@ -71,7 +71,8 @@ export default function PaginaContagens() {
                     const cont = porId.get(c.id)
                     const dif = centimos(c.diferenca)
                     return (
-                      <tr key={c.id}>
+                      <Fragment key={c.id}>
+                      <tr className={cn(c.dizimos != null && '[&>td]:border-b-0')}>
                         <td className="sm:pl-6">
                           <p className="font-medium"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</p>
                           {cont && <p className="text-xs text-muted-foreground">{nomes.get(cont.contador1MembroId) ?? '—'} e {nomes.get(cont.contador2MembroId) ?? '—'}</p>}
@@ -87,6 +88,8 @@ export default function PaginaContagens() {
                           )}
                         </td>
                       </tr>
+                      {c.dizimos != null && <LinhaPartes c={c} />}
+                      </Fragment>
                     )
                   })}
                 </tbody>
@@ -102,6 +105,29 @@ export default function PaginaContagens() {
   )
 }
 
+/** Por baixo de cada contagem: cada parte, contado / lançado; a que não bate fica a vermelho. */
+function LinhaPartes({ c }: { c: Conferencia }) {
+  return (
+    <tr>
+      <td colSpan={6} className="pt-0 sm:px-6">
+        <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
+          {PARTES_CONTAGEM.map((p) => {
+            const contado = centimos(c[p.campo] ?? '0')
+            const lancado = centimos(c[`${p.campo}Lancado`] ?? '0')
+            if (!contado && !lancado) return null
+            const certo = contado === lancado
+            return (
+              <li key={p.campo} className={cn('tabular-nums', certo ? 'text-muted-foreground' : 'font-medium text-destructive-text')}>
+                {p.rotulo}: {dinheiro(deCentimos(contado))}{certo ? ' ✓' : ` · lançado ${dinheiro(deCentimos(lancado))}`}
+              </li>
+            )
+          })}
+        </ul>
+      </td>
+    </tr>
+  )
+}
+
 function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (id: number) => string | undefined }) {
   const igreja = useIgreja()
   const contas = useContas()
@@ -112,7 +138,9 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
   const [ocasiao, setOcasiao] = useState('Culto de sábado')
   const [c1, setC1] = useState<number | null>(null)
   const [c2, setC2] = useState<number | null>(null)
-  const [total, setTotal] = useState('')
+  const [partes, setPartes] = useState<Record<string, string>>({ dizimos: '', ofertas: '', escolaSabatina: '', outras: '' })
+  const validoOuVazio = (v: string) => v === '' || /^\d{1,14}(\.\d{1,2})?$/.test(v)
+  const total = Object.values(partes).reduce((s, v) => s + (v && validoOuVazio(v) ? centimos(v) : 0), 0)
   const [erro, setErro] = useState<string | null>(null)
   const conta = caixas.find((c) => String(c.id) === contaId) ?? caixas[0] ?? contas.data?.[0]
 
@@ -121,9 +149,12 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hojeIso()) return setErro('A data tem de ser dd/mm/aaaa e não pode ser no futuro.')
     if (!c1 || !c2) return setErro('Escolha os dois contadores.')
     if (c1 === c2) return setErro('Os dois contadores têm de ser pessoas diferentes.')
-    if (!/^\d{1,14}(\.\d{1,2})?$/.test(total)) return setErro('Escreva o total contado, por exemplo 2 350,00.')
+    if (!Object.values(partes).every(validoOuVazio)) return setErro('Há um valor inválido: escreva, por exemplo, 2 350,00.')
+    if (total <= 0) return setErro('Escreva o que se contou em pelo menos uma das partes.')
+    const parte = (v: string) => (v ? v : '0.00')
     try {
-      await criar.mutateAsync({ igrejaId: igreja.id, contaId: conta!.id, data: dia, ocasiao: ocasiao.trim() || undefined, contador1MembroId: c1, contador2MembroId: c2, totalContado: total } as never)
+      await criar.mutateAsync({ igrejaId: igreja.id, contaId: conta!.id, data: dia, ocasiao: ocasiao.trim() || undefined, contador1MembroId: c1, contador2MembroId: c2,
+        totalContado: deCentimos(total), dizimos: parte(partes.dizimos), ofertas: parte(partes.ofertas), escolaSabatina: parte(partes.escolaSabatina), outras: parte(partes.outras) } as never)
       toast.success('Contagem registada. Ao lançar as entradas em numerário, escolha esta contagem.')
       aoFechar()
     } catch (e) {
@@ -157,17 +188,28 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
               <label htmlFor="cnt-c2" className="text-sm font-medium">2.º contador</label>
               <CampoMembro id="cnt-c2" valor={c2} aoMudar={setC2} nomeDe={nomeDe} />
             </div>
-            <div className="grid gap-1.5">
-              <label htmlFor="cnt-total" className="text-sm font-medium">Total contado</label>
-              <CampoDinheiro id="cnt-total" value={total} onChange={setTotal} className="alvo" />
-            </div>
-            <div className="grid gap-1.5">
+            <div className="grid gap-1.5 sm:col-span-2">
               <label htmlFor="cnt-conta" className="text-sm font-medium">Fica no</label>
               <Seleccao id="cnt-conta" value={conta ? String(conta.id) : ''} onChange={(e) => setContaId(e.target.value)}>
                 {(caixas.length ? caixas : contas.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </Seleccao>
             </div>
           </div>
+          <fieldset className="grid gap-3 rounded-lg border p-3">
+            <legend className="px-1 text-sm font-medium">O que se contou</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {PARTES_CONTAGEM.map((p) => (
+                <div key={p.campo} className="grid gap-1">
+                  <label htmlFor={`cnt-${p.campo}`} className="text-sm">{p.rotulo} <span className="text-xs text-muted-foreground">· {p.ajuda}</span></label>
+                  <CampoDinheiro id={`cnt-${p.campo}`} value={partes[p.campo]} onChange={(v: string) => setPartes((x) => ({ ...x, [p.campo]: v }))} className="alvo" />
+                </div>
+              ))}
+            </div>
+            <p className="flex items-baseline justify-between border-t pt-2 text-sm">
+              <span className="font-medium">Total contado</span>
+              <span className="num text-lg font-semibold"><Dinheiro valor={deCentimos(total)} /></span>
+            </p>
+          </fieldset>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

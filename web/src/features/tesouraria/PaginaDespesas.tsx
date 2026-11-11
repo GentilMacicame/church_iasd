@@ -28,7 +28,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { METODO_DA_CONTA } from './PaginaEntrada'
-import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, type Despesa } from './api'
+import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, useSaldosFundos, type Despesa } from './api'
 
 const VALOR = z.string().regex(/^\d{1,14}(\.\d{1,2})?$/, 'Escreva o valor, por exemplo 1 500,00').refine((v) => Number(v) > 0, 'O valor tem de ser maior que zero')
 
@@ -111,7 +111,7 @@ export default function PaginaDespesas() {
                         <td className="sm:pl-6">
                           <p className="font-medium">{d.descricao}</p>
                           <p className="text-xs text-muted-foreground">
-                            {d.fornecedor ? `${d.fornecedor} · ` : ''}{categoriaDe(d.categoriaId)} · pedida em {data(d.criadoEm)}
+                            {d.fornecedor ? `${d.fornecedor} · ` : ''}{categoriaDe(d.categoriaId)}{d.outraCategoria ? `: ${d.outraCategoria}` : ''} · pedida em {data(d.criadoEm)}
                             {d.estado === 'REJEITADA' && d.motivoRejeicao ? ` · ${d.motivoRejeicao}` : ''}
                           </p>
                         </td>
@@ -167,6 +167,7 @@ const esquemaPedir = z.object({
   fornecedor: z.string().trim().max(150),
   valor: VALOR,
   categoriaId: z.string().min(1, t.comum.obrigatorio),
+  outraCategoria: z.string().trim().max(100),
   fundoId: z.string().min(1, t.comum.obrigatorio),
 })
 
@@ -177,24 +178,32 @@ function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boole
   const categorias = useCategorias()
   const { pedir } = useDespesasMut()
   const [erro, setErro] = useState<string | null>(null)
+  const saldos = useSaldosFundos()
   const locais = fundosDaIgreja(fundos.data)
+  // os fundos da igreja (orçamento local, ES, as ofertas e projectos dela) e a parte da igreja nos repartidos
+  const daIgreja = locais.filter((f) => !f.destinoEntidadeId)
+  const repartidos = locais.filter((f) => !!f.destinoEntidadeId)
+  const disponivel = (id: number) => { const s = saldos.data?.find((x) => x.fundoId === id); return s ? ` · disponível ${dinheiro(s.disponivel ?? s.saldo)}` : '' }
   const cats = (categorias.data ?? []).filter((c) => c.tipo === 'DESPESA' && !c.eRemessa)
   const form = useForm<z.infer<typeof esquemaPedir>>({
     resolver: zodResolver(esquemaPedir),
     values: {
-      descricao: '', fornecedor: '', valor: '', categoriaId: String(cats[0]?.id ?? ''),
+      descricao: '', fornecedor: '', valor: '', categoriaId: String(cats[0]?.id ?? ''), outraCategoria: '',
       fundoId: String(locais.find((f) => f.tipo === 'ORCAMENTO_LOCAL')?.id ?? locais[0]?.id ?? ''),
     },
     resetOptions: { keepDirtyValues: true },
   })
   const e = form.formState.errors
+  // "Outras despesas": escreve-se que despesa é (a base de dados exige-o)
+  const outra = cats.find((c) => String(c.id) === form.watch('categoriaId'))?.codigo === 'D9'
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
+    if (outra && !v.outraCategoria) { form.setError('outraCategoria', { message: 'Escreva que despesa é' }); return }
     try {
       await pedir.mutateAsync({
         igrejaId: igreja.id, descricao: v.descricao, fornecedor: v.fornecedor || undefined, valorSolicitado: v.valor,
-        categoriaId: Number(v.categoriaId), fundoId: Number(v.fundoId), solicitadoPorUsuarioId: usuario!.id,
+        categoriaId: Number(v.categoriaId), outraCategoria: outra ? v.outraCategoria : undefined, fundoId: Number(v.fundoId), solicitadoPorUsuarioId: usuario!.id,
       } as never)
       toast.success('Despesa pedida. Outra pessoa com permissão decide.')
       aoMudar(false)
@@ -226,8 +235,24 @@ function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boole
               {(p) => <Seleccao {...p} {...form.register('categoriaId')}>{cats.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</Seleccao>}
             </CampoFormulario>
             <CampoFormulario rotulo="Paga pelo fundo" erro={e.fundoId?.message}>
-              {(p) => <Seleccao {...p} {...form.register('fundoId')}>{locais.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</Seleccao>}
+              {(p) => (
+                <Seleccao {...p} {...form.register('fundoId')}>
+                  <optgroup label="Fundos da igreja">
+                    {daIgreja.map((f) => <option key={f.id} value={f.id}>{f.nome}{disponivel(f.id)}</option>)}
+                  </optgroup>
+                  {repartidos.length > 0 && (
+                    <optgroup label="Parte da igreja nas ofertas">
+                      {repartidos.map((f) => <option key={f.id} value={f.id}>{f.nome}{disponivel(f.id)}</option>)}
+                    </optgroup>
+                  )}
+                </Seleccao>
+              )}
             </CampoFormulario>
+            {outra && (
+              <CampoFormulario rotulo="Que despesa é" erro={e.outraCategoria?.message} obrigatorio className="sm:col-span-2" ajuda="A categoria é 'Outras despesas': diga de que tipo é">
+                {(p) => <Input {...p} {...form.register('outraCategoria')} placeholder="ex.: Transporte, Alimentação, Ofertas de amor" className="alvo" maxLength={100} />}
+              </CampoFormulario>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" className="alvo" onClick={() => aoMudar(false)}>{t.comum.cancelar}</Button>

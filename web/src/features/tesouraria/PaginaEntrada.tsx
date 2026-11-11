@@ -94,11 +94,14 @@ export default function PaginaEntrada() {
   const daIgreja = todas.filter((c) => !daMissao(c)).sort((a, b) => Number(b.tipo === 'CAIXA') - Number(a.tipo === 'CAIXA'))
   const naMissaoContas = todas.filter((c) => daMissao(c))
   // por defeito: o caixa (envelopes do sábado); com ?onde=missao, a primeira conta da Missão
-  const inicial = params.get('onde') === 'missao' ? naMissaoContas[0] : daIgreja.find((c) => c.tipo === 'CAIXA') ?? daIgreja[0]
+  // ?conta= (vindo da ficha de um movimento: "lançar outra entrada" do mesmo membro, da mesma forma)
+  const pedida = todas.find((c) => String(c.id) === params.get('conta'))
+  const inicial = pedida ?? (params.get('onde') === 'missao' ? naMissaoContas[0] : daIgreja.find((c) => c.tipo === 'CAIXA') ?? daIgreja[0])
+  const membroPedido = Number(params.get('membro')) || null
 
   const receitas = (categorias.data ?? []).filter((c) => c.tipo === 'RECEITA')
   const catPorCodigo = new Map(receitas.map((c) => [c.codigo, c.id]))
-  const linhasIniciais = useMemo(() => (fundos.data ?? []).map((f) => ({
+  const linhasIniciais = useMemo(() => (fundos.data ?? []).filter((f) => !f.endDate).map((f) => ({
     fundoId: f.id, categoriaId: String(catPorCodigo.get(CATEGORIA_POR_FUNDO[f.tipo] ?? 'R9') ?? receitas[0]?.id ?? ''), valor: '',
   // eslint-disable-next-line react-hooks/exhaustive-deps
   })), [fundos.data, categorias.data])
@@ -107,7 +110,7 @@ export default function PaginaEntrada() {
     resolver: zodResolver(esquema),
     values: {
       contaId: inicial ? String(inicial.id) : '', metodo: METODO_DA_CONTA[inicial?.tipo ?? 'CAIXA'],
-      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: null, contagemId: '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
+      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: membroPedido, contagemId: '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
     },
     resetOptions: { keepDirtyValues: true },
   })

@@ -32,6 +32,7 @@ const PaginaContagens = lazy(() => import('@/features/tesouraria/PaginaContagens
 const PaginaRemessas = lazy(() => import('@/features/tesouraria/PaginaRemessas'))
 const PaginaFechos = lazy(() => import('@/features/tesouraria/PaginaFechos'))
 const PaginaContas = lazy(() => import('@/features/tesouraria/PaginaContas'))
+const PaginaFundos = lazy(() => import('@/features/tesouraria/PaginaFundos'))
 const PaginaAcessos = lazy(() => import('@/features/acessos/PaginaAcessos'))
 const PaginaUtilizador = lazy(() => import('@/features/acessos/PaginaUtilizador'))
 const PaginaRelatorioMensal = lazy(() => import('@/features/tesouraria/PaginaRelatorioMensal'))
@@ -107,6 +108,7 @@ export default function App() {
                   <Route path="tesouraria/remessas" element={<PaginaRemessas />} />
                   <Route path="tesouraria/fechos" element={<PaginaFechos />} />
                   <Route path="tesouraria/contas" element={<PaginaContas />} />
+                  <Route path="tesouraria/fundos" element={<PaginaFundos />} />
                   <Route path="tesouraria/relatorio-mensal" element={<PaginaRelatorioMensal />} />
                   <Route path="acessos" element={<PaginaAcessos />} />
                   <Route path="acessos/utilizadores/novo" element={<PaginaUtilizador />} />

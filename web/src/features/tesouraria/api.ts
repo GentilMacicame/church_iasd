@@ -67,17 +67,44 @@ export function useContasIgreja() {
   })
 }
 
+/** Os fundos gerais (da Missão) e os desta igreja (as suas ofertas e projectos); os de outras igrejas não. */
 export function useFundos() {
+  const igreja = useIgreja()
   return useQuery({
-    queryKey: ['tesouraria', 'fundos'],
-    queryFn: async () => (await dados(api.GET('/v1/tesouraria/fundos', { params: { query: { limite: 100 } } }))).dados as Fundo[],
+    queryKey: ['tesouraria', 'fundos', igreja.id],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/fundos', { params: { query: { limite: 200 } } }))).dados as Fundo[],
+    select: (l: Fundo[]) => l.filter((f) => f.igrejaId == null || f.igrejaId === igreja.id),
     staleTime: 10 * 60_000,
   })
 }
 
+/** Fundo próprio da igreja (oferta especial ou projecto): 100% da igreja. */
+export const daPropriaIgreja = (f: Fundo) => f.igrejaId != null
+
+/** Criar e terminar as ofertas e projectos da igreja (a base de dados só deixa nesta igreja, sem parte da Missão). */
+export function useFundosMut() {
+  const igreja = useIgreja()
+  const qc = useQueryClient()
+  const depois = () => qc.invalidateQueries({ queryKey: ['tesouraria', 'fundos'] })
+  const criar = useMutation({
+    mutationFn: (v: { nome: string; tipo: 'OFERTA_ESPECIAL' | 'PROJECTO'; restrito: boolean }) => {
+      // código único (o índice é de todas as igrejas): I<igreja>-<nome abreviado>-<sufixo>
+      const base = v.nome.normalize('NFD').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'OFERTA'
+      const codigo = `I${igreja.id}-${base}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`.slice(0, 20)
+      return dados(api.POST('/v1/tesouraria/fundos', { body: { igrejaId: igreja.id, codigo, nome: v.nome, tipo: v.tipo, restrito: v.restrito, percentagemRemessa: '0.00' } as never })) as Promise<Fundo>
+    },
+    onSuccess: depois,
+  })
+  const terminar = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/fundos/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: depois,
+  })
+  return { criar, terminar }
+}
+
 /** Fundos de onde a igreja pode gastar: os seus e os repartidos (a parte da igreja); não os 100% da Missão. */
 export function fundosDaIgreja(l?: Fundo[]) {
-  return (l ?? []).filter((f) => !f.destinoEntidadeId || Number(f.percentagemRemessa ?? 0) < 100)
+  return (l ?? []).filter((f) => !f.endDate && (!f.destinoEntidadeId || Number(f.percentagemRemessa ?? 0) < 100))
 }
 
 export function useCategorias() {
@@ -379,7 +406,19 @@ export function useFechosMut() {
 /* ===================================================================== contagem do numerário (P-06 passo 1) */
 export type EstadoContagem = 'ABERTA' | 'CONFERIDA' | 'DEPOSITADA'
 export type Contagem = Esquema<'Contagem'> & { id: number; data: string; contaId: number; totalContado: string; contador1MembroId: number; contador2MembroId: number; estado: EstadoContagem }
-export interface Conferencia { id: number; data: string; ocasiao: string | null; totalContado: string; totalLancado: string; diferenca: string; estado: EstadoContagem }
+export interface Conferencia {
+  id: number; data: string; ocasiao: string | null; totalContado: string; totalLancado: string; diferenca: string; estado: EstadoContagem
+  /** V23: o contado por partes (null nas contagens antigas, só com o total) e o lançado por partes */
+  dizimos: string | null; ofertas: string | null; escolaSabatina: string | null; outras: string | null
+  dizimosLancado: string; ofertasLancado: string; escolaSabatinaLancado: string; outrasLancado: string
+}
+/** As partes da contagem: o contado (campo) e o lançado (campo + 'Lancado'), pela ordem do envelope. */
+export const PARTES_CONTAGEM = [
+  { campo: 'dizimos', rotulo: 'Dízimos', ajuda: 'Envelopes e dízimos soltos' },
+  { campo: 'ofertas', rotulo: 'Ofertas', ajuda: 'Oferta combinada e missionárias' },
+  { campo: 'escolaSabatina', rotulo: 'Escola Sabatina', ajuda: 'Ofertas das classes' },
+  { campo: 'outras', rotulo: 'Outras ofertas', ajuda: 'Especiais e projectos da igreja' },
+] as const
 
 export function useContagens() {
   const igreja = useIgreja()

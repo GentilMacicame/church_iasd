@@ -5,7 +5,7 @@
  */
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Ban, Check, CircleCheck, Printer, Receipt, ShieldCheck, Undo2, Wallet } from 'lucide-react'
+import { ArrowLeft, Ban, Check, Plus, CircleCheck, Printer, Receipt, ShieldCheck, Undo2, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Campo, Cartao, Dinheiro, Tabela } from '@/components/comum/elementos'
@@ -117,7 +117,16 @@ export default function PaginaMovimento() {
               {estornosValidos.map((x, i) => <span key={x.id}>{i > 0 && ', '}<Link to={`/tesouraria/movimentos/${x.id}`} className="font-medium text-primary hover:underline">n.º {x.id}</Link> ({dinheiro(x.valorTotal)}, {x.estado === 'CONFIRMADA' ? 'confirmado' : 'pendente'})</span>)}.
             </p>
           )}
-          {tr.estado === 'CONFIRMADA' && <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4" />Confirmado: não se altera. Para corrigir, registe um estorno.</p>}
+          {tr.estado === 'CONFIRMADA' && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2"><Check className="size-4 flex-none" />Confirmado: não se altera. Para corrigir, registe um estorno.</p>
+              {tr.tipo === 'ENTRADA' && tr.membroId && pode('tesouraria.transacao.criar') && (
+                <Button asChild variant="outline" size="sm" className="alvo">
+                  <Link to={`/tesouraria/entrada?membro=${tr.membroId}&conta=${tr.contaId}`}><Plus className="size-4" />Lançar outra entrada deste membro</Link>
+                </Button>
+              )}
+            </div>
+          )}
         </section>
 
         <div className="grid items-start gap-6 lg:grid-cols-12">

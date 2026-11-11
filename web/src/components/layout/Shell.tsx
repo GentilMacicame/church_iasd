@@ -9,7 +9,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BookOpen, Building2, CalendarDays, Check, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   Users, X,
-  Calculator, CalendarCheck, ClipboardList, FileText, KeyRound, Wallet,
+  Calculator, CalendarCheck, ClipboardList, Coins, FileText, KeyRound, Wallet,
 } from 'lucide-react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -47,6 +47,7 @@ const NAV: GrupoNav[] = [
       { para: '/tesouraria/relatorio-mensal', rotulo: t.tesouraria.relatorioMensal, icone: FileText, permissao: 'tesouraria.transacao.ler', fim: true },
       { para: '/tesouraria/fechos', rotulo: t.tesouraria.fechos, icone: CalendarCheck, permissao: 'tesouraria.fecho_periodo.ler', fim: true },
       { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: Wallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
+      { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: Coins, permissao: 'tesouraria.fundo.ler', fim: true },
     ],
   },
   {
@@ -191,6 +192,7 @@ function Caminho() {
     if (pathname === '/tesouraria/remessas') partes.push({ rotulo: t.tesouraria.remessas })
     if (pathname === '/tesouraria/fechos') partes.push({ rotulo: t.tesouraria.fechos })
     if (pathname === '/tesouraria/contas') partes.push({ rotulo: t.tesouraria.contas })
+    if (pathname === '/tesouraria/fundos') partes.push({ rotulo: 'Fundos e ofertas' })
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
   }
   if (pathname.startsWith('/acessos')) {

@@ -6787,6 +6787,26 @@ export interface components {
              * @description → nucleo.usuario
              */
             conferidoPorUsuarioId?: number;
+            /**
+             * @description Parte do contado: dízimos (V23)
+             * @example 650.00
+             */
+            dizimos?: string;
+            /**
+             * @description Parte do contado: ofertas (oferta combinada, missionárias)
+             * @example 650.00
+             */
+            ofertas?: string;
+            /**
+             * @description Parte do contado: ofertas da Escola Sabatina
+             * @example 650.00
+             */
+            escolaSabatina?: string;
+            /**
+             * @description Parte do contado: outras ofertas (especiais, projectos da igreja)
+             * @example 650.00
+             */
+            outras?: string;
             estado?: components["schemas"]["EnumEstadoContagem"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -6868,6 +6888,8 @@ export interface components {
             fundoId?: number;
             descricao?: string;
             fornecedor?: string;
+            /** @description Com a categoria "Outras despesas": que despesa é (V23) */
+            outraCategoria?: string;
             /** @example 650.00 */
             valorSolicitado?: string;
             /** @example 650.00 */

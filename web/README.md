@@ -88,6 +88,13 @@ src/
   acta formal para imprimir/guardar em PDF (A4, assinaturas do Presidente e do Secretário). O campo de escolher membro
   abre num popover (já não estica os diálogos). Registo de membro em assistente de 5 passos.
 
+- **Início** (painel de direcção): indicadores (membros, saldo, entradas do mês), "Precisa de atenção" (tudo o que
+  espera uma acção da secretaria e da tesouraria, num só sítio), o próximo sábado, tesouraria e membros em faixas.
+- **Fundos e ofertas**: os fundos da Missão (só leitura) e as ofertas e projectos próprios da igreja (criar, terminar);
+  aparecem em "Lançar entrada" e nas despesas. Despesas: "Outras despesas" pede que despesa é; fundos agrupados (da igreja /
+  parte da igreja). Contagem por partes (dízimos, ofertas, Escola Sabatina, outras) com a conferência parte a parte.
+  Fecho do mês com a lista de verificação do mês a fechar (pendentes, contagens, remessa, saldos).
+
 ## Por fazer (próximas iterações)
 
 - Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).
