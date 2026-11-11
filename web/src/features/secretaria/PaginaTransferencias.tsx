@@ -26,6 +26,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { data, dataCompleta, diasAte, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { CampoVoto } from '@/features/livro/CampoVoto'
 import { useDirectorioIgrejas, useTransferencias, useTransferenciasMut, type TransferenciaResumo } from './api'
@@ -326,7 +327,7 @@ function DialogoCarta({ t: x, aoFechar }: { t: TransferenciaResumo; aoFechar: ()
         </article>
         <DialogFooter className="print:hidden">
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>Fechar</Button>
-          <Button type="button" className="alvo" onClick={() => window.print()}><Printer className="size-4" />Imprimir</Button>
+          <Button type="button" className="alvo" onClick={() => imprimirComo(`Carta de transferência - ${x.membro}`)}><Printer className="size-4" />Imprimir / guardar PDF</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

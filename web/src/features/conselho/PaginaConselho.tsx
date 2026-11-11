@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, Hourglass, Pencil, Phone, Plus, Search, Settings2, ShieldCheck, UserMinus, Users } from 'lucide-react'
+import { CalendarClock, Hourglass, Pencil, Phone, Plus, Search, Settings2, ShieldCheck, UserMinus, Users, Vote } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -62,7 +62,12 @@ export default function PaginaConselho() {
   return (
     <>
       <TituloPagina icone={ShieldCheck} titulo="Conselho da igreja" descricao="Oficiais, cargos e mandatos: a base das reuniões, das presenças e das actas"
-        accoes={pode('secretaria.oficial.criar') && <Button className="alvo" onClick={() => setNovo(true)}><Plus className="size-4" />Registar oficial</Button>} />
+        accoes={pode('secretaria.oficial.criar') && (
+          <>
+            <Button asChild variant="outline" className="alvo"><Link to="/conselho/eleicao"><Vote className="size-4" />Eleição de oficiais</Link></Button>
+            <Button className="alvo" onClick={() => setNovo(true)}><Plus className="size-4" />Registar oficial</Button>
+          </>
+        )} />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Indicador rotulo="No conselho" valor={new Set(conselho.map((o) => o.membroId)).size} nota="membros em exercício" icone={Users} aCarregar={q.isPending}

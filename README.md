@@ -139,7 +139,7 @@ src/main/java/mz/org/iasd/igreja/
 ├── Rotas.java                         TODAS AS ROTAS da API, por módulo
 ├── controllers/                       CONTROLLERS (JAX-RS): recebem o pedido HTTP e respondem
 │   ├── base/                          BaseTabelaController/BaseLeituraController (as 6 rotas-padrão herdadas),
-│   │                                  BaseRelatoriosController (relatórios JSON/CSV), Corpo (lê o JSON), Csv
+│   │                                  BaseRelatoriosController (relatórios JSON/CSV/PDF), Corpo (lê o JSON), Csv, Pdf
 │   └── <modulo>/                      secretaria/MembrosController, tesouraria/TransacoesController, ...
 ├── services/<modulo>/                 operações com vários passos (TransacoesService, RelatoriosSabadoService)
 ├── repositories/                      SQL (só parâmetros ?)

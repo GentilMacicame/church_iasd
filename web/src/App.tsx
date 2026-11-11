@@ -25,6 +25,7 @@ const PaginaReunioes = pagina(() => import('@/features/livro/PaginaReunioes'))
 const PaginaReuniao = pagina(() => import('@/features/livro/PaginaReuniao'))
 const PaginaActa = pagina(() => import('@/features/livro/PaginaActa'))
 const PaginaConselho = pagina(() => import('@/features/conselho/PaginaConselho'))
+const PaginaEleicao = pagina(() => import('@/features/conselho/PaginaEleicao'))
 const PaginaTesouraria = pagina(() => import('@/features/tesouraria/PaginaTesouraria'))
 const PaginaMovimentosTes = pagina(() => import('@/features/tesouraria/PaginaMovimentos'))
 const PaginaMovimentoTes = pagina(() => import('@/features/tesouraria/PaginaMovimento'))
@@ -118,6 +119,7 @@ export default function App() {
                   <Route path="reunioes/:id" element={<Exige permissao="secretaria.reuniao.ler"><PaginaReuniao /></Exige>} />
                   <Route path="reunioes/:id/acta" element={<Exige permissao="secretaria.reuniao.ler"><PaginaActa /></Exige>} />
                   <Route path="conselho" element={<Exige permissao="secretaria.oficial.ler"><PaginaConselho /></Exige>} />
+                  <Route path="conselho/eleicao" element={<Exige permissao="secretaria.oficial.ler"><PaginaEleicao /></Exige>} />
                   <Route path="familias" element={<Exige permissao="secretaria.familia.ler"><PaginaFamilias /></Exige>} />
                   <Route path="transferencias" element={<Exige permissao="secretaria.transferencia_membro.ler"><PaginaTransferencias /></Exige>} />
                   <Route path="disciplina" element={<Exige permissao="secretaria.disciplina.ler"><PaginaDisciplina /></Exige>} />

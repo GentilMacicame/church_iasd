@@ -15,6 +15,8 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { imprimirComo } from '@/lib/documentos'
+import { Exportar } from '@/components/comum/Exportar'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useCensurasActivas, useMenoresPendentes, useRelatorioMensalSecretaria, useTransferencias, type LinhaRelatorioMensal } from './api'
 
@@ -68,7 +70,8 @@ export default function PaginaRelatorioSecretaria() {
             <Seleccao aria-label="Ano" value={String(ano)} onChange={(e) => setParams({ ano: e.target.value })} className="w-28">
               {anos.map((a) => <option key={a} value={a}>{a}</option>)}
             </Seleccao>
-            <Button variant="outline" className="alvo" onClick={() => window.print()}><Printer className="size-4" />Imprimir</Button>
+            <Exportar caminho="/v1/secretaria/relatorio-mensal" query={{ igrejaId: igreja.id, ano }} nome={`movimento-do-livro-${ano}`} />
+            <Button variant="outline" className="alvo" onClick={() => imprimirComo(`Relatório da secretaria ${ano} - ${igreja.nome}`)}><Printer className="size-4" />Imprimir / guardar PDF</Button>
           </div>
         )} />
       <CabecalhoDocumento titulo={`${igreja.nome} — Relatório da secretaria de ${ano}`} linha="Secretaria" className="mb-6 hidden print:flex" />

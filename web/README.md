@@ -105,9 +105,9 @@ src/
 - **Indicação de carregamento**: barra fina no topo enquanto há pedidos; páginas carregam dentro da moldura; botões com
   "A …". **Sessão inactiva**: 5 min sem mexer → aviso com 30 s → logout (actividade partilhada entre separadores).
 
-- **Transferências entre contas** (F-TES-05): na página Contas (caixa → banco, M-Pesa → banco) e "Depositar no banco" nas
+- **Transferências entre contas** (F-TES-09): na página Contas (caixa → banco, M-Pesa → banco) e "Depositar no banco" nas
   contagens conferidas (com o n.º do talão; a contagem passa a depositada).
-- **Reconciliação** (F-TES-10): importar o extracto do banco/M-Pesa em CSV (`data;descricao;referencia;valor`) e ligar
+- **Reconciliação** (F-TES-14): importar o extracto do banco/M-Pesa em CSV (`data;descricao;referencia;valor`) e ligar
   cada linha ao movimento; sugere o da mesma conta, valor e direcção (até 5 dias).
 - **Orçamento anual** (F-TES-11): previsto por categoria (receitas e despesas), aprovado com o voto da igreja, realizado
   e % de execução. **Alvos** (F-TES-12) em Fundos e ofertas, com barra de progresso.
@@ -118,9 +118,13 @@ src/
   dado pelo encarregado). **Relatório da secretaria** (F-SEC-10): movimento do livro mês a mês, membros por estado,
   pendentes (menores sem encarregado ou consentimento, censuras, transferências), para imprimir.
 
+- **Eleição de oficiais** (P-04, F-SEC-08) em Conselho › Eleição de oficiais: a comissão de nomeações prepara a lista
+  (cargo → membro, guardada no aparelho) e imprime o relatório; com o voto da igreja (ELEICAO) registam-se todos os
+  mandatos de uma vez e terminam-se os anteriores na véspera; cada recusa da base (censura, membro de outra igreja) aparece na linha.
+- **PDF**: "Imprimir / guardar PDF" nos documentos (relatórios, orçamento, carta, relatório da comissão) com nome de
+  ficheiro útil; "Exportar" (PDF ou CSV) descarrega os relatórios da API (`?formato=pdf`).
+
 ## Por fazer (próximas iterações)
 
-- Secretaria: eleição de oficiais pela comissão de nomeações (P-04).
-- Tesouraria: relatórios mensais em PDF (Fase 4).
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

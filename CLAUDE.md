@@ -14,7 +14,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 | --- | --- |
 | Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V27 |
 | Contrato da API | **Concluído.** `api/openapi.yaml` (320 caminhos, 446 operações) |
-| API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
+| API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, conselho, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
 Especificação completa: `docs/especificacao.md` (Markdown, gerado do Word em
@@ -172,7 +172,7 @@ No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função 
 - Stack: **Java 21, Jakarta EE 10** (o nome actual do Java EE: JAX-RS, CDI, JSON-B, Bean Validation)
   + MicroProfile Config, servidor **Open Liberty**, Maven (`./mvnw`). Acesso à base com **JDBC puro**
   (driver PostgreSQL, datasource `jdbc/igreja`) — sem JPA/ORM nem migrações próprias: as migrações são
-  SQL/Flyway. Argon2id (password4j), JWT HS256 (java-jwt), `java.util.logging`, JUnit 5 + Testcontainers
+  SQL/Flyway. Argon2id (password4j), JWT HS256 (java-jwt), PDF (OpenPDF), `java.util.logging`, JUnit 5 + Testcontainers
   (PostgreSQL real) para testes. Tarefas agendadas: Jakarta Concurrency (`ManagedScheduledExecutorService`).
 - Organização (`mz.org.iasd.igreja`): `controllers/<modulo>/*Controller` (JAX-RS, `@RequestScoped
   @Transaccional`, caminhos em `Rotas.java`) → `services/<modulo>/*Service` (vários passos) →

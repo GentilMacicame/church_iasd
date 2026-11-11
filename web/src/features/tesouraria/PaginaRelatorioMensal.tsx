@@ -15,6 +15,7 @@ import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { useIgreja } from '@/auth/sessao'
 import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useContribuicoesDoMes, useEntidades, useFundos, useRemessas, useRemessasDevidas, useTransacao } from './api'
 import { parteDoFundo } from './comum'
@@ -91,7 +92,7 @@ export default function PaginaRelatorioMensal() {
     <>
       <div className="print:hidden">
         <TituloPagina icone={FileText} titulo="Relatório mensal para a Missão" descricao="Segue com o depósito do mês: o resumo por fundo e os recibos de cada membro"
-          accoes={<Button className="alvo" onClick={() => window.print()} disabled={aCarregar || !resumo.length}><Printer className="size-4" />Imprimir</Button>} />
+          accoes={<Button className="alvo" onClick={() => imprimirComo(`Relatório mensal ${mes} - ${igreja.nome}`)} disabled={aCarregar || !resumo.length}><Printer className="size-4" />Imprimir / guardar PDF</Button>} />
         <div className="mb-6 flex items-center gap-1">
           <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês anterior" onClick={() => setParams({ mes: mudarMes(mes, -1) })}><ChevronLeft className="size-4" /></Button>
           <span className="min-w-40 text-center text-sm font-medium first-letter:uppercase">{nomeMes(ano, m)}</span>

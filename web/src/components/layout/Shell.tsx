@@ -191,7 +191,8 @@ function Caminho() {
     if (/^\/reunioes\/\d+\/acta/.test(pathname)) partes.push({ rotulo: 'Acta' })
   }
   if (pathname.startsWith('/conselho')) {
-    partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Conselho da igreja' })
+    partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Conselho da igreja', para: '/conselho' })
+    if (pathname === '/conselho/eleicao') partes.push({ rotulo: 'Eleição de oficiais' })
   }
   if (pathname === '/familias') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Famílias' })
   if (pathname === '/transferencias') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Transferências' })

@@ -56,7 +56,7 @@ export function useConselhoMut() {
   const igreja = useIgreja()
   const invalidar = () => qc.invalidateQueries({ queryKey: k.todos(igreja.id) })
   const registar = useMutation({
-    mutationFn: (c: { membroId: number; cargoId: number; dataInicio: string; fimPrevisto?: string | null }) =>
+    mutationFn: (c: { membroId: number; cargoId: number; dataInicio: string; fimPrevisto?: string | null; votoId?: number }) =>
       dados(api.POST('/v1/secretaria/oficiais', { body: { ...c, igrejaId: igreja.id, fimPrevisto: c.fimPrevisto || undefined } as never })),
     onSuccess: invalidar,
   })

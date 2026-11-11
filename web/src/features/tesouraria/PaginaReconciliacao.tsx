@@ -14,10 +14,11 @@ import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoEscolha } from '@/components/comum/CampoEscolha'
 import { mensagemDe } from '@/api/erros'
-import { useSessao } from '@/auth/sessao'
+import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { Exportar } from '@/components/comum/Exportar'
 import { useContasIgreja, useExtractosMut, useMovimentos, usePorReconciliar, type PorReconciliar, type Transacao } from './api'
 
 const DIA = 86_400_000
@@ -33,6 +34,7 @@ function efeito(m: Transacao, conta: number): number | null {
 
 export default function PaginaReconciliacao() {
   const { pode } = useSessao()
+  const igreja = useIgreja()
   const linhas = usePorReconciliar()
   const contas = useContasIgreja()
   const [importar, setImportar] = useState(false)
@@ -65,7 +67,12 @@ export default function PaginaReconciliacao() {
   return (
     <>
       <TituloPagina icone={FileCheck2} titulo="Reconciliação com o extracto" descricao="Confirmar que cada linha do extracto do banco ou do M-Pesa está registada na tesouraria"
-        accoes={pode('tesouraria.extrato_linha.criar') && <Button className="alvo" onClick={() => setImportar(true)}><Upload className="size-4" />Importar extracto</Button>} />
+        accoes={(
+          <>
+            {lista.length > 0 && <Exportar caminho="/v1/tesouraria/extractos-por-reconciliar" query={{ igrejaId: igreja.id }} nome="extracto-por-reconciliar" />}
+            {pode('tesouraria.extrato_linha.criar') && <Button className="alvo" onClick={() => setImportar(true)}><Upload className="size-4" />Importar extracto</Button>}
+          </>
+        )} />
 
       {linhas.isPending ? <Barra className="h-64 w-full" />
         : linhas.isError ? <EstadoErro erro={linhas.error} aoTentar={() => linhas.refetch()} />

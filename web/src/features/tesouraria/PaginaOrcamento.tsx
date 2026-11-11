@@ -18,6 +18,8 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, deCentimos } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { imprimirComo } from '@/lib/documentos'
+import { Exportar } from '@/components/comum/Exportar'
 import { CampoVoto } from '@/features/livro/CampoVoto'
 import { useCategorias, useExecucaoOrcamento, useLinhasOrcamento, useOrcamentoMut, useOrcamentos, type Categoria, type Orcamento } from './api'
 
@@ -46,7 +48,8 @@ export default function PaginaOrcamento() {
       <TituloPagina icone={ClipboardList} titulo="Orçamento anual" descricao="O previsto para o ano, aprovado pela igreja, e o realizado ao longo do ano"
         accoes={(
           <>
-            {sel && <Button variant="outline" className="alvo print:hidden" onClick={() => window.print()}><Printer className="size-4" />Imprimir</Button>}
+            {sel && <Exportar caminho="/v1/tesouraria/execucao-orcamento" query={{ igrejaId: igreja.id }} nome="execucao-do-orcamento" />}
+            {sel && <Button variant="outline" className="alvo print:hidden" onClick={() => imprimirComo(`Orçamento ${sel.ano} - ${igreja.nome}`)}><Printer className="size-4" />Imprimir / guardar PDF</Button>}
             {pode('tesouraria.orcamento.criar') && anosEmFalta.map((a) => (
               <Button key={a} variant={sel ? 'outline' : 'default'} className="alvo print:hidden" disabled={criar.isPending} onClick={() => preparar(a)}><Plus className="size-4" />Orçamento de {a}</Button>
             ))}
