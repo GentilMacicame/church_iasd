@@ -124,6 +124,10 @@ src/
 - **PDF**: "Imprimir / guardar PDF" nos documentos (relatórios, orçamento, carta, relatório da comissão) com nome de
   ficheiro útil; "Exportar" (PDF ou CSV) descarrega os relatórios da API (`?formato=pdf`).
 
+- **Reuniões: abertura e encerramento** (V28): primeira oração, hino entoado, meditação (membro ou convidado) e última
+  oração, num cartão da reunião; entram no texto da acta.
+- **Menu** com ícones Phosphor (linha fina; cheio no item activo).
+
 ## Por fazer (próximas iterações)
 
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).

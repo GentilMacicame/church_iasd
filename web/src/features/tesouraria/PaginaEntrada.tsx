@@ -290,8 +290,13 @@ export default function PaginaEntrada() {
             <Cartao titulo="2. Como entregou o dinheiro" icone={Wallet} descricao="Em envelope na igreja, ou por depósito / M-Pesa com comprovativo">
               <div role="radiogroup" aria-label="Como entregou o dinheiro" className="grid gap-4">
                 <div>
-                  <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Na igreja</p>
+                  <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Na igreja local</p>
                   <div className="grid gap-2 sm:grid-cols-2">{daIgreja.map(opcao)}</div>
+                  {pode('tesouraria.conta_financeira.criar') && (
+                    <Link to={`/tesouraria/contas?nova=igreja&tipo=${daIgreja.some((c) => c.tipo === 'BANCO') ? 'MPESA' : 'BANCO'}`} className="alvo mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                      <Plus className="size-4" />{daIgreja.some((c) => c.tipo === 'BANCO') ? 'Outra conta da igreja local' : 'Registar a conta bancária da igreja local'}
+                    </Link>
+                  )}
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Directamente na Missão</p>

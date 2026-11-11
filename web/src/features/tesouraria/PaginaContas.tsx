@@ -35,7 +35,7 @@ export default function PaginaContas() {
   const [params, setParams] = useSearchParams()
   const nova = params.get('nova')
   const transferir = params.get('transferir')
-  const abrir = (tipo: 'igreja' | 'missao' | null) => setParams((p) => { const n = new URLSearchParams(p); if (tipo) n.set('nova', tipo); else n.delete('nova'); return n })
+  const abrir = (tipo: 'igreja' | 'missao' | null) => setParams((p) => { const n = new URLSearchParams(p); if (tipo) n.set('nova', tipo); else { n.delete('nova'); n.delete('tipo') } return n })
   const abrirTransferencia = (de: number | null) => setParams((p) => { const n = new URLSearchParams(p); if (de != null) n.set('transferir', String(de)); else n.delete('transferir'); return n })
   const saldoDe = (id: number) => saldos.data?.find((s) => s.id === id)?.saldo
   const daIgreja = (contas.data ?? []).filter((c) => c.entidadeId == null)
@@ -99,19 +99,19 @@ export default function PaginaContas() {
           </div>
         )}
       {transferir != null && <DialogoTransferencia origem={Number(transferir) || undefined} aoFechar={() => abrirTransferencia(null)} />}
-      {nova && <DialogoConta missao={nova === 'missao'} aoFechar={() => abrir(null)} />}
+      {nova && <DialogoConta missao={nova === 'missao'} tipoInicial={params.get('tipo') ?? undefined} aoFechar={() => abrir(null)} />}
     </>
   )
 }
 
-function DialogoConta({ missao: inicial, aoFechar }: { missao: boolean; aoFechar: () => void }) {
+function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: boolean; tipoInicial?: string; aoFechar: () => void }) {
   const igreja = useIgreja()
   const fundos = useFundos()
   const entidades = useEntidades()
   const { criar } = useContasMut()
   const [missao, setMissao] = useState(inicial)
-  const [tipo, setTipo] = useState(inicial ? 'BANCO' : 'CAIXA')
-  const [nome, setNome] = useState(inicial ? 'Conta da Missão' : '')
+  const [tipo, setTipo] = useState(tipoInicial && TIPOS[tipoInicial] ? tipoInicial : inicial ? 'BANCO' : 'CAIXA')
+  const [nome, setNome] = useState(inicial ? 'Conta da Missão' : tipoInicial === 'BANCO' ? 'Conta bancária da igreja' : '')
   const [banco, setBanco] = useState('')
   const [numero, setNumero] = useState('')
   const [titular, setTitular] = useState('')

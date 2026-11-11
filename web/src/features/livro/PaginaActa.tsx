@@ -4,6 +4,7 @@
  * votações, votos formais, encerramento e assinaturas. Enquanto a acta não for aprovada leva a marca RASCUNHO.
  * O PDF faz-se pela impressão do navegador ("Guardar como PDF"); a geração no servidor é da Fase 4.
  */
+import { quemMeditou } from './Devocional'
 import { Marca } from '@/components/layout/Marca'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Printer } from 'lucide-react'
@@ -55,6 +56,15 @@ export default function PaginaActa() {
   const presidente = nome(r.presididaPorMembroId)
   const secretario = nome(r.secretarioMembroId)
   const nPresentes = presentes.length || r.quorumPresentes || 0
+  // V28: abertura com oração, hino e meditação ("A reunião abriu com oração por X, entoou-se o hino ... e Y fez a meditação.")
+  const partesAbertura = [
+    nome(r.oracaoInicialMembroId) && `com oração por ${nome(r.oracaoInicialMembroId)}`,
+    r.hino && `entoou-se o hino «${r.hino}»`,
+    quemMeditou(r, nome) && `a meditação foi feita por ${quemMeditou(r, nome)}`,
+  ].filter(Boolean) as string[]
+  const abertura = partesAbertura.length
+    ? `A reunião abriu ${partesAbertura.length > 1 ? partesAbertura.slice(0, -1).join(', ') + ' e ' + partesAbertura[partesAbertura.length - 1] : partesAbertura[0]}.`
+    : ''
 
   return (
     <div className="grid gap-4">
@@ -88,6 +98,7 @@ export default function PaginaActa() {
           {presidente ? ` sob a presidência de ${presidente}${cargoDe(r.presididaPorMembroId) ? ` (${cargoDe(r.presididaPorMembroId)})` : ''}` : ''}
           {secretario ? `, servindo de secretário(a) ${secretario}` : ''}, com a presença de {nPresentes} {nPresentes === 1 ? 'membro' : 'membros'}.
         </p>
+        {abertura && <p className="mt-3 text-justify indent-8">{abertura}</p>}
 
         <Seccao titulo="Participantes">
           <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 print:grid-cols-2">
@@ -147,7 +158,7 @@ export default function PaginaActa() {
 
         <Seccao titulo="Encerramento">
           <p className="text-justify indent-8">
-            Nada mais havendo a tratar, a reunião foi encerrada{r.encerradaEm ? ` pelas ${hora(r.encerradaEm)}` : ''}.{r.encerramento ? ` ${r.encerramento}` : ''} Para constar, lavrou-se a presente acta que,
+            Nada mais havendo a tratar, a reunião foi encerrada{r.encerradaEm ? ` pelas ${hora(r.encerradaEm)}` : ''}{nome(r.oracaoFinalMembroId) ? `, com oração por ${nome(r.oracaoFinalMembroId)}` : ''}.{r.encerramento ? ` ${r.encerramento}` : ''} Para constar, lavrou-se a presente acta que,
             depois de lida e aprovada, vai ser assinada pelo Presidente e pelo(a) Secretário(a).
           </p>
         </Seccao>

@@ -29,6 +29,11 @@ import mz.org.iasd.igreja.models.tipos.TipoReuniao;
  * @param numero Número da reunião/acta, ex.: 2026-03
  * @param encerradaEm Hora do encerramento
  * @param encerramento Registo do encerramento (oração final, próxima reunião, ...)
+ * @param meditacaoMembroId Quem fez a meditação (V28)
+ * @param meditacaoConvidado Quem fez a meditação, se não for membro desta igreja (ex.: pastor do distrito) (V28)
+ * @param hino Hino entoado, ex.: "Hino 123 — Castelo forte" (V28)
+ * @param oracaoInicialMembroId Quem fez a primeira oração (V28)
+ * @param oracaoFinalMembroId Quem fez a última oração (V28)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -62,6 +67,16 @@ public record Reuniao(
         OffsetDateTime encerradaEm,
         @ColunaBd(value = "reu_encerramento", tipo = Tipo.TEXTO)
         String encerramento,
+        @ColunaBd(value = "reu_meditacao_mem_id", tipo = Tipo.INT)
+        Integer meditacaoMembroId,
+        @ColunaBd(value = "reu_meditacao_convidado", tipo = Tipo.TEXTO)
+        String meditacaoConvidado,
+        @ColunaBd(value = "reu_hino", tipo = Tipo.TEXTO)
+        String hino,
+        @ColunaBd(value = "reu_oracao_inicial_mem_id", tipo = Tipo.INT)
+        Integer oracaoInicialMembroId,
+        @ColunaBd(value = "reu_oracao_final_mem_id", tipo = Tipo.INT)
+        Integer oracaoFinalMembroId,
         @ColunaBd(value = "reu_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoReuniao estado,
         @ColunaBd(value = "reu_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

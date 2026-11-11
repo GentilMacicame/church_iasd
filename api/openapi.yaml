@@ -10136,6 +10136,18 @@ paths:
         in: query
         schema:
           type: integer
+      - name: meditacaoMembroId
+        in: query
+        schema:
+          type: integer
+      - name: oracaoInicialMembroId
+        in: query
+        schema:
+          type: integer
+      - name: oracaoFinalMembroId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -20261,6 +20273,26 @@ components:
         encerramento:
           type: string
           description: Registo do encerramento (oração final, próxima reunião, ...)
+        meditacaoMembroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Quem fez a meditação (V28)
+        meditacaoConvidado:
+          type: string
+          maxLength: 150
+          description: 'Quem fez a meditação, se não for membro desta igreja (ex.: pastor do distrito) (V28)'
+        hino:
+          type: string
+          maxLength: 150
+          description: 'Hino entoado, ex.: "Hino 123 — Castelo forte" (V28)'
+        oracaoInicialMembroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Quem fez a primeira oração (V28)
+        oracaoFinalMembroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Quem fez a última oração (V28)
         estado:
           $ref: '#/components/schemas/EnumEstadoReuniao'
         criadoEm:

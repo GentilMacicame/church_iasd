@@ -8331,6 +8331,25 @@ export interface components {
             encerradaEm?: string;
             /** @description Registo do encerramento (oração final, próxima reunião, ...) */
             encerramento?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Quem fez a meditação (V28)
+             */
+            meditacaoMembroId?: number;
+            /** @description Quem fez a meditação, se não for membro desta igreja (ex.: pastor do distrito) (V28) */
+            meditacaoConvidado?: string;
+            /** @description Hino entoado, ex.: "Hino 123 — Castelo forte" (V28) */
+            hino?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Quem fez a primeira oração (V28)
+             */
+            oracaoInicialMembroId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Quem fez a última oração (V28)
+             */
+            oracaoFinalMembroId?: number;
             estado?: components["schemas"]["EnumEstadoReuniao"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -17359,6 +17378,9 @@ export interface operations {
                 tipo?: components["schemas"]["EnumTipoReuniao"];
                 presididaPorMembroId?: number;
                 secretarioMembroId?: number;
+                meditacaoMembroId?: number;
+                oracaoInicialMembroId?: number;
+                oracaoFinalMembroId?: number;
                 estado?: components["schemas"]["EnumEstadoReuniao"];
                 desde?: string;
                 ate?: string;

@@ -7,11 +7,11 @@
 import { Suspense, useEffect, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  BookOpen, Building2, CalendarDays, Check, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
-  Users, X,
-  Calculator, CalendarCheck, ClipboardList, Coins, FileText, KeyRound, Wallet,
-  ArrowRightLeft, BarChart3, FileCheck2, Gavel, Home, Target,
+  Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
+import {
+  SquaresFour as PhSquaresFour, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
+} from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -25,49 +25,50 @@ import { Marca } from './Marca'
 import { BarraCarregamento, CarregandoPagina } from './Carregamento'
 import { Inactividade } from './Inactividade'
 
-interface ItemNav { para: string; rotulo: string; icone: ComponentType<{ className?: string }>; permissao?: string; fim?: boolean }
+/** Ícones do menu: Phosphor, linha fina normalmente e cheios no item activo. */
+interface ItemNav { para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string; fim?: boolean }
 interface GrupoNav { rotulo?: string; itens: ItemNav[] }
 
 const NAV: GrupoNav[] = [
-  { itens: [{ para: '/', rotulo: t.nav.inicio, icone: LayoutDashboard, fim: true }] },
+  { itens: [{ para: '/', rotulo: t.nav.inicio, icone: PhSquaresFour, fim: true }] },
   {
     rotulo: t.nav.secretaria,
     itens: [
-      { para: '/membros', rotulo: t.nav.membros, icone: Users, permissao: 'secretaria.membro.ler', fim: false },
-      { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
-      { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
-      { para: '/conselho', rotulo: 'Conselho da igreja', icone: ShieldCheck, permissao: 'secretaria.oficial.ler', fim: false },
-      { para: '/familias', rotulo: 'Famílias', icone: Home, permissao: 'secretaria.familia.ler', fim: true },
-      { para: '/transferencias', rotulo: 'Transferências', icone: ArrowRightLeft, permissao: 'secretaria.transferencia_membro.ler', fim: true },
-      { para: '/disciplina', rotulo: 'Disciplina', icone: Gavel, permissao: 'secretaria.disciplina.ler', fim: true },
-      { para: '/secretaria/relatorio', rotulo: 'Relatório da secretaria', icone: BarChart3, permissao: 'secretaria.movimento_membro.ler', fim: true },
+      { para: '/membros', rotulo: t.nav.membros, icone: PhUsersThree, permissao: 'secretaria.membro.ler', fim: false },
+      { para: '/livro', rotulo: t.livro.titulo, icone: PhBookOpenText, permissao: 'secretaria.movimento_membro.ler', fim: false },
+      { para: '/reunioes', rotulo: t.livro.reunioes, icone: PhChatsCircle, permissao: 'secretaria.reuniao.ler', fim: false },
+      { para: '/conselho', rotulo: 'Conselho da igreja', icone: PhUserList, permissao: 'secretaria.oficial.ler', fim: false },
+      { para: '/familias', rotulo: 'Famílias', icone: PhHouseLine, permissao: 'secretaria.familia.ler', fim: true },
+      { para: '/transferencias', rotulo: 'Transferências', icone: PhArrowsLeftRight, permissao: 'secretaria.transferencia_membro.ler', fim: true },
+      { para: '/disciplina', rotulo: 'Disciplina', icone: PhGavel, permissao: 'secretaria.disciplina.ler', fim: true },
+      { para: '/secretaria/relatorio', rotulo: 'Relatório da secretaria', icone: PhChartBar, permissao: 'secretaria.movimento_membro.ler', fim: true },
     ],
   },
   {
     rotulo: t.nav.tesouraria,
     itens: [
-      { para: '/tesouraria', rotulo: 'Painel', icone: PiggyBank, permissao: 'tesouraria.conta_financeira.ler', fim: true },
-      { para: '/tesouraria/movimentos', rotulo: t.tesouraria.movimentos, icone: ListOrdered, permissao: 'tesouraria.transacao.ler', fim: false },
-      { para: '/tesouraria/despesas', rotulo: t.tesouraria.despesas, icone: ClipboardList, permissao: 'tesouraria.despesa.ler', fim: true },
-      { para: '/tesouraria/contagens', rotulo: t.tesouraria.contagens, icone: Calculator, permissao: 'tesouraria.contagem_numerario.ler', fim: true },
-      { para: '/tesouraria/remessas', rotulo: t.tesouraria.remessas, icone: Landmark, permissao: 'tesouraria.remessa.ler', fim: true },
-      { para: '/tesouraria/relatorio-mensal', rotulo: t.tesouraria.relatorioMensal, icone: FileText, permissao: 'tesouraria.transacao.ler', fim: true },
-      { para: '/tesouraria/fechos', rotulo: t.tesouraria.fechos, icone: CalendarCheck, permissao: 'tesouraria.fecho_periodo.ler', fim: true },
-      { para: '/tesouraria/orcamento', rotulo: 'Orçamento anual', icone: Target, permissao: 'tesouraria.orcamento.ler', fim: true },
-      { para: '/tesouraria/reconciliacao', rotulo: 'Reconciliação', icone: FileCheck2, permissao: 'tesouraria.extrato_linha.ler', fim: true },
-      { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: Wallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
-      { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: Coins, permissao: 'tesouraria.fundo.ler', fim: true },
+      { para: '/tesouraria', rotulo: 'Painel', icone: PhChartPieSlice, permissao: 'tesouraria.conta_financeira.ler', fim: true },
+      { para: '/tesouraria/movimentos', rotulo: t.tesouraria.movimentos, icone: PhArrowsDownUp, permissao: 'tesouraria.transacao.ler', fim: false },
+      { para: '/tesouraria/despesas', rotulo: t.tesouraria.despesas, icone: PhReceipt, permissao: 'tesouraria.despesa.ler', fim: true },
+      { para: '/tesouraria/contagens', rotulo: t.tesouraria.contagens, icone: PhCalculator, permissao: 'tesouraria.contagem_numerario.ler', fim: true },
+      { para: '/tesouraria/remessas', rotulo: t.tesouraria.remessas, icone: PhBank, permissao: 'tesouraria.remessa.ler', fim: true },
+      { para: '/tesouraria/relatorio-mensal', rotulo: t.tesouraria.relatorioMensal, icone: PhFileText, permissao: 'tesouraria.transacao.ler', fim: true },
+      { para: '/tesouraria/fechos', rotulo: t.tesouraria.fechos, icone: PhLockSimple, permissao: 'tesouraria.fecho_periodo.ler', fim: true },
+      { para: '/tesouraria/orcamento', rotulo: 'Orçamento anual', icone: PhTarget, permissao: 'tesouraria.orcamento.ler', fim: true },
+      { para: '/tesouraria/reconciliacao', rotulo: 'Reconciliação', icone: PhListChecks, permissao: 'tesouraria.extrato_linha.ler', fim: true },
+      { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: PhWallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
+      { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: PhHandCoins, permissao: 'tesouraria.fundo.ler', fim: true },
     ],
   },
   {
     rotulo: t.nav.actividades,
-    itens: [{ para: '/escalas', rotulo: t.nav.escalas, icone: CalendarDays, permissao: 'actividades.escala_plano.ler', fim: false }],
+    itens: [{ para: '/escalas', rotulo: t.nav.escalas, icone: PhCalendarDots, permissao: 'actividades.escala_plano.ler', fim: false }],
   },
   {
     rotulo: t.nav.administracao,
     itens: [
-      { para: '/igrejas', rotulo: 'Igrejas', icone: Building2, permissao: 'organizacao.igreja.criar', fim: true },
-      { para: '/acessos', rotulo: t.nav.acessos, icone: KeyRound, permissao: 'nucleo.usuario.ler', fim: false },
+      { para: '/igrejas', rotulo: 'Igrejas', icone: PhChurch, permissao: 'organizacao.igreja.criar', fim: true },
+      { para: '/acessos', rotulo: t.nav.acessos, icone: PhUserGear, permissao: 'nucleo.usuario.ler', fim: false },
     ],
   },
 ]
@@ -108,7 +109,7 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
                       encolhida && 'justify-center px-0',
                     )}
                   >
-                    <it.icone className="size-[18px] shrink-0 opacity-85" />
+                    <it.icone className={cn('size-5 shrink-0', !activo && 'opacity-80')} weight={activo ? 'fill' : 'regular'} />
                     {!encolhida && <span className="min-w-0 flex-1 truncate">{it.rotulo}</span>}
                   </NavLink>
                 )
@@ -163,7 +164,7 @@ function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; abe
         <div className="border-t border-sidebar-border p-2.5">
           <button type="button" onClick={() => sair()}
             className={cn('alvo flex min-h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-sm font-medium text-sidebar-foreground hover:bg-tint-destructive hover:text-destructive-text', encolhida && 'lg:justify-center lg:px-0')}>
-            <LogOut className="size-[18px] shrink-0" />
+            <PhSignOut className="size-5 shrink-0" />
             <span className={cn(encolhida && 'lg:hidden')}>{t.nav.sair}</span>
           </button>
         </div>

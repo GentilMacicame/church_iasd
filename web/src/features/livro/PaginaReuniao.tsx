@@ -31,6 +31,7 @@ import { emExercicio, useConselho, type Oficial } from '@/features/conselho/api'
 import { EscolherDoConselho } from '@/features/conselho/EscolherDoConselho'
 import { useCriarVoto, usePontos, usePresencas, useReuniao, useReuniaoMut, useVotos, type EstadoPonto, type Ponto, type Presenca, type Reuniao, type TipoVoto, type Voto } from './api'
 import { PilulaEstadoReuniao } from './PaginaReunioes'
+import { CartaoDevocional } from './Devocional'
 
 const n = z.string().regex(/^\d*$/, 'Só algarismos')
 const esquema = z.object({
@@ -235,6 +236,7 @@ export default function PaginaReuniao() {
         </div>
 
         <div className="grid min-w-0 gap-6 lg:col-span-4 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
+          <CartaoDevocional reuniao={r} fechada={!podeEditar} nomeDe={(id) => nomeDe(id) ?? undefined} />
           <Presencas reuniaoId={r.id} fechada={fechada} oficiais={conselho.data ?? []} presencas={presencas.data ?? []} aCarregar={presencas.isPending || conselho.isPending} nomeDe={nomeDe} />
           <Encerramento reuniao={r} fechada={!podeEditar} />
         </div>

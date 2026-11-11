@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Sistema de Gestão da Igreja Adventista · esquema completo (script único)
 -- GERADO por scripts/gerar-schema-completo.sh a partir de database/migrations
--- (V1__base.sql … V27__directorio_de_igrejas.sql). NÃO EDITAR À MÃO.
+-- (V1__base.sql … V28__meditacao_hino_e_oracoes_da_reuniao.sql). NÃO EDITAR À MÃO.
 -- PostgreSQL 16+, como administrador; depois: scripts/criar-papel-api.sh
 -- =====================================================================
 
@@ -6508,3 +6508,33 @@ WHERE t.tme_end_date IS NULL
        OR t.tme_destino_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.transferencia_membro.ler'))::INT[]));
 COMMENT ON VIEW secretaria.vw_transferencias IS 'Transferências de membros com o nome do membro e das duas igrejas, para a origem e o destino (V27)';
 GRANT SELECT ON secretaria.vw_transferencias TO app_igreja;
+
+-- >>>>> V28__meditacao_hino_e_oracoes_da_reuniao.sql
+-- =====================================================================
+-- V28 · Reuniões: meditação, hino e orações (F-SEC-04)
+--
+-- A acta regista quem fez a meditação (um membro desta igreja ou um convidado, ex.: o pastor do distrito), o hino
+-- entoado e quem fez a primeira e a última oração. Colunas opcionais: as reuniões antigas ficam como estão.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TABLE secretaria.reuniao
+  ADD COLUMN reu_meditacao_mem_id INT,
+  ADD COLUMN reu_meditacao_convidado VARCHAR(150),
+  ADD COLUMN reu_hino VARCHAR(150),
+  ADD COLUMN reu_oracao_inicial_mem_id INT,
+  ADD COLUMN reu_oracao_final_mem_id INT,
+  ADD CONSTRAINT fk_reu_meditacao_mem_id FOREIGN KEY (reu_meditacao_mem_id) REFERENCES secretaria.membro(mem_id),
+  ADD CONSTRAINT fk_reu_oracao_inicial_mem_id FOREIGN KEY (reu_oracao_inicial_mem_id) REFERENCES secretaria.membro(mem_id),
+  ADD CONSTRAINT fk_reu_oracao_final_mem_id FOREIGN KEY (reu_oracao_final_mem_id) REFERENCES secretaria.membro(mem_id),
+  ADD CONSTRAINT chk_reu_meditacao CHECK (NOT (reu_meditacao_mem_id IS NOT NULL AND reu_meditacao_convidado IS NOT NULL));
+
+COMMENT ON COLUMN secretaria.reuniao.reu_meditacao_mem_id IS 'Quem fez a meditação (V28)';
+COMMENT ON COLUMN secretaria.reuniao.reu_meditacao_convidado IS 'Quem fez a meditação, se não for membro desta igreja (ex.: pastor do distrito) (V28)';
+COMMENT ON COLUMN secretaria.reuniao.reu_hino IS 'Hino entoado, ex.: "Hino 123 — Castelo forte" (V28)';
+COMMENT ON COLUMN secretaria.reuniao.reu_oracao_inicial_mem_id IS 'Quem fez a primeira oração (V28)';
+COMMENT ON COLUMN secretaria.reuniao.reu_oracao_final_mem_id IS 'Quem fez a última oração (V28)';
+
+CREATE INDEX idx_reu_meditacao_mem_id ON secretaria.reuniao (reu_meditacao_mem_id);
+CREATE INDEX idx_reu_oracao_inicial_mem_id ON secretaria.reuniao (reu_oracao_inicial_mem_id);
+CREATE INDEX idx_reu_oracao_final_mem_id ON secretaria.reuniao (reu_oracao_final_mem_id);

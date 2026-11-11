@@ -1,0 +1,30 @@
+ set_config 
+------------
+ 980
+(1 row)
+
+1. o administrador da igreja 1 regista a meditação, o hino e as orações
+         reu_hino         | meditacao | primeira | ultima 
+--------------------------+-----------+----------+--------
+ Hino 123 — Castelo forte | t         | t        | t
+(1 row)
+
+2. meditação de um membro E de um convidado ao mesmo tempo: recusado
+psql:database/tests/14_meditacao_e_oracoes.sql:19: ERROR:  new row for relation "reuniao" violates check constraint "chk_reu_meditacao"
+3. um convidado em vez do membro: aceite
+ reu_meditacao_convidado 
+-------------------------
+ Pastor do distrito
+(1 row)
+
+4. um utilizador sem perfil não altera a reunião (0 linhas: não a vê)
+ set_config 
+------------
+ 13002
+(1 row)
+
+      hino_continua       
+--------------------------
+ Hino 123 — Castelo forte
+(1 row)
+
