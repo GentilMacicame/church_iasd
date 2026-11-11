@@ -123,3 +123,63 @@ export function useCriarMovimento(membroId: number) {
     },
   })
 }
+
+/* ===================================================================== conselho: presenças e agenda (V22) */
+export type Presenca = Esquema<'ReuniaoPresenca'> & { id: number; reuniaoId: number; membroId: number; presente: boolean }
+export type EstadoPonto = 'PENDENTE' | 'APROVADO' | 'REJEITADO' | 'ADIADO' | 'INFORMATIVO'
+export type Ponto = Esquema<'ReuniaoPonto'> & { id: number; reuniaoId: number; ordem: number; assunto: string; estado: EstadoPonto }
+
+export function usePresencas(reuniaoId: number) {
+  return useQuery({
+    enabled: reuniaoId > 0,
+    queryKey: [...chaves.reuniao(reuniaoId), 'presencas'],
+    queryFn: () => todas<Presenca>((depois) => dados(api.GET('/v1/secretaria/presencas-reuniao', { params: { query: { reuniaoId, limite: 200, depois } } }))),
+  })
+}
+
+export function usePontos(reuniaoId: number) {
+  return useQuery({
+    enabled: reuniaoId > 0,
+    queryKey: [...chaves.reuniao(reuniaoId), 'pontos'],
+    queryFn: async () => (await todas<Ponto>((depois) => dados(api.GET('/v1/secretaria/pontos-agenda', { params: { query: { reuniaoId, limite: 200, depois } } }))))
+      .sort((a, b) => a.ordem - b.ordem || a.id - b.id),
+  })
+}
+
+/** Presenças, pontos da agenda e dados da reunião (a acta aprovada fica fechada pela base de dados). */
+export function useReuniaoMut(reuniaoId: number) {
+  const qc = useQueryClient()
+  const igreja = useIgreja()
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: chaves.reuniao(reuniaoId) })
+    qc.invalidateQueries({ queryKey: chaves.reunioes(igreja.id) })
+  }
+  /** Marca presente/ausente: cria a linha da pessoa ou altera a que existe. */
+  const marcar = useMutation({
+    mutationFn: async (p: { existente?: Presenca; membroId: number; presente: boolean; funcao?: string | null; justificacao?: string | null }) =>
+      p.existente
+        ? dados(api.PATCH('/v1/secretaria/presencas-reuniao/{id}', { params: { path: { id: p.existente.id } }, body: { presente: p.presente, justificacao: p.presente ? null : p.justificacao ?? null } as never }))
+        : dados(api.POST('/v1/secretaria/presencas-reuniao', { body: { reuniaoId, membroId: p.membroId, presente: p.presente, funcao: p.funcao ?? null, justificacao: p.justificacao ?? null } as never })),
+    onSuccess: invalidar,
+  })
+  const retirarPresenca = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/secretaria/presencas-reuniao/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: invalidar,
+  })
+  const gravarPonto = useMutation({
+    mutationFn: async ({ id, ...corpo }: Partial<Ponto> & { id?: number }) =>
+      id
+        ? dados(api.PATCH('/v1/secretaria/pontos-agenda/{id}', { params: { path: { id } }, body: corpo as never }))
+        : dados(api.POST('/v1/secretaria/pontos-agenda', { body: { ...corpo, reuniaoId } as never })),
+    onSuccess: invalidar,
+  })
+  const retirarPonto = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/secretaria/pontos-agenda/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: invalidar,
+  })
+  const alterarReuniao = useMutation({
+    mutationFn: (corpo: Partial<Reuniao>) => dados(api.PATCH('/v1/secretaria/reunioes/{id}', { params: { path: { id: reuniaoId } }, body: corpo as never })),
+    onSuccess: invalidar,
+  })
+  return { marcar, retirarPresenca, gravarPonto, retirarPonto, alterarReuniao }
+}

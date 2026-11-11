@@ -2903,6 +2903,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/secretaria/conselho": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Conselho
+         * @description Lido da vista secretaria.vw_conselho.
+         */
+        get: operations["relVSecretariaConselho"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/secretaria/consentimentos": {
         parameters: {
             query?: never;
@@ -3589,6 +3609,176 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarOficial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/pontos-agenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pontos agenda: listar
+         * @description Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação
+         */
+        get: operations["listarReuniaoPonto"];
+        put?: never;
+        /**
+         * Pontos agenda: criar
+         * @description Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação
+         */
+        post: operations["criarReuniaoPonto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/pontos-agenda/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pontos agenda: ler um */
+        get: operations["lerReuniaoPonto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Pontos agenda: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarReuniaoPonto"];
+        trace?: never;
+    };
+    "/v1/secretaria/pontos-agenda/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pontos agenda: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarReuniaoPonto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/pontos-agenda/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pontos agenda: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarReuniaoPonto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/presencas-reuniao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Presencas reuniao: listar
+         * @description Presenças nas reuniões: quem esteve e quem faltou (com a justificação)
+         */
+        get: operations["listarReuniaoPresenca"];
+        put?: never;
+        /**
+         * Presencas reuniao: criar
+         * @description Presenças nas reuniões: quem esteve e quem faltou (com a justificação)
+         */
+        post: operations["criarReuniaoPresenca"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/presencas-reuniao/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Presencas reuniao: ler um */
+        get: operations["lerReuniaoPresenca"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Presencas reuniao: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarReuniaoPresenca"];
+        trace?: never;
+    };
+    "/v1/secretaria/presencas-reuniao/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Presencas reuniao: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarReuniaoPresenca"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/presencas-reuniao/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Presencas reuniao: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarReuniaoPresenca"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6319,6 +6509,8 @@ export interface components {
             mandatoAnos?: number;
             /** @description Só membros em situação regular */
             exigeMembro?: boolean;
+            /** @description Faz parte do conselho da igreja (junta directiva) */
+            conselho?: boolean;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -6799,6 +6991,8 @@ export interface components {
         /** @enum {string} */
         EnumEstadoOrcamento: "RASCUNHO" | "APROVADO" | "ENCERRADO";
         /** @enum {string} */
+        EnumEstadoPonto: "PENDENTE" | "APROVADO" | "REJEITADO" | "ADIADO" | "INFORMATIVO";
+        /** @enum {string} */
         EnumEstadoRegisto: "ACTIVO" | "INACTIVO";
         /** @enum {string} */
         EnumEstadoRelatorio: "ABERTO" | "FECHADO";
@@ -7106,6 +7300,8 @@ export interface components {
             endereco?: string;
             latitude?: string;
             longitude?: string;
+            /** @description Duração dos mandatos dos oficiais nesta igreja, em anos */
+            mandatoAnos?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -7388,8 +7584,16 @@ export interface components {
             votoId?: number;
             /** Format: date */
             dataInicio?: string;
-            /** Format: date */
+            /**
+             * Format: date
+             * @description Fim efectivo (mandato terminado antes ou depois do previsto)
+             */
             dataFim?: string;
+            /**
+             * Format: date
+             * @description Fim do mandato pela duração definida na igreja (preenchido sozinho; pode corrigir-se)
+             */
+            fimPrevisto?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -7797,7 +8001,79 @@ export interface components {
             secretarioMembroId?: number;
             quorumPresentes?: number;
             actaUrl?: string;
+            /** @description Número da reunião/acta, ex.: 2026-03 */
+            numero?: string;
+            /**
+             * Format: date-time
+             * @description Hora do encerramento
+             */
+            encerradaEm?: string;
+            /** @description Registo do encerramento (oração final, próxima reunião, ...) */
+            encerramento?: string;
             estado?: components["schemas"]["EnumEstadoReuniao"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação */
+        ReuniaoPonto: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.reuniao
+             */
+            reuniaoId?: number;
+            ordem?: number;
+            assunto?: string;
+            detalhes?: string;
+            discutido?: boolean;
+            votado?: boolean;
+            aFavor?: number;
+            contra?: number;
+            abstencoes?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.voto · Voto formal da acta (admissões, transferências, ...) ligado a este ponto
+             */
+            votoId?: number;
+            /** @description Decisão ou deliberação tomada */
+            deliberacao?: string;
+            estado?: components["schemas"]["EnumEstadoPonto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Presenças nas reuniões: quem esteve e quem faltou (com a justificação) */
+        ReuniaoPresenca: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.reuniao
+             */
+            reuniaoId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro
+             */
+            membroId?: number;
+            presente?: boolean;
+            /** @description Cargo com que participou (fica no histórico) */
+            funcao?: string;
+            /** @description Motivo da ausência */
+            justificacao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -14456,6 +14732,35 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    relVSecretariaConselho: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarConsentimento: {
         parameters: {
             query?: {
@@ -15909,6 +16214,376 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Oficial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarReuniaoPonto: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                reuniaoId?: number;
+                votoId?: number;
+                estado?: components["schemas"]["EnumEstadoPonto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ReuniaoPonto"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarReuniaoPonto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ReuniaoPonto"], "reuniaoId" | "assunto">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPonto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerReuniaoPonto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPonto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarReuniaoPonto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReuniaoPonto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPonto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarReuniaoPonto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPonto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarReuniaoPonto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPonto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarReuniaoPresenca: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                reuniaoId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ReuniaoPresenca"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarReuniaoPresenca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ReuniaoPresenca"], "reuniaoId" | "membroId">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPresenca"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerReuniaoPresenca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPresenca"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarReuniaoPresenca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReuniaoPresenca"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPresenca"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarReuniaoPresenca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPresenca"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarReuniaoPresenca: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReuniaoPresenca"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

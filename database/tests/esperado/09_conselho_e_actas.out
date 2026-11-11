@@ -1,0 +1,66 @@
+0. a igreja 1 define mandatos de 2 anos (fora dos limites: recusado)
+psql:database/tests/09_conselho_e_actas.sql:14: ERROR:  new row for relation "igreja" violates check constraint "chk_igr_mandato"
+1. secretário (autorizado): elege o secretário e um ancião; o fim previsto sai da duração da igreja
+ ofi_data_inicio | ofi_fim_previsto 
+-----------------+------------------
+ 2026-01-01      | 2027-12-31
+(1 row)
+
+ ofi_data_inicio | ofi_fim_previsto 
+-----------------+------------------
+ 2025-01-01      | 2025-12-31
+(1 row)
+
+   fim previsto antes do início: recusado
+psql:database/tests/09_conselho_e_actas.sql:28: ERROR:  new row for relation "oficial" violates check constraint "chk_ofi_fim_previsto"
+2. o conselho: cargo, contacto e estado do mandato
+    membro     |          cargo          | do_conselho | ofi_fim_previsto |   contacto    | estado_mandato 
+---------------+-------------------------+-------------+------------------+---------------+----------------
+ Joana Cumbe   | Ancião                  | t           | 2025-12-31       |               | TERMINADO
+ Paulo Mabjaia | Secretário(a) da igreja | t           | 2027-12-31       | +258843330000 | ACTIVO
+ Rui Mabote    | Ancião                  | t           | 2027-12-31       |               | FUTURO
+(3 rows)
+
+3. reunião do conselho com presenças e agenda
+ reu_numero | reu_estado 
+------------+------------
+ 2026-07    | CONVOCADA
+(1 row)
+
+   a mesma pessoa duas vezes: recusado
+psql:database/tests/09_conselho_e_actas.sql:40: ERROR:  duplicate key value violates unique constraint "uq_rpr_reu_id_mem_id"
+   votos num ponto que não foi a votos: recusado
+psql:database/tests/09_conselho_e_actas.sql:45: ERROR:  new row for relation "reuniao_ponto" violates check constraint "chk_rpt_votacao"
+ rpr_mem_id | rpr_presente |       rpr_funcao        | rpr_justificacao 
+------------+--------------+-------------------------+------------------
+        960 | t            | Secretário(a) da igreja | 
+        961 | f            | Ancião                  | Doente
+(2 rows)
+
+ rpt_ordem |       rpt_assunto       | rpt_votado | rpt_a_favor | rpt_contra | rpt_estado 
+-----------+-------------------------+------------+-------------+------------+------------
+         1 | Pintura da fachada      | t          |           8 |          1 | APROVADO
+         2 | Programa do 13.º sábado | f          |             |            | PENDENTE
+(2 rows)
+
+4. acta aprovada: presenças e pontos ficam fechados
+psql:database/tests/09_conselho_e_actas.sql:51: ERROR:  A acta desta reunião já foi aprovada: as presenças e os pontos da agenda já não se alteram
+psql:database/tests/09_conselho_e_actas.sql:52: ERROR:  A acta desta reunião já foi aprovada: as presenças e os pontos da agenda já não se alteram
+5. tesoureiro da igreja 1 (não autorizado): não vê presenças nem pontos e não os regista
+ ve_presencas 
+--------------
+            0
+(1 row)
+
+ ve_pontos 
+-----------
+         0
+(1 row)
+
+psql:database/tests/09_conselho_e_actas.sql:58: ERROR:  new row violates row-level security policy for table "reuniao_ponto"
+6. tesoureiro de outra igreja: não vê o conselho da igreja 1
+ ve_conselho 
+-------------
+           0
+(1 row)
+

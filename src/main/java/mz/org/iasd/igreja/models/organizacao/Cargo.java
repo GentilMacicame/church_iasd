@@ -21,6 +21,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param nome coluna {@code car_nome} — obrigatório ao criar
  * @param mandatoAnos Duração habitual do mandato
  * @param exigeMembro Só membros em situação regular
+ * @param conselho Faz parte do conselho da igreja (junta directiva)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -40,6 +41,8 @@ public record Cargo(
         Integer mandatoAnos,
         @ColunaBd(value = "car_exige_membro", tipo = Tipo.BOOLEANO, naoNula = true)
         Boolean exigeMembro,
+        @ColunaBd(value = "car_conselho", tipo = Tipo.BOOLEANO, naoNula = true)
+        Boolean conselho,
         @ColunaBd(value = "car_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "car_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

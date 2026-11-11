@@ -53,7 +53,9 @@ src/
   (baptismo, profissão de fé) e saídas registadas na ficha do membro, com o voto que as autoriza; o livro com os números
   do ano.
 - **Tesouraria** (P-06, P-08): painel (saldo total, do mês, contas, saldos por fundo com o que é da Associação);
-  lançar entrada por fundos (envelope a envelope, total em cêntimos, recibo numerado); registar saída (fica por
+  lançar entrada (envelope a envelope: membro ou ofertas da salva, o que o membro já deu este ano, dízimo e oferta em
+  destaque e os outros fundos recolhidos, a parte da Missão e a da igreja, a lista do que se lançou na sessão; recibo
+  numerado); registar saída (fica por
   aprovar: quem regista não aprova; o ancião aprova, o tesoureiro confirma); movimentos do mês com filtros; ficha do
   movimento (confirmar, aprovar, recibo para imprimir, anular pendente). Pedidos de dinheiro com Idempotency-Key.
   Despesas (P-07): pedir, decidir (aprovar, pode reduzir, ou rejeitar com motivo; quem pede não decide), pagar (a saída
@@ -76,6 +78,13 @@ src/
   específicas; só o super-administrador altera). Ficha do utilizador: dados, membro ligado, perfis em cartões, estado da
   conta, enviar o código por SMS (o "convite": o utilizador define a senha em "Esqueci a senha"), desactivar/reactivar.
   As regras são da base de dados: ninguém altera os próprios perfis nem dá um perfil com mais permissões do que as suas.
+
+- **Conselho da igreja e reuniões** (F-SEC-07/08, P-04): conselho com cargos, contactos e mandatos (em exercício, a
+  terminar, terminados), duração dos mandatos por igreja; reunião com número, presidente e secretário escolhidos do
+  conselho (secretário oficial por defeito), presenças (presente/ausente com justificação), agenda com deliberações e
+  votações, votos formais, encerramento, estados (convocada → realizada → acta aprovada, que fecha o registo) e a
+  acta formal para imprimir/guardar em PDF (A4, assinaturas do Presidente e do Secretário). O campo de escolher membro
+  abre num popover (já não estica os diálogos). Registo de membro em assistente de 5 passos.
 
 ## Por fazer (próximas iterações)
 

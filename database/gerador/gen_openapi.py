@@ -259,7 +259,8 @@ for p_, v_, perm in [('relatorio-mensal', 'secretaria.vw_relatorio_mensal_membro
                      ('censuras-activas', 'secretaria.vw_censuras_activas', 'secretaria.disciplina.ler'),
                      ('mandatos-a-terminar', 'secretaria.vw_mandatos_a_terminar', 'secretaria.oficial.ler'),
                      ('menores-pendentes', 'secretaria.vw_menores_pendentes', 'secretaria.membro.ler'),
-                     ('familias-resumo', 'secretaria.vw_familia_resumo', 'secretaria.familia.ler')]:
+                     ('familias-resumo', 'secretaria.vw_familia_resumo', 'secretaria.familia.ler'),
+                     ('conselho', 'secretaria.vw_conselho', 'secretaria.oficial.ler')]:
     rel(f'/v1/secretaria/{p_}', v_, SEC, perm, ANO if p_ == 'relatorio-mensal' else ())
 for p_, v_ in [('classificacao', 'vw_classificacao'), ('painel', 'vw_painel'), ('evolucao', 'vw_evolucao_sabado'),
                ('relatorios-em-falta', 'vw_relatorios_em_falta'), ('conferencia-ofertas', 'vw_conferencia_ofertas'),

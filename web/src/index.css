@@ -183,6 +183,14 @@
 /* Impressão (escala para afixar): folha A4 deitada, sem cores de fundo. */
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
+  /* documentos oficiais (acta): A4 ao alto, margens de documento */
+  @page documento { size: A4 portrait; margin: 18mm 16mm 16mm; }
+  .documento-a4 { page: documento; }
+  /* ao imprimir um documento, a moldura da aplicação não ocupa altura (sem página em branco no fim) */
+  body:has(.documento-a4) .min-h-dvh, body:has(.documento-a4) .min-h-screen { min-height: 0 !important; }
+  body:has(.documento-a4) main { padding: 0 !important; }
+  /* a página inteira (e não só o documento) usa o formato do documento: sem página deitada no fim */
+  html:has(.documento-a4), body:has(.documento-a4) { page: documento; }
   body { background: #fff; color: #000; }
 }
 

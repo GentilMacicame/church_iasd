@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,6 +47,7 @@ import mz.org.iasd.igreja.controllers.escolasabatina.RelatoriosEscolaSabatinaCon
 import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
 import mz.org.iasd.igreja.repositories.eu.EuRepository;
 import mz.org.iasd.igreja.controllers.tesouraria.RelatoriosTesourariaController;
+import mz.org.iasd.igreja.controllers.secretaria.RelatoriosSecretariaController;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
 import mz.org.iasd.igreja.models.catalogo.Catalogo;
 import mz.org.iasd.igreja.repositories.base.TabelaRepository;
@@ -59,6 +61,10 @@ import mz.org.iasd.igreja.models.secretaria.Membro;
 import mz.org.iasd.igreja.models.actividades.Escala;
 import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.secretaria.Familia;
+import mz.org.iasd.igreja.models.secretaria.Oficial;
+import mz.org.iasd.igreja.models.secretaria.Reuniao;
+import mz.org.iasd.igreja.models.secretaria.ReuniaoPonto;
+import mz.org.iasd.igreja.models.secretaria.ReuniaoPresenca;
 
 /**
  * Fase 0 contra PostgreSQL real (migrações V1–V17), sempre como {@code api_igreja} (nunca o dono):
@@ -826,6 +832,60 @@ class BaseDadosTest {
             r.put(linha.substring(0, igual).strip(), linha.substring(igual + 1).strip());
         }
         return r;
+    }
+
+    // ------------------------------------------------------------------ V22: conselho e actas
+
+    @Test
+    void conselhoPresencasEPontosDaAgendaComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v22@teste.mz", "+258840000221", "SECRETARIO");
+        int membro;
+        int cargo;
+        try (Connection dono = ligarComoDono()) {
+            membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_estado) VALUES ("
+                    + igrejaCentral + ", 'Paulo', 'Conselho', 'ACTIVO') RETURNING mem_id");
+            cargo = inserir(dono, "SELECT car_id FROM organizacao.cargo WHERE car_nome = 'Secretário(a) da igreja'");
+        }
+        var oficial = Catalogo.de(Oficial.class);
+        var reuniao = Catalogo.de(Reuniao.class);
+        var presenca = Catalogo.de(ReuniaoPresenca.class);
+        var ponto = Catalogo.de(ReuniaoPonto.class);
+
+        // o secretário elege o oficial: o fim previsto do mandato sai da duração definida na igreja
+        JsonObject ofi = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, oficial, Json.createObjectBuilder()
+                .add("membroId", membro).add("cargoId", cargo).add("igrejaId", igrejaCentral).add("dataInicio", "2026-01-01").build()));
+        assertFalse(ofi.isNull("fimPrevisto"));
+        JsonArray conselho = ExecutorTransaccao.executar(api, secretario, c -> RelatoriosSecretariaController.CONSELHO.consultar(c,
+                Map.of("igrejaId", String.valueOf(igrejaCentral))));
+        assertTrue(conselho.stream().map(JsonValue::asJsonObject).anyMatch(o -> o.getInt("membroId") == membro && o.getBoolean("doConselho")));
+
+        // reunião com presença e ponto da agenda votado
+        JsonObject reu = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, reuniao, Json.createObjectBuilder()
+                .add("igrejaId", igrejaCentral).add("tipo", "JUNTA_DIRECTIVA").add("data", "2026-11-08T15:00:00+02:00")
+                .add("numero", "V22-01").add("secretarioMembroId", membro).build()));
+        long reuId = reu.getJsonNumber("id").longValue();
+        ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, presenca, Json.createObjectBuilder()
+                .add("reuniaoId", reuId).add("membroId", membro).add("presente", true).add("funcao", "Secretário(a) da igreja").build()));
+        JsonObject pt = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, ponto, Json.createObjectBuilder()
+                .add("reuniaoId", reuId).add("ordem", 1).add("assunto", "Pintura da fachada").add("votado", true)
+                .add("aFavor", 8).add("contra", 1).add("deliberacao", "Aprovada").add("estado", "APROVADO").build()));
+        assertEquals("APROVADO", pt.getString("estado"));
+
+        // o tesoureiro não regista presenças (403) nem vê os pontos (404 ao alterar)
+        SQLException e = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, presenca,
+                Json.createObjectBuilder().add("reuniaoId", reuId).add("membroId", membro).build())));
+        assertEquals(403, TradutorErrosSql.traduzir(e).estadoHttp());
+        long ptId = pt.getJsonNumber("id").longValue();
+        ApiException naoVe = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, ponto, ptId, Json.createObjectBuilder().add("assunto", "X").build())));
+        assertEquals(404, naoVe.estadoHttp());
+
+        // acta aprovada: os pontos já não se alteram (422 com a mensagem da base de dados)
+        ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, reuniao, reuId,
+                Json.createObjectBuilder().add("estado", "ACTA_APROVADA").build()));
+        SQLException fechada = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                c -> TabelaRepository.criar(c, ponto, Json.createObjectBuilder().add("reuniaoId", reuId).add("assunto", "Tarde").build())));
+        assertEquals(422, TradutorErrosSql.traduzir(fechada).estadoHttp());
     }
 
     private static List<Path> migracoes(Path pasta) throws Exception {

@@ -7321,6 +7321,50 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/conselho:
+    get:
+      summary: 'Relatório: Conselho'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.oficial.ler
+      operationId: relVSecretariaConselho
+      description: Lido da vista secretaria.vw_conselho.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: secretaria.vw_conselho
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/secretaria/consentimentos:
     get:
       summary: 'Consentimentos: listar'
@@ -9110,6 +9154,430 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Oficial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pontos-agenda:
+    get:
+      summary: 'Pontos agenda: listar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.ler
+      operationId: listarReuniaoPonto
+      description: 'Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: reuniaoId
+        in: query
+        schema:
+          type: integer
+      - name: votoId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoPonto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReuniaoPonto'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Pontos agenda: criar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.criar
+      operationId: criarReuniaoPonto
+      description: 'Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ReuniaoPonto'
+              required:
+              - reuniaoId
+              - assunto
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPonto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pontos-agenda/{id}:
+    get:
+      summary: 'Pontos agenda: ler um'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.ler
+      operationId: lerReuniaoPonto
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPonto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Pontos agenda: alterar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.alterar
+      operationId: alterarReuniaoPonto
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReuniaoPonto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPonto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pontos-agenda/{id}/reactivar:
+    post:
+      summary: 'Pontos agenda: reactivar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.terminar
+      operationId: reactivarReuniaoPonto
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPonto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pontos-agenda/{id}/terminar:
+    post:
+      summary: 'Pontos agenda: terminar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_ponto.terminar
+      operationId: terminarReuniaoPonto
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPonto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/presencas-reuniao:
+    get:
+      summary: 'Presencas reuniao: listar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.ler
+      operationId: listarReuniaoPresenca
+      description: 'Presenças nas reuniões: quem esteve e quem faltou (com a justificação)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: reuniaoId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReuniaoPresenca'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Presencas reuniao: criar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.criar
+      operationId: criarReuniaoPresenca
+      description: 'Presenças nas reuniões: quem esteve e quem faltou (com a justificação)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ReuniaoPresenca'
+              required:
+              - reuniaoId
+              - membroId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPresenca'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/presencas-reuniao/{id}:
+    get:
+      summary: 'Presencas reuniao: ler um'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.ler
+      operationId: lerReuniaoPresenca
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPresenca'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Presencas reuniao: alterar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.alterar
+      operationId: alterarReuniaoPresenca
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReuniaoPresenca'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPresenca'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/presencas-reuniao/{id}/reactivar:
+    post:
+      summary: 'Presencas reuniao: reactivar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.terminar
+      operationId: reactivarReuniaoPresenca
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPresenca'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/presencas-reuniao/{id}/terminar:
+    post:
+      summary: 'Presencas reuniao: terminar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.reuniao_presenca.terminar
+      operationId: terminarReuniaoPresenca
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReuniaoPresenca'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -16121,6 +16589,9 @@ components:
         exigeMembro:
           type: boolean
           description: Só membros em situação regular
+        conselho:
+          type: boolean
+          description: Faz parte do conselho da igreja (junta directiva)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -17040,6 +17511,14 @@ components:
       - RASCUNHO
       - APROVADO
       - ENCERRADO
+    EnumEstadoPonto:
+      type: string
+      enum:
+      - PENDENTE
+      - APROVADO
+      - REJEITADO
+      - ADIADO
+      - INFORMATIVO
     EnumEstadoRegisto:
       type: string
       enum:
@@ -17711,6 +18190,9 @@ components:
         longitude:
           type: string
           pattern: ^-?\d+(\.\d+)?$
+        mandatoAnos:
+          type: integer
+          description: Duração dos mandatos dos oficiais nesta igreja, em anos
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -18242,6 +18724,11 @@ components:
         dataFim:
           type: string
           format: date
+          description: Fim efectivo (mandato terminado antes ou depois do previsto)
+        fimPrevisto:
+          type: string
+          format: date
+          description: Fim do mandato pela duração definida na igreja (preenchido sozinho; pode corrigir-se)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -19026,6 +19513,17 @@ components:
         actaUrl:
           type: string
           maxLength: 500
+        numero:
+          type: string
+          maxLength: 20
+          description: 'Número da reunião/acta, ex.: 2026-03'
+        encerradaEm:
+          type: string
+          format: date-time
+          description: Hora do encerramento
+        encerramento:
+          type: string
+          description: Registo do encerramento (oração final, próxima reunião, ...)
         estado:
           $ref: '#/components/schemas/EnumEstadoReuniao'
         criadoEm:
@@ -19053,6 +19551,124 @@ components:
       - igrejaId
       - tipo
       - data
+    ReuniaoPonto:
+      type: object
+      description: 'Pontos da agenda de uma reunião: assunto, discussão, votação e deliberação'
+      x-tabela: secretaria.reuniao_ponto
+      x-prefixo: rpt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        reuniaoId:
+          type: integer
+          format: int32
+          description: → secretaria.reuniao
+        ordem:
+          type: integer
+        assunto:
+          type: string
+          maxLength: 255
+        detalhes:
+          type: string
+        discutido:
+          type: boolean
+        votado:
+          type: boolean
+        aFavor:
+          type: integer
+        contra:
+          type: integer
+        abstencoes:
+          type: integer
+        votoId:
+          type: integer
+          format: int32
+          description: → secretaria.voto · Voto formal da acta (admissões, transferências, ...) ligado a este ponto
+        deliberacao:
+          type: string
+          description: Decisão ou deliberação tomada
+        estado:
+          $ref: '#/components/schemas/EnumEstadoPonto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - reuniaoId
+      - assunto
+    ReuniaoPresenca:
+      type: object
+      description: 'Presenças nas reuniões: quem esteve e quem faltou (com a justificação)'
+      x-tabela: secretaria.reuniao_presenca
+      x-prefixo: rpr
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        reuniaoId:
+          type: integer
+          format: int32
+          description: → secretaria.reuniao
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        presente:
+          type: boolean
+        funcao:
+          type: string
+          maxLength: 100
+          description: Cargo com que participou (fica no histórico)
+        justificacao:
+          type: string
+          maxLength: 255
+          description: Motivo da ausência
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - reuniaoId
+      - membroId
     Sabado:
       type: object
       description: Sábados de cada trimestre

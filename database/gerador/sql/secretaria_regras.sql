@@ -220,3 +220,45 @@ END $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_ofi_10_validar
     BEFORE INSERT OR UPDATE ON secretaria.oficial
     FOR EACH ROW EXECUTE FUNCTION secretaria.fn_ofi_validar();
+
+-- ---------------------------------------------------------------- conselho e actas (V22)
+-- Fim previsto do mandato: início + duração dos mandatos da igreja (menos um dia). Recalcula-se se o início
+-- mudar e o fim previsto não for corrigido à mão.
+CREATE FUNCTION secretaria.fn_ofi_fim_previsto() RETURNS trigger AS $$
+DECLARE v_anos SMALLINT;
+BEGIN
+    IF NEW.ofi_fim_previsto IS NULL
+       OR (TG_OP = 'UPDATE' AND NEW.ofi_data_inicio IS DISTINCT FROM OLD.ofi_data_inicio
+           AND NEW.ofi_fim_previsto IS NOT DISTINCT FROM OLD.ofi_fim_previsto) THEN
+        SELECT igr_mandato_anos INTO v_anos FROM organizacao.igreja WHERE igr_id = NEW.ofi_igr_id;
+        NEW.ofi_fim_previsto := (NEW.ofi_data_inicio + make_interval(years => COALESCE(v_anos, 1)) - INTERVAL '1 day')::date;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_ofi_05_fim_previsto
+    BEFORE INSERT OR UPDATE ON secretaria.oficial
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_ofi_fim_previsto();
+
+-- Acta aprovada fica fechada: presenças e pontos da agenda já não se registam nem se alteram
+CREATE FUNCTION secretaria.fn_reuniao_acta_aberta() RETURNS trigger AS $$
+DECLARE v_estado nucleo.estado_reuniao_t;
+BEGIN
+    -- a mesma função serve as duas tabelas: lê o id da reunião pelo nome da coluna (rpr_ ou rpt_)
+    SELECT reu_estado INTO v_estado FROM secretaria.reuniao
+     WHERE reu_id = (to_jsonb(NEW) ->> (CASE TG_TABLE_NAME WHEN 'reuniao_presenca' THEN 'rpr_reu_id' ELSE 'rpt_reu_id' END))::INT;
+    IF v_estado = 'ACTA_APROVADA' THEN
+        RAISE EXCEPTION 'A acta desta reunião já foi aprovada: as presenças e os pontos da agenda já não se alteram';
+    END IF;
+    IF v_estado = 'CANCELADA' THEN
+        RAISE EXCEPTION 'Esta reunião foi cancelada';
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_rpr_10_acta_aberta
+    BEFORE INSERT OR UPDATE ON secretaria.reuniao_presenca
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_reuniao_acta_aberta();
+CREATE TRIGGER trg_rpt_10_acta_aberta
+    BEFORE INSERT OR UPDATE ON secretaria.reuniao_ponto
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_reuniao_acta_aberta();

@@ -30,6 +30,7 @@ import mz.org.iasd.igreja.models.tipos.TipoIgreja;
  * @param endereco coluna {@code igr_endereco}
  * @param latitude coluna {@code igr_latitude}
  * @param longitude coluna {@code igr_longitude}
+ * @param mandatoAnos Duração dos mandatos dos oficiais nesta igreja, em anos
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -61,6 +62,8 @@ public record Igreja(
         BigDecimal latitude,
         @ColunaBd(value = "igr_longitude", tipo = Tipo.DECIMAL)
         BigDecimal longitude,
+        @ColunaBd(value = "igr_mandato_anos", tipo = Tipo.INT, naoNula = true)
+        Integer mandatoAnos,
         @ColunaBd(value = "igr_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "igr_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

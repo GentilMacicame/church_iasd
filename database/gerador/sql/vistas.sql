@@ -58,12 +58,30 @@ WHERE d.dsc_end_date IS NULL AND CURRENT_DATE >= d.dsc_data_inicio AND CURRENT_D
 -- Mandatos que terminam nos próximos 60 dias (para a comissão de nomeações)
 CREATE VIEW secretaria.vw_mandatos_a_terminar WITH (security_invoker = true) AS
 SELECT o.ofi_id, o.ofi_igr_id, c.car_nome AS cargo, m.mem_nome || ' ' || m.mem_apelido AS membro,
-       o.ofi_data_inicio, (o.ofi_data_inicio + make_interval(years => c.car_mandato_anos))::date AS fim_previsto
+       o.ofi_data_inicio, COALESCE(o.ofi_fim_previsto, (o.ofi_data_inicio + make_interval(years => c.car_mandato_anos))::date) AS fim_previsto
 FROM secretaria.oficial o
 JOIN organizacao.cargo c ON c.car_id = o.ofi_car_id
 JOIN secretaria.membro m ON m.mem_id = o.ofi_mem_id
 WHERE o.ofi_end_date IS NULL AND o.ofi_data_fim IS NULL
-  AND o.ofi_data_inicio + make_interval(years => c.car_mandato_anos) < CURRENT_DATE + 60;
+  AND COALESCE(o.ofi_fim_previsto, (o.ofi_data_inicio + make_interval(years => c.car_mandato_anos))::date) < CURRENT_DATE + 60;
+
+-- Conselho da igreja: os oficiais (com cargo do conselho ou não), o contacto principal e o estado do mandato
+CREATE VIEW secretaria.vw_conselho WITH (security_invoker = true) AS
+SELECT o.ofi_id, o.ofi_igr_id, o.ofi_mem_id, m.mem_nome || ' ' || m.mem_apelido AS membro,
+       c.car_id AS cargo_id, c.car_nome AS cargo, c.car_conselho AS do_conselho,
+       o.ofi_data_inicio, o.ofi_fim_previsto, o.ofi_data_fim,
+       (SELECT ct.cto_valor FROM secretaria.contacto ct
+         WHERE ct.cto_mem_id = o.ofi_mem_id AND ct.cto_end_date IS NULL
+         ORDER BY ct.cto_principal DESC, (ct.cto_tipo = 'TELEFONE') DESC, ct.cto_id LIMIT 1) AS contacto,
+       CASE WHEN o.ofi_data_inicio > CURRENT_DATE THEN 'FUTURO'
+            WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE THEN 'TERMINADO'
+            WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE + 60 THEN 'A_TERMINAR'
+            ELSE 'ACTIVO' END AS estado_mandato
+FROM secretaria.oficial o
+JOIN organizacao.cargo c   ON c.car_id = o.ofi_car_id
+JOIN secretaria.membro m   ON m.mem_id = o.ofi_mem_id
+WHERE o.ofi_end_date IS NULL;
+
 
 CREATE VIEW secretaria.vw_menores_pendentes WITH (security_invoker = true) AS
 SELECT m.mem_id, m.mem_igr_id, m.mem_nome, m.mem_apelido, m.mem_data_nascimento,

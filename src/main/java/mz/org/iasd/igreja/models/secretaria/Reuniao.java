@@ -26,6 +26,9 @@ import mz.org.iasd.igreja.models.tipos.TipoReuniao;
  * @param secretarioMembroId Referência a secretaria.membro
  * @param quorumPresentes coluna {@code reu_quorum_presentes}
  * @param actaUrl coluna {@code reu_acta_url}
+ * @param numero Número da reunião/acta, ex.: 2026-03
+ * @param encerradaEm Hora do encerramento
+ * @param encerramento Registo do encerramento (oração final, próxima reunião, ...)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -53,6 +56,12 @@ public record Reuniao(
         Integer quorumPresentes,
         @ColunaBd(value = "reu_acta_url", tipo = Tipo.TEXTO)
         String actaUrl,
+        @ColunaBd(value = "reu_numero", tipo = Tipo.TEXTO)
+        String numero,
+        @ColunaBd(value = "reu_encerrada_em", tipo = Tipo.DATA_HORA)
+        OffsetDateTime encerradaEm,
+        @ColunaBd(value = "reu_encerramento", tipo = Tipo.TEXTO)
+        String encerramento,
         @ColunaBd(value = "reu_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoReuniao estado,
         @ColunaBd(value = "reu_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

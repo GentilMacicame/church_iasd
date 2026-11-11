@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 417 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 430 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -234,6 +234,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/secretaria/baptismos/{id}/terminar` | BaptismosController · terminar | `secretaria.baptismo.terminar` |
 | GET | `/v1/secretaria/cartas-pendentes` | RelatoriosSecretariaController · cartasPendentes | `secretaria.transferencia_membro.ler` |
 | GET | `/v1/secretaria/censuras-activas` | RelatoriosSecretariaController · censurasActivas | `secretaria.disciplina.ler` |
+| GET | `/v1/secretaria/conselho` | RelatoriosSecretariaController · conselho | `secretaria.oficial.ler` |
 | GET | `/v1/secretaria/consentimentos` | ConsentimentosController · listar | `secretaria.consentimento.ler` |
 | POST | `/v1/secretaria/consentimentos` | ConsentimentosController · criar | `secretaria.consentimento.criar` |
 | GET | `/v1/secretaria/consentimentos/{id}` | ConsentimentosController · obter | `secretaria.consentimento.ler` |
@@ -281,6 +282,18 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/secretaria/oficiais/{id}` | OficiaisController · alterar | `secretaria.oficial.alterar` |
 | POST | `/v1/secretaria/oficiais/{id}/reactivar` | OficiaisController · reactivar | `secretaria.oficial.terminar` |
 | POST | `/v1/secretaria/oficiais/{id}/terminar` | OficiaisController · terminar | `secretaria.oficial.terminar` |
+| GET | `/v1/secretaria/pontos-agenda` | PontosAgendaController · listar | `secretaria.reuniao_ponto.ler` |
+| POST | `/v1/secretaria/pontos-agenda` | PontosAgendaController · criar | `secretaria.reuniao_ponto.criar` |
+| GET | `/v1/secretaria/pontos-agenda/{id}` | PontosAgendaController · obter | `secretaria.reuniao_ponto.ler` |
+| PATCH | `/v1/secretaria/pontos-agenda/{id}` | PontosAgendaController · alterar | `secretaria.reuniao_ponto.alterar` |
+| POST | `/v1/secretaria/pontos-agenda/{id}/reactivar` | PontosAgendaController · reactivar | `secretaria.reuniao_ponto.terminar` |
+| POST | `/v1/secretaria/pontos-agenda/{id}/terminar` | PontosAgendaController · terminar | `secretaria.reuniao_ponto.terminar` |
+| GET | `/v1/secretaria/presencas-reuniao` | PresencasReuniaoController · listar | `secretaria.reuniao_presenca.ler` |
+| POST | `/v1/secretaria/presencas-reuniao` | PresencasReuniaoController · criar | `secretaria.reuniao_presenca.criar` |
+| GET | `/v1/secretaria/presencas-reuniao/{id}` | PresencasReuniaoController · obter | `secretaria.reuniao_presenca.ler` |
+| PATCH | `/v1/secretaria/presencas-reuniao/{id}` | PresencasReuniaoController · alterar | `secretaria.reuniao_presenca.alterar` |
+| POST | `/v1/secretaria/presencas-reuniao/{id}/reactivar` | PresencasReuniaoController · reactivar | `secretaria.reuniao_presenca.terminar` |
+| POST | `/v1/secretaria/presencas-reuniao/{id}/terminar` | PresencasReuniaoController · terminar | `secretaria.reuniao_presenca.terminar` |
 | GET | `/v1/secretaria/relatorio-mensal` | RelatoriosSecretariaController · relatorioMensal | `secretaria.movimento_membro.ler` |
 | GET | `/v1/secretaria/reunioes` | ReunioesController · listar | `secretaria.reuniao.ler` |
 | POST | `/v1/secretaria/reunioes` | ReunioesController · criar | `secretaria.reuniao.criar` |

@@ -3,7 +3,8 @@
  * activos (vista vw_membro_basico); usado nas escalas, nas assinaturas e, mais tarde, noutros módulos.
  */
 import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/comum/elementos'
 import { Barra, EstadoErro } from '@/components/comum/estados'
@@ -59,25 +60,31 @@ export function ListaMembros({ aoEscolher, excluir = [], seleccionado, autoFocus
   )
 }
 
-/** Campo de formulário que mostra o membro escolhido e abre a lista para mudar. */
-export function CampoMembro({ id, valor, aoMudar, nomeDe, estados, vazio = 'Escolher membro…' }: {
+/**
+ * Campo de formulário que mostra o membro escolhido e abre a lista num popover flutuante (com a largura do
+ * campo e altura limitada): não empurra o resto do formulário nem estica os diálogos.
+ */
+export function CampoMembro({ id, valor, aoMudar, nomeDe, estados, vazio = 'Escolher membro…', excluir }: {
   id?: string; valor: number | null; aoMudar: (id: number | null) => void; nomeDe: (id: number) => string | undefined; estados?: string[]; vazio?: string
+  excluir?: number[]
 }) {
   const [aberto, setAberto] = useState(false)
   return (
-    <div className="grid gap-2">
-      <button id={id} type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto}
-        className="alvo flex h-9 w-full items-center justify-between rounded-md border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(0_0_0/0.04)]">
-        <span className={valor ? 'text-foreground' : 'text-muted-foreground'}>{valor ? nomeDe(valor) ?? '—' : vazio}</span>
-        {valor && <span role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); aoMudar(null) }}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); aoMudar(null) } }}
-          className="text-xs text-muted-foreground hover:text-foreground">Limpar</span>}
-      </button>
-      {aberto && (
-        <div className="rounded-lg border bg-popover p-2 shadow-lg">
-          <ListaMembros seleccionado={valor} estados={estados} aoEscolher={(m) => { aoMudar(m.id); setAberto(false) }} altura="max-h-56" />
-        </div>
-      )}
-    </div>
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger asChild>
+        <button id={id} type="button" aria-expanded={aberto} aria-haspopup="listbox"
+          className="alvo flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(0_0_0/0.04)] focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none">
+          <span className={cn('truncate', valor ? 'text-foreground' : 'text-muted-foreground')}>{valor ? nomeDe(valor) ?? '—' : vazio}</span>
+          {valor
+            ? <span role="button" tabIndex={0} aria-label="Limpar" onClick={(e) => { e.stopPropagation(); aoMudar(null) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); aoMudar(null) } }}
+                className="flex-none text-xs text-muted-foreground hover:text-foreground">Limpar</span>
+            : <ChevronDown aria-hidden className="size-4 flex-none text-muted-foreground" />}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-64 p-2">
+        <ListaMembros seleccionado={valor} estados={estados} excluir={excluir} aoEscolher={(m) => { aoMudar(m.id); setAberto(false) }} altura="max-h-60" />
+      </PopoverContent>
+    </Popover>
   )
 }

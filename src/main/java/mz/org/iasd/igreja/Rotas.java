@@ -173,6 +173,12 @@ public final class Rotas {
         /** OficiaisController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String OFICIAIS = "/v1/secretaria/oficiais";
 
+        /** PontosAgendaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
+        public static final String PONTOS_AGENDA = "/v1/secretaria/pontos-agenda";
+
+        /** PresencasReuniaoController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
+        public static final String PRESENCAS_REUNIAO = "/v1/secretaria/presencas-reuniao";
+
         /** RelatoriosSecretariaController */
         public static final String RELATORIOS = "/v1/secretaria";
 
@@ -196,6 +202,9 @@ public final class Rotas {
 
         /** GET /v1/secretaria/membros-basico  (RelatoriosSecretariaController.membrosBasico) */
         public static final String MEMBROS_BASICO = "membros-basico";
+
+        /** GET /v1/secretaria/conselho  (RelatoriosSecretariaController.conselho) */
+        public static final String CONSELHO = "conselho";
 
         /** ReunioesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String REUNIOES = "/v1/secretaria/reunioes";

@@ -22,6 +22,7 @@ import mz.org.iasd.igreja.Rotas;
  *   GET /v1/secretaria/menores-pendentes                    secretaria.membro.ler
  *   GET /v1/secretaria/familias-resumo                      secretaria.familia.ler
  *   GET /v1/secretaria/membros-basico                       secretaria.membro.ler
+ *   GET /v1/secretaria/conselho                             secretaria.oficial.ler
  * </pre>
  */
 @Path(Rotas.Secretaria.RELATORIOS)
@@ -42,6 +43,8 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
             "fam_igr_id = ?", "fam_nome");
     public static final Relatorio MEMBROS_BASICO = Relatorio.porIgreja("secretaria.vw_membro_basico",
             "mem_igr_id = ?", "mem_apelido, mem_nome, mem_id");
+    public static final Relatorio CONSELHO = Relatorio.porIgreja("secretaria.vw_conselho",
+            "ofi_igr_id = ?", "do_conselho DESC, cargo, membro");
 
     /** Relatório mensal à Associação: entradas e saídas do livro de membros por tipo. */
     @GET
@@ -61,6 +64,13 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
     @Path(Rotas.Secretaria.CENSURAS_ACTIVAS)
     public Response censurasActivas() throws SQLException {
         return responder(CENSURAS_ACTIVAS);
+    }
+
+    /** Conselho da igreja: oficiais, cargo, contacto e estado do mandato (F-SEC-07). */
+    @GET
+    @Path(Rotas.Secretaria.CONSELHO)
+    public Response conselho() throws SQLException {
+        return responder(CONSELHO);
     }
 
     /** Mandatos que terminam nos próximos 60 dias (para a comissão de nomeações). */

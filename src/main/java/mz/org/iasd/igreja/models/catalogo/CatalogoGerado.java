@@ -40,6 +40,8 @@ import mz.org.iasd.igreja.models.secretaria.Membro;
 import mz.org.iasd.igreja.models.secretaria.MovimentoMembro;
 import mz.org.iasd.igreja.models.secretaria.Oficial;
 import mz.org.iasd.igreja.models.secretaria.Reuniao;
+import mz.org.iasd.igreja.models.secretaria.ReuniaoPonto;
+import mz.org.iasd.igreja.models.secretaria.ReuniaoPresenca;
 import mz.org.iasd.igreja.models.secretaria.TransferenciaMembro;
 import mz.org.iasd.igreja.models.secretaria.Voto;
 import mz.org.iasd.igreja.models.tesouraria.Alvo;
@@ -75,6 +77,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoEscala;
 import mz.org.iasd.igreja.models.tipos.EstadoMembro;
 import mz.org.iasd.igreja.models.tipos.EstadoNotificacao;
 import mz.org.iasd.igreja.models.tipos.EstadoOrcamento;
+import mz.org.iasd.igreja.models.tipos.EstadoPonto;
 import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
 import mz.org.iasd.igreja.models.tipos.EstadoRelatorio;
 import mz.org.iasd.igreja.models.tipos.EstadoRemessa;
@@ -123,6 +126,7 @@ public final class CatalogoGerado {
             EstadoMembro.class,
             EstadoNotificacao.class,
             EstadoOrcamento.class,
+            EstadoPonto.class,
             EstadoRegisto.class,
             EstadoRelatorio.class,
             EstadoRemessa.class,
@@ -167,6 +171,8 @@ public final class CatalogoGerado {
             Contacto.class,
             Consentimento.class,
             Reuniao.class,
+            ReuniaoPresenca.class,
+            ReuniaoPonto.class,
             Voto.class,
             MovimentoMembro.class,
             TransferenciaMembro.class,

@@ -33,6 +33,7 @@ const NAV: GrupoNav[] = [
       { para: '/membros', rotulo: t.nav.membros, icone: Users, permissao: 'secretaria.membro.ler', fim: false },
       { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
       { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
+      { para: '/conselho', rotulo: 'Conselho da igreja', icone: ShieldCheck, permissao: 'secretaria.oficial.ler', fim: false },
     ],
   },
   {
@@ -172,7 +173,12 @@ function Caminho() {
   if (pathname.startsWith('/livro')) partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.livro.titulo })
   if (pathname.startsWith('/reunioes')) {
     partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.livro.reunioes, para: '/reunioes' })
-    if (/^\/reunioes\/\d+/.test(pathname)) partes.push({ rotulo: 'Acta' })
+    const m = /^\/reunioes\/(\d+)/.exec(pathname)
+    if (m) partes.push({ rotulo: 'Reunião', para: `/reunioes/${m[1]}` })
+    if (/^\/reunioes\/\d+\/acta/.test(pathname)) partes.push({ rotulo: 'Acta' })
+  }
+  if (pathname.startsWith('/conselho')) {
+    partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Conselho da igreja' })
   }
   if (pathname.startsWith('/tesouraria')) {
     partes.push({ rotulo: t.nav.tesouraria, para: '/tesouraria' })
