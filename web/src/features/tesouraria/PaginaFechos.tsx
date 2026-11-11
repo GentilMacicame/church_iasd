@@ -144,7 +144,7 @@ export default function PaginaFechos() {
           texto={<>
             Depois de fechado, ninguém lança nem confirma movimentos com data neste mês.
             {aFechar.pendentes > 0 && <strong className="mt-2 block text-warning-text">Há {aFechar.pendentes} movimento(s) pendente(s): confirme-os ou anule-os antes de fechar.</strong>}
-            {aFechar.porRemeter > 0 && <strong className="mt-2 block text-warning-text">Falta remeter <Dinheiro valor={deCentimos(aFechar.porRemeter)} /> à Missão neste mês.</strong>}
+            {aFechar.porRemeter > 0 && <strong className="mt-2 block text-warning-text">Falta depositar <Dinheiro valor={deCentimos(aFechar.porRemeter)} /> à Missão neste mês.</strong>}
           </>}
           aoConfirmar={() => fechar.mutate({ ano: aFechar.ano, mes: aFechar.mes }, {
             onSuccess: () => { toast.success(`${Mes1(nomeMes(aFechar.ano, aFechar.mes))} fechado.`); setAFechar(null) },
@@ -170,8 +170,8 @@ function ProximoFecho({ m, podeFechar, aoFechar }: { m: Mes; podeFechar: boolean
       detalhe: m.pendentes ? `${m.pendentes} pendente(s): confirme ou anule` : 'Nenhum pendente' },
     { ok: m.contagensAbertas === 0, titulo: 'Contagens conferidas', para: '/tesouraria/contagens', accao: 'Ver contagens',
       detalhe: m.contagensAbertas ? `${m.contagensAbertas} contagem(ns) por conferir` : 'Contado = lançado' },
-    { ok: m.porRemeter === 0 && (m.remessaEnviada || m.entradas === 0), titulo: 'Remessa à Missão', para: '/tesouraria/remessas', accao: 'Ver remessas',
-      detalhe: m.porRemeter > 0 ? <>Falta remeter <Dinheiro valor={deCentimos(m.porRemeter)} /></> : m.remessaEnviada ? 'Enviada' : 'Nada a remeter' },
+    { ok: m.porRemeter === 0 && (m.remessaEnviada || m.entradas === 0), titulo: 'Depósito à Missão', para: '/tesouraria/remessas', accao: 'Ver depósitos',
+      detalhe: m.porRemeter > 0 ? <>Falta depositar <Dinheiro valor={deCentimos(m.porRemeter)} /></> : m.remessaEnviada ? 'Depositado' : 'Nada a depositar' },
     { ok: null, titulo: 'Saldos conferidos', para: '/tesouraria/contas', accao: 'Ver contas',
       detalhe: 'Compare cada conta com o extracto do banco, do M-Pesa e com o caixa' },
   ]

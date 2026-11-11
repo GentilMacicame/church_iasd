@@ -36,7 +36,7 @@ export const nomeMes = (ano: number, mes: number) => `${MESES[mes - 1]} de ${ano
 interface Periodo { chave: string; ano: number; mes: number; entidadeId: number; linhas: Devida[]; emFalta: string; remessa?: RemessaComLinhas; complementar?: boolean }
 
 const PILULA: Record<EstadoRemessa, { v: 'warning' | 'info' | 'success'; r: string }> = {
-  PREPARADA: { v: 'warning', r: 'Preparada' }, ENVIADA: { v: 'info', r: 'Enviada' }, CONFIRMADA: { v: 'success', r: 'Confirmada' },
+  PREPARADA: { v: 'warning', r: 'Preparado' }, ENVIADA: { v: 'info', r: 'Depositado' }, CONFIRMADA: { v: 'success', r: 'Confirmado' },
 }
 
 export default function PaginaRemessas() {
@@ -82,18 +82,18 @@ export default function PaginaRemessas() {
 
   return (
     <>
-      <TituloPagina icone={Landmark} titulo="Remessas" descricao="No fim de cada mês: 100% dos dízimos e a parte da Missão nas ofertas, depositados na conta da Missão" />
+      <TituloPagina icone={Landmark} titulo="Depósitos à Missão" descricao="No fim de cada mês: 100% dos dízimos e a parte da Missão nas ofertas, depositados na conta da Missão" />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-          <Indicador rotulo="Por enviar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${porEnviar.length} mês(es)`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
-          <Indicador rotulo="Enviadas, por confirmar" valor={<Dinheiro valor={soma(enviadas)} />} nota={`${enviadas.length} remessa(s)`} icone={Send} tom="info" aCarregar={remessas.isPending} />
-          <Indicador rotulo={`Confirmadas em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${confirmadasAno.length} remessa(s)`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
+          <Indicador rotulo="Por depositar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${porEnviar.length} mês(es)`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
+          <Indicador rotulo="Depositados, por confirmar" valor={<Dinheiro valor={soma(enviadas)} />} nota={`${enviadas.length} depósito(s)`} icone={Send} tom="info" aCarregar={remessas.isPending} />
+          <Indicador rotulo={`Confirmados em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${confirmadasAno.length} depósito(s)`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
         </div>
 
-        <Cartao titulo="Por enviar" descricao="Por mês: quanto entrou em cada fundo, quanto cabe à Missão e o que os membros já pagaram directamente lá" icone={Hourglass} semMargem>
+        <Cartao titulo="Por depositar" descricao="Por mês: quanto entrou em cada fundo, quanto cabe à Missão e o que os membros já pagaram directamente lá" icone={Hourglass} semMargem>
           {devidas.isPending || remessas.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
             : devidas.isError ? <EstadoErro erro={devidas.error} aoTentar={() => devidas.refetch()} className="mx-6 mb-6" />
-            : porEnviar.length === 0 ? <EstadoVazio icone={CircleCheck} titulo="Nada por enviar">Todas as remessas devidas foram enviadas.</EstadoVazio>
+            : porEnviar.length === 0 ? <EstadoVazio icone={CircleCheck} titulo="Nada por depositar">Todos os depósitos devidos foram feitos.</EstadoVazio>
             : (
               <div className="grid gap-px border-t bg-border">
                 {porEnviar.map((p) => (
@@ -102,12 +102,12 @@ export default function PaginaRemessas() {
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold first-letter:uppercase">{nomeMes(p.ano, p.mes)}</h3>
                         <p className="text-xs text-muted-foreground">
-                          Para {nomeEntidade(p.entidadeId)}{mesActual(p) ? ' · o mês ainda não terminou' : ''}{p.remessa ? ' · remessa preparada, falta pagar' : ''}{p.complementar ? ' · entrou mais depois do depósito: remessa complementar' : ''}
+                          Para {nomeEntidade(p.entidadeId)}{mesActual(p) ? ' · o mês ainda não terminou' : ''}{p.remessa ? ' · depósito preparado, falta registar o pagamento' : ''}{p.complementar ? ' · entrou mais depois do depósito: depósito complementar' : ''}
                         </p>
                       </div>
                       <span className="num text-lg font-semibold">{dinheiro(p.emFalta)}</span>
                       {pode('tesouraria.remessa.criar') && pode('tesouraria.transacao.criar') && (
-                        <Button className="alvo" onClick={() => setEnviar(p)}><Send className="size-4" />{p.remessa ? 'Pagar e enviar' : 'Enviar remessa'}</Button>
+                        <Button className="alvo" onClick={() => setEnviar(p)}><Send className="size-4" />{p.remessa ? 'Registar o pagamento' : 'Registar depósito'}</Button>
                       )}
                     </div>
                     <Tabela className="mt-2">
@@ -131,10 +131,10 @@ export default function PaginaRemessas() {
             )}
         </Cartao>
 
-        <Cartao titulo="Remessas" descricao="Depositadas na conta da Missão e confirmadas por ela" icone={Landmark} semMargem>
+        <Cartao titulo="Depósitos feitos" descricao="Na conta da Missão, e confirmados por ela" icone={Landmark} semMargem>
           {remessas.isPending ? <LinhasACarregar linhas={3} />
             : remessas.isError ? <EstadoErro erro={remessas.error} aoTentar={() => remessas.refetch()} className="mx-6 mb-6" />
-            : lista.length === 0 ? <EstadoVazio icone={Landmark}>Ainda não foi enviada nenhuma remessa.</EstadoVazio>
+            : lista.length === 0 ? <EstadoVazio icone={Landmark}>Ainda não foi feito nenhum depósito à Missão.</EstadoVazio>
             : (
               <Tabela>
                 <thead><tr><th className="sm:pl-6">Mês</th><th className="hidden md:table-cell">Fundos</th><th>Estado</th><th className="num">Total</th><th className="sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
@@ -144,7 +144,7 @@ export default function PaginaRemessas() {
                       <td className="sm:pl-6">
                         <p className="font-medium first-letter:uppercase">{nomeMes(r.ano, r.mes)}</p>
                         <p className="text-xs text-muted-foreground">
-                          {nomeEntidade(r.entidadeId)}{r.enviadaEm ? ` · enviada em ${data(r.enviadaEm)}` : ''}
+                          {nomeEntidade(r.entidadeId)}{r.enviadaEm ? ` · depositado em ${data(r.enviadaEm)}` : ''}
                           {r.transacaoId ? <> · <Link to={`/tesouraria/movimentos/${r.transacaoId}`} className="text-primary hover:underline">depósito</Link></> : null}
                           {' · '}<Link to={`/tesouraria/relatorio-mensal?mes=${r.ano}-${String(r.mes).padStart(2, '0')}`} className="text-primary hover:underline">relatório</Link>
                         </p>
@@ -169,11 +169,11 @@ export default function PaginaRemessas() {
       </div>
 
       {enviar && <DialogoEnviar p={enviar} entidadeNome={nomeEntidade(enviar.entidadeId)} aoFechar={() => setEnviar(null)} />}
-      <DialogoConfirmar aberto={!!aConfirmar} aoMudar={(v) => !v && setAConfirmar(null)} titulo="Confirmar a recepção desta remessa?"
-        texto={aConfirmar ? <>A Missão recebeu {dinheiro(totalDe(aConfirmar))} de {nomeMes(aConfirmar.ano, aConfirmar.mes)}. Depois de confirmada, a remessa não se altera.</> : null}
+      <DialogoConfirmar aberto={!!aConfirmar} aoMudar={(v) => !v && setAConfirmar(null)} titulo="Confirmar a recepção deste depósito?"
+        texto={aConfirmar ? <>A Missão recebeu {dinheiro(totalDe(aConfirmar))} de {nomeMes(aConfirmar.ano, aConfirmar.mes)}. Depois de confirmado, o depósito não se altera.</> : null}
         accao="Confirmar recepção" aCorrer={confirmar.isPending}
         aoConfirmar={() => aConfirmar && confirmar.mutate(aConfirmar.id, {
-          onSuccess: () => { toast.success('Remessa confirmada.'); setAConfirmar(null) },
+          onSuccess: () => { toast.success('Depósito confirmado.'); setAConfirmar(null) },
           onError: (e) => { toast.error(mensagemDe(e)); setAConfirmar(null) },
         })} />
     </>
@@ -205,7 +205,7 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
     if (fundosLinhas.some((l) => c(valores[l.fundoId]) < 0)) { setErro('Escreva os valores como 1 500,00.'); return }
     if (total <= 0) { setErro('Escreva o valor a enviar.'); return }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hojeIso()) { setErro('A data tem de ser dd/mm/aaaa e não pode ser no futuro.'); return }
-    if (!categoria || !conta) { setErro('Falta a categoria de remessa ou uma conta: peça ao administrador.'); return }
+    if (!categoria || !conta) { setErro('Falta a categoria de depósitos à Missão ou uma conta: peça ao administrador.'); return }
     if (!referencia.trim()) { setErro('Escreva o n.º do talão do depósito (ou o código M-Pesa).'); return }
     try {
       await enviar.mutateAsync({
@@ -213,7 +213,7 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
         linhas: fundosLinhas.filter((l) => c(valores[l.fundoId]) > 0).map((l) => ({ fundoId: l.fundoId, valor: valores[l.fundoId] })),
         contaId: conta.id, metodo: met, data: dia, categoriaRemessaId: categoria.id, referencia: referencia.trim(),
       })
-      toast.success(`Remessa de ${nomeMes(p.ano, p.mes)} enviada: ${dinheiro(deCentimos(total))}.`)
+      toast.success(`Depósito de ${nomeMes(p.ano, p.mes)} registado: ${dinheiro(deCentimos(total))}.`)
       aoFechar()
     } catch (e) {
       setErro(mensagemDe(e))
@@ -224,9 +224,9 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="first-letter:uppercase">Remessa {p.complementar ? 'complementar ' : ''}de {nomeMes(p.ano, p.mes)}</DialogTitle>
+          <DialogTitle className="first-letter:uppercase">Depósito à Missão {p.complementar ? '(complementar) ' : ''}de {nomeMes(p.ano, p.mes)}</DialogTitle>
           <DialogDescription>
-            Depósito na conta de {entidadeNome}. Regista a saída do dinheiro da Missão (não precisa de outra aprovação) e marca a remessa como enviada.
+            Depósito na conta de {entidadeNome}. Regista a saída do dinheiro da Missão (não precisa de outra aprovação) e marca o depósito como feito.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
@@ -272,7 +272,7 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
           <Button type="button" className="alvo" disabled={enviar.isPending || contas.isPending || categorias.isPending} onClick={submeter}>
-            {enviar.isPending ? t.comum.aGravar : 'Enviar remessa'}
+            {enviar.isPending ? t.comum.aGravar : 'Registar depósito'}
           </Button>
         </DialogFooter>
       </DialogContent>

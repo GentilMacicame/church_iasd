@@ -39,7 +39,7 @@ INSERT INTO tesouraria.categoria (cat_codigo, cat_nome, cat_tipo, cat_e_remessa)
   ('R3', 'Ofertas da Escola Sabatina',      'RECEITA', FALSE),
   ('R4', 'Doações para projectos',          'RECEITA', FALSE),
   ('R9', 'Outras receitas',                 'RECEITA', FALSE),
-  ('D1', 'Remessas à Associação/Missão',    'DESPESA', TRUE),
+  ('D1', 'Depósitos à Associação/Missão (remessas)',    'DESPESA', TRUE),
   ('D2', 'Água, luz e comunicações',        'DESPESA', FALSE),
   ('D3', 'Manutenção e obras',              'DESPESA', FALSE),
   ('D4', 'Actividades de departamentos',    'DESPESA', FALSE),

@@ -408,7 +408,7 @@ export default function PaginaEntrada() {
                 </div>
                 <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-1)]" />Para a Missão</span><span className="num">{dinheiro(deCentimos(paraMissao))}</span></p>
                 <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-3)]" />Fica na igreja</span><span className="num">{dinheiro(deCentimos(total - paraMissao))}</span></p>
-                {naMissao && <p className="text-xs text-muted-foreground">Já está na Missão: não precisa de remessa.</p>}
+                {naMissao && <p className="text-xs text-muted-foreground">Já está na Missão: não entra no depósito do fim do mês.</p>}
               </div>
             )}
             <label className={cn('alvo mt-4 flex items-center gap-2 text-sm', (anonimo || !membro) && 'opacity-50')}>

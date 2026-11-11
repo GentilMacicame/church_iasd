@@ -99,7 +99,7 @@ export default function PaginaFundos() {
                 </tbody>
               </Tabela>
             )}
-            <p className="border-t px-4 py-3 text-xs text-muted-foreground sm:px-6">Só a Associação/Missão muda estes fundos. A parte da Missão sai na remessa do fim do mês.</p>
+            <p className="border-t px-4 py-3 text-xs text-muted-foreground sm:px-6">Só a Associação/Missão muda estes fundos. A parte da Missão vai no depósito à Missão do fim do mês.</p>
           </Cartao>
         </div>
       )}

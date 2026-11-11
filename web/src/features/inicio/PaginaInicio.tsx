@@ -123,8 +123,8 @@ function AtencaoTesouraria({ aoTer }: { aoTer: (itens: Item[], aCarregar: boolea
     detalhe: `A mais antiga é de ${data([...abertas].sort((a, b) => a.data.localeCompare(b.data))[0].data)}` })
   const ant = mesAnterior()
   const emFalta = (devidas.data ?? []).filter((d) => (d.ano < ant.ano || (d.ano === ant.ano && d.mes <= ant.mes)) && centimos(d.emFalta) > 0)
-  if (emFalta.length) itens.push({ chave: 'remessa', icone: Landmark, titulo: 'Remessa à Missão em falta', n: new Set(emFalta.map((d) => `${d.ano}-${d.mes}`)).size, para: '/tesouraria/remessas', tom: 'destructive',
-    detalhe: <>Falta remeter <Dinheiro valor={deCentimos(emFalta.reduce((s, d) => s + centimos(d.emFalta), 0))} /> de meses anteriores</> })
+  if (emFalta.length) itens.push({ chave: 'remessa', icone: Landmark, titulo: 'Depósito à Missão em falta', n: new Set(emFalta.map((d) => `${d.ano}-${d.mes}`)).size, para: '/tesouraria/remessas', tom: 'destructive',
+    detalhe: <>Falta depositar <Dinheiro valor={deCentimos(emFalta.reduce((s, d) => s + centimos(d.emFalta), 0))} /> de meses anteriores</> })
   return <>{aoTer(itens, [movs, despesas, contagens, devidas].some((x) => x.isPending))}</>
 }
 

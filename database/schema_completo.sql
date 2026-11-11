@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Sistema de Gestão da Igreja Adventista · esquema completo (script único)
 -- GERADO por scripts/gerar-schema-completo.sh a partir de database/migrations
--- (V1__base.sql … V23__tabelas_comuns_e_ofertas_da_igreja.sql). NÃO EDITAR À MÃO.
+-- (V1__base.sql … V24__nome_dos_depositos_a_missao.sql). NÃO EDITAR À MÃO.
 -- PostgreSQL 16+, como administrador; depois: scripts/criar-papel-api.sh
 -- =====================================================================
 
@@ -6267,3 +6267,14 @@ LEFT JOIN LATERAL (
     WHERE t.tra_cnu_id = c.cnu_id AND t.tra_estado = 'CONFIRMADA' AND t.tra_end_date IS NULL
 ) x ON TRUE
 WHERE c.cnu_end_date IS NULL;
+
+-- >>>>> V24__nome_dos_depositos_a_missao.sql
+-- =====================================================================
+-- V24 · Nome da categoria: "Depósitos à Associação/Missão" em vez de "Remessas"
+--
+-- Na interface, "remessa" passou a chamar-se "depósito à Missão" (é o depósito do fim do mês na conta da
+-- Missão, com o talão). A categoria do plano de contas acompanha o nome; o código (D1) e a marca de remessa
+-- (cat_e_remessa) não mudam, nem os nomes técnicos (tabela remessa, rotas /remessas).
+-- =====================================================================
+UPDATE tesouraria.categoria SET cat_nome = 'Depósitos à Associação/Missão (remessas)'
+ WHERE cat_codigo = 'D1' AND cat_nome = 'Remessas à Associação/Missão';

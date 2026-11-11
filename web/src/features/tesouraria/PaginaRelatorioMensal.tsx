@@ -29,7 +29,7 @@ function Deposito({ remessa, entidade, complementar }: { remessa: RemessaComLinh
     <p className="mb-1">
       {complementar ? 'Depósito complementar' : 'Depositado'} em {data(remessa.enviadaEm)} na conta de {entidade}: <strong className="num">{dinheiro(total)}</strong>
       {tr.data?.referencia ? <> · talão n.º <strong className="num">{tr.data.referencia}</strong></> : null}
-      {' '}<Pilula variante={remessa.estado === 'CONFIRMADA' ? 'success' : 'info'} className="ml-1 print:hidden">{remessa.estado === 'CONFIRMADA' ? 'Confirmada pela Missão' : 'Enviada'}</Pilula>
+      {' '}<Pilula variante={remessa.estado === 'CONFIRMADA' ? 'success' : 'info'} className="ml-1 print:hidden">{remessa.estado === 'CONFIRMADA' ? 'Confirmado pela Missão' : 'Depositado'}</Pilula>
     </p>
   )
 }
@@ -131,7 +131,7 @@ export default function PaginaRelatorioMensal() {
                 {depositos.length ? depositos.map((r, i) => (
                   <Deposito key={r.id} remessa={r} entidade={entidadeNome} complementar={i > 0} />
                 )) : (
-                  <p className="text-warning-text">Ainda não foi depositada a remessa deste mês. <Link to="/tesouraria/remessas" className="font-medium text-primary hover:underline print:hidden">Enviar remessa</Link></p>
+                  <p className="text-warning-text">Ainda não foi feito o depósito à Missão deste mês. <Link to="/tesouraria/remessas" className="font-medium text-primary hover:underline print:hidden">Fazer o depósito</Link></p>
                 )}
                 {centimos(soma('emFalta')) < 0 && <p className="mt-1 text-info-text">Os membros pagaram na Missão mais do que lhe cabia: a diferença é da igreja.</p>}
               </div>

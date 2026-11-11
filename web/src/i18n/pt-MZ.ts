@@ -139,7 +139,7 @@ export const t = {
     movimentos: 'Movimentos',
     despesas: 'Despesas',
     contagens: 'Contagens',
-    remessas: 'Remessas',
+    remessas: 'Depósitos à Missão',
     fechos: 'Fecho do mês',
     contas: 'Contas',
     relatorioMensal: 'Relatório para a Missão',

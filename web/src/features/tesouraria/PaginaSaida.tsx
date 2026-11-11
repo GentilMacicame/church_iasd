@@ -64,7 +64,7 @@ export default function PaginaSaida() {
   const ajudaFundo = (id: string) => {
     const f = locais.find((x) => String(x.id) === id)
     const s = saldos.data?.find((x) => String(x.fundoId) === id)
-    if (!f) return 'O dízimo e os fundos 100% da Missão só saem como remessa.'
+    if (!f) return 'O dízimo e os fundos 100% da Missão só saem no depósito à Missão.'
     return `${parteDoFundo(f)}${s ? ` · a igreja pode gastar ${dinheiro(s.disponivel ?? s.saldo)}` : ''}`
   }
 

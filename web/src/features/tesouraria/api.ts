@@ -356,7 +356,7 @@ export function useEnviarRemessa() {
       let tr = (await dados(api.POST('/v1/tesouraria/transacoes', {
         body: {
           igrejaId: igreja.id, tipo: 'SAIDA', metodo: p.metodo, valorTotal: deCentimos(total), contaId: p.contaId, dataHora: `${p.data}T12:00:00+02:00`,
-          beneficiario: p.entidadeNome, descricao: `Remessa ${p.complementar ? 'complementar ' : ''}de ${String(rem.mes).padStart(2, '0')}/${rem.ano}`, referencia: p.referencia || undefined,
+          beneficiario: p.entidadeNome, descricao: `Depósito à Missão ${p.complementar ? '(complementar) ' : ''}de ${String(rem.mes).padStart(2, '0')}/${rem.ano}`, referencia: p.referencia || undefined,
           linhas: rem.linhas.map((l) => ({ fundoId: l.fundoId, categoriaId: p.categoriaRemessaId, valor: l.valor })),
         } as NovaTransacao,
         params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
