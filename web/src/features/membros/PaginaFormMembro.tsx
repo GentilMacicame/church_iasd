@@ -1,14 +1,15 @@
 /**
- * Registar ou editar a ficha do membro, por secções. Valida só o formato (Zod); as regras (encarregado
- * para menores, estado só por movimento, quem pode alterar) são da base de dados e as suas mensagens
- * aparecem junto ao campo ou no topo. Ao editar envia só os campos alterados (PATCH).
+ * Registar ou editar a ficha do membro, num assistente de 5 passos (Pessoa, Família, Morada, Igreja, Rever).
+ * Cada passo valida só o seu formato (Zod) antes de avançar; as regras (encarregado para menores, estado só
+ * por movimento, quem pode alterar) são da base de dados e um erro dela leva ao passo do campo em causa.
+ * Ao editar, todos os passos ficam abertos e "Guardar" está sempre à mão; envia só os campos alterados (PATCH).
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Briefcase, Church, IdCard, MapPin, UserPen, UserPlus, Users } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Briefcase, Check, Church, ClipboardCheck, IdCard, MapPin, Pencil, UserPen, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,7 +20,8 @@ import { CampoData } from '@/components/comum/CampoData'
 import { Barra, EstadoErro } from '@/components/comum/estados'
 import { useIgreja } from '@/auth/sessao'
 import { PROVINCIAS, rotulos, t } from '@/i18n/pt-MZ'
-import { hojeIso, idade } from '@/lib/formatos'
+import { data as dataEcra, hojeIso, idade } from '@/lib/formatos'
+import { cn } from '@/lib/utils'
 import { useAlterarMembro, useCriarMembro, useMembro, useMembrosBasicos, type Membro } from './api'
 
 const texto = (max: number) => z.string().trim().max(max, `No máximo ${max} caracteres`)
@@ -78,6 +80,63 @@ function paraApi(v: Partial<Valores>): Record<string, unknown> {
   return out
 }
 
+/** Os passos do assistente e os campos de cada um (para validar e para saltar ao passo de um erro). */
+const PASSOS = [
+  { chave: 'pessoa', titulo: 'Pessoa', descricao: 'Identificação, documento e origem', icone: IdCard,
+    campos: ['nome', 'apelido', 'sexo', 'dataNascimento', 'estadoCivil', 'tipoIdentificacao', 'numeroIdentificacao', 'nacionalidade', 'naturalidade'] },
+  { chave: 'familia', titulo: 'Família', descricao: 'Pai, mãe e encarregado de educação', icone: Users, campos: ['nomePai', 'nomeMae', 'encarregadoMembroId'] },
+  { chave: 'morada', titulo: 'Morada', descricao: 'Onde vive', icone: MapPin, campos: ['provincia', 'cidadeDistrito', 'bairro', 'quarteirao', 'numeroCasa', 'morada'] },
+  { chave: 'igreja', titulo: 'Igreja', descricao: 'Profissão, escolaridade e entrada na igreja', icone: Church, campos: ['profissao', 'escolaridade', 'dataEntrada', 'modoEntrada'] },
+  { chave: 'rever', titulo: 'Rever', descricao: 'Confirmar antes de gravar', icone: ClipboardCheck, campos: [] },
+] as const satisfies readonly { chave: string; titulo: string; descricao: string; icone: unknown; campos: readonly (keyof Valores)[] }[]
+
+/** Barra de passos: número e nome de cada passo; no telemóvel, "Passo 2 de 5" e uma barra de progresso. */
+function Passos({ actual, feitos, aoEscolher, livre }: { actual: number; feitos: Set<number>; aoEscolher: (i: number) => void; livre: boolean }) {
+  return (
+    <nav aria-label="Passos do registo" className="rounded-xl border bg-card px-4 py-4 shadow-card sm:px-6">
+      <div className="flex items-center justify-between gap-3 text-sm sm:hidden">
+        <span className="font-medium">Passo {actual + 1} de {PASSOS.length} · {PASSOS[actual].titulo}</span>
+        <span className="text-xs text-muted-foreground">{PASSOS[actual].descricao}</span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted sm:hidden" aria-hidden>
+        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${((actual + 1) / PASSOS.length) * 100}%` }} />
+      </div>
+      <ol className="hidden min-w-0 items-center sm:flex">
+        {PASSOS.map((p, i) => {
+          const feito = feitos.has(i) && i !== actual
+          const podeIr = livre || i <= actual || feitos.has(i) || feitos.has(i - 1)
+          return (
+            <li key={p.chave} className="flex min-w-0 flex-1 items-center last:flex-none">
+              <button type="button" disabled={!podeIr} onClick={() => aoEscolher(i)} aria-current={i === actual ? 'step' : undefined}
+                className="alvo group flex items-center gap-3 rounded-lg pr-2 text-left disabled:cursor-not-allowed">
+                <span className={cn('flex size-9 flex-none items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors',
+                  i === actual ? 'border-primary bg-primary text-primary-foreground'
+                    : feito ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border text-muted-foreground group-enabled:group-hover:border-primary/50')}>
+                  {feito ? <Check className="size-4" /> : i + 1}
+                </span>
+                <span className={cn('text-sm font-medium whitespace-nowrap', i === actual ? 'text-foreground' : 'text-muted-foreground')}>{p.titulo}</span>
+              </button>
+              {i < PASSOS.length - 1 && <span aria-hidden className={cn('mx-3 h-0.5 min-w-4 flex-1 rounded-full', feitos.has(i) ? 'bg-primary/60' : 'bg-border')} />}
+            </li>
+          )
+        })}
+      </ol>
+      <p className="mt-3 hidden text-sm text-muted-foreground sm:block">{PASSOS[actual].descricao}</p>
+    </nav>
+  )
+}
+
+/** Uma linha do resumo: rótulo e valor (ou "—"). */
+function Linha({ rotulo, valor }: { rotulo: string; valor?: string | null }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,10rem)_1fr] gap-3 py-1.5 text-sm">
+      <dt className="text-muted-foreground">{rotulo}</dt>
+      <dd className={cn('min-w-0 break-words', !valor && 'text-muted-foreground')}>{valor || '—'}</dd>
+    </div>
+  )
+}
+
 function Opcoes({ mapa }: { mapa: Record<string, string> }) {
   return (
     <>
@@ -97,6 +156,9 @@ export default function PaginaFormMembro() {
   const criar = useCriarMembro()
   const alterar = useAlterarMembro(id ?? 0)
   const [erroTopo, setErroTopo] = useState<string | null>(null)
+  const [passo, setPasso] = useState(0)
+  const [feitos, setFeitos] = useState<Set<number>>(new Set())
+  const ultimo = PASSOS.length - 1
 
   const form = useForm<Valores>({ resolver: zodResolver(esquema), defaultValues: VAZIO })
   const { register, formState: { errors: e, isSubmitting, dirtyFields } } = form
@@ -111,6 +173,23 @@ export default function PaginaFormMembro() {
     () => (basicos.data ?? []).filter((b) => b.id !== id && b.estado === 'ACTIVO').sort((a, b) => `${a.nome} ${a.apelido}`.localeCompare(`${b.nome} ${b.apelido}`, 'pt')),
     [basicos.data, id],
   )
+
+  const irPara = (i: number) => {
+    setPasso(i)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  /** Valida os campos do passo actual; se estiverem certos, marca-o feito e avança. */
+  const avancar = async () => {
+    const ok = await form.trigger([...PASSOS[passo].campos] as (keyof Valores)[])
+    if (!ok) return
+    setFeitos((f) => new Set(f).add(passo))
+    irPara(Math.min(passo + 1, ultimo))
+  }
+  /** Um erro (do Zod ou da base de dados) num campo leva ao passo onde esse campo está. */
+  const passoDoErro = (campos: string[]) => {
+    const i = PASSOS.findIndex((p) => (p.campos as readonly string[]).some((c) => campos.includes(c)))
+    if (i >= 0) irPara(i)
+  }
 
   const submeter = form.handleSubmit(async (v) => {
     setErroTopo(null)
@@ -127,9 +206,16 @@ export default function PaginaFormMembro() {
       }
     } catch (err) {
       setErroTopo(aplicarErroApi(form, err))
+      passoDoErro(Object.keys(form.formState.errors))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  })
+  }, (erros) => passoDoErro(Object.keys(erros)))
+
+  // Enter num campo avança o passo (no registo novo); só grava no último passo
+  const aoSubmeter = (ev: React.FormEvent) => {
+    if (!id && passo < ultimo) { ev.preventDefault(); void avancar(); return }
+    void submeter(ev)
+  }
 
   const voltarPara = id ? `/membros/${id}` : '/membros'
   const titulo = id ? t.membros.editarTitulo : t.membros.novo
@@ -140,8 +226,22 @@ export default function PaginaFormMembro() {
   if (id && existente.isError) return <EstadoErro erro={existente.error} aoTentar={() => existente.refetch()} />
 
   const grade = 'grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3'
+  const v = form.watch()
+  const opcao = (mapa: Record<string, string>, k: string) => (k ? mapa[k] ?? k : '')
+  const encarregado = candidatosEncarregado.find((b) => String(b.id) === v.encarregadoMembroId)
+  const Seccao = ({ i, children }: { i: number; children: React.ReactNode }) => (
+    <section className="rounded-lg border">
+      <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
+        <h3 className="text-sm font-semibold">{PASSOS[i].titulo}</h3>
+        <Button type="button" variant="ghost" size="sm" onClick={() => irPara(i)}><Pencil className="size-3.5" />Alterar</Button>
+      </div>
+      <dl className="px-4 py-2">{children}</dl>
+    </section>
+  )
+  const mostra = (i: number) => (passo === i ? undefined : 'hidden')
+
   return (
-    <form onSubmit={submeter} noValidate>
+    <form onSubmit={aoSubmeter} noValidate>
       <TituloPagina
         antes={
           <Link to={voltarPara} className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -154,8 +254,11 @@ export default function PaginaFormMembro() {
       />
 
       <div className="grid gap-6">
+        <Passos actual={passo} feitos={feitos} aoEscolher={irPara} livre={!!id} />
         <ErroFormulario mensagem={erroTopo} />
 
+        {/* os passos ficam todos montados (só se escondem): os valores e as validações não se perdem */}
+        <div className={cn('grid gap-6', mostra(0))}>
         <Cartao titulo={t.ficha.identificacao} descricao="Nome, data de nascimento e estado civil" icone={IdCard}>
           <div className={grade}>
             <CampoFormulario rotulo={t.ficha.nome} erro={e.nome?.message} obrigatorio>
@@ -193,6 +296,9 @@ export default function PaginaFormMembro() {
           </div>
         </Cartao>
 
+        </div>
+
+        <div className={cn('grid gap-6', mostra(1))}>
         <Cartao titulo={t.ficha.filiacao} descricao="Nomes do pai e da mãe" icone={Users}>
           <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
             <CampoFormulario rotulo={t.ficha.nomePai} erro={e.nomePai?.message}>
@@ -203,6 +309,22 @@ export default function PaginaFormMembro() {
             </CampoFormulario>
           </div>
         </Cartao>
+        <Cartao titulo="Encarregado de educação" descricao="Obrigatório para menores de 18 anos (a base de dados confirma)" icone={Users}>
+          <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+            <CampoFormulario rotulo={t.ficha.encarregado} erro={e.encarregadoMembroId?.message}
+              ajuda={anos != null && anos < 18 ? `${t.ficha.encarregadoAjuda} Este membro tem ${anos} anos.` : t.ficha.encarregadoAjuda}>
+              {(p) => (
+                <Seleccao {...p} {...register('encarregadoMembroId')} disabled={basicos.isPending}>
+                  <option value="">{basicos.isPending ? 'A carregar…' : t.ficha.nenhum}</option>
+                  {candidatosEncarregado.map((b) => <option key={b.id} value={b.id}>{b.nome} {b.apelido}</option>)}
+                </Seleccao>
+              )}
+            </CampoFormulario>
+          </div>
+        </Cartao>
+        </div>
+
+        <div className={cn('grid gap-6', mostra(2))}>
 
         <Cartao titulo={t.ficha.moradaTitulo} descricao="Onde vive: permite encontrar o membro e fazer relatórios por bairro" icone={MapPin}>
           <div className={grade}>
@@ -232,22 +354,16 @@ export default function PaginaFormMembro() {
           </div>
         </Cartao>
 
-        <Cartao titulo={t.ficha.vida} descricao="Profissão, escolaridade e encarregado de educação" icone={Briefcase}>
+        </div>
+
+        <div className={cn('grid gap-6', mostra(3))}>
+        <Cartao titulo={t.ficha.vida} descricao="Profissão e escolaridade" icone={Briefcase}>
           <div className={grade}>
             <CampoFormulario rotulo={t.ficha.profissao} erro={e.profissao?.message}>
               {(p) => <Input {...p} {...register('profissao')} className="alvo" />}
             </CampoFormulario>
             <CampoFormulario rotulo={t.ficha.escolaridade} erro={e.escolaridade?.message}>
               {(p) => <Seleccao {...p} {...register('escolaridade')}><Opcoes mapa={rotulos.escolaridade} /></Seleccao>}
-            </CampoFormulario>
-            <CampoFormulario rotulo={t.ficha.encarregado} erro={e.encarregadoMembroId?.message}
-              ajuda={anos != null && anos < 18 ? `${t.ficha.encarregadoAjuda} Este membro tem ${anos} anos.` : t.ficha.encarregadoAjuda}>
-              {(p) => (
-                <Seleccao {...p} {...register('encarregadoMembroId')} disabled={basicos.isPending}>
-                  <option value="">{basicos.isPending ? 'A carregar…' : t.ficha.nenhum}</option>
-                  {candidatosEncarregado.map((b) => <option key={b.id} value={b.id}>{b.nome} {b.apelido}</option>)}
-                </Seleccao>
-              )}
             </CampoFormulario>
           </div>
         </Cartao>
@@ -268,9 +384,48 @@ export default function PaginaFormMembro() {
           </div>
         </Cartao>
 
-        <div className="sticky bottom-0 -mx-4 flex justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-          <Button asChild variant="outline" className="alvo"><Link to={voltarPara}>{t.comum.cancelar}</Link></Button>
-          <Button type="submit" disabled={isSubmitting} className="alvo min-w-32">{isSubmitting ? t.comum.aGravar : id ? t.comum.guardar : t.membros.registar}</Button>
+        </div>
+
+        {passo === ultimo && (
+          <Cartao titulo="Rever o registo" descricao={id ? 'Confira as alterações e guarde.' : 'Confira os dados; o registo fica por aprovar pelo secretário.'} icone={ClipboardCheck}>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Seccao i={0}>
+                <Linha rotulo={t.ficha.nome} valor={`${v.nome} ${v.apelido}`.trim()} />
+                <Linha rotulo={t.ficha.sexo} valor={opcao(rotulos.sexo, v.sexo)} />
+                <Linha rotulo={t.ficha.dataNascimento} valor={v.dataNascimento ? `${dataEcra(v.dataNascimento)}${anos != null ? ` (${anos} anos)` : ''}` : ''} />
+                <Linha rotulo={t.ficha.estadoCivil} valor={opcao(rotulos.estadoCivil, v.estadoCivil)} />
+                <Linha rotulo={t.ficha.tipoIdentificacao} valor={[opcao(rotulos.tipoIdentificacao, v.tipoIdentificacao), v.numeroIdentificacao].filter(Boolean).join(' · ')} />
+                <Linha rotulo={t.ficha.nacionalidade} valor={v.nacionalidade} />
+                <Linha rotulo={t.ficha.naturalidade} valor={v.naturalidade} />
+              </Seccao>
+              <Seccao i={1}>
+                <Linha rotulo={t.ficha.nomePai} valor={v.nomePai} />
+                <Linha rotulo={t.ficha.nomeMae} valor={v.nomeMae} />
+                <Linha rotulo={t.ficha.encarregado} valor={encarregado ? `${encarregado.nome} ${encarregado.apelido}` : ''} />
+              </Seccao>
+              <Seccao i={2}>
+                <Linha rotulo={t.ficha.provincia} valor={v.provincia} />
+                <Linha rotulo={t.ficha.cidadeDistrito} valor={v.cidadeDistrito} />
+                <Linha rotulo={t.ficha.bairro} valor={[v.bairro, v.quarteirao && `quarteirão ${v.quarteirao}`, v.numeroCasa && `casa ${v.numeroCasa}`].filter(Boolean).join(' · ')} />
+                <Linha rotulo={t.ficha.morada} valor={v.morada} />
+              </Seccao>
+              <Seccao i={3}>
+                <Linha rotulo={t.ficha.profissao} valor={v.profissao} />
+                <Linha rotulo={t.ficha.escolaridade} valor={opcao(rotulos.escolaridade, v.escolaridade)} />
+                <Linha rotulo={t.ficha.dataEntrada} valor={v.dataEntrada ? dataEcra(v.dataEntrada) : ''} />
+                <Linha rotulo={t.ficha.modoEntrada} valor={opcao(rotulos.modoEntrada, v.modoEntrada)} />
+              </Seccao>
+            </div>
+          </Cartao>
+        )}
+
+        <div className="sticky bottom-0 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          <Button asChild variant="ghost" className="alvo mr-auto"><Link to={voltarPara}>{t.comum.cancelar}</Link></Button>
+          {passo > 0 && <Button type="button" variant="outline" className="alvo" onClick={() => irPara(passo - 1)}><ArrowLeft className="size-4" />Anterior</Button>}
+          {passo < ultimo && <Button type="button" variant={id ? 'outline' : 'default'} className="alvo min-w-28" onClick={() => void avancar()}>Seguinte<ArrowRight className="size-4" /></Button>}
+          {(passo === ultimo || id) && (
+            <Button type="submit" disabled={isSubmitting} className="alvo min-w-32">{isSubmitting ? t.comum.aGravar : id ? t.comum.guardar : t.membros.registar}</Button>
+          )}
         </div>
       </div>
     </form>
