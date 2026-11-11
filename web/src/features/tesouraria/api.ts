@@ -456,3 +456,33 @@ export function useContasMut() {
   })
   return { criar }
 }
+
+/* ===================================================================== resumo para gráficos */
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/**
+ * Entradas e saídas confirmadas por mês (últimos N meses, o actual incluído), só nas contas da igreja: o que os
+ * membros pagaram directamente na conta da Missão não entrou na igreja. Valores em meticais (para o gráfico; os
+ * totais exactos continuam a ser somados em cêntimos).
+ */
+export function useResumoMensal(meses = 6) {
+  const hoje = new Date()
+  const inicio = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth() - (meses - 1), 1))
+  const desde = inicio.toISOString().slice(0, 10)
+  const movs = useMovimentos({ desde, ate: new Date().toISOString().slice(0, 10) })
+  const contas = useContas()
+  const chaves = Array.from({ length: meses }, (_, i) => {
+    const d = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth() + i, 1))
+    return { chave: d.toISOString().slice(0, 7), rotulo: MESES_CURTOS[d.getUTCMonth()] }
+  })
+  const naMissao = new Set((contas.data ?? []).filter((c) => daMissao(c)).map((c) => c.id))
+  const entradas = chaves.map(() => 0), saidas = chaves.map(() => 0)
+  for (const t of movs.data ?? []) {
+    if (t.endDate || t.estado !== 'CONFIRMADA' || naMissao.has(t.contaId ?? 0) || t.tipo === 'TRANSFERENCIA') continue
+    const i = chaves.findIndex((c) => t.dataHora.startsWith(c.chave))
+    if (i < 0) continue
+    const v = centimos(t.valorTotal) / 100
+    if (t.tipo === 'ENTRADA') entradas[i] += v; else saidas[i] += v
+  }
+  return { categorias: chaves.map((c) => c.rotulo), entradas, saidas, aCarregar: movs.isPending || contas.isPending, erro: movs.error ?? contas.error }
+}

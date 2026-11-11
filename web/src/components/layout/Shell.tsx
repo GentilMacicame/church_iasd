@@ -7,8 +7,8 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  Banknote, BookOpen, Building2, CalendarDays, Check, HandCoins, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
-  UserPlus, Users, X,
+  BookOpen, Building2, CalendarDays, Check, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
+  Users, X,
   Calculator, CalendarCheck, ClipboardList, FileText, KeyRound, Wallet,
 } from 'lucide-react'
 import {
@@ -31,7 +31,6 @@ const NAV: GrupoNav[] = [
     rotulo: t.nav.secretaria,
     itens: [
       { para: '/membros', rotulo: t.nav.membros, icone: Users, permissao: 'secretaria.membro.ler', fim: false },
-      { para: '/membros/novo', rotulo: t.membros.registar, icone: UserPlus, permissao: 'secretaria.membro.criar', fim: true },
       { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
       { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
     ],
@@ -41,8 +40,6 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/tesouraria', rotulo: 'Painel', icone: PiggyBank, permissao: 'tesouraria.conta_financeira.ler', fim: true },
       { para: '/tesouraria/movimentos', rotulo: t.tesouraria.movimentos, icone: ListOrdered, permissao: 'tesouraria.transacao.ler', fim: false },
-      { para: '/tesouraria/entrada', rotulo: t.tesouraria.entrada, icone: HandCoins, permissao: 'tesouraria.transacao.criar', fim: true },
-      { para: '/tesouraria/saida', rotulo: t.tesouraria.saida, icone: Banknote, permissao: 'tesouraria.transacao.criar', fim: true },
       { para: '/tesouraria/despesas', rotulo: t.tesouraria.despesas, icone: ClipboardList, permissao: 'tesouraria.despesa.ler', fim: true },
       { para: '/tesouraria/contagens', rotulo: t.tesouraria.contagens, icone: Calculator, permissao: 'tesouraria.contagem_numerario.ler', fim: true },
       { para: '/tesouraria/remessas', rotulo: t.tesouraria.remessas, icone: Landmark, permissao: 'tesouraria.remessa.ler', fim: true },
@@ -146,7 +143,7 @@ function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; abe
             <X className="size-[18px]" />
           </button>
         </div>
-        <div className="flex-1 overflow-x-hidden overflow-y-auto px-2.5 py-3">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2.5 py-3">
           <Navegacao encolhida={encolhida} aoEscolher={aoFechar} />
         </div>
         <div className="border-t border-sidebar-border p-2.5">

@@ -1,8 +1,9 @@
 /** Livro de membros · "Quem entrou e quem saiu, e com que voto?" (o registo oficial da igreja). */
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, BookOpen, Scale } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, BarChart3, BookOpen, Scale } from 'lucide-react'
 import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { GraficoBarras } from '@/components/comum/graficos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, hojeIso } from '@/lib/formatos'
@@ -22,6 +23,10 @@ export default function PaginaLivro() {
   const doAno = lista.filter((m) => m.data.startsWith(ano))
   const entradas = doAno.filter((m) => eEntrada(m.tipo)).length
   const saidas = doAno.length - entradas
+  const mesActual = Number(hojeIso().slice(5, 7))
+  const meses = Array.from({ length: mesActual }, (_, i) => i + 1)
+  const porMes = (entrada: boolean) => meses.map((m) => doAno.filter((x) => Number(x.data.slice(5, 7)) === m && eEntrada(x.tipo) === entrada).length)
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
   return (
     <>
@@ -33,6 +38,11 @@ export default function PaginaLivro() {
           <Indicador rotulo={`Saídas em ${ano}`} valor={saidas} nota="cartas, falecimentos, remoções" icone={ArrowUpRight} tom="destructive" aCarregar={q.isPending} />
           <Indicador rotulo="Variação" valor={`${entradas - saidas > 0 ? '+' : ''}${entradas - saidas}`} nota={`no livro em ${ano}`} icone={Scale} tom="info" aCarregar={q.isPending} />
         </div>
+        <Cartao titulo={`Entradas e saídas em ${ano}`} descricao="Por mês, com o voto da igreja" icone={BarChart3}>
+          {q.isPending ? <div className="h-48 animate-pulse rounded-lg bg-muted" />
+            : <GraficoBarras rotulo={`Entradas e saídas do livro de membros em ${ano}`} altura={200} categorias={meses.map((m) => MESES[m - 1])} destaque={mesActual - 1}
+                series={[{ nome: 'Entradas', slot: 1, valores: porMes(true) }, { nome: 'Saídas', slot: 2, valores: porMes(false) }]} formatar={(v) => String(v)} inteiros />}
+        </Cartao>
         <Cartao titulo="Movimentos" descricao="O mais recente primeiro" semMargem>
           {q.isPending ? <LinhasACarregar linhas={5} />
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="mx-6 mb-6" />

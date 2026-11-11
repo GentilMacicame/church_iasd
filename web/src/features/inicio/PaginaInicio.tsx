@@ -6,17 +6,19 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowRight, BellRing, BookOpen, CalendarDays, ClipboardCheck, ClipboardList, LayoutDashboard, Mic, Plus, Sprout, Users, Wallet,
+  ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, ClipboardCheck, ClipboardList, LayoutDashboard, Mic, Plus, Sprout, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Donut, GraficoBarras, curto, type FatiaDonut, type Slot } from '@/components/comum/graficos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { api, dados } from '@/api/cliente'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { data, dataPorExtenso, diasAte, hojeIso } from '@/lib/formatos'
+import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso } from '@/lib/formatos'
 import { useContagemPorAprovar, useMembrosBasicos } from '@/features/membros/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
+import { useResumoMensal } from '@/features/tesouraria/api'
 
 /* Linhas das vistas (nomes de campo como a API os devolve). */
 interface LinhaEscala { id: number; data: string; funcao: keyof typeof rotulos.funcaoEscala; membro: string; estado: string }
@@ -24,7 +26,7 @@ interface LinhaMensal { ano: number; mes: number; baptismos: number; rebaptismos
 interface LinhaMenor { id: number; nome: string; apelido: string; faltaEncarregado: boolean; faltaConsentimento: boolean }
 interface LinhaCarta { id: number; membro: string; validaAte: string; expirada: boolean }
 interface LinhaMandato { id: number; cargo: string; membro: string; fimPrevisto: string }
-interface LinhaSaldo { id: number; nome: string; tipo: string; moeda: string; saldo: string }
+interface LinhaSaldo { id: number; nome: string; tipo: string; moeda: string; saldo: string; entidadeId: number | null }
 
 /** Lê uma vista de relatório da igreja escolhida (só se o utilizador a puder ler). */
 function useRelatorio<T>(caminho: string, permissao: string) {
@@ -205,69 +207,86 @@ function Pendentes() {
   )
 }
 
-function MovimentosDoAno() {
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/** Entradas e saídas do livro de membros, mês a mês, neste ano (vista vw_relatorio_mensal_membros). */
+function LivroDoAno() {
   const q = useRelatorio<LinhaMensal>('/v1/secretaria/relatorio-mensal', 'secretaria.movimento_membro.ler')
   if (q.fetchStatus === 'idle' && !q.data) return null
   const ano = Number(hojeIso().slice(0, 4))
+  const mesActual = Number(hojeIso().slice(5, 7))
   const linhas = (q.data ?? []).filter((l) => l.ano === ano)
-  const soma = (k: keyof LinhaMensal) => linhas.reduce((s, l) => s + Number(l[k] ?? 0), 0)
-  const itens = [
-    { rotulo: 'Baptismos', n: soma('baptismos') + soma('rebaptismos'), entrada: true },
-    { rotulo: 'Profissões de fé', n: soma('profissoesDeFe'), entrada: true },
-    { rotulo: 'Cartas recebidas', n: soma('transferenciasEntrada'), entrada: true },
-    { rotulo: 'Cartas enviadas', n: soma('transferenciasSaida'), entrada: false },
-    { rotulo: 'Falecimentos', n: soma('falecimentos'), entrada: false },
-    { rotulo: 'Remoções e desaparecidos', n: soma('remocoes') + soma('desaparecidos'), entrada: false },
-  ]
-  const max = Math.max(1, ...itens.map((i) => i.n))
+  const doMes = (m: number) => linhas.find((l) => l.mes === m)
+  const n = (l: LinhaMensal | undefined, ks: (keyof LinhaMensal)[]) => (l ? ks.reduce((s, k) => s + Number(l[k] ?? 0), 0) : 0)
+  const meses = Array.from({ length: mesActual }, (_, i) => i + 1)
+  const entradas = meses.map((m) => n(doMes(m), ['baptismos', 'rebaptismos', 'profissoesDeFe', 'transferenciasEntrada']))
+  const saidas = meses.map((m) => n(doMes(m), ['transferenciasSaida', 'falecimentos', 'remocoes', 'desaparecidos']))
+  const somaE = entradas.reduce((a, b) => a + b, 0), somaS = saidas.reduce((a, b) => a + b, 0)
   return (
-    <Cartao titulo={`Livro de membros em ${ano}`} descricao="Entradas e saídas registadas com o voto" icone={BookOpen} className="lg:col-span-7">
-      {q.isPending ? <Barra className="h-32 w-full" />
+    <Cartao titulo={`Livro de membros em ${ano}`} descricao={`${somaE} entrada(s) e ${somaS} saída(s), com o voto da igreja`} icone={BookOpen} className="lg:col-span-7"
+      accoes={<Button asChild variant="ghost" size="sm"><Link to="/livro">{t.comum.verTodos}</Link></Button>}>
+      {q.isPending ? <Barra className="h-48 w-full" />
+        : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
+        : <GraficoBarras rotulo={`Entradas e saídas do livro de membros em ${ano}`} altura={200} categorias={meses.map((m) => MESES_CURTOS[m - 1])} destaque={mesActual - 1}
+            series={[{ nome: 'Entradas', slot: 1, valores: entradas }, { nome: 'Saídas', slot: 2, valores: saidas }]} formatar={(v) => String(v)} inteiros />}
+    </Cartao>
+  )
+}
+
+/** Composição do livro: activos, interessados e o resto (transferidos, falecidos...), e a divisão por sexo. */
+function Composicao() {
+  const { pode } = useSessao()
+  const q = useMembrosBasicos()
+  if (!pode('secretaria.membro.ler')) return null
+  const l = q.data ?? []
+  const conta = (f: (m: (typeof l)[number]) => boolean) => l.filter(f).length
+  const activos = conta((m) => m.estado === 'ACTIVO'), interessados = conta((m) => m.estado === 'INTERESSADO')
+  const mulheres = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'F'), homens = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'M')
+  return (
+    <Cartao titulo="Membros" descricao="Quem está no livro desta igreja" icone={Users} className="lg:col-span-5"
+      accoes={<Button asChild variant="ghost" size="sm"><Link to="/membros">{t.comum.verTodos}</Link></Button>}>
+      {q.isPending ? <Barra className="h-40 w-full" />
         : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : (
-          <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-            {itens.map((i) => (
-              <div key={i.rotulo}>
-                <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{i.rotulo}</span>
-                  <span className="num font-semibold">{i.n}</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div className={i.entrada ? 'h-full rounded-full bg-primary' : 'h-full rounded-full bg-muted-foreground/50'} style={{ width: `${(i.n * 100) / max}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <>
+            <Donut lado rotulo="Membros por estado" formatar={(v) => String(v)}
+              fatias={[{ nome: 'Activos', valor: activos, slot: 1 }, { nome: 'Interessados', valor: interessados, slot: 3 }, { nome: 'Outros (saídas)', valor: l.length - activos - interessados, slot: 'neutra' }]} />
+            <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">Membros activos: {mulheres} mulheres e {homens} homens{activos - mulheres - homens ? ` (${activos - mulheres - homens} sem sexo indicado)` : ''}.</p>
+          </>
         )}
     </Cartao>
   )
 }
 
-function Saldos() {
+/** Finanças em resumo: entradas e saídas dos últimos 6 meses e onde está o dinheiro (sem a conta da Missão). */
+function Financas() {
+  const { pode } = useSessao()
+  const resumo = useResumoMensal(6)
   const q = useRelatorio<LinhaSaldo>('/v1/tesouraria/saldos-contas', 'tesouraria.conta_financeira.ler')
-  if (q.fetchStatus === 'idle' && !q.data) return null
-  // total em cêntimos inteiros (nunca float para dinheiro), a partir dos saldos mostrados
-  const centimos = (q.data ?? []).reduce((s, c) => s + Number(c.saldo.replace('.', '')), 0)
-  const total = `${centimos < 0 ? '-' : ''}${Math.floor(Math.abs(centimos) / 100)}.${String(Math.abs(centimos) % 100).padStart(2, '0')}`
+  if (!pode('tesouraria.transacao.ler') || !pode('tesouraria.conta_financeira.ler')) return null
+  const contas = (q.data ?? []).filter((c) => c.entidadeId == null).sort((a, b) => centimos(b.saldo) - centimos(a.saldo))
+  const total = deCentimos(contas.reduce((s, c) => s + centimos(c.saldo), 0))
+  const fatias: FatiaDonut[] = [
+    ...contas.slice(0, 3).map((c, i) => ({ nome: c.nome, valor: Math.max(0, centimos(c.saldo)) / 100, slot: (i + 1) as Slot })),
+    ...(contas.length > 3 ? [{ nome: 'Outras', valor: contas.slice(3).reduce((s, c) => s + Math.max(0, centimos(c.saldo)), 0) / 100, slot: 'neutra' as Slot }] : []),
+  ]
+  const mt = (v: number) => dinheiro(deCentimos(Math.round(v * 100)))
   return (
-    <Cartao titulo={t.inicio.saldos} descricao="Saldo actual de cada conta da igreja" icone={Wallet} className="lg:col-span-5" semMargem>
-      {q.isPending ? <div className="px-6 pb-6"><Barra className="h-16 w-full" /></div>
-        : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="mx-6 mb-6" />
-        : !q.data.length ? <EstadoVazio icone={Wallet}>Ainda não há contas registadas.</EstadoVazio>
-        : (
-          <Tabela>
-            <thead><tr><th className="sm:pl-6">Conta</th><th className="num sm:pr-6">Saldo</th></tr></thead>
-            <tbody>
-              {q.data.map((c) => (
-                <tr key={c.id}><td className="sm:pl-6">{c.nome}</td><td className="num font-medium sm:pr-6"><Dinheiro valor={c.saldo} /></td></tr>
-              ))}
-              {q.data.length > 1 && (
-                <tr className="bg-muted/30"><td className="font-semibold sm:pl-6">Total</td><td className="num font-semibold sm:pr-6"><Dinheiro valor={total} /></td></tr>
-              )}
-            </tbody>
-          </Tabela>
-        )}
-    </Cartao>
+    <>
+      <Cartao titulo="Entradas e saídas" descricao="Últimos 6 meses, nas contas da igreja" icone={BarChart3} className="lg:col-span-7"
+        accoes={<Button asChild variant="ghost" size="sm"><Link to="/tesouraria">Tesouraria</Link></Button>}>
+        {resumo.aCarregar ? <Barra className="h-48 w-full" />
+          : resumo.erro ? <EstadoErro erro={resumo.erro} />
+          : <GraficoBarras rotulo="Entradas e saídas confirmadas por mês" altura={200} categorias={resumo.categorias} destaque={resumo.categorias.length - 1}
+              series={[{ nome: 'Entradas', slot: 1, valores: resumo.entradas }, { nome: 'Saídas', slot: 2, valores: resumo.saidas }]} formatar={mt} />}
+      </Cartao>
+      <Cartao titulo={t.inicio.saldos} descricao={<>Total da igreja: <Dinheiro valor={total} /></>} icone={Wallet} className="lg:col-span-5">
+        {q.isPending ? <Barra className="h-40 w-full" />
+          : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
+          : !contas.length ? <EstadoVazio icone={Wallet}>Ainda não há contas registadas.</EstadoVazio>
+          : <Donut rotulo="Saldo por conta" centro={curto(centimos(total) / 100)} formatar={mt} fatias={fatias} />}
+      </Cartao>
+    </>
   )
 }
 
@@ -300,8 +319,9 @@ export default function PaginaInicio() {
         <div className="grid items-start gap-6 lg:grid-cols-12">
           <ProximoSabado />
           <Pendentes />
-          <MovimentosDoAno />
-          <Saldos />
+          <LivroDoAno />
+          <Composicao />
+          <Financas />
         </div>
       </div>
     </>

@@ -11,6 +11,11 @@
 
 :root {
   --radius: 0.625rem;
+  /* gráficos: paleta categórica validada (dataviz: azul, laranja, água; neutro para "outros") */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --serie-neutra: #a3abb8;
 
   --background: oklch(0.984 0.003 247.858);
   --foreground: oklch(0.208 0.042 265.755);
@@ -62,6 +67,10 @@
 }
 
 .dark {
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-neutra: #5b6472;
   --background: oklch(0.145 0.02 264);
   --foreground: oklch(0.968 0.007 247.896);
   --card: oklch(0.185 0.025 264);

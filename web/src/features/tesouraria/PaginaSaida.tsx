@@ -137,7 +137,7 @@ export default function PaginaSaida() {
                   {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                 </CampoFormulario>
                 <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                  {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
+                  {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
                 </CampoFormulario>
               </div>
               <CampoFormulario rotulo="Referência" erro={e.referencia?.message} ajuda="N.º da factura, do recibo ou da transacção">

@@ -98,18 +98,18 @@ export default function PaginaMovimentos() {
             : lista.length === 0 ? <EstadoVazio icone={ListOrdered} titulo="Sem movimentos">{filtro === 'todos' ? `Nada registado em ${nome}.` : 'Nada com este filtro neste mês.'}</EstadoVazio>
             : (
               <Tabela>
-                <thead><tr><th className="sm:pl-6">Data</th><th>Movimento</th><th className="hidden md:table-cell">Conta</th><th>Estado</th><th className="num sm:pr-6">Valor</th></tr></thead>
+                <thead><tr><th className="hidden sm:table-cell sm:pl-6">Data</th><th>Movimento</th><th className="hidden md:table-cell">Conta</th><th className="hidden sm:table-cell">Estado</th><th className="num sm:pr-6">Valor</th></tr></thead>
                 <tbody>
                   {lista.map((tr) => (
                     <tr key={tr.id} onClick={() => navigate(`/tesouraria/movimentos/${tr.id}`)} className={cn('cursor-pointer', tr.endDate && 'opacity-60')}>
-                      <td className="tabular-nums whitespace-nowrap text-muted-foreground sm:pl-6">{data(tr.dataHora)}</td>
+                      <td className="hidden tabular-nums whitespace-nowrap text-muted-foreground sm:table-cell sm:pl-6">{data(tr.dataHora)}</td>
                       <td>
                         <Link to={`/tesouraria/movimentos/${tr.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{quem(tr, (id) => nomes.get(id))}</Link>
-                        <p className="text-xs text-muted-foreground">{rotulos.tipoTransacao[tr.tipo]} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
+                        <p className="text-xs text-muted-foreground"><span className="tabular-nums sm:hidden">{data(tr.dataHora)} · </span>{rotulos.tipoTransacao[tr.tipo]} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
                       </td>
                       <td className="hidden text-muted-foreground md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}{naMissao.has(tr.contaId ?? 0) && <span className="block text-xs text-info-text">pago na Missão</span>}</td>
-                      <td><PilulaEstado tr={tr} /></td>
-                      <td className="num sm:pr-6"><Valor tr={tr} /></td>
+                      <td className="hidden sm:table-cell"><PilulaEstado tr={tr} /></td>
+                      <td className="num sm:pr-6"><Valor tr={tr} /><span className="mt-1 block sm:hidden"><PilulaEstado tr={tr} /></span></td>
                     </tr>
                   ))}
                 </tbody>

@@ -146,10 +146,15 @@ function DialogoDia({ dia, plano, aoFechar, outros, nomeDe }: { dia: Dia | null;
 function BotaoCelula({ nome, aoClicar, pode, destaque }: { nome?: string; aoClicar: () => void; pode: boolean; destaque?: boolean }) {
   if (!nome && !pode) return <span className="text-muted-foreground">—</span>
   return (
-    <button type="button" onClick={aoClicar}
-      className={cn('alvo -mx-2 flex min-h-9 w-[calc(100%+1rem)] items-center rounded-md px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-        nome ? (destaque ? 'font-semibold' : 'font-medium') : 'text-muted-foreground print:hidden')}>
-      {nome ?? <span className="inline-flex items-center gap-1.5"><Plus className="size-3.5" />Escalar</span>}
+    <button type="button" onClick={aoClicar} aria-label={nome ? undefined : 'Escalar'}
+      className={cn('group alvo -mx-2 flex min-h-9 w-[calc(100%+1rem)] items-center rounded-md px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+        nome ? (destaque ? 'font-semibold' : 'font-medium') : 'text-muted-foreground/40 print:hidden')}>
+      {nome ?? (
+        // vazio: só um "+" discreto; a palavra aparece ao passar o rato ou com o teclado (a grelha fica limpa)
+        <span className="inline-flex items-center gap-1.5 group-hover:text-foreground group-focus-visible:text-foreground">
+          <Plus className="size-3.5" /><span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">Escalar</span>
+        </span>
+      )}
     </button>
   )
 }
@@ -289,9 +294,11 @@ export default function PaginaEscala() {
                             )
                           })}
                           <td className="px-4 py-2 sm:pr-6">
-                            <button type="button" disabled={!podeDia} onClick={() => setDiaAberto(d)}
-                              className="alvo -mx-2 flex min-h-9 items-center rounded-md px-2 text-left enabled:hover:bg-accent">
-                              {d.grupoCoral ?? <span className="text-muted-foreground print:hidden">{podeDia ? '+ Grupo' : '—'}</span>}
+                            <button type="button" disabled={!podeDia} onClick={() => setDiaAberto(d)} aria-label={d.grupoCoral ? undefined : 'Indicar o grupo coral'}
+                              className="group alvo -mx-2 flex min-h-9 items-center rounded-md px-2 text-left enabled:hover:bg-accent">
+                              {d.grupoCoral ?? (podeDia
+                                ? <span className="inline-flex items-center gap-1.5 text-muted-foreground/40 group-hover:text-foreground print:hidden"><Plus className="size-3.5" /><span className="opacity-0 transition-opacity group-hover:opacity-100">Grupo</span></span>
+                                : <span className="text-muted-foreground">—</span>)}
                             </button>
                           </td>
                         </tr>

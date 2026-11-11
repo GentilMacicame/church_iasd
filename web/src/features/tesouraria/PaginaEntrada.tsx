@@ -62,6 +62,8 @@ export default function PaginaEntrada() {
   const [erro, setErro] = useState<string | null>(null)
   const [ultimo, setUltimo] = useState<{ id: number; valor: string; recibo?: string } | null>(null)
   const [params, setParams] = useSearchParams()
+  // a categoria de cada fundo vem sugerida; só se mostra quando o tesoureiro a quer mudar
+  const [verCategorias, setVerCategorias] = useState(false)
   const naMissao = params.get('onde') === 'missao'
   const contasDoCaso = (contas.data ?? []).filter((c) => daMissao(c) === naMissao)
 
@@ -198,7 +200,7 @@ export default function PaginaEntrada() {
                   {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                 </CampoFormulario>
                 <CampoFormulario rotulo="Hora" erro={form.formState.errors.hora?.message}>
-                  {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
+                  {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
                 </CampoFormulario>
               </div>
               <CampoFormulario rotulo="Contribuinte" erro={form.formState.errors.membro?.message} obrigatorio={naMissao}
@@ -226,18 +228,19 @@ export default function PaginaEntrada() {
               </CampoFormulario>
             </div>
           </Cartao>
-          <Cartao titulo="Valores por fundo" descricao="Escreva só os fundos com valor; o total soma-se sozinho" icone={Wallet} semMargem>
+          <Cartao titulo="Valores por fundo" descricao="Escreva só os fundos com valor; o total soma-se sozinho" icone={Wallet} semMargem
+            accoes={<Button type="button" variant="ghost" size="sm" className="hidden sm:inline-flex" aria-pressed={verCategorias} onClick={() => setVerCategorias((v) => !v)}>{verCategorias ? 'Ocultar categorias' : 'Alterar categorias'}</Button>}>
             <ul className="divide-y">
               {fields.map((f, i) => {
                 const fundo = fundoPorId.get(f.fundoId)
                 if (!fundoVisivel(f.fundoId)) return null
                 return (
-                  <li key={f.id} className="grid grid-cols-[1fr_150px] items-center gap-3 px-4 py-3 sm:grid-cols-[1fr_200px_170px] sm:px-6">
+                  <li key={f.id} className={cn('grid grid-cols-[1fr_150px] items-center gap-3 px-4 py-3 sm:px-6', verCategorias ? 'sm:grid-cols-[1fr_200px_170px]' : 'sm:grid-cols-[1fr_190px]')}>
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{fundo?.nome}</p>
                       <p className="text-xs text-muted-foreground">{fundo && parteDoFundo(fundo)}</p>
                     </div>
-                    <div className="hidden sm:block"><Seleccao aria-label={`Categoria de ${fundo?.nome}`} {...form.register(`linhas.${i}.categoriaId`)} className="h-9 text-xs">
+                    <div className={verCategorias ? 'hidden sm:block' : 'hidden'}><Seleccao aria-label={`Categoria de ${fundo?.nome}`} {...form.register(`linhas.${i}.categoriaId`)} className="h-9 text-xs">
                       {receitas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
                     </Seleccao></div>
                     <Controller control={form.control} name={`linhas.${i}.valor`} render={({ field, fieldState }) => (

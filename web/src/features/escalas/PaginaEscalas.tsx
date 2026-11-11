@@ -54,7 +54,7 @@ export default function PaginaEscalas() {
               </EstadoVazio>
             ) : (
               <Tabela>
-                <thead><tr><th className="sm:pl-6">Escala</th><th className="hidden sm:table-cell">Período</th><th>Estado</th><th className="hidden md:table-cell">Emitida em</th><th className="sm:pr-6" /></tr></thead>
+                <thead><tr><th className="sm:pl-6">Escala</th><th className="hidden sm:table-cell">Período</th><th>Estado</th><th className="hidden md:table-cell">Emissão</th><th className="sm:pr-6" /></tr></thead>
                 <tbody>
                   {planos.map((p) => (
                     <tr key={p.id} onClick={() => navigate(`/escalas/${p.id}`)} className="group cursor-pointer">
