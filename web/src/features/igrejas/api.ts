@@ -46,6 +46,25 @@ export function useEntidadesOrg() {
   })
 }
 
+export type Provincia = Esquema<'Provincia'> & { id: number; nome: string }
+export type DistritoAdm = Esquema<'DistritoAdministrativo'> & { id: number; nome: string; provinciaId: number }
+
+/** Províncias e distritos administrativos de Moçambique (V26): mudam raramente, ficam em memória. */
+export function useProvincias() {
+  return useQuery({
+    queryKey: [...k, 'provincias'],
+    queryFn: async () => (await dados(api.GET('/v1/organizacao/provincias', { params: { query: { limite: 50 } } }))).dados as Provincia[],
+    staleTime: 60 * 60_000,
+  })
+}
+export function useDistritosAdministrativos() {
+  return useQuery({
+    queryKey: [...k, 'distritos-administrativos'],
+    queryFn: () => todas<DistritoAdm>((depois) => dados(api.GET('/v1/organizacao/distritos-administrativos', { params: { query: { limite: 200, depois } as never } }))),
+    staleTime: 60 * 60_000,
+  })
+}
+
 export function useDistritos() {
   return useQuery({
     queryKey: [...k, 'distritos'],

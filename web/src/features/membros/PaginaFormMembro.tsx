@@ -90,40 +90,83 @@ const PASSOS = [
   { chave: 'rever', titulo: 'Rever', descricao: 'Confirmar antes de gravar', icone: ClipboardCheck, campos: [] },
 ] as const satisfies readonly { chave: string; titulo: string; descricao: string; icone: unknown; campos: readonly (keyof Valores)[] }[]
 
-/** Barra de passos: número e nome de cada passo; no telemóvel, "Passo 2 de 5" e uma barra de progresso. */
+/**
+ * Passos do registo. No computador: coluna lateral fixa com os passos na vertical (feito / em curso / por fazer),
+ * título, descrição e o progresso. No telemóvel: cabeçalho compacto "Passo 2 de 5" com a barra de progresso.
+ */
 function Passos({ actual, feitos, aoEscolher, livre }: { actual: number; feitos: Set<number>; aoEscolher: (i: number) => void; livre: boolean }) {
+  const total = PASSOS.length
+  const pct = Math.round(((actual + 1) / total) * 100)
+  const podeIr = (i: number) => livre || i <= actual || feitos.has(i) || feitos.has(i - 1)
+  const P = PASSOS[actual]
   return (
-    <nav aria-label="Passos do registo" className="rounded-xl border bg-card px-4 py-4 shadow-card sm:px-6">
-      <div className="flex items-center justify-between gap-3 text-sm sm:hidden">
-        <span className="font-medium">Passo {actual + 1} de {PASSOS.length} · {PASSOS[actual].titulo}</span>
-        <span className="text-xs text-muted-foreground">{PASSOS[actual].descricao}</span>
+    <>
+      <nav aria-label="Passos do registo" className="rounded-xl border bg-card p-4 shadow-card lg:hidden">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 flex-none items-center justify-center rounded-full bg-primary text-primary-foreground"><P.icone className="size-5" /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-muted-foreground">Passo {actual + 1} de {total}</p>
+            <p className="truncate font-semibold">{P.titulo}</p>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground tabular-nums">{pct}%</span>
+        </div>
+        <div className="mt-3 flex gap-1" aria-hidden>
+          {PASSOS.map((x, i) => <span key={x.chave} className={cn('h-1.5 flex-1 rounded-full', i <= actual ? 'bg-primary' : feitos.has(i) ? 'bg-primary/40' : 'bg-muted')} />)}
+        </div>
+      </nav>
+
+      <nav aria-label="Passos do registo" className="hidden rounded-xl border bg-card p-5 shadow-card lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:block">
+        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Progresso</p>
+        <div className="mt-2 flex items-baseline justify-between text-sm">
+          <span className="font-medium">Passo {actual + 1} de {total}</span>
+          <span className="text-muted-foreground tabular-nums">{pct}%</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${pct}%` }} />
+        </div>
+        <ol className="mt-6">
+          {PASSOS.map((x, i) => {
+            const emCurso = i === actual
+            const feito = feitos.has(i) && !emCurso
+            return (
+              <li key={x.chave} className="relative pb-5 last:pb-0">
+                {i < total - 1 && <span aria-hidden className={cn('absolute top-10 bottom-0 left-[19px] w-0.5 rounded-full', feito ? 'bg-primary/50' : 'bg-border')} />}
+                <button type="button" disabled={!podeIr(i)} onClick={() => aoEscolher(i)} aria-current={emCurso ? 'step' : undefined}
+                  className={cn('alvo group relative flex w-full items-start gap-3 rounded-lg p-1 text-left transition-colors disabled:cursor-not-allowed',
+                    emCurso ? 'bg-accent/60' : 'enabled:hover:bg-muted/60')}>
+                  <span className={cn('flex size-8 flex-none items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors',
+                    emCurso || feito ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground',
+                    emCurso && 'shadow-sm ring-4 ring-primary/15')}>
+                    {feito ? <Check className="size-4" /> : emCurso ? <x.icone className="size-4" /> : i + 1}
+                  </span>
+                  <span className="min-w-0 pt-0.5">
+                    <span className={cn('block text-sm font-semibold', emCurso || feito ? 'text-foreground' : 'text-muted-foreground')}>{x.titulo}</span>
+                    <span className="block text-xs leading-snug text-muted-foreground">{x.descricao}</span>
+                    <span className={cn('mt-1 inline-block text-[11px] font-medium', emCurso ? 'text-primary' : feito ? 'text-success-text' : 'text-muted-foreground/70')}>
+                      {emCurso ? 'Em curso' : feito ? 'Concluído' : 'Por preencher'}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      </nav>
+    </>
+  )
+}
+
+/** No computador, por cima do formulário: o passo em curso (ícone, número, título e descrição). */
+function CabecalhoPasso({ passo }: { passo: number }) {
+  const P = PASSOS[passo]
+  return (
+    <header className="hidden items-center gap-3 border-b pb-4 lg:flex">
+      <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground"><P.icone className="size-5" /></span>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground">Passo {passo + 1} de {PASSOS.length}</p>
+        <h2 className="text-lg font-semibold tracking-tight">{P.titulo} <span className="font-normal text-muted-foreground">· {P.descricao}</span></h2>
       </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted sm:hidden" aria-hidden>
-        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${((actual + 1) / PASSOS.length) * 100}%` }} />
-      </div>
-      <ol className="hidden min-w-0 items-center sm:flex">
-        {PASSOS.map((p, i) => {
-          const feito = feitos.has(i) && i !== actual
-          const podeIr = livre || i <= actual || feitos.has(i) || feitos.has(i - 1)
-          return (
-            <li key={p.chave} className="flex min-w-0 flex-1 items-center last:flex-none">
-              <button type="button" disabled={!podeIr} onClick={() => aoEscolher(i)} aria-current={i === actual ? 'step' : undefined}
-                className="alvo group flex items-center gap-3 rounded-lg pr-2 text-left disabled:cursor-not-allowed">
-                <span className={cn('flex size-9 flex-none items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors',
-                  i === actual ? 'border-primary bg-primary text-primary-foreground'
-                    : feito ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground group-enabled:group-hover:border-primary/50')}>
-                  {feito ? <Check className="size-4" /> : i + 1}
-                </span>
-                <span className={cn('text-sm font-medium whitespace-nowrap', i === actual ? 'text-foreground' : 'text-muted-foreground')}>{p.titulo}</span>
-              </button>
-              {i < PASSOS.length - 1 && <span aria-hidden className={cn('mx-3 h-0.5 min-w-4 flex-1 rounded-full', feitos.has(i) ? 'bg-primary/60' : 'bg-border')} />}
-            </li>
-          )
-        })}
-      </ol>
-      <p className="mt-3 hidden text-sm text-muted-foreground sm:block">{PASSOS[actual].descricao}</p>
-    </nav>
+    </header>
   )
 }
 
@@ -253,8 +296,10 @@ export default function PaginaFormMembro() {
         descricao={id ? `Ficha no livro de membros de ${igreja.nome}` : `${igreja.nome} · o registo fica por aprovar pelo secretário`}
       />
 
-      <div className="grid gap-6">
+      <div className="grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
         <Passos actual={passo} feitos={feitos} aoEscolher={irPara} livre={!!id} />
+        <div className="grid min-w-0 gap-6">
+        <CabecalhoPasso passo={passo} />
         <ErroFormulario mensagem={erroTopo} />
 
         {/* os passos ficam todos montados (só se escondem): os valores e as validações não se perdem */}
@@ -419,13 +464,14 @@ export default function PaginaFormMembro() {
           </Cartao>
         )}
 
-        <div className="sticky bottom-0 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-0 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pt-5 sm:pb-0 sm:backdrop-blur-none">
           <Button asChild variant="ghost" className="alvo mr-auto"><Link to={voltarPara}>{t.comum.cancelar}</Link></Button>
           {passo > 0 && <Button type="button" variant="outline" className="alvo" onClick={() => irPara(passo - 1)}><ArrowLeft className="size-4" />Anterior</Button>}
           {passo < ultimo && <Button type="button" variant={id ? 'outline' : 'default'} className="alvo min-w-28" onClick={() => void avancar()}>Seguinte<ArrowRight className="size-4" /></Button>}
           {(passo === ultimo || id) && (
             <Button type="submit" disabled={isSubmitting} className="alvo min-w-32">{isSubmitting ? t.comum.aGravar : id ? t.comum.guardar : t.membros.registar}</Button>
           )}
+        </div>
         </div>
       </div>
     </form>

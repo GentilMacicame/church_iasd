@@ -6,7 +6,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Building2, Church, Plus, ShieldAlert, UserPlus, Users } from 'lucide-react'
+import { ArrowRight, Building2, Church, MapPin, Plus, ShieldAlert, UserPlus, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,7 +20,7 @@ import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
-import { TIPO_IGREJA, useAdministradores, useDistritos, useEntidadesOrg, useIgrejas, useIgrejasMut, type Igreja, type NovoAdministrador, type TipoIgreja } from './api'
+import { TIPO_IGREJA, useAdministradores, useDistritos, useDistritosAdministrativos, useEntidadesOrg, useIgrejas, useIgrejasMut, useProvincias, type Igreja, type NovoAdministrador, type TipoIgreja } from './api'
 
 export default function PaginaIgrejas() {
   const { pode, escolherIgreja, recarregar } = useSessao()
@@ -31,12 +31,34 @@ export default function PaginaIgrejas() {
   const admins = useAdministradores((igrejas.data ?? []).filter((i) => !i.endDate).map((i) => i.id))
   const [nova, setNova] = useState(false)
   const [paraAdmin, setParaAdmin] = useState<Igreja | null>(null)
+  const provincias = useProvincias()
+  const dads = useDistritosAdministrativos()
   const [busca, setBusca] = useState('')
+  const [fEnt, setFEnt] = useState('')
+  const [fPrv, setFPrv] = useState('')
+  const [fDad, setFDad] = useState('')
+  const [fTipo, setFTipo] = useState('')
+  const [soSemAdmin, setSoSemAdmin] = useState(false)
   const nomeEnt = (id?: number | null) => entidades.data?.find((e) => e.id === id)?.nome ?? '—'
   const nomeDst = (id?: number | null) => distritos.data?.find((d) => d.id === id)?.nome
-  const lista = useMemo(() => (igrejas.data ?? []).filter((i) => !i.endDate)
-    .filter((i) => !busca || i.nome.toLowerCase().includes(busca.toLowerCase()))
-    .sort((a, b) => a.nome.localeCompare(b.nome)), [igrejas.data, busca])
+  const nomePrv = (id?: number | null) => provincias.data?.find((p) => p.id === id)?.nome
+  const nomeDad = (id?: number | null) => dads.data?.find((d) => d.id === id)?.nome
+  const activas = (igrejas.data ?? []).filter((i) => !i.endDate)
+  const comFiltros = !!(busca || fEnt || fPrv || fDad || fTipo || soSemAdmin)
+  const limparFiltros = () => { setBusca(''); setFEnt(''); setFPrv(''); setFDad(''); setFTipo(''); setSoSemAdmin(false) }
+  const lista = useMemo(() => activas
+    .filter((i) => !busca || `${i.nome} ${i.localidade ?? ''} ${i.endereco ?? ''}`.toLowerCase().includes(busca.toLowerCase()))
+    .filter((i) => !fEnt || String(i.entidadeId) === fEnt)
+    .filter((i) => !fPrv || String(i.provinciaId) === fPrv)
+    .filter((i) => !fDad || String(i.distritoAdministrativoId) === fDad)
+    .filter((i) => !fTipo || (i.tipo ?? 'IGREJA_ORGANIZADA') === fTipo)
+    .filter((i) => !soSemAdmin || !(admins.data?.get(i.id)?.length))
+    .sort((a, b) => a.nome.localeCompare(b.nome)),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [igrejas.data, busca, fEnt, fPrv, fDad, fTipo, soSemAdmin, admins.data])
+  const entidadesComIgrejas = (entidades.data ?? []).filter((e) => activas.some((i) => i.entidadeId === e.id))
+  const provinciasComIgrejas = (provincias.data ?? []).filter((p) => activas.some((i) => i.provinciaId === p.id))
+  const dadsDoFiltro = (dads.data ?? []).filter((d) => (!fPrv || String(d.provinciaId) === fPrv) && activas.some((i) => i.distritoAdministrativoId === d.id))
   const semAdmin = (igrejas.data ?? []).filter((i) => !i.endDate && !(admins.data?.get(i.id)?.length)).length
   const totalAdmins = [...(admins.data?.values() ?? [])].reduce((s, l) => s + l.length, 0)
   const podeCriarUtilizadores = pode('nucleo.usuario.criar')
@@ -58,14 +80,41 @@ export default function PaginaIgrejas() {
           <Indicador rotulo="Sem administrador" valor={semAdmin} nota="ninguém as administra ainda" icone={ShieldAlert} tom={semAdmin ? 'warning' : 'success'} aCarregar={igrejas.isPending || admins.isPending} />
         </div>
 
-        <Cartao titulo="Todas as igrejas" icone={Church} semMargem
-          accoes={<Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Procurar igreja…" className="alvo h-9 w-44 sm:w-60" aria-label="Procurar igreja" />}>
+        <Cartao titulo="Todas as igrejas" descricao={comFiltros ? `${lista.length} de ${activas.length} igreja(s)` : `${activas.length} igreja(s)`} icone={Church} semMargem>
+          <div className="grid gap-2 border-y bg-muted/30 px-4 py-3 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
+            <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Procurar por nome ou localidade…" className="alvo h-9" aria-label="Procurar igreja" />
+            <Seleccao aria-label="Associação / Missão" value={fEnt} onChange={(e) => setFEnt(e.target.value)} className="h-9">
+              <option value="">Associação</option>
+              {entidadesComIgrejas.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+            </Seleccao>
+            <Seleccao aria-label="Província" value={fPrv} onChange={(e) => { setFPrv(e.target.value); setFDad('') }} className="h-9">
+              <option value="">Província</option>
+              {provinciasComIgrejas.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            </Seleccao>
+            <Seleccao aria-label="Distrito" value={fDad} onChange={(e) => setFDad(e.target.value)} className="h-9">
+              <option value="">Distrito</option>
+              {dadsDoFiltro.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
+            </Seleccao>
+            <Seleccao aria-label="Tipo" value={fTipo} onChange={(e) => setFTipo(e.target.value)} className="h-9">
+              <option value="">Tipo</option>
+              {Object.entries(TIPO_IGREJA).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+            </Seleccao>
+            <div className="flex items-center gap-2">
+              <button type="button" aria-pressed={soSemAdmin} onClick={() => setSoSemAdmin((v) => !v)}
+                className={cn('alvo h-9 rounded-md border px-3 text-sm whitespace-nowrap', soSemAdmin ? 'border-warning/40 bg-tint-warning text-warning-text' : 'bg-card hover:bg-muted/50')}>
+                Sem administrador
+              </button>
+              {comFiltros && <Button variant="ghost" size="sm" className="alvo h-9 px-2" onClick={limparFiltros} aria-label="Limpar filtros"><X className="size-4" /></Button>}
+            </div>
+          </div>
           {igrejas.isPending ? <LinhasACarregar linhas={4} />
             : igrejas.isError ? <EstadoErro erro={igrejas.error} aoTentar={() => igrejas.refetch()} className="mx-6 mb-6" />
-            : !lista.length ? <EstadoVazio icone={Church} titulo={busca ? 'Nenhuma igreja com esse nome' : 'Ainda não há igrejas'}>Registe a primeira igreja e o seu administrador.</EstadoVazio>
+            : !lista.length ? (comFiltros
+              ? <EstadoVazio icone={Church} titulo="Nenhuma igreja com estes filtros" accao={<Button variant="outline" className="alvo" onClick={limparFiltros}>Limpar filtros</Button>}>Mude ou limpe os filtros.</EstadoVazio>
+              : <EstadoVazio icone={Church} titulo="Ainda não há igrejas">Registe a primeira igreja e o seu administrador.</EstadoVazio>)
             : (
               <Tabela>
-                <thead><tr><th className="sm:pl-6">Igreja</th><th className="hidden md:table-cell">Associação / distrito</th><th>Administrador</th><th className="sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
+                <thead><tr><th className="sm:pl-6">Igreja</th><th className="hidden md:table-cell">Localização</th><th className="hidden xl:table-cell">Associação / distrito pastoral</th><th>Administrador</th><th className="sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
                 <tbody>
                   {lista.map((i) => {
                     const a = admins.data?.get(i.id) ?? []
@@ -73,9 +122,17 @@ export default function PaginaIgrejas() {
                       <tr key={i.id}>
                         <td className="sm:pl-6">
                           <p className="font-medium">{i.nome}</p>
-                          <p className="text-xs text-muted-foreground">{TIPO_IGREJA[(i.tipo ?? 'IGREJA_ORGANIZADA') as TipoIgreja]}{i.endereco ? ` · ${i.endereco}` : ''}</p>
+                          <p className="text-xs text-muted-foreground">{TIPO_IGREJA[(i.tipo ?? 'IGREJA_ORGANIZADA') as TipoIgreja]}</p>
                         </td>
                         <td className="hidden text-sm md:table-cell">
+                          {nomePrv(i.provinciaId) ? (
+                            <>
+                              <p className="flex items-center gap-1"><MapPin className="size-3.5 flex-none text-muted-foreground" />{[nomeDad(i.distritoAdministrativoId), nomePrv(i.provinciaId)].filter(Boolean).join(', ')}</p>
+                              {(i.localidade || i.endereco) && <p className="text-xs text-muted-foreground">{i.localidade ?? i.endereco}</p>}
+                            </>
+                          ) : <span className="text-xs text-muted-foreground">{i.endereco ?? 'por indicar'}</span>}
+                        </td>
+                        <td className="hidden text-sm xl:table-cell">
                           <p>{nomeEnt(i.entidadeId)}</p>
                           {nomeDst(i.distritoId) && <p className="text-xs text-muted-foreground">{nomeDst(i.distritoId)}</p>}
                         </td>
@@ -103,10 +160,6 @@ export default function PaginaIgrejas() {
               </Tabela>
             )}
         </Cartao>
-        <p className="text-sm text-muted-foreground">
-          O administrador de cada igreja entra com o seu e-mail ou telefone e define a senha com o código enviado por SMS
-          ("Esqueci-me da senha"). Depois regista os outros utilizadores da igreja (secretário, tesoureiro, ...) em "Utilizadores e perfis".
-        </p>
       </div>
       {nova && <DialogoIgreja aoFechar={() => setNova(false)} aoCriar={async (id) => { await recarregar(); setNova(false); toast.message('Pode abrir a igreja nova na lista.', { action: { label: 'Abrir', onClick: () => abrir(id) } }) }} />}
       {paraAdmin && <DialogoAdministrador igreja={paraAdmin} aoFechar={() => setParaAdmin(null)} />}
@@ -163,6 +216,12 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
   const [distritoId, setDistritoId] = useState('')
   const [maeId, setMaeId] = useState('')
   const [endereco, setEndereco] = useState('')
+  const provincias = useProvincias()
+  const dads = useDistritosAdministrativos()
+  const [prvId, setPrvId] = useState('')
+  const [dadId, setDadId] = useState('')
+  const [localidade, setLocalidade] = useState('')
+  const dadsDaProvincia = (dads.data ?? []).filter((d) => String(d.provinciaId) === prvId && !d.endDate).sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
   const [codigo, setCodigo] = useState('')
   const [dataOrg, setDataOrg] = useState('')
   const [comAdmin, setComAdmin] = useState(true)
@@ -177,12 +236,15 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
     if (nome.trim().length < 3) return setErro('Escreva o nome da igreja.')
     if (!ent) return setErro('Escolha a Associação/Missão.')
     if (tipo !== 'IGREJA_ORGANIZADA' && !maeId) return setErro('Um grupo ou filial precisa da igreja-mãe.')
+    if (!prvId || !dadId) return setErro('Indique a província e o distrito onde fica a igreja.')
+    if (localidade.trim().length < 2) return setErro('Indique a localidade (ou o bairro).')
     if (comAdmin) { const e = validarAdmin(admin); if (e) return setErro(e) }
     try {
       const { igreja, erroAdmin } = await registar.mutateAsync({
         igreja: {
           nome: nome.trim(), tipo, entidadeId: Number(ent), distritoId: distritoId ? Number(distritoId) : undefined,
           maeIgrejaId: tipo !== 'IGREJA_ORGANIZADA' && maeId ? Number(maeId) : undefined,
+          provinciaId: Number(prvId), distritoAdministrativoId: Number(dadId), localidade: localidade.trim(),
           endereco: endereco.trim() || undefined, codigoAcms: codigo.trim() || undefined, dataOrganizacao: dataOrg || undefined,
         },
         administrador: comAdmin ? limpar(admin) : undefined,
@@ -224,7 +286,7 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
                 </Seleccao>
               </div>
               <div className="grid gap-1.5">
-                <label htmlFor="igr-dst" className="text-sm font-medium">Distrito</label>
+                <label htmlFor="igr-dst" className="text-sm font-medium">Distrito pastoral</label>
                 <Seleccao id="igr-dst" value={distritoId} onChange={(e) => setDistritoId(e.target.value)}>
                   <option value="">{dstDaEnt.length ? 'Sem distrito' : 'Não há distritos nesta Associação'}</option>
                   {dstDaEnt.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
@@ -247,14 +309,37 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
                 <label htmlFor="igr-cod" className="text-sm font-medium">Código ACMS</label>
                 <Input id="igr-cod" value={codigo} onChange={(e) => setCodigo(e.target.value)} maxLength={30} placeholder="opcional" className="alvo" />
               </div>
-              <div className="grid gap-1.5 sm:col-span-2">
+            </div>
+          </fieldset>
+          <fieldset className="grid gap-3">
+            <legend className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">2. Onde fica</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <label htmlFor="igr-prv" className="text-sm font-medium">Província <span className="text-destructive-text">*</span></label>
+                <Seleccao id="igr-prv" value={prvId} onChange={(e) => { setPrvId(e.target.value); setDadId('') }}>
+                  <option value="">Escolher…</option>
+                  {(provincias.data ?? []).filter((p) => !p.endDate).map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                </Seleccao>
+              </div>
+              <div className="grid gap-1.5">
+                <label htmlFor="igr-dad" className="text-sm font-medium">Distrito <span className="text-destructive-text">*</span></label>
+                <Seleccao id="igr-dad" value={dadId} onChange={(e) => setDadId(e.target.value)} disabled={!prvId}>
+                  <option value="">{prvId ? 'Escolher…' : 'Escolha primeiro a província'}</option>
+                  {dadsDaProvincia.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                </Seleccao>
+              </div>
+              <div className="grid gap-1.5">
+                <label htmlFor="igr-loc" className="text-sm font-medium">Localidade / bairro <span className="text-destructive-text">*</span></label>
+                <Input id="igr-loc" value={localidade} onChange={(e) => setLocalidade(e.target.value)} maxLength={120} placeholder="ex.: Bairro de Nwamatibjana" className="alvo" />
+              </div>
+              <div className="grid gap-1.5">
                 <label htmlFor="igr-end" className="text-sm font-medium">Endereço</label>
-                <Input id="igr-end" value={endereco} onChange={(e) => setEndereco(e.target.value)} maxLength={255} placeholder="ex.: Bairro de Nwamatibjana, Maputo" className="alvo" />
+                <Input id="igr-end" value={endereco} onChange={(e) => setEndereco(e.target.value)} maxLength={255} placeholder="ex.: Rua 4, quarteirão 12" className="alvo" />
               </div>
             </div>
           </fieldset>
           <fieldset className="grid gap-3 rounded-lg border p-4">
-            <legend className="px-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">2. O administrador da igreja</legend>
+            <legend className="px-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">3. O administrador da igreja</legend>
             <label className="alvo flex items-center gap-2 text-sm">
               <input type="checkbox" checked={comAdmin} onChange={(e) => setComAdmin(e.target.checked)} className="size-4 accent-[var(--primary)]" />
               Criar já o administrador (perfil ADMIN nesta igreja)
