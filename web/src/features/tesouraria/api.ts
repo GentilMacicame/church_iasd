@@ -486,3 +486,13 @@ export function useResumoMensal(meses = 6) {
   }
   return { categorias: chaves.map((c) => c.rotulo), entradas, saidas, aCarregar: movs.isPending || contas.isPending, erro: movs.error ?? contas.error }
 }
+
+/** Contribuições do ano (para mostrar, ao lançar, o que o membro já deu este ano). */
+export function useContribuicoesDoAno(ano: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'contribuicoes', ano],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/contribuicoes', { params: { query: { igrejaId: igreja.id, ano } } }))) as unknown as Contribuicao[],
+    staleTime: 60_000,
+  })
+}
