@@ -22,6 +22,7 @@ import { t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
 import { daPropriaIgreja, useFundos, useFundosMut, useSaldosFundos, type Fundo } from './api'
 import { parteDoFundo } from './comum'
+import { CartaoAlvos } from './Alvos'
 
 export default function PaginaFundos() {
   const { pode } = useSessao()
@@ -101,6 +102,7 @@ export default function PaginaFundos() {
             )}
             <p className="border-t px-4 py-3 text-xs text-muted-foreground sm:px-6">Só a Associação/Missão muda estes fundos. A parte da Missão vai no depósito à Missão do fim do mês.</p>
           </Cartao>
+          {pode('tesouraria.alvo.ler') && <div className="lg:col-span-2"><CartaoAlvos /></div>}
         </div>
       )}
       {nova && <DialogoOferta aoFechar={() => setNova(false)} />}

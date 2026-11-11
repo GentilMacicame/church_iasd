@@ -194,7 +194,7 @@ export function useRecibo(transacaoId: number) {
   })
 }
 
-function useInvalidar() {
+export function useInvalidar() {
   const qc = useQueryClient()
   const igreja = useIgreja()
   return (id?: number) => {
@@ -622,4 +622,134 @@ export async function abrirDocumento(id: number) {
     janela?.close()
     throw e
   }
+}
+
+/* ===================================================================== extracto e reconciliação (F-TES-10) */
+export type LinhaExtracto = Esquema<'ExtratoLinha'> & { id: number; contaId: number; data: string; valor: string; transacaoId?: number | null }
+/** Linha de GET /v1/tesouraria/extractos-por-reconciliar (vista: as linhas sem movimento ligado, com o nome da conta). */
+export interface PorReconciliar { id: number; contaId: number; conta: string; data: string; descricao: string | null; referencia: string | null; valor: string }
+
+export function usePorReconciliar() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'por-reconciliar'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/extractos-por-reconciliar', { params: { query: { igrejaId: igreja.id } } }))) as unknown as PorReconciliar[],
+  })
+}
+
+/** Linhas já reconciliadas de uma conta, num período (para ver o trabalho feito). */
+export function useExtractoReconciliado(contaId: number | null, desde: string, ate: string) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'extracto', contaId, desde, ate],
+    enabled: contaId != null,
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/extractos', { params: { query: { contaId: contaId!, desde, ate, limite: 200, ordem: '-data' } as never } }))).dados as LinhaExtracto[],
+  })
+}
+
+export function useExtractosMut() {
+  const invalidar = useInvalidar()
+  const importar = useMutation({
+    mutationFn: (corpo: { contaId: number; csv: string }) => dados(api.POST('/v1/tesouraria/extractos/importar', { body: corpo })) as Promise<{ importadas: number; repetidas: number }>,
+    onSuccess: () => invalidar(),
+  })
+  const reconciliar = useMutation({
+    mutationFn: ({ id, transacaoId }: { id: number; transacaoId: number }) =>
+      dados(api.POST('/v1/tesouraria/extractos/{id}/reconciliar', { params: { path: { id } }, body: { transacaoId } })),
+    onSuccess: () => invalidar(),
+  })
+  return { importar, reconciliar }
+}
+
+/* ===================================================================== orçamento anual (F-TES-11) e alvos (F-TES-12) */
+export type EstadoOrcamento = 'RASCUNHO' | 'APROVADO' | 'ENCERRADO'
+export type Orcamento = Esquema<'Orcamento'> & { id: number; igrejaId: number; ano: number; estado: EstadoOrcamento }
+export type LinhaOrcamento = Esquema<'OrcamentoLinha'> & { id: number; orcamentoId: number; categoriaId: number; valorPrevisto: string }
+/** Linha de GET /v1/tesouraria/execucao-orcamento (previsto × realizado por categoria). */
+export interface Execucao { id: number; igrejaId: number; ano: number; departamento: string | null; codigo: string; categoria: string; tipo: 'RECEITA' | 'DESPESA'; previsto: string; realizado: string; diferenca: string; pctExecucao: string | null }
+export type Alvo = Esquema<'Alvo'> & { id: number; fundoId: number; descricao?: string | null; valorAlvo: string; dataInicio: string; dataFim: string }
+export interface ProgressoAlvo { id: number; igrejaId: number; fundo: string; valorAlvo: string; arrecadado: string; percentagem: string | null }
+
+export function useOrcamentos() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'orcamentos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/orcamentos', { params: { query: { igrejaId: igreja.id, limite: 50, ordem: '-ano' } as never } }))).dados as Orcamento[],
+  })
+}
+
+export function useLinhasOrcamento(orcamentoId: number | null) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'linhas-orcamento', orcamentoId],
+    enabled: orcamentoId != null,
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/linhas-orcamento', { params: { query: { orcamentoId: orcamentoId!, limite: 200 } } }))).dados as LinhaOrcamento[],
+  })
+}
+
+export function useExecucaoOrcamento() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'execucao-orcamento'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/execucao-orcamento', { params: { query: { igrejaId: igreja.id } } }))) as unknown as Execucao[],
+  })
+}
+
+export function useOrcamentoMut() {
+  const invalidar = useInvalidar()
+  const criar = useMutation({
+    mutationFn: (corpo: { igrejaId: number; ano: number; observacoes?: string }) =>
+      dados(api.POST('/v1/tesouraria/orcamentos', { body: corpo as never, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })) as Promise<Orcamento>,
+    onSuccess: () => invalidar(),
+  })
+  const linha = useMutation({
+    mutationFn: (corpo: { orcamentoId: number; categoriaId: number; valorPrevisto: string }) =>
+      dados(api.POST('/v1/tesouraria/linhas-orcamento', { body: corpo as never, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })),
+    onSuccess: () => invalidar(),
+  })
+  const mudarLinha = useMutation({
+    mutationFn: ({ id, valorPrevisto }: { id: number; valorPrevisto: string }) =>
+      dados(api.PATCH('/v1/tesouraria/linhas-orcamento/{id}', { params: { path: { id } }, body: { valorPrevisto } as never })),
+    onSuccess: () => invalidar(),
+  })
+  const tirarLinha = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/linhas-orcamento/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+  const aprovar = useMutation({
+    mutationFn: ({ id, votoId }: { id: number; votoId: number }) =>
+      dados(api.POST('/v1/tesouraria/orcamentos/{id}/aprovar', { params: { path: { id } }, body: { votoId } })),
+    onSuccess: () => invalidar(),
+  })
+  return { criar, linha, mudarLinha, tirarLinha, aprovar }
+}
+
+export function useAlvos() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'alvos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/alvos', { params: { query: { igrejaId: igreja.id, limite: 100, ordem: '-dataFim' } as never } }))).dados as Alvo[],
+  })
+}
+
+export function useProgressoAlvos() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'progresso-alvos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/progresso-alvos', { params: { query: { igrejaId: igreja.id } } }))) as unknown as ProgressoAlvo[],
+  })
+}
+
+export function useAlvosMut() {
+  const invalidar = useInvalidar()
+  const criar = useMutation({
+    mutationFn: (corpo: { igrejaId: number; fundoId: number; descricao?: string; valorAlvo: string; dataInicio: string; dataFim: string }) =>
+      dados(api.POST('/v1/tesouraria/alvos', { body: corpo as never, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })),
+    onSuccess: () => invalidar(),
+  })
+  const terminar = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/alvos/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+  return { criar, terminar }
 }

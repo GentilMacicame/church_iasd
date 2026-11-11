@@ -10,6 +10,7 @@ import {
   BookOpen, Building2, CalendarDays, Check, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
   Users, X,
   Calculator, CalendarCheck, ClipboardList, Coins, FileText, KeyRound, Wallet,
+  ArrowRightLeft, BarChart3, FileCheck2, Gavel, Home, Target,
 } from 'lucide-react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -36,6 +37,10 @@ const NAV: GrupoNav[] = [
       { para: '/livro', rotulo: t.livro.titulo, icone: BookOpen, permissao: 'secretaria.movimento_membro.ler', fim: false },
       { para: '/reunioes', rotulo: t.livro.reunioes, icone: Landmark, permissao: 'secretaria.reuniao.ler', fim: false },
       { para: '/conselho', rotulo: 'Conselho da igreja', icone: ShieldCheck, permissao: 'secretaria.oficial.ler', fim: false },
+      { para: '/familias', rotulo: 'Famílias', icone: Home, permissao: 'secretaria.familia.ler', fim: true },
+      { para: '/transferencias', rotulo: 'Transferências', icone: ArrowRightLeft, permissao: 'secretaria.transferencia_membro.ler', fim: true },
+      { para: '/disciplina', rotulo: 'Disciplina', icone: Gavel, permissao: 'secretaria.disciplina.ler', fim: true },
+      { para: '/secretaria/relatorio', rotulo: 'Relatório da secretaria', icone: BarChart3, permissao: 'secretaria.movimento_membro.ler', fim: true },
     ],
   },
   {
@@ -48,6 +53,8 @@ const NAV: GrupoNav[] = [
       { para: '/tesouraria/remessas', rotulo: t.tesouraria.remessas, icone: Landmark, permissao: 'tesouraria.remessa.ler', fim: true },
       { para: '/tesouraria/relatorio-mensal', rotulo: t.tesouraria.relatorioMensal, icone: FileText, permissao: 'tesouraria.transacao.ler', fim: true },
       { para: '/tesouraria/fechos', rotulo: t.tesouraria.fechos, icone: CalendarCheck, permissao: 'tesouraria.fecho_periodo.ler', fim: true },
+      { para: '/tesouraria/orcamento', rotulo: 'Orçamento anual', icone: Target, permissao: 'tesouraria.orcamento.ler', fim: true },
+      { para: '/tesouraria/reconciliacao', rotulo: 'Reconciliação', icone: FileCheck2, permissao: 'tesouraria.extrato_linha.ler', fim: true },
       { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: Wallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
       { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: Coins, permissao: 'tesouraria.fundo.ler', fim: true },
     ],
@@ -186,6 +193,10 @@ function Caminho() {
   if (pathname.startsWith('/conselho')) {
     partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Conselho da igreja' })
   }
+  if (pathname === '/familias') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Famílias' })
+  if (pathname === '/transferencias') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Transferências' })
+  if (pathname === '/disciplina') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Disciplina' })
+  if (pathname === '/secretaria/relatorio') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Relatório da secretaria' })
   if (pathname.startsWith('/tesouraria')) {
     partes.push({ rotulo: t.nav.tesouraria, para: '/tesouraria' })
     if (pathname.startsWith('/tesouraria/movimentos')) partes.push({ rotulo: t.tesouraria.movimentos, para: '/tesouraria/movimentos' })
@@ -199,6 +210,8 @@ function Caminho() {
     if (pathname === '/tesouraria/contas') partes.push({ rotulo: t.tesouraria.contas })
     if (pathname === '/tesouraria/fundos') partes.push({ rotulo: 'Fundos e ofertas' })
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
+    if (pathname === '/tesouraria/orcamento') partes.push({ rotulo: 'Orçamento anual' })
+    if (pathname === '/tesouraria/reconciliacao') partes.push({ rotulo: t.tesouraria.contas, para: '/tesouraria/contas' }, { rotulo: 'Reconciliação' })
   }
   if (pathname === '/igrejas') partes.push({ rotulo: t.nav.administracao }, { rotulo: 'Igrejas' })
   if (pathname.startsWith('/acessos')) {

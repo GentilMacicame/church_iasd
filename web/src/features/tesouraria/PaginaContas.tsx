@@ -5,7 +5,8 @@
  */
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Church, Landmark, Plus, Wallet } from 'lucide-react'
+import { ArrowLeftRight, Church, FileCheck2, Landmark, Plus, Wallet } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, deCentimos, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
+import { DialogoTransferencia } from './DialogoTransferencia'
 import { useContas, useContasMut, useEntidades, useFundos, useSaldosContas, type Conta } from './api'
 
 const TIPOS: Record<string, string> = { CAIXA: 'Caixa (numerário)', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' }
@@ -32,16 +34,19 @@ export default function PaginaContas() {
   const entidades = useEntidades()
   const [params, setParams] = useSearchParams()
   const nova = params.get('nova')
+  const transferir = params.get('transferir')
   const abrir = (tipo: 'igreja' | 'missao' | null) => setParams((p) => { const n = new URLSearchParams(p); if (tipo) n.set('nova', tipo); else n.delete('nova'); return n })
+  const abrirTransferencia = (de: number | null) => setParams((p) => { const n = new URLSearchParams(p); if (de != null) n.set('transferir', String(de)); else n.delete('transferir'); return n })
   const saldoDe = (id: number) => saldos.data?.find((s) => s.id === id)?.saldo
   const daIgreja = (contas.data ?? []).filter((c) => c.entidadeId == null)
   const daMissao = (contas.data ?? []).filter((c) => c.entidadeId != null)
   const totalIgreja = deCentimos(daIgreja.reduce((s, c) => s + centimos(saldoDe(c.id) ?? '0'), 0))
   const nomeEntidade = (id: number) => entidades.data?.find((e) => e.id === id)?.nome ?? 'Missão'
+  const podeTransferir = pode('tesouraria.transacao.criar') && daIgreja.length > 1
 
   const linhas = (l: Conta[], missao: boolean) => (
     <Tabela>
-      <thead><tr><th className="sm:pl-6">Conta</th><th className="hidden sm:table-cell">Tipo</th><th className="num sm:pr-6">{missao ? 'Pago lá pelos membros' : 'Saldo'}</th></tr></thead>
+      <thead><tr><th className="sm:pl-6">Conta</th><th className="hidden sm:table-cell">Tipo</th><th className="num">{missao ? 'Pago lá pelos membros' : 'Saldo'}</th>{!missao && podeTransferir && <th className="sm:pr-6"><span className="sr-only">Acções</span></th>}</tr></thead>
       <tbody>
         {l.map((c) => (
           <tr key={c.id}>
@@ -50,10 +55,17 @@ export default function PaginaContas() {
               <p className="text-xs text-muted-foreground">{[c.banco, c.numero, missao && c.entidadeId ? nomeEntidade(c.entidadeId) : c.titular].filter(Boolean).join(' · ') || '—'}</p>
             </td>
             <td className="hidden text-muted-foreground sm:table-cell">{TIPOS[c.tipo ?? ''] ?? c.tipo}</td>
-            <td className="num font-medium sm:pr-6"><Dinheiro valor={saldoDe(c.id) ?? '0.00'} /></td>
+            <td className={cn('num font-medium', (missao || !podeTransferir) && 'sm:pr-6')}><Dinheiro valor={saldoDe(c.id) ?? '0.00'} /></td>
+            {!missao && podeTransferir && (
+              <td className="w-px whitespace-nowrap text-right sm:pr-6">
+                <Button size="sm" variant="ghost" className="alvo" onClick={() => abrirTransferencia(c.id)} aria-label={`Transferir de ${c.nome}`}>
+                  <ArrowLeftRight className="size-4" /><span className="hidden md:inline">Transferir</span>
+                </Button>
+              </td>
+            )}
           </tr>
         ))}
-        {!missao && l.length > 1 && <tr className="bg-muted/30"><td className="font-semibold sm:pl-6" colSpan={2}>Total da igreja</td><td className="num font-semibold sm:pr-6"><Dinheiro valor={totalIgreja} /></td></tr>}
+        {!missao && l.length > 1 && <tr className="bg-muted/30"><td className="font-semibold sm:pl-6" colSpan={2}>Total da igreja</td><td className={cn('num font-semibold', !podeTransferir && 'sm:pr-6')}><Dinheiro valor={totalIgreja} /></td>{podeTransferir && <td />}</tr>}
       </tbody>
     </Tabela>
   )
@@ -61,7 +73,13 @@ export default function PaginaContas() {
   return (
     <>
       <TituloPagina icone={Wallet} titulo="Contas" descricao="Onde está o dinheiro da igreja, e a conta da Missão para o que os membros pagam directamente lá"
-        accoes={pode('tesouraria.conta_financeira.criar') && <Button className="alvo" onClick={() => abrir('igreja')}><Plus className="size-4" />Nova conta</Button>} />
+        accoes={(
+          <>
+            {pode('tesouraria.extrato_linha.ler') && <Button asChild variant="outline" className="alvo"><Link to="/tesouraria/reconciliacao"><FileCheck2 className="size-4" />Reconciliar extracto</Link></Button>}
+            {podeTransferir && <Button variant="outline" className="alvo" onClick={() => abrirTransferencia(0)}><ArrowLeftRight className="size-4" />Transferir</Button>}
+            {pode('tesouraria.conta_financeira.criar') && <Button className="alvo" onClick={() => abrir('igreja')}><Plus className="size-4" />Nova conta</Button>}
+          </>
+        )} />
       {contas.isPending ? <Barra className="h-64 w-full" />
         : contas.isError ? <EstadoErro erro={contas.error} aoTentar={() => contas.refetch()} />
         : (
@@ -80,6 +98,7 @@ export default function PaginaContas() {
             </Cartao>
           </div>
         )}
+      {transferir != null && <DialogoTransferencia origem={Number(transferir) || undefined} aoFechar={() => abrirTransferencia(null)} />}
       {nova && <DialogoConta missao={nova === 'missao'} aoFechar={() => abrir(null)} />}
     </>
   )

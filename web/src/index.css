@@ -192,6 +192,9 @@
   /* a página inteira (e não só o documento) usa o formato do documento: sem página deitada no fim */
   html:has(.documento-a4), body:has(.documento-a4) { page: documento; }
   body { background: #fff; color: #000; }
+  /* documento num diálogo (ex.: carta de transferência): imprime-se só ele */
+  body:has(.imprimir-so-isto) * { visibility: hidden; }
+  body:has(.imprimir-so-isto) .imprimir-so-isto, body:has(.imprimir-so-isto) .imprimir-so-isto * { visibility: visible; }
 }
 
 /* Telemóvel e ecrãs de toque: alvos de pelo menos 44px (WCAG 2.1, CLAUDE.md). */

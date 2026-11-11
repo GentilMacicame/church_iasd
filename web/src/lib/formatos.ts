@@ -21,6 +21,11 @@ export function dataPorExtenso(iso: string): string {
   return new Intl.DateTimeFormat(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', timeZone: FUSO }).format(paraData(iso))
 }
 
+/** 14 de novembro de 2026 (documentos oficiais: cartas, actas) */
+export function dataCompleta(iso: string): string {
+  return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric', timeZone: FUSO }).format(paraData(iso))
+}
+
 /** Hoje em Maputo, em ISO (2026-11-10). */
 export function hojeIso(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO }).format(new Date())

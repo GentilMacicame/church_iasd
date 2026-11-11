@@ -26,7 +26,7 @@ export const REUNIOES_QUE_VOTAM: Partial<Record<TipoMovimento, TipoReuniao[]>> =
   DESAPARECIDO: ['ASSEMBLEIA_ADMINISTRATIVA'],
 }
 export const ENTRADAS: TipoMovimento[] = ['BAPTISMO', 'PROFISSAO_FE', 'REBAPTISMO']
-export const SAIDAS: TipoMovimento[] = ['FALECIMENTO', 'REMOCAO_PEDIDO', 'DESAPARECIDO']
+export const SAIDAS: TipoMovimento[] = ['FALECIMENTO', 'REMOCAO_PEDIDO', 'REMOCAO_DISCIPLINA', 'DESAPARECIDO']
 export const eEntrada = (t: TipoMovimento) => ['BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE', 'TRANSFERENCIA_ENTRADA'].includes(t)
 
 const chaves = {

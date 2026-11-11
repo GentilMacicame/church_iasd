@@ -17,6 +17,7 @@ import mz.org.iasd.igreja.Rotas;
  * <pre>
  *   GET /v1/secretaria/relatorio-mensal       ?ano=&amp;mes=   secretaria.movimento_membro.ler
  *   GET /v1/secretaria/cartas-pendentes                     secretaria.transferencia_membro.ler
+ *   GET /v1/secretaria/transferencias-resumo                secretaria.transferencia_membro.ler (V27)
  *   GET /v1/secretaria/censuras-activas                     secretaria.disciplina.ler
  *   GET /v1/secretaria/mandatos-a-terminar                  secretaria.oficial.ler
  *   GET /v1/secretaria/menores-pendentes                    secretaria.membro.ler
@@ -33,6 +34,9 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
             "igr_id = ?", "ano DESC, mes DESC").comAnoMes("ano", "mes");
     public static final Relatorio CARTAS_PENDENTES = Relatorio.porIgreja("secretaria.vw_cartas_pendentes",
             "(tme_origem_igr_id = ? OR tme_destino_igr_id = ?)", "tme_carta_emitida_em");
+    /** V27: as transferências com o nome do membro e das duas igrejas (a de destino também as vê). */
+    public static final Relatorio TRANSFERENCIAS_RESUMO = Relatorio.porIgreja("secretaria.vw_transferencias",
+            "(tme_origem_igr_id = ? OR tme_destino_igr_id = ?)", "tme_data_pedido DESC, tme_id DESC");
     public static final Relatorio CENSURAS_ACTIVAS = Relatorio.porIgreja("secretaria.vw_censuras_activas",
             "mem_igr_id = ?", "dsc_data_fim");
     public static final Relatorio MANDATOS_A_TERMINAR = Relatorio.porIgreja("secretaria.vw_mandatos_a_terminar",
@@ -58,6 +62,12 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
     @Path(Rotas.Secretaria.CARTAS_PENDENTES)
     public Response cartasPendentes() throws SQLException {
         return responder(CARTAS_PENDENTES);
+    }
+
+    @GET
+    @Path(Rotas.Secretaria.TRANSFERENCIAS_RESUMO)
+    public Response transferenciasResumo() throws SQLException {
+        return responder(TRANSFERENCIAS_RESUMO);
     }
 
     @GET

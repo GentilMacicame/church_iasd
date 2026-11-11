@@ -105,10 +105,22 @@ src/
 - **Indicação de carregamento**: barra fina no topo enquanto há pedidos; páginas carregam dentro da moldura; botões com
   "A …". **Sessão inactiva**: 5 min sem mexer → aviso com 30 s → logout (actividade partilhada entre separadores).
 
+- **Transferências entre contas** (F-TES-05): na página Contas (caixa → banco, M-Pesa → banco) e "Depositar no banco" nas
+  contagens conferidas (com o n.º do talão; a contagem passa a depositada).
+- **Reconciliação** (F-TES-10): importar o extracto do banco/M-Pesa em CSV (`data;descricao;referencia;valor`) e ligar
+  cada linha ao movimento; sugere o da mesma conta, valor e direcção (até 5 dias).
+- **Orçamento anual** (F-TES-11): previsto por categoria (receitas e despesas), aprovado com o voto da igreja, realizado
+  e % de execução. **Alvos** (F-TES-12) em Fundos e ofertas, com barra de progresso.
+- **Transferências com carta** (P-02): pedido (igreja do sistema, pelo directório, ou de fora), carta votada em 2.ª
+  leitura e impressa com o logotipo, aceitação pela igreja de destino (que vê o nome do membro), recusa, validade de 6 meses.
+- **Disciplina** (P-03): censura de 1 a 12 meses com o voto, aviso ao encarregado nos menores, motivo confidencial.
+- **Famílias** e **consentimentos** (cartão na ficha do membro: o último de cada tipo, histórico guardado; nos menores,
+  dado pelo encarregado). **Relatório da secretaria** (F-SEC-10): movimento do livro mês a mês, membros por estado,
+  pendentes (menores sem encarregado ou consentimento, censuras, transferências), para imprimir.
+
 ## Por fazer (próximas iterações)
 
-- Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).
-- Tesouraria: orçamento anual (F-TES-11), transferências entre contas, depósito da contagem no banco, relatórios
-  mensais em PDF (Fase 4).
+- Secretaria: eleição de oficiais pela comissão de nomeações (P-04).
+- Tesouraria: relatórios mensais em PDF (Fase 4).
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

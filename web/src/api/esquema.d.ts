@@ -2506,6 +2506,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/organizacao/directorio-igrejas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Directorio igrejas
+         * @description Lido da vista organizacao.vw_directorio_igrejas.
+         */
+        get: operations["relVOrganizacaoDirectorioIgrejas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/organizacao/distritos": {
         parameters: {
             query?: never;
@@ -4096,6 +4116,26 @@ export interface paths {
          * @description Cartas de transferência (válidas 6 meses; o membro só sai quando o destino aceita)
          */
         post: operations["criarTransferencia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/transferencias-resumo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Transferencias resumo
+         * @description Lido da vista secretaria.vw_transferencias.
+         */
+        get: operations["relVSecretariaTransferenciasResumo"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -14172,6 +14212,37 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    relVOrganizacaoDirectorioIgrejas: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                /** @description Só as igrejas desta Associação/Missão */
+                entidadeId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarDistrito: {
         parameters: {
             query?: {
@@ -17586,6 +17657,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Transferencia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVSecretariaTransferenciasResumo: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

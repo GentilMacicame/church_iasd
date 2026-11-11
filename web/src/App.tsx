@@ -43,6 +43,12 @@ const PaginaRelatorioMensal = pagina(() => import('@/features/tesouraria/PaginaR
 const PaginaEscalas = pagina(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaNovaEscala = pagina(() => import('@/features/escalas/PaginaNovaEscala'))
 const PaginaEscala = pagina(() => import('@/features/escalas/PaginaEscala'))
+const PaginaReconciliacao = pagina(() => import('@/features/tesouraria/PaginaReconciliacao'))
+const PaginaOrcamento = pagina(() => import('@/features/tesouraria/PaginaOrcamento'))
+const PaginaTransferencias = pagina(() => import('@/features/secretaria/PaginaTransferencias'))
+const PaginaDisciplina = pagina(() => import('@/features/secretaria/PaginaDisciplina'))
+const PaginaFamilias = pagina(() => import('@/features/secretaria/PaginaFamilias'))
+const PaginaRelatorioSecretaria = pagina(() => import('@/features/secretaria/PaginaRelatorioSecretaria'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +118,10 @@ export default function App() {
                   <Route path="reunioes/:id" element={<Exige permissao="secretaria.reuniao.ler"><PaginaReuniao /></Exige>} />
                   <Route path="reunioes/:id/acta" element={<Exige permissao="secretaria.reuniao.ler"><PaginaActa /></Exige>} />
                   <Route path="conselho" element={<Exige permissao="secretaria.oficial.ler"><PaginaConselho /></Exige>} />
+                  <Route path="familias" element={<Exige permissao="secretaria.familia.ler"><PaginaFamilias /></Exige>} />
+                  <Route path="transferencias" element={<Exige permissao="secretaria.transferencia_membro.ler"><PaginaTransferencias /></Exige>} />
+                  <Route path="disciplina" element={<Exige permissao="secretaria.disciplina.ler"><PaginaDisciplina /></Exige>} />
+                  <Route path="secretaria/relatorio" element={<Exige permissao="secretaria.movimento_membro.ler"><PaginaRelatorioSecretaria /></Exige>} />
                   <Route path="tesouraria" element={<Exige permissao="tesouraria.conta_financeira.ler"><PaginaTesouraria /></Exige>} />
                   <Route path="tesouraria/movimentos" element={<Exige permissao="tesouraria.transacao.ler"><PaginaMovimentosTes /></Exige>} />
                   <Route path="tesouraria/movimentos/:id" element={<Exige permissao="tesouraria.transacao.ler"><PaginaMovimentoTes /></Exige>} />
@@ -123,6 +133,8 @@ export default function App() {
                   <Route path="tesouraria/fechos" element={<Exige permissao="tesouraria.fecho_periodo.ler"><PaginaFechos /></Exige>} />
                   <Route path="tesouraria/contas" element={<Exige permissao="tesouraria.conta_financeira.ler"><PaginaContas /></Exige>} />
                   <Route path="tesouraria/fundos" element={<Exige permissao="tesouraria.fundo.ler"><PaginaFundos /></Exige>} />
+                  <Route path="tesouraria/orcamento" element={<Exige permissao="tesouraria.orcamento.ler"><PaginaOrcamento /></Exige>} />
+                  <Route path="tesouraria/reconciliacao" element={<Exige permissao="tesouraria.extrato_linha.ler"><PaginaReconciliacao /></Exige>} />
                   <Route path="tesouraria/relatorio-mensal" element={<Exige permissao="tesouraria.transacao.ler"><PaginaRelatorioMensal /></Exige>} />
                   <Route path="igrejas" element={<Exige permissao="organizacao.igreja.criar"><PaginaIgrejas /></Exige>} />
                   <Route path="acessos" element={<Exige permissao="nucleo.usuario.ler"><PaginaAcessos /></Exige>} />

@@ -1,0 +1,71 @@
+ set_config 
+------------
+ 980
+(1 row)
+
+1. o administrador da igreja 1 vê a igreja 2 no directório (nome e Associação)
+       nome       |       entidade        
+------------------+-----------------------
+ Igreja da Matola | Associação de exemplo
+(1 row)
+
+   mas não vê os dados da igreja 2 (0 linhas na tabela)
+ igreja_2_na_tabela 
+--------------------
+                  0
+(1 row)
+
+ membros_da_igreja_2 
+---------------------
+                   0
+(1 row)
+
+2. sem sessão: o directório não mostra nada
+ set_config 
+------------
+ 
+(1 row)
+
+ sem_sessao 
+------------
+          0
+(1 row)
+
+3. transferência pedida da igreja 1 para a igreja 2: o secretário da igreja 2 vê quem vai receber
+ set_config 
+------------
+ 13001
+(1 row)
+
+ ve_o_nome |             origem              |     destino      | tme_estado 
+-----------+---------------------------------+------------------+------------
+ t         | Igreja Adventista do Sétimo Dia | Igreja da Matola | PEDIDA
+(1 row)
+
+   mas o membro continua invisível na tabela (é da igreja 1)
+ membro_na_tabela 
+------------------
+                0
+(1 row)
+
+4. um utilizador sem perfil nas duas igrejas não vê a transferência (mas vê o directório)
+ sem_sessao_para_criar 
+-----------------------
+ 
+(1 row)
+
+ set_config 
+------------
+ 13002
+(1 row)
+
+ transferencias_vistas 
+-----------------------
+                     0
+(1 row)
+
+ ve_o_directorio 
+-----------------
+ t
+(1 row)
+

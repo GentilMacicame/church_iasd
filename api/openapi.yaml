@@ -6315,6 +6315,55 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/directorio-igrejas:
+    get:
+      summary: 'Relatório: Directorio igrejas'
+      tags:
+      - Organização
+      x-permissao: qualquer utilizador com sessão
+      operationId: relVOrganizacaoDirectorioIgrejas
+      description: Lido da vista organizacao.vw_directorio_igrejas.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
+        description: Só as igrejas desta Associação/Missão
+      x-vista: organizacao.vw_directorio_igrejas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/organizacao/distritos:
     get:
       summary: 'Distritos: listar'
@@ -10444,6 +10493,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Transferencia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/transferencias-resumo:
+    get:
+      summary: 'Relatório: Transferencias resumo'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.transferencia_membro.ler
+      operationId: relVSecretariaTransferenciasResumo
+      description: Lido da vista secretaria.vw_transferencias.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: secretaria.vw_transferencias
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':

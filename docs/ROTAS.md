@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 444 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 446 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -202,6 +202,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/organizacao/departamentos/{id}` | DepartamentosController · alterar | `organizacao.departamento.alterar` |
 | POST | `/v1/organizacao/departamentos/{id}/reactivar` | DepartamentosController · reactivar | `organizacao.departamento.terminar` |
 | POST | `/v1/organizacao/departamentos/{id}/terminar` | DepartamentosController · terminar | `organizacao.departamento.terminar` |
+| GET | `/v1/organizacao/directorio-igrejas` | RelatoriosOrganizacaoController · directorioIgrejas | `qualquer utilizador com sessão` |
 | GET | `/v1/organizacao/distritos` | DistritosController · listar | — |
 | POST | `/v1/organizacao/distritos` | DistritosController · criar | `organizacao.distrito.criar` |
 | GET | `/v1/organizacao/distritos-administrativos` | DistritosAdministrativosController · listar | — |
@@ -317,6 +318,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/secretaria/reunioes/{id}/votos` | ReunioesController · criarVoto | `secretaria.voto.criar` |
 | GET | `/v1/secretaria/transferencias` | TransferenciasController · listar | `secretaria.transferencia_membro.ler` |
 | POST | `/v1/secretaria/transferencias` | TransferenciasController · criar | `secretaria.transferencia_membro.criar` |
+| GET | `/v1/secretaria/transferencias-resumo` | RelatoriosSecretariaController · transferenciasResumo | `secretaria.transferencia_membro.ler` |
 | GET | `/v1/secretaria/transferencias/{id}` | TransferenciasController · obter | `secretaria.transferencia_membro.ler` |
 | PATCH | `/v1/secretaria/transferencias/{id}` | TransferenciasController · alterar | `secretaria.transferencia_membro.alterar` |
 | POST | `/v1/secretaria/transferencias/{id}/concluir` | TransferenciasController · concluir | `secretaria.transferencia_membro.aceitar` |

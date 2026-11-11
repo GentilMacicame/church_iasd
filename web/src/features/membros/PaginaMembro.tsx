@@ -21,6 +21,7 @@ import { data, idade } from '@/lib/formatos'
 import { PilulasMembro } from './PaginaMembros'
 import { DialogoBaptismo, DialogoContacto } from './Dialogos'
 import { CartaoLivro } from '@/features/livro/MovimentosMembro'
+import { CartaoConsentimentos } from '@/features/secretaria/Consentimentos'
 import { useBaptismos, useContactos, useMembro, useTerminarMembro, useValidarMembro, type Membro } from './api'
 
 const ICONE_CONTACTO = { TELEFONE: Phone, WHATSAPP: MessageCircle, EMAIL: Mail, OUTRO: Phone } as const
@@ -254,6 +255,7 @@ export default function PaginaMembro() {
           <CartaoLivro m={m} />
           <Contactos m={m} />
           <Baptismos m={m} />
+          <CartaoConsentimentos m={m} />
         </div>
       </div>
     </>

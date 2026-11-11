@@ -12,10 +12,10 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V26 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (318 caminhos, 444 operações) |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V27 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (320 caminhos, 446 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
-| Frontend (React) | **Iteração 1 feita** em `web/`: Design System, entrar, Início, Membros (lista, ficha, registo). Ver `web/README.md` |
+| Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, conselho, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
 Especificação completa: `docs/especificacao.md` (Markdown, gerado do Word em
 `docs/Especificacao_Sistema_Igreja_v1.1.docx`). Funcionalidades têm IDs `F-SEC-05`, processos
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V26 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V27 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–12 (tem de dar 13× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–13 (tem de dar 14× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V27__...sql`, `V28__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V28__...sql`, `V29__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -257,6 +257,9 @@ Nunca devolver stack traces nem SQL ao cliente.
   Cada igreja tem as suas ofertas/projectos (`fun_igr_id`, 100% da igreja, só nos movimentos e despesas dela).
   "Outras despesas" (D9) exige `des_outra_categoria`. A contagem do numerário separa dízimos, ofertas, Escola Sabatina
   e outras (soma = total) e a conferência compara cada parte com o lançado.
+- Transferências (V27): o directório de igrejas (`vw_directorio_igrejas`, só nome e localização) serve para escolher o
+  destino; a igreja de destino vê a transferência com o nome do membro em `vw_transferencias` (`/v1/secretaria/transferencias-resumo`),
+  embora a RLS lhe esconda a ficha do membro até à conclusão.
 - ES: três ofertas separadas (missões, 13.º sábado, despesas); relatório fechado só reabre com permissão.
 
 ## Testes e definição de pronto
@@ -265,7 +268,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 13× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 14× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

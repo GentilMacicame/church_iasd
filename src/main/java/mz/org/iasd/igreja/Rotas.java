@@ -133,6 +133,10 @@ public final class Rotas {
         /** ProvinciasController · rotas-padrão (V26) */
         public static final String PROVINCIAS = "/v1/organizacao/provincias";
 
+        /** RelatoriosOrganizacaoController · GET /v1/organizacao/directorio-igrejas (V27) */
+        public static final String RELATORIOS = "/v1/organizacao";
+        public static final String DIRECTORIO_IGREJAS = "directorio-igrejas";
+
         /** DistritosAdministrativosController · rotas-padrão (V26) */
         public static final String DISTRITOS_ADMINISTRATIVOS = "/v1/organizacao/distritos-administrativos";
 
@@ -193,6 +197,7 @@ public final class Rotas {
 
         /** GET /v1/secretaria/cartas-pendentes  (RelatoriosSecretariaController.cartasPendentes) */
         public static final String CARTAS_PENDENTES = "cartas-pendentes";
+        public static final String TRANSFERENCIAS_RESUMO = "transferencias-resumo";
 
         /** GET /v1/secretaria/censuras-activas  (RelatoriosSecretariaController.censurasActivas) */
         public static final String CENSURAS_ACTIVAS = "censuras-activas";

@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calculator, CircleCheck, HandCoins, Plus, Scale } from 'lucide-react'
+import { Calculator, CircleCheck, HandCoins, Landmark, Plus, Scale } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,7 @@ import { t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { DialogoTransferencia } from './DialogoTransferencia'
 import { PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, type Conferencia } from './api'
 
 const ESTADO = {
@@ -98,6 +99,9 @@ export default function PaginaContagens() {
 function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string }) {
   const { pode } = useSessao()
   const { mudarEstado } = useContagensMut()
+  const contagens = useContagens()
+  const [depositar, setDepositar] = useState(false)
+  const caixaId = contagens.data?.find((x) => x.id === c.id)?.contaId
   const contado = centimos(c.totalContado), lancado = centimos(c.totalLancado), falta = contado - lancado
   const pct = contado ? Math.min(100, Math.round((lancado / contado) * 100)) : 0
   const aberta = c.estado === 'ABERTA'
@@ -182,6 +186,13 @@ function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string 
           </div>
         </footer>
       )}
+      {c.estado === 'CONFERIDA' && pode('tesouraria.transacao.criar') && (
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
+          <p className="text-xs text-muted-foreground">Conferida. Quando levar o numerário ao banco, registe aqui o depósito com o n.º do talão.</p>
+          <Button size="sm" className="alvo" onClick={() => setDepositar(true)}><Landmark className="size-4" />Depositar no banco</Button>
+        </footer>
+      )}
+      {depositar && <DialogoTransferencia origem={caixaId} valor={c.totalContado} contagem={{ id: c.id, data: c.data, ocasiao: c.ocasiao }} aoFechar={() => setDepositar(false)} />}
     </section>
   )
 }

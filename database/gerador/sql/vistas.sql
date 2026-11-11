@@ -481,3 +481,36 @@ WHERE d.eds_end_date IS NULL AND p.epl_end_date IS NULL
                                                WHERE m2.mem_id = (SELECT nucleo.fn_membro_sessao()))))
 GROUP BY p.epl_id, p.epl_igr_id, p.epl_titulo, p.epl_publicada, d.eds_id, d.eds_data, d.eds_evento,
          d.eds_grupo_coral, dep.dep_nome, d.eds_observacoes;
+
+-- V27: directório público de igrejas (NÃO security_invoker de propósito: só nome, tipo, Associação e localização)
+CREATE VIEW organizacao.vw_directorio_igrejas AS
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_tipo AS tipo, i.igr_ent_id, e.ent_nome AS entidade,
+       p.prv_nome AS provincia, d.dad_nome AS distrito, i.igr_localidade AS localidade
+FROM organizacao.igreja i
+JOIN organizacao.entidade e ON e.ent_id = i.igr_ent_id
+LEFT JOIN organizacao.provincia p ON p.prv_id = i.igr_prv_id
+LEFT JOIN organizacao.distrito_administrativo d ON d.dad_id = i.igr_dad_id
+WHERE i.igr_end_date IS NULL AND nucleo.fn_usuario_sessao() IS NOT NULL;
+COMMENT ON VIEW organizacao.vw_directorio_igrejas IS 'Directório público de igrejas (nome, tipo, Associação, localização) para escolher o destino de uma transferência (V27)';
+GRANT SELECT ON organizacao.vw_directorio_igrejas TO app_igreja;
+
+-- Transferências vistas pelas duas igrejas (P-02): a igreja de destino tem de saber QUEM vai receber, mas a RLS
+-- não lhe mostra o membro (ainda é da igreja de origem). Esta vista (também com os direitos do dono) mostra o nome
+-- do membro e das duas igrejas, só nas transferências de uma igreja em que o utilizador pode ler transferências.
+CREATE VIEW secretaria.vw_transferencias AS
+SELECT t.tme_id, t.tme_mem_id, m.mem_nome || ' ' || m.mem_apelido AS membro,
+       t.tme_origem_igr_id, io.igr_nome AS origem,
+       t.tme_destino_igr_id, COALESCE(id.igr_nome, t.tme_destino_externo) AS destino, t.tme_destino_externo,
+       t.tme_data_pedido, t.tme_origem_vot_id, t.tme_carta_emitida_em,
+       (t.tme_carta_emitida_em + INTERVAL '6 months')::date AS valida_ate,
+       COALESCE((t.tme_carta_emitida_em + INTERVAL '6 months')::date < CURRENT_DATE, FALSE) AS expirada,
+       t.tme_destino_vot_id, t.tme_aceite_em, t.tme_observacoes, t.tme_estado
+FROM secretaria.transferencia_membro t
+JOIN secretaria.membro m       ON m.mem_id = t.tme_mem_id
+JOIN organizacao.igreja io     ON io.igr_id = t.tme_origem_igr_id
+LEFT JOIN organizacao.igreja id ON id.igr_id = t.tme_destino_igr_id
+WHERE t.tme_end_date IS NULL
+  AND (t.tme_origem_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.transferencia_membro.ler'))::INT[])
+       OR t.tme_destino_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.transferencia_membro.ler'))::INT[]));
+COMMENT ON VIEW secretaria.vw_transferencias IS 'Transferências de membros com o nome do membro e das duas igrejas, para a origem e o destino (V27)';
+GRANT SELECT ON secretaria.vw_transferencias TO app_igreja;

@@ -48,6 +48,7 @@ import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
 import mz.org.iasd.igreja.repositories.eu.EuRepository;
 import mz.org.iasd.igreja.controllers.tesouraria.RelatoriosTesourariaController;
 import mz.org.iasd.igreja.controllers.secretaria.RelatoriosSecretariaController;
+import mz.org.iasd.igreja.controllers.organizacao.RelatoriosOrganizacaoController;
 import mz.org.iasd.igreja.services.tesouraria.DocumentosService;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
 import mz.org.iasd.igreja.infraestrutura.ficheiros.ArmazemFicheiros;
@@ -888,6 +889,41 @@ class BaseDadosTest {
         SQLException fechada = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
                 c -> TabelaRepository.criar(c, ponto, Json.createObjectBuilder().add("reuniaoId", reuId).add("assunto", "Tarde").build())));
         assertEquals(422, TradutorErrosSql.traduzir(fechada).estadoHttp());
+    }
+
+    /**
+     * V27 (P-02): a igreja de destino vê a transferência com o nome do membro (que a RLS ainda lhe esconde na tabela);
+     * quem não lê transferências não a vê; o directório de igrejas mostra todas as igrejas a quem tem sessão.
+     */
+    @Test
+    void transferenciaVistaPelasDuasIgrejasEDirectorio() throws Exception {
+        int secBairro = criarUsuarioComDono("secretario.bairro.v27@teste.mz", null, "SECRETARIO");
+        int membro;
+        try (Connection dono = ligarComoDono(); Statement st = dono.createStatement()) {
+            st.execute("UPDATE nucleo.usuario_igreja SET uig_igr_id = " + igrejaBairro + " WHERE uig_usu_id = " + secBairro);
+            membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_estado) VALUES ("
+                    + igrejaCentral + ", 'Rosa', 'Mudanca', 'ACTIVO') RETURNING mem_id");
+            inserir(dono, "INSERT INTO secretaria.transferencia_membro (tme_mem_id, tme_origem_igr_id, tme_destino_igr_id, tme_data_pedido) "
+                    + "VALUES (" + membro + ", " + igrejaCentral + ", " + igrejaBairro + ", DATE '2026-11-01') RETURNING tme_id");
+        }
+        // o secretário da igreja de destino vê quem vai receber...
+        JsonArray destino = ExecutorTransaccao.executar(api, secBairro, c -> RelatoriosSecretariaController.TRANSFERENCIAS_RESUMO.consultar(c,
+                Map.of("igrejaId", String.valueOf(igrejaBairro))));
+        assertTrue(destino.stream().map(JsonValue::asJsonObject).anyMatch(o -> o.getInt("membroId") == membro
+                && "Rosa Mudanca".equals(o.getString("membro")) && "Igreja Central".equals(o.getString("origem"))), destino.toString());
+        // ...mas a ficha do membro continua invisível (404)
+        ApiException naoVe = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, secBairro,
+                c -> TabelaRepository.alterar(c, Catalogo.de(Membro.class), membro, Json.createObjectBuilder().add("nome", "X").build())));
+        assertEquals(404, naoVe.estadoHttp());
+        // o tesoureiro da igreja de origem não lê transferências: não vê nada
+        JsonArray tes = ExecutorTransaccao.executar(api, tesoureiro, c -> RelatoriosSecretariaController.TRANSFERENCIAS_RESUMO.consultar(c,
+                Map.of("igrejaId", String.valueOf(igrejaCentral))));
+        assertEquals(0, tes.size());
+        // directório: com sessão vê também as igrejas de outra Missão; sem utilizador, nada
+        JsonArray dir = ExecutorTransaccao.executar(api, tesoureiro, c -> RelatoriosOrganizacaoController.DIRECTORIO_IGREJAS.consultar(c, Map.of()));
+        assertTrue(dir.stream().map(JsonValue::asJsonObject).anyMatch(o -> o.getInt("id") == igrejaOutraAssociacao), dir.toString());
+        JsonArray anonimo = ExecutorTransaccao.executar(api, null, c -> RelatoriosOrganizacaoController.DIRECTORIO_IGREJAS.consultar(c, Map.of()));
+        assertEquals(0, anonimo.size());
     }
 
     /** P-06: comprovativo com ficheiro (talão / print M-Pesa) junto ao movimento; quem vê o ficheiro decide-o a RLS. */

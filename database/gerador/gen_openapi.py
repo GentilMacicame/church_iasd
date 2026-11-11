@@ -274,12 +274,15 @@ ANO = [{'name': 'ano', 'in': 'query', 'schema': {'type': 'integer'}}, {'name': '
 TRI = [{'name': 'trimestreId', 'in': 'query', 'schema': {'type': 'integer'}}]
 for p_, v_, perm in [('relatorio-mensal', 'secretaria.vw_relatorio_mensal_membros', 'secretaria.movimento_membro.ler'),
                      ('cartas-pendentes', 'secretaria.vw_cartas_pendentes', 'secretaria.transferencia_membro.ler'),
+                     ('transferencias-resumo', 'secretaria.vw_transferencias', 'secretaria.transferencia_membro.ler'),
                      ('censuras-activas', 'secretaria.vw_censuras_activas', 'secretaria.disciplina.ler'),
                      ('mandatos-a-terminar', 'secretaria.vw_mandatos_a_terminar', 'secretaria.oficial.ler'),
                      ('menores-pendentes', 'secretaria.vw_menores_pendentes', 'secretaria.membro.ler'),
                      ('familias-resumo', 'secretaria.vw_familia_resumo', 'secretaria.familia.ler'),
                      ('conselho', 'secretaria.vw_conselho', 'secretaria.oficial.ler')]:
     rel(f'/v1/secretaria/{p_}', v_, SEC, perm, ANO if p_ == 'relatorio-mensal' else ())
+rel('/v1/organizacao/directorio-igrejas', 'organizacao.vw_directorio_igrejas', TITULO['organizacao'], 'qualquer utilizador com sessão',
+    [{'name': 'entidadeId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas desta Associação/Missão'}])
 for p_, v_ in [('classificacao', 'vw_classificacao'), ('painel', 'vw_painel'), ('evolucao', 'vw_evolucao_sabado'),
                ('relatorios-em-falta', 'vw_relatorios_em_falta'), ('conferencia-ofertas', 'vw_conferencia_ofertas'),
                ('relatorio-associacao', 'vw_relatorio_associacao')]:
