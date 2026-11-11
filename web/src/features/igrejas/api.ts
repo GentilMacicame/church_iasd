@@ -125,3 +125,33 @@ export function useIgrejasMut() {
   })
   return { registar, administrador }
 }
+
+export const TIPO_ENTIDADE: Record<string, string> = {
+  CONFERENCIA_GERAL: 'Conferência Geral', DIVISAO: 'Divisão', UNIAO: 'União', ASSOCIACAO: 'Associação', MISSAO: 'Missão', CAMPO: 'Campo',
+}
+
+/** Associações/Missões (com os fundos-padrão, se pedido) e distritos pastorais. */
+export function useOrganizacaoMut() {
+  const qc = useQueryClient()
+  const depois = () => { qc.invalidateQueries({ queryKey: k }); qc.invalidateQueries({ queryKey: ['tesouraria'] }); qc.invalidateQueries({ queryKey: ['organizacao'] }) }
+  const entidade = useMutation({
+    mutationFn: async (v: { tipo: string; nome: string; sigla: string; paiId?: number; fundos?: { percentagemOfertaCombinada: string } }) => {
+      const e = (await dados(api.POST('/v1/organizacao/entidades', { body: { tipo: v.tipo, nome: v.nome, sigla: v.sigla || undefined, paiEntidadeId: v.paiId } as never }))) as Entidade
+      let erroFundos: unknown = null
+      if (v.fundos) {
+        try {
+          // os códigos dos fundos são únicos em toda a plataforma: os da segunda Associação levam a sigla
+          await dados(api.POST('/v1/organizacao/entidades/{id}/fundos-padrao', { params: { path: { id: e.id } },
+            body: { percentagemOfertaCombinada: v.fundos.percentagemOfertaCombinada, sufixo: (v.sigla || `E${e.id}`).slice(0, 10) } as never }))
+        } catch (err) { erroFundos = err }
+      }
+      return { entidade: e, erroFundos }
+    },
+    onSuccess: depois,
+  })
+  const distrito = useMutation({
+    mutationFn: (v: { entidadeId: number; nome: string }) => dados(api.POST('/v1/organizacao/distritos', { body: { entidadeId: v.entidadeId, nome: v.nome } as never })) as Promise<Distrito>,
+    onSuccess: depois,
+  })
+  return { entidade, distrito }
+}

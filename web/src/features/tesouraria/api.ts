@@ -67,13 +67,29 @@ export function useContasIgreja() {
   })
 }
 
-/** Os fundos gerais (da Missão) e os desta igreja (as suas ofertas e projectos); os de outras igrejas não. */
+/** A Associação/Missão da igreja escolhida (muda raramente: fica em memória). */
+export function useEntidadeDaIgreja() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: ['organizacao', 'igreja-entidade', igreja.id],
+    queryFn: async () => ((await dados(api.GET('/v1/organizacao/igrejas/{id}', { params: { path: { id: igreja.id } } }))) as { entidadeId?: number }).entidadeId ?? null,
+    staleTime: 30 * 60_000,
+  })
+}
+
+/**
+ * Os fundos que esta igreja usa: os da sua Associação/Missão, os gerais sem destino (orçamento local, ES despesas)
+ * e as ofertas e projectos próprios dela. Os de outras Associações e de outras igrejas não aparecem.
+ */
 export function useFundos() {
   const igreja = useIgreja()
+  const entidade = useEntidadeDaIgreja()
+  const ent = entidade.data
   return useQuery({
     queryKey: ['tesouraria', 'fundos', igreja.id],
     queryFn: async () => (await dados(api.GET('/v1/tesouraria/fundos', { params: { query: { limite: 200 } } }))).dados as Fundo[],
-    select: (l: Fundo[]) => l.filter((f) => f.igrejaId == null || f.igrejaId === igreja.id),
+    select: (l: Fundo[]) => l.filter((f) => f.igrejaId === igreja.id
+      || (f.igrejaId == null && (!f.destinoEntidadeId || ent == null || f.destinoEntidadeId === ent))),
     staleTime: 10 * 60_000,
   })
 }

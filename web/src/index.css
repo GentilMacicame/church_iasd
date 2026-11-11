@@ -198,3 +198,9 @@
 @media (pointer: coarse), (max-width: 640px) {
   .alvo { min-height: 44px; }
 }
+
+/* barra de carregamento no topo (components/layout/Carregamento) */
+@keyframes carregar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}

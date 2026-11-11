@@ -4,7 +4,7 @@
  * Computador: a barra lateral encolhe para só ícones (fica guardado). Telemóvel: gaveta com fundo escurecido.
  * O menu só mostra módulos que existem e que o utilizador pode abrir.
  */
-import { useEffect, useState, type ComponentType } from 'react'
+import { Suspense, useEffect, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BookOpen, Building2, CalendarDays, Check, Landmark, ListOrdered, PiggyBank, ChevronRight, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon,
@@ -21,6 +21,8 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { useTema } from '@/lib/tema'
 import { cn } from '@/lib/utils'
 import { Marca } from './Marca'
+import { BarraCarregamento, CarregandoPagina } from './Carregamento'
+import { Inactividade } from './Inactividade'
 
 interface ItemNav { para: string; rotulo: string; icone: ComponentType<{ className?: string }>; permissao?: string; fim?: boolean }
 interface GrupoNav { rotulo?: string; itens: ItemNav[] }
@@ -309,8 +311,11 @@ export function Shell() {
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:p-0">
-          <Outlet />
+          {/* a página nova carrega aqui dentro; o menu e o topo ficam */}
+          <Suspense fallback={<CarregandoPagina />}><Outlet /></Suspense>
         </main>
+        <BarraCarregamento />
+        <Inactividade />
       </div>
     </div>
   )

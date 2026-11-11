@@ -99,6 +99,12 @@ src/
   igreja-mãe) com o seu administrador (perfil ADMIN; código por SMS para definir a senha), ver quem administra cada
   uma e abri-la. As páginas exigem a mesma permissão que o menu ("Sem acesso a esta página").
 
+- **Associações/Missões e distritos pastorais** (separadores em Igrejas): registar e listar; a Associação pode ser
+  criada já com os fundos (dízimo, ofertas, Escola Sabatina, parte da Missão na oferta combinada). Cada igreja só vê os
+  fundos da sua Associação. Listas longas com pesquisa (`CampoEscolha`: sem acentos, teclado).
+- **Indicação de carregamento**: barra fina no topo enquanto há pedidos; páginas carregam dentro da moldura; botões com
+  "A …". **Sessão inactiva**: 5 min sem mexer → aviso com 30 s → logout (actividade partilhada entre separadores).
+
 ## Por fazer (próximas iterações)
 
 - Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).
