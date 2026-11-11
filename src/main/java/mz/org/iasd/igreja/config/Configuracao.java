@@ -104,6 +104,16 @@ public class Configuracao {
     @ConfigProperty(name = "pedido.max.kb", defaultValue = "2048")
     int pedidoMaxKb;
 
+    /** Pasta onde se guardam os comprovativos carregados (FICHEIROS_PASTA). Sem ela, carregar ficheiros dá 503. */
+    @Inject
+    @ConfigProperty(name = "ficheiros.pasta")
+    java.util.Optional<String> ficheirosPasta;
+
+    /** Tamanho máximo de um comprovativo (KB). */
+    @Inject
+    @ConfigProperty(name = "ficheiros.max.kb", defaultValue = "5120")
+    int ficheirosMaxKb;
+
     /** Força a verificação (e a falha) no arranque, não no primeiro pedido. */
     void arrancar(@Observes Startup arranque) {
         LOG.info(() -> "Ambiente: " + (desenvolvimento() ? "desenvolvimento (perfil dev)" : "produção"));
@@ -201,5 +211,13 @@ public class Configuracao {
 
     public long pedidoMaxBytes() {
         return pedidoMaxKb * 1024L;
+    }
+
+    public java.util.Optional<java.nio.file.Path> ficheirosPasta() {
+        return ficheirosPasta.filter(x -> !x.isBlank()).map(java.nio.file.Path::of);
+    }
+
+    public long ficheirosMaxBytes() {
+        return ficheirosMaxKb * 1024L;
     }
 }

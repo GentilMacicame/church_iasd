@@ -41,6 +41,7 @@ com os segredos de desenvolvimento, com `MENSAGENS_MODO=consola` ou com `COOKIE_
 | `LOG_FORMATO` | recomendado | `JSON` (uma linha por mensagem, para o agregador de logs) |
 | `MENSAGENS_MODO` | sim, para SMS | `http` com o fornecedor; `desligado` = lembretes e códigos ficam por enviar |
 | `SMS_URL`, `SMS_TOKEN`, `SMS_REMETENTE` | com `http` | fornecedor de SMS (a API recusa arrancar com `http` sem URL e token) |
+| `FICHEIROS_PASTA` | sim, para comprovativos | pasta onde a API guarda as fotografias/PDF dos comprovativos (utilizador da API com escrita; incluir no backup). Sem ela, carregar dá 503 |
 
 Trocar `JWT_SEGREDO` termina todas as sessões (os utilizadores entram de novo).
 

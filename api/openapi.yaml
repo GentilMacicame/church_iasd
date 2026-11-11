@@ -12358,6 +12358,72 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/documentos/carregar:
+    post:
+      summary: Carregar o ficheiro de um comprovativo (fotografia do talão, print M-Pesa, PDF) e criar o documento
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.documento.criar
+      operationId: carregarDocumento
+      description: O tipo é verificado pelos primeiros bytes (JPG, PNG, WebP ou PDF), até ficheiros.max.kb (5 MB). Indicar transacaoId ou despesaId
+        (só um). A base de dados decide se o utilizador pode juntar documentos a esse registo.
+      parameters:
+      - name: transacaoId
+        in: query
+        schema:
+          type: integer
+      - name: despesaId
+        in: query
+        schema:
+          type: integer
+      - name: tipo
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumTipoDocumento'
+      - name: nome
+        in: query
+        schema:
+          type: string
+          maxLength: 255
+        description: Nome original do ficheiro
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/documentos/{id}:
     get:
       summary: 'Documentos: ler um'
@@ -12408,6 +12474,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Documento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/documentos/{id}/ficheiro:
+    get:
+      summary: O ficheiro do comprovativo
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.documento.ler
+      operationId: ficheiroDocumento
+      description: 404 se o documento não for visível ou não tiver ficheiro guardado pela API.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: O ficheiro
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':

@@ -17,7 +17,8 @@ import mz.org.iasd.igreja.config.Configuracao;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 
 /**
- * Tamanho máximo do corpo de cada pedido ({@code pedido.max.kb}, 2 MB por defeito): acima disso, 413.
+ * Tamanho máximo do corpo de cada pedido ({@code pedido.max.kb}, 2 MB por defeito; comprovativos: {@code ficheiros.max.kb},
+ * 5 MB): acima disso, 413.
  * Verifica o Content-Length e conta também os bytes lidos (pedidos sem Content-Length).
  */
 @Provider
@@ -31,13 +32,19 @@ public class LimiteCorpo implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext pedido) {
-        long maximo = configuracao.pedidoMaxBytes();
+        long maximo = carregamento(pedido.getMethod(), pedido.getUriInfo().getPath())
+                ? configuracao.ficheirosMaxBytes() : configuracao.pedidoMaxBytes();
         if (pedido.getLength() > maximo) {
             throw demasiadoGrande();
         }
         if (pedido.hasEntity()) {
             pedido.setEntityStream(new Contado(pedido.getEntityStream(), maximo));
         }
+    }
+
+    /** O carregamento de comprovativos (fotografias, PDF) tem o seu próprio máximo ({@code ficheiros.max.kb}). */
+    static boolean carregamento(String metodo, String caminho) {
+        return "POST".equals(metodo) && caminho != null && caminho.replaceAll("/+$", "").endsWith("/tesouraria/documentos/carregar");
     }
 
     static ApiException demasiadoGrande() {

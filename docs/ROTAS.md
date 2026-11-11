@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 430 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 432 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -371,8 +371,10 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/despesas/{id}/terminar` | DespesasController · terminar | `tesouraria.despesa.terminar` |
 | GET | `/v1/tesouraria/documentos` | DocumentosController · listar | `tesouraria.documento.ler` |
 | POST | `/v1/tesouraria/documentos` | DocumentosController · criar | `tesouraria.documento.criar` |
+| POST | `/v1/tesouraria/documentos/carregar` | DocumentosController · carregar | `tesouraria.documento.criar` |
 | GET | `/v1/tesouraria/documentos/{id}` | DocumentosController · obter | `tesouraria.documento.ler` |
 | PATCH | `/v1/tesouraria/documentos/{id}` | DocumentosController · alterar | `tesouraria.documento.alterar` |
+| GET | `/v1/tesouraria/documentos/{id}/ficheiro` | DocumentosController · ficheiro | `tesouraria.documento.ler` |
 | POST | `/v1/tesouraria/documentos/{id}/reactivar` | DocumentosController · reactivar | `tesouraria.documento.terminar` |
 | POST | `/v1/tesouraria/documentos/{id}/terminar` | DocumentosController · terminar | `tesouraria.documento.terminar` |
 | GET | `/v1/tesouraria/execucao-orcamento` | RelatoriosTesourariaController · execucaoOrcamento | `tesouraria.orcamento.ler` |

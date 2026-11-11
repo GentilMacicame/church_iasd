@@ -13,7 +13,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 | Parte | Estado |
 | --- | --- |
 | Base de dados (PostgreSQL 16) | **Concluída e testada.** 63 tabelas, 6 schemas, migrações V1–V22 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (308 caminhos, 430 operações) |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (310 caminhos, 432 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Por fazer: M-Pesa e PDF (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | **Iteração 1 feita** em `web/`: Design System, entrar, Início, Membros (lista, ficha, registo). Ver `web/README.md` |
 
@@ -199,6 +199,9 @@ No `openapi.yaml`: `x-permissao` = permissão exigida, `x-funcao-bd` = função 
   com limite de pedidos (`LimitadorPedidos`, 429); cálculo de senhas fora de transacções (`ControloSenhas`).
   Cada transacção tem `statement_timeout`/`lock_timeout` e confirma a sessão do token (`fn_sessao_activa`).
   Produção: `docs/producao/README.md`; auditoria: `docs/AUDITORIA.md`.
+- Comprovativos (fotografias/PDF): `POST /v1/tesouraria/documentos/carregar` (o ficheiro no corpo, tipo verificado
+  pelos primeiros bytes, até 5 MB) e `GET .../documentos/{id}/ficheiro`; a linha de `tesouraria.documento` (RLS) decide
+  quem junta e vê. Ficheiros em `FICHEIROS_PASTA` (`infraestrutura/ficheiros/ArmazemFicheiros`, único sítio a mudar para S3).
 - Auth: access token JWT 15 min (header `Authorization: Bearer`); refresh token 30 dias em cookie
   `HttpOnly; Secure; SameSite=Strict`, rodado em cada renovação.
 

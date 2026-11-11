@@ -216,6 +216,24 @@ acao('/v1/tesouraria/remessas/{id}/confirmar', 'Associação confirma a recepç�
 acao('/v1/tesouraria/fechos/{id}/reabrir', 'Reabrir o mês', TES, 'tesouraria.fecho_periodo.terminar', None, ref('FechoPeriodo'))
 acao('/v1/tesouraria/extractos/importar', 'Importar o extracto (CSV) de uma conta', TES, 'tesouraria.extrato_linha.criar',
      obj(['contaId', 'csv'], contaId=I, csv={'type': 'string', 'description': 'data;descricao;referencia;valor'}), obj(['importadas', 'repetidas'], importadas=I, repetidas=I))
+# comprovativos com ficheiro: o corpo é o próprio ficheiro (fotografia ou PDF), não JSON
+_carregar = op('Carregar o ficheiro de um comprovativo (fotografia do talão, print M-Pesa, PDF) e criar o documento', TES,
+               'tesouraria.documento.criar', operationId='carregarDocumento',
+               description='O tipo é verificado pelos primeiros bytes (JPG, PNG, WebP ou PDF), até ficheiros.max.kb (5 MB). '
+                           'Indicar transacaoId ou despesaId (só um). A base de dados decide se o utilizador pode juntar documentos a esse registo.',
+               parameters=[{'name': 'transacaoId', 'in': 'query', 'schema': I}, {'name': 'despesaId', 'in': 'query', 'schema': I},
+                           {'name': 'tipo', 'in': 'query', 'schema': ref('EnumTipoDocumento')},
+                           {'name': 'nome', 'in': 'query', 'schema': {'type': 'string', 'maxLength': 255}, 'description': 'Nome original do ficheiro'}],
+               requestBody={'required': True, 'content': {m: {'schema': {'type': 'string', 'format': 'binary'}}
+                                                          for m in ('image/jpeg', 'image/png', 'image/webp', 'application/pdf')}},
+               responses=resp('201', ref('Documento'), 'Criado'))
+paths['/v1/tesouraria/documentos/carregar'] = {'post': _carregar}
+_fich = op('O ficheiro do comprovativo', TES, 'tesouraria.documento.ler', operationId='ficheiroDocumento',
+           description='404 se o documento não for visível ou não tiver ficheiro guardado pela API.',
+           parameters=[{'$ref': '#/components/parameters/Id'}], responses=resp('200', None))
+_fich['responses']['200'] = {'description': 'O ficheiro', 'content': {m: {'schema': {'type': 'string', 'format': 'binary'}}
+                             for m in ('image/jpeg', 'image/png', 'image/webp', 'application/pdf')}}
+paths['/v1/tesouraria/documentos/{id}/ficheiro'] = {'get': _fich}
 acao('/v1/tesouraria/extractos/{id}/reconciliar', 'Ligar a linha do extracto a uma transacção', TES, 'tesouraria.extrato_linha.alterar', obj(['transacaoId'], transacaoId=I), ref('ExtratoLinha'))
 acao('/v1/tesouraria/recalcular-saldos', 'Recalcular os saldos pré-calculados de uma igreja a partir dos movimentos (auditoria, depois de importações)', TES,
      'tesouraria.fecho_periodo.criar', obj(['igrejaId'], igrejaId=I), obj(['igrejaId', 'contas', 'fundos'], igrejaId=I, contas=I, fundos=I),

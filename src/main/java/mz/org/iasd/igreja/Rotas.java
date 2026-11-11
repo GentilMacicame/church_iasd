@@ -344,6 +344,12 @@ public final class Rotas {
         /** DocumentosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String DOCUMENTOS = "/v1/tesouraria/documentos";
 
+        /** POST /v1/tesouraria/documentos/carregar  (DocumentosController.carregar): o ficheiro no corpo */
+        public static final String DOCUMENTOS_CARREGAR = "carregar";
+
+        /** GET /v1/tesouraria/documentos/{id}/ficheiro  (DocumentosController.ficheiro) */
+        public static final String DOCUMENTOS_FICHEIRO = "{id: \\d+}/ficheiro";
+
         /** ExtractosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String EXTRACTOS = "/v1/tesouraria/extractos";
 

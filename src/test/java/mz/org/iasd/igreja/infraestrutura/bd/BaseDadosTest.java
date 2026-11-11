@@ -48,7 +48,9 @@ import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
 import mz.org.iasd.igreja.repositories.eu.EuRepository;
 import mz.org.iasd.igreja.controllers.tesouraria.RelatoriosTesourariaController;
 import mz.org.iasd.igreja.controllers.secretaria.RelatoriosSecretariaController;
+import mz.org.iasd.igreja.services.tesouraria.DocumentosService;
 import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
+import mz.org.iasd.igreja.infraestrutura.ficheiros.ArmazemFicheiros;
 import mz.org.iasd.igreja.models.catalogo.Catalogo;
 import mz.org.iasd.igreja.repositories.base.TabelaRepository;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
@@ -886,6 +888,61 @@ class BaseDadosTest {
         SQLException fechada = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
                 c -> TabelaRepository.criar(c, ponto, Json.createObjectBuilder().add("reuniaoId", reuId).add("assunto", "Tarde").build())));
         assertEquals(422, TradutorErrosSql.traduzir(fechada).estadoHttp());
+    }
+
+    /** P-06: comprovativo com ficheiro (talão / print M-Pesa) junto ao movimento; quem vê o ficheiro decide-o a RLS. */
+    @Test
+    void comprovativoComFicheiroComPerfis() throws Exception {
+        Tesouraria tes = prepararTesouraria();
+        int secretario = criarUsuarioComDono("secretario.doc@teste.mz", null, "SECRETARIO");
+        Path pasta = Files.createTempDirectory("comprovativos");
+        ArmazemFicheiros armazem = new ArmazemFicheiros(pasta);
+        JsonObject saida = Json.createObjectBuilder()
+                .add("tipo", "SAIDA").add("metodo", "BANCO").add("valorTotal", "50.00").add("contaId", tes.conta())
+                .add("descricao", "Talão do banco")
+                .add("linhas", Json.createArrayBuilder().add(Json.createObjectBuilder()
+                        .add("fundoId", tes.fundoLocal()).add("categoriaId", tes.categoriaLuz()).add("valor", "50.00")))
+                .build();
+        long tra = ExecutorTransaccao.executar(api, tesoureiro, c -> TransacoesService.criar(c, saida)).getJsonNumber("id").longValue();
+        byte[] jpg = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2, 3, 4};
+
+        // o tesoureiro junta a fotografia do talão: fica a linha e o ficheiro, com o nome limpo
+        JsonObject doc = ExecutorTransaccao.executar(api, tesoureiro, c -> DocumentosService.carregar(c, armazem, tra, null,
+                "COMPROVATIVO", "C:\\Fotos\\talão 0045.jpeg", jpg));
+        assertEquals("talão 0045.jpg", doc.getString("nomeFicheiro"));
+        assertTrue(doc.getString("url").startsWith(ArmazemFicheiros.PREFIXO));
+        long docId = doc.getJsonNumber("id").longValue();
+        var f = ExecutorTransaccao.executar(api, tesoureiro, c -> DocumentosService.ficheiro(c, armazem, docId));
+        assertEquals("image/jpeg", f.tipo().mime);
+        assertEquals(jpg.length, f.dados().length);
+
+        // um ficheiro que não é fotografia nem PDF → 400
+        ApiException tipo = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> DocumentosService.carregar(c, armazem, tra, null, null, "x.exe", "MZ...".getBytes(StandardCharsets.UTF_8))));
+        assertEquals(400, tipo.estadoHttp());
+
+        // o secretário não junta comprovativos (403) nem vê o ficheiro (404); e não ficou ficheiro órfão
+        long ficheirosAntes;
+        try (Stream<Path> s = Files.walk(pasta)) {
+            ficheirosAntes = s.filter(Files::isRegularFile).count();
+        }
+        SQLException semPermissao = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                c -> DocumentosService.carregar(c, armazem, tra, null, null, "talao.jpg", jpg)));
+        assertEquals(403, TradutorErrosSql.traduzir(semPermissao).estadoHttp());
+        try (Stream<Path> s = Files.walk(pasta)) {
+            assertEquals(ficheirosAntes, s.filter(Files::isRegularFile).count());
+        }
+        ApiException naoVe = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                c -> DocumentosService.ficheiro(c, armazem, docId)));
+        assertEquals(404, naoVe.estadoHttp());
+
+        // um documento criado à mão com um url forjado não serve ficheiros fora da pasta → 404
+        JsonObject forjado = ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, DocumentosService.DOCUMENTO,
+                Json.createObjectBuilder().add("transacaoId", tra).add("tipo", "OUTRO").add("nomeFicheiro", "x")
+                        .add("url", ArmazemFicheiros.PREFIXO + "../../etc/passwd").build()));
+        ApiException fora = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> DocumentosService.ficheiro(c, armazem, forjado.getJsonNumber("id").longValue())));
+        assertEquals(404, fora.estadoHttp());
     }
 
     private static List<Path> migracoes(Path pasta) throws Exception {

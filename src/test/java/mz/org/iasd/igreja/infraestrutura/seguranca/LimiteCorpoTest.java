@@ -22,4 +22,14 @@ class LimiteCorpoTest {
             assertEquals(413, e.estadoHttp());
         }
     }
+
+    /** Só o carregamento de comprovativos tem o máximo maior (ficheiros.max.kb). */
+    @Test
+    void carregamentoDeComprovativos() {
+        assertEquals(true, LimiteCorpo.carregamento("POST", "/v1/tesouraria/documentos/carregar"));
+        assertEquals(true, LimiteCorpo.carregamento("POST", "v1/tesouraria/documentos/carregar/"));
+        assertEquals(false, LimiteCorpo.carregamento("GET", "/v1/tesouraria/documentos/carregar"));
+        assertEquals(false, LimiteCorpo.carregamento("POST", "/v1/tesouraria/transacoes"));
+        assertEquals(false, LimiteCorpo.carregamento("POST", "/v1/tesouraria/documentos"));
+    }
 }
