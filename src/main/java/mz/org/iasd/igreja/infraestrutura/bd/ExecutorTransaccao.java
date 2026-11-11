@@ -88,6 +88,67 @@ public final class ExecutorTransaccao {
         }
     }
 
+    /**
+     * Pedido só de leitura (GET): igual a {@link #executar(DataSource, Integer, Long, Trabalho)} até ao fim do trabalho
+     * (utilizador identificado na transacção, RLS, repetição em conflito), mas o COMMIT e a devolução da ligação ao
+     * pool fazem-se em {@code depois}, sem o pedido esperar: poupa uma ida e volta à base (com a base longe, ~0,5 s
+     * por pedido). Uma leitura não tem nada a confirmar: o COMMIT só termina a transacção. Se {@code depois} recusar
+     * a tarefa, faz-se tudo aqui, como numa escrita.
+     */
+    public static <T> T executarLeitura(DataSource fonte, Integer usuarioId, Long sessaoId, Trabalho<T> trabalho,
+            java.util.concurrent.Executor depois) throws Exception {
+        for (int tentativa = 1; ; tentativa++) {
+            Connection ligacao = fonte.getConnection();
+            boolean entregue = false;
+            try {
+                ligacao.setAutoCommit(false);
+                identificar(ligacao, usuarioId, sessaoId);
+                T resultado = trabalho.executar(ligacao);
+                try {
+                    depois.execute(() -> terminar(ligacao));
+                    entregue = true;
+                } catch (java.util.concurrent.RejectedExecutionException e) {
+                    ligacao.commit();
+                }
+                return resultado;
+            } catch (Exception e) {
+                desfazer(ligacao);
+                SQLException sql = TradutorErrosSql.encontrar(e);
+                if (sql != null && TradutorErrosSql.repetivel(sql) && tentativa < TENTATIVAS) {
+                    continue;
+                }
+                throw e;
+            } catch (Error e) {
+                desfazer(ligacao);
+                throw e;
+            } finally {
+                if (!entregue) {
+                    fechar(ligacao);
+                }
+            }
+        }
+    }
+
+    /** COMMIT da leitura e devolução da ligação ao pool (fora do pedido). */
+    private static void terminar(Connection ligacao) {
+        try {
+            ligacao.commit();
+        } catch (SQLException e) {
+            LOG.log(Level.WARNING, "Falha ao terminar uma transacção de leitura", e);
+            desfazer(ligacao);
+        } finally {
+            fechar(ligacao);
+        }
+    }
+
+    private static void fechar(Connection ligacao) {
+        try {
+            ligacao.close();
+        } catch (SQLException e) {
+            LOG.log(Level.WARNING, "Falha ao devolver a ligação ao pool", e);
+        }
+    }
+
     static void identificar(Connection ligacao, Integer usuarioId, Long sessaoId) throws SQLException {
         String sql = "SELECT set_config('statement_timeout', ?, true), set_config('lock_timeout', ?, true)"
                 + (usuarioId == null ? "" : ", set_config('app.usuario_id', ?, true)")

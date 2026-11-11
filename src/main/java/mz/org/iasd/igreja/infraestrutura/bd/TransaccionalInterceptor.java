@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 
 import jakarta.annotation.Priority;
 import jakarta.annotation.Resource;
+import jakarta.enterprise.concurrent.ManagedExecutorService;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
@@ -50,14 +51,17 @@ public class TransaccionalInterceptor {
     @Inject
     HttpServletRequest pedido;
 
+    /** Termina as transacções de leitura (COMMIT e devolução da ligação) depois de a resposta seguir. */
+    @Resource
+    ManagedExecutorService terminarLeituras;
+
     @AroundInvoke
     public Object executar(InvocationContext ctx) throws Exception {
         String metodo = pedido.getMethod();
         String caminho = pedido.getRequestURI();
         UUID chave = chave(ctx, metodo);
         String hashPedido = chave == null ? null : hashPedido(ctx);
-        try {
-            return ExecutorTransaccao.executar(fonte, contexto.usuarioId(), contexto.sessaoId(), ligacao -> {
+        ExecutorTransaccao.Trabalho<Object> trabalho = ligacao -> {
                 unidade.definir(ligacao);
                 try {
                     if (chave != null) {
@@ -79,7 +83,12 @@ public class TransaccionalInterceptor {
                 } finally {
                     unidade.limpar();
                 }
-            });
+            };
+        try {
+            // GET só lê: o COMMIT não precisa de atrasar a resposta (uma ida e volta a menos à base)
+            return "GET".equals(metodo) && chave == null
+                    ? ExecutorTransaccao.executarLeitura(fonte, contexto.usuarioId(), contexto.sessaoId(), trabalho, terminarLeituras)
+                    : ExecutorTransaccao.executar(fonte, contexto.usuarioId(), contexto.sessaoId(), trabalho);
         } catch (SQLException e) {
             throw new ErroBaseDados(e);
         }
