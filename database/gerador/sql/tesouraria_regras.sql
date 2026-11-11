@@ -505,3 +505,35 @@ CREATE CONSTRAINT TRIGGER trg_tra_91_parte_da_igreja
 CREATE INDEX idx_rem_igr_periodo ON tesouraria.remessa (rem_igr_id, rem_ent_id, rem_ano, rem_mes);
 CREATE UNIQUE INDEX uq_rem_preparada ON tesouraria.remessa (rem_igr_id, rem_ent_id, rem_ano, rem_mes)
     WHERE rem_end_date IS NULL AND rem_estado = 'PREPARADA';
+
+-- ---------------------------------------------------------------- 5. fundos da igreja e "outras despesas" (V23)
+-- O fundo próprio de uma igreja (oferta ou projecto dela) só entra nos movimentos e nas despesas dessa igreja.
+CREATE FUNCTION tesouraria.fn_fundo_da_igreja(p_fun INT, p_igr INT) RETURNS VOID AS $$
+DECLARE v_igr INT; v_nome TEXT;
+BEGIN
+    SELECT fun_igr_id, fun_nome INTO v_igr, v_nome FROM tesouraria.fundo WHERE fun_id = p_fun;
+    IF v_igr IS NOT NULL AND v_igr IS DISTINCT FROM p_igr THEN
+        RAISE EXCEPTION 'O fundo "%" é de outra igreja', v_nome;
+    END IF;
+END $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE FUNCTION tesouraria.fn_tli_fundo_da_igreja() RETURNS trigger AS $$
+BEGIN
+    PERFORM tesouraria.fn_fundo_da_igreja(NEW.tli_fun_id, (SELECT tra_igr_id FROM tesouraria.transacao WHERE tra_id = NEW.tli_tra_id));
+    RETURN NEW;
+END $$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE TRIGGER trg_tli_30_fundo_da_igreja BEFORE INSERT OR UPDATE OF tli_fun_id ON tesouraria.transacao_linha
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tli_fundo_da_igreja();
+
+-- Despesa: fundo da própria igreja; com a categoria "Outras despesas" (D9) diz-se que despesa é.
+CREATE FUNCTION tesouraria.fn_des_fundo_e_outra() RETURNS trigger AS $$
+BEGIN
+    PERFORM tesouraria.fn_fundo_da_igreja(NEW.des_fun_id, NEW.des_igr_id);
+    IF (SELECT cat_codigo FROM tesouraria.categoria WHERE cat_id = NEW.des_cat_id) = 'D9'
+       AND coalesce(btrim(NEW.des_outra_categoria), '') = '' THEN
+        RAISE EXCEPTION 'Com a categoria "Outras despesas", escreva que despesa é';
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE TRIGGER trg_des_30_fundo_e_outra BEFORE INSERT OR UPDATE OF des_fun_id, des_cat_id, des_outra_categoria ON tesouraria.despesa
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_des_fundo_e_outra();

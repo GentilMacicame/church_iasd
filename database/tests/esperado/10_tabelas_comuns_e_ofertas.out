@@ -1,0 +1,71 @@
+1. tesoureiro de igreja (não autorizado) nas linhas comuns: nada muda (0 linhas) e criar é recusado
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:19: ERROR:  new row violates row-level security policy for table "fundo"
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:20: ERROR:  new row violates row-level security policy for table "categoria"
+   continua igual: só a categoria de remessa original; oferta combinada 50%; fundos gerais activos
+ categorias_de_remessa | oferta_combinada | gerais_terminados 
+-----------------------+------------------+-------------------
+                     1 |            50.00 |                 0
+(1 row)
+
+2. tesoureiro (autorizado na sua igreja): cria as ofertas da igreja
+  fun_codigo   |       fun_nome       |    fun_tipo     | fun_restrito | fun_percentagem_remessa 
+---------------+----------------------+-----------------+--------------+-------------------------
+ I1-CONSTRUCAO | Construção do templo | PROJECTO        | t            |                    0.00
+ I1-GRATIDAO   | Oferta de gratidão   | OFERTA_ESPECIAL | f            |                    0.00
+(2 rows)
+
+   oferta da igreja com parte para a Missão ou de outro tipo: recusado
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:32: ERROR:  new row for relation "fundo" violates check constraint "chk_fun_da_igreja"
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:33: ERROR:  new row for relation "fundo" violates check constraint "chk_fun_associacao"
+   na igreja de outro: recusado
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:35: ERROR:  new row violates row-level security policy for table "fundo"
+3. a oferta da igreja recebe entradas e é da igreja (sem remessa)
+       fun_nome       | tli_valor | fun_percentagem_remessa 
+----------------------+-----------+-------------------------
+ Construção do templo |    300.00 |                    0.00
+(1 row)
+
+3b. despesa "Outras despesas" sem dizer qual: recusada; dizendo, aceite e paga pelo fundo da igreja
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:48: ERROR:  Com a categoria "Outras despesas", escreva que despesa é
+  des_descricao   |  des_outra_categoria   | des_valor_solicitado 
+------------------+------------------------+----------------------
+ Blocos e cimento | Material de construção |               450.00
+(1 row)
+
+   o fundo de uma igreja na despesa de outra: recusado
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:55: ERROR:  O fundo "Construção do templo" é de outra igreja
+3c. contagem por partes: a soma tem de dar o total; a conferência compara cada parte com o lançado
+psql:database/tests/10_tabelas_comuns_e_ofertas.sql:60: ERROR:  new row for relation "contagem_numerario" violates check constraint "chk_cnu_partes"
+ cnu_total_contado | cnu_dizimos | cnu_ofertas | cnu_escola_sabatina | cnu_outras 
+-------------------+-------------+-------------+---------------------+------------
+           1000.00 |      500.00 |      200.00 |              200.00 |     100.00
+(1 row)
+
+ cnu_total_contado | total_lancado | diferenca | cnu_dizimos | dizimos_lancado | cnu_ofertas | ofertas_lancado | cnu_escola_sabatina | escola_sabatina_lancado 
+-------------------+---------------+-----------+-------------+-----------------+-------------+-----------------+---------------------+-------------------------
+           1000.00 |        700.00 |    300.00 |      500.00 |          500.00 |      200.00 |               0 |              200.00 |                  200.00
+(1 row)
+
+4. tesoureiro da igreja 2 (não autorizado na igreja 1): não termina a oferta da igreja 1
+   o tesoureiro da igreja 1 termina-a (autorizado)
+ fun_codigo  | terminado 
+-------------+-----------
+ I1-GRATIDAO | t
+(1 row)
+
+5. administrador da Associação (autorizado): muda o plano comum e cria um fundo geral
+ fun_codigo | fun_igr_id 
+------------+------------
+ V23GERAL   |           
+(1 row)
+
+ fun_codigo | terminado 
+------------+-----------
+ V23GERAL   | t
+(1 row)
+
+ cat_codigo 
+------------
+ V23CAT
+(1 row)
+

@@ -4,6 +4,10 @@ def arr(code):  # igrejas onde o utilizador tem a permissão, calculado uma vez 
     return f"((SELECT nucleo.fn_igrejas_com_permissao('{code}'))::INT[])"
 def glob(code):
     return f"(SELECT nucleo.fn_tem_permissao_global('{code}'))"
+def comum(code):  # V23: linhas comuns da Associação (permissão ao nível da Associação ou super-administrador)
+    return f"(SELECT nucleo.fn_tem_permissao_comum('{code}'))"
+def global_ou_comum(t, accao, code):
+    return comum(code) if accao != 'ler' and t.name in COMUNS_ASSOCIACAO else glob(code)
 
 def cond(t, accao):
     code = f'{q(t)}.{accao}'
@@ -14,7 +18,7 @@ def cond(t, accao):
         pt = BY[kind[2]]; pk = SCOPE[pt.name]
         assert pk[0] == 'direct'
         return f'EXISTS (SELECT 1 FROM {q(pt)} x WHERE x.{pt.p}_id = {t.p}_{kind[1]} AND x.{pt.p}_{pk[1]} = ANY {arr(code)})'
-    return sub(t, kind[1]).replace('{A}', arr(code)).replace('{G}', glob(code))
+    return sub(t, kind[1]).replace('{A}', arr(code)).replace('{G}', global_ou_comum(t, accao, code))
 
 s = ['-- =====================================================================',
      f'-- V{n} · Permissões e segurança por igreja (Row Level Security)',
@@ -57,8 +61,8 @@ def policies(t):
         else:
             out.append(f'CREATE POLICY pol_{t.p}_ler ON {q(t)} FOR SELECT USING ({glob(q(t) + ".ler")});')
         if t.name not in SYSTEM_WRITE:
-            out.append(f'CREATE POLICY pol_{t.p}_criar ON {q(t)} FOR INSERT WITH CHECK ({glob(q(t) + ".criar")});')
-            g = glob(q(t) + '.alterar')
+            out.append(f'CREATE POLICY pol_{t.p}_criar ON {q(t)} FOR INSERT WITH CHECK ({global_ou_comum(t, "criar", q(t) + ".criar")});')
+            g = global_ou_comum(t, 'alterar', q(t) + '.alterar')
             out.append(f'CREATE POLICY pol_{t.p}_alterar ON {q(t)} FOR UPDATE USING ({g}) WITH CHECK ({g});')
     if t.name in OWNER_READ:
         out.append(f'CREATE POLICY pol_{t.p}_proprio ON {q(t)} FOR SELECT USING ({sub(t, OWNER_READ[t.name])});')

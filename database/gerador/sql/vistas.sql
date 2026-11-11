@@ -367,13 +367,29 @@ WHERE o.orc_end_date IS NULL;
 
 CREATE VIEW tesouraria.vw_contagem_conferencia WITH (security_invoker = true) AS
 SELECT c.cnu_id, c.cnu_igr_id, c.cnu_data, c.cnu_ocasiao, c.cnu_total_contado,
-       COALESCE(SUM(t.tra_valor_total), 0)                       AS total_lancado,
-       c.cnu_total_contado - COALESCE(SUM(t.tra_valor_total), 0) AS diferenca,
-       c.cnu_estado
+       COALESCE(x.total, 0)                       AS total_lancado,
+       c.cnu_total_contado - COALESCE(x.total, 0) AS diferenca,
+       c.cnu_estado,
+       -- V23: o contado e o lançado por parte (dízimos, ofertas, Escola Sabatina, outras ofertas)
+       c.cnu_dizimos, c.cnu_ofertas, c.cnu_escola_sabatina, c.cnu_outras,
+       COALESCE(x.dizimos, 0)         AS dizimos_lancado,
+       COALESCE(x.ofertas, 0)         AS ofertas_lancado,
+       COALESCE(x.escola_sabatina, 0) AS escola_sabatina_lancado,
+       COALESCE(x.outras, 0)          AS outras_lancado
 FROM tesouraria.contagem_numerario c
-LEFT JOIN tesouraria.transacao t ON t.tra_cnu_id = c.cnu_id AND t.tra_estado = 'CONFIRMADA' AND t.tra_end_date IS NULL
-WHERE c.cnu_end_date IS NULL
-GROUP BY c.cnu_id, c.cnu_igr_id, c.cnu_data, c.cnu_ocasiao, c.cnu_total_contado, c.cnu_estado;
+LEFT JOIN LATERAL (
+    SELECT SUM(l.tli_valor) AS total,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo = 'DIZIMO') AS dizimos,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo IN ('OFERTA_COMBINADA', 'OFERTA_MISSIONARIA')) AS ofertas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo IN ('ES_MISSOES', 'ES_13_SABADO', 'ES_DESPESAS')) AS escola_sabatina,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo NOT IN ('DIZIMO', 'OFERTA_COMBINADA', 'OFERTA_MISSIONARIA',
+                                                            'ES_MISSOES', 'ES_13_SABADO', 'ES_DESPESAS')) AS outras
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id
+    WHERE t.tra_cnu_id = c.cnu_id AND t.tra_estado = 'CONFIRMADA' AND t.tra_end_date IS NULL
+) x ON TRUE
+WHERE c.cnu_end_date IS NULL;
 
 CREATE VIEW tesouraria.vw_despesas_por_pagar WITH (security_invoker = true) AS
 SELECT d.des_id, d.des_igr_id, d.des_descricao, d.des_valor_aprovado, d.des_aprovado_em,

@@ -326,7 +326,9 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    uniq=[['codigo']],
    checks=[('chk_fun_remessa', '@percentagem_remessa BETWEEN 0 AND 100 AND (@percentagem_remessa = 0 OR @destino_ent_id IS NOT NULL)'),
            ('chk_fun_associacao', "@tipo NOT IN ('DIZIMO', 'ES_MISSOES', 'ES_13_SABADO', 'OFERTA_MISSIONARIA') OR @percentagem_remessa = 100"),
-           ('chk_fun_local', "@tipo NOT IN ('ES_DESPESAS', 'ORCAMENTO_LOCAL') OR @percentagem_remessa = 0")]),
+           ('chk_fun_local', "@tipo NOT IN ('ES_DESPESAS', 'ORCAMENTO_LOCAL') OR @percentagem_remessa = 0"),
+           # V23: fundos próprios de uma igreja (ofertas e projectos dela): ficam 100% na igreja
+           ('chk_fun_da_igreja', "@igr_id IS NULL OR (@percentagem_remessa = 0 AND @destino_ent_id IS NULL AND @tipo IN ('OFERTA_ESPECIAL', 'PROJECTO'))")]),
  T('calendario_oferta', 'cof', 'Calendário de ofertas especiais definido pela Divisão/União/Associação', [
    ('ent_id', 'fk:entidade', NN), ('data', 'DATE', NN), ('fun_id', 'fk:fundo', NN),
    ('descricao', 'VARCHAR(150)', NN)], uniq=[['ent_id', 'data', 'fun_id']]),
@@ -353,6 +355,7 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    ('igr_id', 'fk:igreja', NN), ('ide_id', 'fk:igreja_departamento'), ('act_id', 'fk:actividade'),
    ('cat_id', 'fk:categoria', NN), ('fun_id', 'fk:fundo', NN),
    ('descricao', 'VARCHAR(255)', NN), ('fornecedor', 'VARCHAR(150)'),
+   ('outra_categoria', 'VARCHAR(100)', '', 'Com a categoria "Outras despesas": que despesa é (V23)'),
    ('valor_solicitado', 'DECIMAL(14,2)', NN), ('valor_aprovado', 'DECIMAL(14,2)'),
    ('solicitado_por_usu_id', 'fk:usuario', NN), ('aprovado_por_usu_id', 'fk:usuario'),
    ('vot_id', 'fk:voto', '', 'Voto da junta, quando o valor o exige'),
@@ -366,9 +369,17 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    ('igr_id', 'fk:igreja', NN), ('cfi_id', 'fk:conta_financeira', NN), ('data', 'DATE', NN),
    ('ocasiao', 'VARCHAR(100)', "NOT NULL DEFAULT 'Culto de sábado'"),
    ('contador1_mem_id', 'fk:membro', NN), ('contador2_mem_id', 'fk:membro', NN),
-   ('total_contado', 'DECIMAL(14,2)', NN), ('conferido_por_usu_id', 'fk:usuario')],
+   ('total_contado', 'DECIMAL(14,2)', NN), ('conferido_por_usu_id', 'fk:usuario'),
+   ('dizimos', 'DECIMAL(14,2)', '', 'Parte do contado: dízimos (V23)'),
+   ('ofertas', 'DECIMAL(14,2)', '', 'Parte do contado: ofertas (oferta combinada, missionárias)'),
+   ('escola_sabatina', 'DECIMAL(14,2)', '', 'Parte do contado: ofertas da Escola Sabatina'),
+   ('outras', 'DECIMAL(14,2)', '', 'Parte do contado: outras ofertas (especiais, projectos da igreja)')],
    checks=[('chk_cnu_contadores_diferentes', '@contador1_mem_id <> @contador2_mem_id'),
-           ('chk_cnu_total', '@total_contado >= 0')],
+           ('chk_cnu_total', '@total_contado >= 0'),
+           # V23: sem partes (contagens antigas) ou com as quatro, não negativas e a somar o total
+           ('chk_cnu_partes', '(@dizimos IS NULL AND @ofertas IS NULL AND @escola_sabatina IS NULL AND @outras IS NULL) OR '
+                              '(@dizimos >= 0 AND @ofertas >= 0 AND @escola_sabatina >= 0 AND @outras >= 0 AND '
+                              '@dizimos + @ofertas + @escola_sabatina + @outras = @total_contado)')],
    estado=('estado_contagem_t', "'ABERTA'")),
  T('transacao', 'tra', 'Movimentos: entradas, saídas e transferências (cabeçalho)', [
    ('igr_id', 'fk:igreja', NN, 'Preenchido automaticamente a partir da conta'),
@@ -517,6 +528,10 @@ SCOPE = {
 # Tabelas comuns que qualquer utilizador autenticado pode ler (escrever exige permissão)
 GLOBAL_READ = {'perfil', 'permissao', 'perfil_permissao', 'entidade', 'distrito', 'departamento', 'cargo',
                'trimestre', 'sabado', 'pontuacao_config', 'calendario_oferta', 'categoria'}
+# V23: tabelas comuns definidas pela Associação/Missão (fundos gerais, plano de contas, calendário, lição). As linhas
+# comuns só se criam, alteram e terminam com a permissão ao nível da Associação (perfil em usuario_entidade) ou como
+# super-administrador; ter a permissão numa igreja não chega (antes chegava: um tesoureiro mudava o plano de todos).
+COMUNS_ASSOCIACAO = {'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config'}
 # Tabelas que só os triggers do sistema escrevem (os utilizadores só lêem)
 SYSTEM_WRITE = {'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria'}
 

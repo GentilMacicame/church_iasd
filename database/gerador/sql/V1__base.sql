@@ -274,6 +274,31 @@ BEGIN
         OR EXISTS (SELECT 1 FROM nucleo.fn_entidades_com_permissao(p_codigo));
 END $$;
 
+-- V23: linhas comuns definidas pela Associação/Missão (fundos gerais, plano de contas, calendário, lição): só com a
+-- permissão ao nível da Associação (perfil em usuario_entidade) ou como super-administrador. Ter a permissão numa
+-- igreja não chega para mudar o que vale para todas.
+CREATE FUNCTION nucleo.fn_tem_permissao_comum(p_codigo TEXT) RETURNS BOOLEAN
+LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
+BEGIN
+    RETURN nucleo.fn_e_super_admin() OR EXISTS (SELECT 1 FROM nucleo.fn_entidades_com_permissao(p_codigo));
+END $$;
+
+-- Trigger: terminar/reactivar uma linha comum (sem igreja) exige a permissão "terminar" ao nível da Associação.
+-- Argumentos: prefixo, código da tabela, coluna da igreja ('' se a tabela não tem igreja).
+CREATE FUNCTION nucleo.fn_terminar_comum() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE o JSONB := to_jsonb(OLD); n JSONB := to_jsonb(NEW); p TEXT := TG_ARGV[0];
+BEGIN
+    IF (o ->> (p || '_end_date')) IS DISTINCT FROM (n ->> (p || '_end_date'))
+       AND (TG_ARGV[2] = '' OR n ->> TG_ARGV[2] IS NULL)
+       AND nucleo.fn_usuario_sessao() IS NOT NULL
+       AND NOT nucleo.fn_tem_permissao_comum(TG_ARGV[1] || '.terminar') THEN
+        RAISE EXCEPTION 'Sem permissão: só a Associação/Missão termina ou reactiva registos comuns a todas as igrejas (%)', TG_ARGV[1]
+              USING ERRCODE = 'insufficient_privilege';
+    END IF;
+    RETURN NEW;
+END $$;
+
 CREATE FUNCTION nucleo.fn_tem_permissao(p_codigo TEXT, p_igr INT) RETURNS BOOLEAN
 LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
 BEGIN

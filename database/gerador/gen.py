@@ -1,7 +1,7 @@
 import os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import fnmatch
-from defs import MODULES, SCHEMAS, SCOPE, GLOBAL_READ, SYSTEM_WRITE, OWNER_READ, ACCOES, NEGOCIO, PERFIS, REGRAS
+from defs import MODULES, SCHEMAS, SCOPE, GLOBAL_READ, SYSTEM_WRITE, OWNER_READ, ACCOES, NEGOCIO, PERFIS, REGRAS, COMUNS_ASSOCIACAO
 
 BASE = os.path.dirname(__file__)
 SQL = os.path.join(BASE, 'sql')
@@ -115,9 +115,13 @@ for t in ALL:
     codigo = '' if t.name in SYSTEM_WRITE else q(t)
     sc = SCOPE.get(t.name)
     igrcol = f'{t.p}_{sc[1]}' if sc and sc[0] == 'direct' else ''
+    if t.name == 'fundo':
+        igrcol = 'fun_igr_id'   # V23: os fundos de uma igreja terminam-se com a permissão nessa igreja
     v += [f"CREATE TRIGGER trg_{t.p}_00_padrao BEFORE INSERT OR UPDATE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('{t.p}', '{codigo}', '{igrcol}');",
           f'CREATE TRIGGER trg_{t.p}_00_sem_delete BEFORE DELETE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete(\'{t.p}\');',
           f'CREATE TRIGGER trg_{t.p}_00_sem_truncate BEFORE TRUNCATE ON {q(t)} FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete(\'{t.p}\');']
+    if t.name in COMUNS_ASSOCIACAO:   # V23: terminar uma linha comum exige a permissão ao nível da Associação
+        v.append(f"CREATE TRIGGER trg_{t.p}_01_comum BEFORE UPDATE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_terminar_comum('{t.p}', '{q(t)}', '{igrcol}');")
     if t.name == 'log_auditoria':
         v.append(f'CREATE TRIGGER trg_lau_00_imutavel BEFORE UPDATE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_imutavel();')
     elif not t.cache:

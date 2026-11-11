@@ -27,6 +27,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoDespesa;
  * @param fundoId Referência a tesouraria.fundo — obrigatório ao criar
  * @param descricao coluna {@code des_descricao} — obrigatório ao criar
  * @param fornecedor coluna {@code des_fornecedor}
+ * @param outraCategoria Com a categoria "Outras despesas": que despesa é (V23)
  * @param valorSolicitado coluna {@code des_valor_solicitado} — obrigatório ao criar, dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param valorAprovado coluna {@code des_valor_aprovado} — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param solicitadoPorUsuarioId Referência a nucleo.usuario — obrigatório ao criar
@@ -59,6 +60,8 @@ public record Despesa(
         String descricao,
         @ColunaBd(value = "des_fornecedor", tipo = Tipo.TEXTO)
         String fornecedor,
+        @ColunaBd(value = "des_outra_categoria", tipo = Tipo.TEXTO)
+        String outraCategoria,
         @ColunaBd(value = "des_valor_solicitado", tipo = Tipo.DINHEIRO, obrigatoria = true, naoNula = true)
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal valorSolicitado,
         @ColunaBd(value = "des_valor_aprovado", tipo = Tipo.DINHEIRO)

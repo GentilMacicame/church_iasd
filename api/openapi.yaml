@@ -17118,6 +17118,26 @@ components:
           type: integer
           format: int32
           description: → nucleo.usuario
+        dizimos:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Parte do contado: dízimos (V23)'
+        ofertas:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Parte do contado: ofertas (oferta combinada, missionárias)'
+        escolaSabatina:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Parte do contado: ofertas da Escola Sabatina'
+        outras:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Parte do contado: outras ofertas (especiais, projectos da igreja)'
         estado:
           $ref: '#/components/schemas/EnumEstadoContagem'
         criadoEm:
@@ -17269,6 +17289,10 @@ components:
         fornecedor:
           type: string
           maxLength: 150
+        outraCategoria:
+          type: string
+          maxLength: 100
+          description: 'Com a categoria "Outras despesas": que despesa é (V23)'
         valorSolicitado:
           type: string
           pattern: ^-?\d{1,14}(\.\d{1,2})?$
