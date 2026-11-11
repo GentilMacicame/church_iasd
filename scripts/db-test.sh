@@ -12,7 +12,7 @@ mkdir -p database/tests/resultado
 # no Windows (Git Bash) o psql não conhece /dev/null: corre-se uma cópia do teste com NUL
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) windows=1 ;; *) windows=0 ;; esac
 falhou=0
-for t in 00_dados_exemplo_escola_sabatina 01_regras_manual_e_tesouraria 02_permissoes_por_perfil 03_sessoes_e_api 04_perfis_proprios_e_manutencao 05_escalas_e_lembretes 06_juntar_schemas_e_indices 07_ficha_do_membro 08_conta_da_missao 09_conselho_e_actas 10_tabelas_comuns_e_ofertas; do
+for t in 00_dados_exemplo_escola_sabatina 01_regras_manual_e_tesouraria 02_permissoes_por_perfil 03_sessoes_e_api 04_perfis_proprios_e_manutencao 05_escalas_e_lembretes 06_juntar_schemas_e_indices 07_ficha_do_membro 08_conta_da_missao 09_conselho_e_actas 10_tabelas_comuns_e_ofertas 11_registar_igrejas; do
   fonte="database/tests/$t.sql"
   if [[ $windows == 1 ]]; then
     sed 's#\g /dev/null#\g NUL#' "$fonte" > "database/tests/resultado/$t.sql"

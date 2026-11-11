@@ -1,0 +1,26 @@
+1. super-administrador (autorizado): regista a igreja e dá-lhe um administrador
+       igr_nome        | igr_ent_id |     igr_tipo      
+-----------------------+------------+-------------------
+ Igreja do Bairro Novo |          1 | IGREJA_ORGANIZADA
+(1 row)
+
+ perfil 
+--------
+ ADMIN
+(1 row)
+
+2. administração da Associação 1 (autorizada na sua Associação): regista; noutra Missão, recusado
+     igr_nome     
+------------------
+ Grupo da Machava
+(1 row)
+
+psql:database/tests/11_registar_igrejas.sql:25: ERROR:  new row violates row-level security policy for table "igreja"
+3. administrador de uma igreja (não autorizado): não regista igrejas
+psql:database/tests/11_registar_igrejas.sql:29: ERROR:  new row violates row-level security policy for table "igreja"
+4. o novo administrador vê a sua igreja (e só tem perfil nela)
+       igr_nome        
+-----------------------
+ Igreja do Bairro Novo
+(1 row)
+

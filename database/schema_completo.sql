@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Sistema de Gestão da Igreja Adventista · esquema completo (script único)
 -- GERADO por scripts/gerar-schema-completo.sh a partir de database/migrations
--- (V1__base.sql … V24__nome_dos_depositos_a_missao.sql). NÃO EDITAR À MÃO.
+-- (V1__base.sql … V25__registar_igrejas.sql). NÃO EDITAR À MÃO.
 -- PostgreSQL 16+, como administrador; depois: scripts/criar-papel-api.sh
 -- =====================================================================
 
@@ -6278,3 +6278,19 @@ WHERE c.cnu_end_date IS NULL;
 -- =====================================================================
 UPDATE tesouraria.categoria SET cat_nome = 'Depósitos à Associação/Missão (remessas)'
  WHERE cat_codigo = 'D1' AND cat_nome = 'Remessas à Associação/Missão';
+
+-- >>>>> V25__registar_igrejas.sql
+-- =====================================================================
+-- V25 · Registar igrejas (F-ORG-01, P-13)
+--
+-- Problema: ninguém conseguia registar uma igreja, nem o super-administrador. A política de INSERT exigia que o
+-- id da igreja nova estivesse em fn_igrejas_com_permissao(...), mas essa lista só tem as igrejas que já existem.
+--
+-- Agora regista uma igreja o super-administrador, ou quem tem organizacao.igreja.criar ao nível da
+-- Associação/Missão a que a igreja pertence (perfil em usuario_entidade, ex.: ADMIN_ASSOCIACAO). Ter a permissão
+-- numa igreja (perfil de igreja) não chega para criar outras. A leitura ganha a mesma regra (pela Associação da igreja):
+-- o INSERT ... RETURNING da API lê a linha nova, que ainda não está na lista de igrejas do utilizador.
+-- =====================================================================
+DROP POLICY pol_igr_criar ON organizacao.igreja;
+CREATE POLICY pol_igr_criar ON organizacao.igreja FOR INSERT WITH CHECK ((SELECT nucleo.fn_e_super_admin()) OR igr_ent_id IN (SELECT nucleo.fn_entidades_com_permissao('organizacao.igreja.criar')));
+CREATE POLICY pol_igr_ler_associacao ON organizacao.igreja FOR SELECT USING ((SELECT nucleo.fn_e_super_admin()) OR igr_ent_id IN (SELECT nucleo.fn_entidades_com_permissao('organizacao.igreja.ler')));

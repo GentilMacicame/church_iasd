@@ -52,7 +52,14 @@ def policies(t):
     if t.name in SCOPE:
         out.append(f'CREATE POLICY pol_{t.p}_ler ON {q(t)} FOR SELECT USING ({cond(t, "ler")});')
         if t.name not in SYSTEM_WRITE:
-            out.append(f'CREATE POLICY pol_{t.p}_criar ON {q(t)} FOR INSERT WITH CHECK ({cond(t, "criar")});')
+            criar = cond(t, 'criar')
+            if t.name == 'igreja':   # V25: a igreja nova ainda não está na lista do utilizador; decide a Associação dela
+                criar = ("(SELECT nucleo.fn_e_super_admin()) OR igr_ent_id IN "
+                         "(SELECT nucleo.fn_entidades_com_permissao('organizacao.igreja.criar'))")
+            out.append(f'CREATE POLICY pol_{t.p}_criar ON {q(t)} FOR INSERT WITH CHECK ({criar});')
+            if t.name == 'igreja':   # V25: e lê-se pela Associação (o INSERT ... RETURNING da API vê a igreja nova)
+                out.append("CREATE POLICY pol_igr_ler_associacao ON organizacao.igreja FOR SELECT USING ((SELECT nucleo.fn_e_super_admin()) "
+                           "OR igr_ent_id IN (SELECT nucleo.fn_entidades_com_permissao('organizacao.igreja.ler')));")
             c = cond(t, 'alterar')
             out.append(f'CREATE POLICY pol_{t.p}_alterar ON {q(t)} FOR UPDATE USING ({c}) WITH CHECK ({c});')
     else:
