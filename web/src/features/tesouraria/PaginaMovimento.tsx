@@ -18,6 +18,7 @@ import { data, dataPorExtenso, dinheiro } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useAccao, useCategorias, useContas, useEstornosDe, useFundos, useLinhas, useRecibo, useTransacao } from './api'
 import { DialogoEstorno } from './Estorno'
+import { CartaoComprovativos } from './Comprovativos'
 import { PilulaEstado, Valor, quem } from './comum'
 
 export default function PaginaMovimento() {
@@ -135,7 +136,8 @@ export default function PaginaMovimento() {
                 </Tabela>
               )}
           </Cartao>
-          <Cartao titulo="Dados" className="lg:col-span-4">
+          <div className="grid gap-6 lg:col-span-4">
+          <Cartao titulo="Dados">
             <dl className="grid gap-4">
               <Campo rotulo="Conta">{tr.contaId ? contas.data?.find((c) => c.id === tr.contaId)?.nome : null}</Campo>
               <Campo rotulo="Referência">{tr.referencia}</Campo>
@@ -143,6 +145,8 @@ export default function PaginaMovimento() {
               {saida && <Campo rotulo="Aprovação">{aprovada ? 'Aprovada por outra pessoa' : 'Por aprovar'}</Campo>}
             </dl>
           </Cartao>
+          <CartaoComprovativos transacaoId={id} />
+          </div>
         </div>
       </div>
 

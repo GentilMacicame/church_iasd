@@ -53,11 +53,13 @@ src/
   (baptismo, profissão de fé) e saídas registadas na ficha do membro, com o voto que as autoriza; o livro com os números
   do ano.
 - **Tesouraria** (P-06, P-08): painel (saldo total, do mês, contas, saldos por fundo com o que é da Associação);
-  lançar entrada (envelope a envelope: membro ou ofertas da salva, o que o membro já deu este ano, dízimo e oferta em
-  destaque e os outros fundos recolhidos, a parte da Missão e a da igreja, a lista do que se lançou na sessão; recibo
-  numerado); registar saída (fica por
+  lançar entrada em 3 passos: quem contribui (membro, com o que já deu este ano, ou ofertas da salva), como entregou
+  (envelope em numerário, M-Pesa/depósito na conta da igreja, depósito ou M-Pesa directamente na Missão: uma escolha por
+  conta, a forma de pagamento sai dela) e os valores (dízimo e oferta em destaque); o que não é numerário pede o
+  comprovativo (referência, data, descrição e a fotografia ou PDF, reduzida no telemóvel antes de enviar); resumo com a parte da Missão e a da igreja e a lista da sessão; recibo
+  numerado; registar saída (fica por
   aprovar: quem regista não aprova; o ancião aprova, o tesoureiro confirma); movimentos do mês com filtros; ficha do
-  movimento (confirmar, aprovar, recibo para imprimir, anular pendente). Pedidos de dinheiro com Idempotency-Key.
+  movimento (confirmar, aprovar, recibo para imprimir, anular pendente, comprovativos: abrir e juntar). Pedidos de dinheiro com Idempotency-Key.
   Despesas (P-07): pedir, decidir (aprovar, pode reduzir, ou rejeitar com motivo; quem pede não decide), pagar (a saída
   confirma-se logo e a despesa passa a paga). Remessas (P-09): o devido por mês e fundo, enviar (remessa + linhas +
   saída de remessa + enviada; retoma-se se falhar a meio), confirmar a recepção (Associação). Fecho do mês (P-10):

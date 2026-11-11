@@ -1,19 +1,22 @@
 /**
- * Lançar entrada (P-06 passos 2 e 3) · os dízimos e ofertas de um envelope (membro, com recibo numerado) ou as
- * ofertas da salva (sem nome). Pensada para o sábado, envelope a envelope: primeiro quem contribui, depois o dízimo
- * e a oferta (os outros fundos ficam à mão em "Outros fundos"); a conta, a data e a hora mantêm-se entre envelopes
- * e ficam numa linha que se abre para mudar. O resumo mostra a parte da Missão e a da igreja, e a lista do que já se
- * lançou nesta sessão. A soma das linhas = total, e o resto das regras, são da base de dados.
+ * Lançar entrada (P-06 passos 2 e 3) · os dízimos e ofertas de um membro (com recibo numerado) ou as ofertas da salva
+ * (sem nome). Pensada para o sábado, envelope a envelope, e para os comprovativos que chegam durante a semana:
  *
- * Dois casos: o que se recolhe na igreja e o que o membro pagou directamente na conta da Missão (V21): só fundos da
- * Missão, com a referência do comprovativo; conta como contribuição do membro e como já remetido.
+ * 1. Quem contribui: o membro, ou as ofertas da salva.
+ * 2. Como entregou: uma escolha por conta real (envelope em numerário no caixa; M-Pesa ou depósito na conta da igreja;
+ *    depósito ou M-Pesa directamente na Missão). A forma de pagamento sai da conta, não se escolhe à parte.
+ *    O que não é numerário pede o comprovativo: referência e a descrição que o membro mandou.
+ * 3. Valores: dízimo e oferta em destaque; os outros fundos recolhidos.
+ *
+ * O que foi pago na Missão (V21) só aceita fundos da Missão e a referência; conta como contribuição do membro e como já
+ * remetido, e não entra no saldo da igreja. A soma das linhas = total, e o resto das regras, são da base de dados.
  */
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, ChevronDown, Church, HandCoins, HandHeart, Landmark, Pencil, Receipt, UserRound, Users, Wallet } from 'lucide-react'
+import { ArrowLeft, Banknote, Paperclip, ChevronDown, FileCheck2, HandCoins, HandHeart, Landmark, Plus, Receipt, Smartphone, UserRound, Users, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,19 +26,20 @@ import { CampoData } from '@/components/comum/CampoData'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { Seleccao } from '@/components/comum/Seleccao'
-import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
+import { Barra, EstadoErro } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
-import { rotulos, t } from '@/i18n/pt-MZ'
+import { t } from '@/i18n/pt-MZ'
 import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { cn } from '@/lib/utils'
-import { CATEGORIA_POR_FUNDO, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useCriarMovimento, useFundos, type Conta } from './api'
+import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useCriarMovimento, useFundos, type Conta } from './api'
+import { CampoComprovativo } from './Comprovativos'
 import { parteDoFundo } from './comum'
 
 const valorApi = /^\d{1,14}(\.\d{1,2})?$/
 const esquema = z.object({
-  contaId: z.string().min(1, t.comum.obrigatorio),
+  contaId: z.string().min(1, 'Diga como o dinheiro foi entregue'),
   metodo: z.string().min(1),
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Escreva a data como dd/mm/aaaa').refine((d) => d <= hojeIso(), 'A data não pode ser no futuro'),
   hora: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora como 10:00'),
@@ -52,7 +56,19 @@ export const METODO_DA_CONTA: Record<string, string> = { CAIXA: 'NUMERARIO', MPE
 /** Os fundos de quase todos os envelopes: ficam em destaque; os outros abrem-se em "Outros fundos". */
 const PRINCIPAIS = ['DIZIMO', 'OFERTA_COMBINADA']
 
-interface Lancada { id: number; quem: string; valor: string; recibo?: string }
+/** Como o membro entregou, dito pela conta onde o dinheiro está. */
+function comoEntregou(c: Conta) {
+  const missao = daMissao(c)
+  switch (c.tipo) {
+    case 'CAIXA': return { titulo: 'Envelope em numerário', I: Banknote }
+    case 'MPESA': return { titulo: missao ? 'M-Pesa da Missão' : 'M-Pesa da igreja', I: Smartphone }
+    case 'EMOLA': return { titulo: missao ? 'e-Mola da Missão' : 'e-Mola da igreja', I: Smartphone }
+    default: return { titulo: missao ? 'Depósito na conta da Missão' : 'Depósito na conta da igreja', I: Landmark }
+  }
+}
+const detalheConta = (c: Conta) => [c.nome === comoEntregou(c).titulo ? null : c.nome, c.banco, c.numero].filter(Boolean).filter((x, i, l) => l.indexOf(x) === i).join(' · ')
+
+interface Lancada { id: number; quem: string; como: string; valor: string; recibo?: string; comprovativo?: boolean }
 
 export default function PaginaEntrada() {
   const navigate = useNavigate()
@@ -67,14 +83,18 @@ export default function PaginaEntrada() {
   const [chave, setChave] = useState(() => crypto.randomUUID())
   const [erro, setErro] = useState<string | null>(null)
   const [sessao, setSessao] = useState<Lancada[]>([])
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const [verCategorias, setVerCategorias] = useState(false)
   const [verOutros, setVerOutros] = useState(false)
-  const [verOnde, setVerOnde] = useState(false)
-  const [salva, setSalva] = useState(false)          // ofertas sem nome (salva)
-  const naMissao = params.get('onde') === 'missao'
-  const anonimo = salva && !naMissao
-  const contasDoCaso = (contas.data ?? []).filter((c) => daMissao(c) === naMissao)
+  const [salva, setSalva] = useState(false)          // ofertas sem nome (salva): só em numerário
+  const [comprovativo, setComprovativo] = useState<File | null>(null)   // fotografia/PDF: enviado depois de gravar
+
+  const todas = (contas.data ?? []).filter((c) => !c.endDate)
+  // o envelope em numerário primeiro: é o mais comum
+  const daIgreja = todas.filter((c) => !daMissao(c)).sort((a, b) => Number(b.tipo === 'CAIXA') - Number(a.tipo === 'CAIXA'))
+  const naMissaoContas = todas.filter((c) => daMissao(c))
+  // por defeito: o caixa (envelopes do sábado); com ?onde=missao, a primeira conta da Missão
+  const inicial = params.get('onde') === 'missao' ? naMissaoContas[0] : daIgreja.find((c) => c.tipo === 'CAIXA') ?? daIgreja[0]
 
   const receitas = (categorias.data ?? []).filter((c) => c.tipo === 'RECEITA')
   const catPorCodigo = new Map(receitas.map((c) => [c.codigo, c.id]))
@@ -86,7 +106,7 @@ export default function PaginaEntrada() {
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
     values: {
-      contaId: contasDoCaso[0] ? String(contasDoCaso[0].id) : '', metodo: METODO_DA_CONTA[contasDoCaso[0]?.tipo ?? 'CAIXA'],
+      contaId: inicial ? String(inicial.id) : '', metodo: METODO_DA_CONTA[inicial?.tipo ?? 'CAIXA'],
       data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: null, contagemId: '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
     },
     resetOptions: { keepDirtyValues: true },
@@ -94,17 +114,19 @@ export default function PaginaEntrada() {
   const { fields } = useFieldArray({ control: form.control, name: 'linhas' })
   const linhas = form.watch('linhas')
   const membro = form.watch('membro')
-  const metodo = form.watch('metodo')
   const e = form.formState.errors
   const contagensAbertas = (contagens.data ?? []).filter((c) => c.estado === 'ABERTA' && !c.endDate)
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
   const fundoPorId = new Map((fundos.data ?? []).map((f) => [f.id, f]))
-  const contaEscolhida = contas.data?.find((c) => String(c.id) === form.watch('contaId'))
+  const conta = todas.find((c) => String(c.id) === form.watch('contaId'))
+  const naMissao = !!conta && daMissao(conta)
+  const numerario = conta?.tipo === 'CAIXA'
+  const anonimo = salva && !naMissao
   /** Na conta da Missão só entram os fundos dessa entidade (a base de dados recusa os outros). */
   const fundoVisivel = (id: number) => {
     if (!naMissao) return true
     const f = fundoPorId.get(id)
-    return !!f && f.destinoEntidadeId === contaEscolhida?.entidadeId && Number(f.percentagemRemessa ?? 0) > 0
+    return !!f && f.destinoEntidadeId === conta?.entidadeId && Number(f.percentagemRemessa ?? 0) > 0
   }
   const valido = (v: string) => valorApi.test(v)
   const total = linhas.reduce((s, l) => s + (valido(l.valor) && fundoVisivel(l.fundoId) ? centimos(l.valor) : 0), 0)
@@ -125,22 +147,28 @@ export default function PaginaEntrada() {
   const ultima = [...doMembro].sort((a, b) => b.dataHora.localeCompare(a.dataHora))[0]
   const totalSessao = sessao.reduce((s, x) => s + centimos(x.valor), 0)
 
-  const mudarCaso = (missao: boolean) => {
-    setParams((p) => { const n = new URLSearchParams(p); if (missao) n.set('onde', 'missao'); else n.delete('onde'); return n }, { replace: true })
-    const lista = (contas.data ?? []).filter((c) => daMissao(c) === missao)
-    form.setValue('contaId', lista[0] ? String(lista[0].id) : '')
-    form.setValue('metodo', METODO_DA_CONTA[lista[0]?.tipo ?? 'CAIXA'])
-    form.setValue('linhas', linhasIniciais)
-    form.clearErrors()
+  const escolherConta = (c: Conta) => {
+    form.setValue('contaId', String(c.id), { shouldDirty: true })
+    form.setValue('metodo', METODO_DA_CONTA[c.tipo ?? 'CAIXA'], { shouldDirty: true })
+    if (c.tipo !== 'CAIXA') form.setValue('contagemId', '')
+    form.clearErrors(['contaId', 'referencia'])
     setErro(null)
-    if (missao) setSalva(false)
+  }
+  const escolherSalva = (sim: boolean) => {
+    setSalva(sim)
+    form.clearErrors('membro')
+    if (!sim) return
+    form.setValue('membro', null)
+    // ofertas da salva: só em numerário, no caixa da igreja
+    const caixa = daIgreja.find((c) => c.tipo === 'CAIXA')
+    if (caixa) escolherConta(caixa)
   }
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     const preenchidas = v.linhas.filter((l) => l.valor && centimos(l.valor) > 0 && fundoVisivel(l.fundoId))
     if (!anonimo && v.membro == null) {
-      form.setError('membro', { message: naMissao ? 'Diga que membro pagou na conta da Missão' : 'Escolha o membro (ou "Ofertas da salva" para ofertas sem nome)' })
+      form.setError('membro', { message: naMissao ? 'Diga que membro pagou na Missão' : 'Escolha o membro (ou "Ofertas da salva" para ofertas sem nome)' })
       return
     }
     if (naMissao && !v.referencia) { form.setError('referencia', { message: 'Escreva a referência do comprovativo' }); return }
@@ -152,18 +180,30 @@ export default function PaginaEntrada() {
         recibo: v.recibo && membroId != null && pode('tesouraria.recibo.criar'),
         corpo: {
           tipo: 'ENTRADA', metodo: v.metodo as never, valorTotal: deCentimos(total), contaId: Number(v.contaId),
-          membroId: membroId ?? undefined, anonimo: membroId == null, contagemId: v.metodo === 'NUMERARIO' && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
-          referencia: v.referencia || undefined, descricao: v.descricao || (naMissao ? 'Pago na conta da Missão' : anonimo ? 'Ofertas da salva' : undefined),
+          membroId: membroId ?? undefined, anonimo: membroId == null, contagemId: numerario && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
+          referencia: v.referencia || undefined,
+          descricao: v.descricao || (naMissao ? 'Pago directamente na Missão' : anonimo ? 'Ofertas da salva' : numerario ? 'Envelope' : undefined),
           linhas: preenchidas.map((l) => ({ fundoId: l.fundoId, categoriaId: Number(l.categoriaId), valor: l.valor })),
         } as never,
       })
       const numero = recibo ? `${recibo.numero}/${recibo.ano}` : undefined
-      setSessao((s) => [{ id: tr.id, quem: membroId ? nomeDe(membroId) ?? 'Membro' : 'Ofertas da salva', valor: tr.valorTotal, recibo: numero }, ...s])
+      // o ficheiro do comprovativo vai depois da entrada (precisa do id); se falhar, a entrada fica e junta-se na ficha
+      let juntou = false
+      if (comprovativo && !numerario) {
+        try {
+          await carregarComprovativo(tr.id, comprovativo)
+          juntou = true
+        } catch (errFicheiro) {
+          toast.warning('A entrada foi gravada, mas o comprovativo não foi carregado', { description: `${mensagemDe(errFicheiro)} Junte-o na ficha do movimento.` })
+        }
+      }
+      setSessao((s) => [{ id: tr.id, quem: membroId ? nomeDe(membroId) ?? 'Membro' : 'Ofertas da salva', como: conta ? comoEntregou(conta).titulo : '', valor: tr.valorTotal, recibo: numero, comprovativo: juntou }, ...s])
       toast.success(numero ? `Entrada gravada. Recibo n.º ${numero}.` : 'Entrada gravada e confirmada.')
       if (erroRecibo) toast.warning('O recibo não foi emitido', { description: `${mensagemDe(erroRecibo)} Emita-o na ficha do movimento.` })
       setChave(crypto.randomUUID())
-      // pronto para o envelope seguinte: mantém conta, forma, data e hora
+      // pronto para a entrada seguinte: mantém como foi entregue, a data e a hora
       form.reset({ ...v, membro: null, referencia: '', descricao: '', linhas: linhasIniciais })
+      setComprovativo(null)
       setVerOutros(false)
     } catch (err) {
       setErro(aplicarErroApi(form, err))
@@ -190,54 +230,40 @@ export default function PaginaEntrada() {
       {receitas.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
     </Seleccao>
   )
-  const quandoTexto = `${form.watch('data') === hojeIso() ? 'hoje' : dataEcra(form.watch('data'))}, ${form.watch('hora')}`
-  const erroOnde = e.contaId || e.data || e.hora || e.descricao
+  const opcao = (c: Conta) => {
+    const { titulo, I } = comoEntregou(c)
+    const sel = conta?.id === c.id
+    return (
+      <button key={c.id} type="button" role="radio" aria-checked={sel} onClick={() => escolherConta(c)}
+        className={cn('alvo flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left', sel ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
+        <I className={cn('size-5 flex-none', sel ? 'text-primary' : 'text-muted-foreground')} />
+        <span className="min-w-0"><span className="block text-sm font-medium">{titulo}</span><span className="block truncate text-xs text-muted-foreground">{detalheConta(c)}</span></span>
+      </button>
+    )
+  }
 
   return (
     <form onSubmit={submeter} noValidate>
       <TituloPagina
         antes={<Link to="/tesouraria" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.tesouraria.titulo}</Link>}
         icone={HandCoins} titulo={t.tesouraria.entrada}
-        descricao={naMissao ? 'O membro pagou directamente na conta da Missão e mandou o comprovativo.' : 'Os dízimos e ofertas de cada envelope, ou as ofertas da salva.'}
+        descricao="Os dízimos e ofertas de cada membro (envelope ou comprovativo) e as ofertas da salva."
       />
-      <div role="tablist" aria-label="Onde foi pago" className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 sm:inline-grid">
-        {[{ m: false, rot: 'Recolhido na igreja', I: Church }, { m: true, rot: 'Pago na conta da Missão', I: Landmark }].map(({ m, rot, I }) => (
-          <button key={rot} type="button" role="tab" aria-selected={naMissao === m} onClick={() => mudarCaso(m)}
-            className={cn('alvo flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground', naMissao === m && 'bg-card text-foreground shadow-sm')}>
-            <I className="size-4 shrink-0" />{rot}
-          </button>
-        ))}
-      </div>
-      {naMissao && !contasDoCaso.length ? (
-        <div className="rounded-xl border bg-card shadow-card">
-          <EstadoVazio icone={Landmark} titulo="Ainda não está registada a conta da Missão"
-            accao={pode('tesouraria.conta_financeira.criar') && <Button asChild className="alvo"><Link to="/tesouraria/contas?nova=missao">Registar a conta da Missão</Link></Button>}>
-            Para lançar o que os membros pagam directamente na Missão, registe primeiro a conta bancária (ou M-Pesa) da Missão.
-          </EstadoVazio>
-        </div>
-      ) : <>
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid min-w-0 gap-6 lg:col-span-8">
           <ErroFormulario mensagem={erro} />
-          {naMissao && (
-            <p className="rounded-lg border border-info/30 bg-tint-info px-4 py-3 text-sm text-info-text">
-              O dinheiro já está na Missão: conta como contribuição do membro (com recibo) e como já remetido, e não entra no saldo da igreja.
-            </p>
-          )}
 
           {/* 1 · quem contribui */}
-          <Cartao titulo="Quem contribui" descricao={naMissao ? 'O membro que pagou e mandou o comprovativo' : 'O envelope de um membro, ou as ofertas sem nome'} icone={UserRound}>
-            {!naMissao && (
-              <div role="radiogroup" aria-label="Quem contribui" className="mb-4 grid grid-cols-2 gap-2">
-                {[{ v: false, r: 'Membro (envelope)', I: UserRound, d: 'Com recibo numerado' }, { v: true, r: 'Ofertas da salva', I: Users, d: 'Sem nome, sem recibo' }].map((o) => (
-                  <button key={o.r} type="button" role="radio" aria-checked={salva === o.v} onClick={() => { setSalva(o.v); if (o.v) form.setValue('membro', null); form.clearErrors('membro') }}
-                    className={cn('alvo flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left', salva === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
-                    <o.I className={cn('size-5 flex-none', salva === o.v ? 'text-primary' : 'text-muted-foreground')} />
-                    <span className="min-w-0"><span className="block text-sm font-medium">{o.r}</span><span className="block text-xs text-muted-foreground">{o.d}</span></span>
-                  </button>
-                ))}
-              </div>
-            )}
+          <Cartao titulo="1. Quem contribui" icone={UserRound}>
+            <div role="radiogroup" aria-label="Quem contribui" className="mb-4 grid grid-cols-2 gap-2">
+              {[{ v: false, r: 'Um membro', I: UserRound, d: 'Com recibo numerado' }, { v: true, r: 'Ofertas da salva', I: Users, d: 'Sem nome, em numerário' }].map((o) => (
+                <button key={o.r} type="button" role="radio" aria-checked={anonimo === o.v} onClick={() => escolherSalva(o.v)}
+                  className={cn('alvo flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left', anonimo === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
+                  <o.I className={cn('size-5 flex-none', anonimo === o.v ? 'text-primary' : 'text-muted-foreground')} />
+                  <span className="min-w-0"><span className="block text-sm font-medium">{o.r}</span><span className="block text-xs text-muted-foreground">{o.d}</span></span>
+                </button>
+              ))}
+            </div>
             {!anonimo && (
               <CampoFormulario rotulo="Membro" erro={e.membro?.message} obrigatorio>
                 {(p) => <Controller control={form.control} name="membro" render={({ field }) => (
@@ -251,11 +277,62 @@ export default function PaginaEntrada() {
                 {ultima && <span>Última: {dataEcra(ultima.dataHora)}</span>}
               </p>
             )}
-            {anonimo && <p className="flex items-center gap-2 text-sm text-muted-foreground"><HandHeart className="size-4 flex-none" />Ofertas sem nome: entram nos fundos, sem recibo.</p>}
+            {anonimo && <p className="flex items-center gap-2 text-sm text-muted-foreground"><HandHeart className="size-4 flex-none" />O que se recolheu na salva: entra nos fundos, em numerário, sem recibo.</p>}
           </Cartao>
 
-          {/* 2 · quanto */}
-          <Cartao titulo="Valores" descricao="Escreva só o que tem valor; o total soma-se sozinho" icone={Wallet}
+          {/* 2 · como entregou */}
+          {!anonimo && (
+            <Cartao titulo="2. Como entregou o dinheiro" icone={Wallet} descricao="Em envelope na igreja, ou por depósito / M-Pesa com comprovativo">
+              <div role="radiogroup" aria-label="Como entregou o dinheiro" className="grid gap-4">
+                <div>
+                  <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Na igreja</p>
+                  <div className="grid gap-2 sm:grid-cols-2">{daIgreja.map(opcao)}</div>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Directamente na Missão</p>
+                  {naMissaoContas.length > 0 && <div className="grid gap-2 sm:grid-cols-2">{naMissaoContas.map(opcao)}</div>}
+                  {pode('tesouraria.conta_financeira.criar') && (
+                    <Link to="/tesouraria/contas?nova=missao" className="alvo mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                      <Plus className="size-4" />{naMissaoContas.length ? 'Outra conta da Missão (ex.: M-Pesa da Missão)' : 'Registar a conta da Missão (banco ou M-Pesa)'}
+                    </Link>
+                  )}
+                  {!naMissaoContas.length && !pode('tesouraria.conta_financeira.criar') && <p className="text-sm text-muted-foreground">Ainda não há contas da Missão registadas.</p>}
+                </div>
+              </div>
+              {e.contaId && <p className="mt-2 text-sm text-destructive-text">{e.contaId.message}</p>}
+              {naMissao && (
+                <p className="mt-4 rounded-lg border border-info/30 bg-tint-info px-3 py-2 text-sm text-info-text">
+                  O dinheiro já está na Missão: conta como contribuição do membro (com recibo) e como já remetido; não entra no saldo da igreja.
+                </p>
+              )}
+            </Cartao>
+          )}
+
+          {/* 3 · comprovativo (o que não é numerário) */}
+          {!numerario && conta && (
+            <Cartao titulo="Comprovativo" icone={FileCheck2} descricao="O que o membro mandou ao tesoureiro: o talão do depósito ou a mensagem do M-Pesa">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <CampoFormulario rotulo={conta.tipo === 'BANCO' ? 'N.º do talão / referência' : 'Código da transacção'} erro={e.referencia?.message} obrigatorio={naMissao}>
+                  {(p) => <Input {...p} {...form.register('referencia')} placeholder={conta.tipo === 'BANCO' ? 'ex.: 004512' : 'ex.: QK7H2LM9PX'} className="alvo num uppercase placeholder:normal-case" />}
+                </CampoFormulario>
+                <div className="grid grid-cols-[1fr_auto] gap-3">
+                  <CampoFormulario rotulo="Data do pagamento" erro={e.data?.message} obrigatorio>
+                    {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
+                  </CampoFormulario>
+                  <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
+                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
+                  </CampoFormulario>
+                </div>
+                <CampoFormulario rotulo="Descrição" erro={e.descricao?.message} className="sm:col-span-2" ajuda="O que o membro escreveu no comprovativo (ex.: dízimo de Outubro)">
+                  {(p) => <Input {...p} {...form.register('descricao')} placeholder="ex.: Dízimo e oferta de Outubro" className="alvo" />}
+                </CampoFormulario>
+                <div className="sm:col-span-2"><CampoComprovativo ficheiro={comprovativo} aoMudar={setComprovativo} /></div>
+              </div>
+            </Cartao>
+          )}
+
+          {/* valores */}
+          <Cartao titulo={anonimo ? '2. Valores' : '3. Valores'} descricao="Escreva só o que tem valor; o total soma-se sozinho" icone={HandCoins}
             accoes={<Button type="button" variant="ghost" size="sm" className="hidden sm:inline-flex" aria-pressed={verCategorias} onClick={() => setVerCategorias((v) => !v)}>{verCategorias ? 'Ocultar categorias' : 'Alterar categorias'}</Button>}>
             {principais.length > 0 && (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -288,50 +365,19 @@ export default function PaginaEntrada() {
                 )}
               </div>
             )}
-            {(metodo !== 'NUMERARIO' || naMissao) && (
-              <div className="mt-4 grid gap-1.5 sm:max-w-sm">
-                <label htmlFor="ent-ref" className="text-sm font-medium">{naMissao ? 'Referência do comprovativo' : 'Referência'}{naMissao && <span className="text-destructive-text"> *</span>}</label>
-                <Input id="ent-ref" {...form.register('referencia')} placeholder={metodo === 'MPESA' ? 'código da transacção M-Pesa' : 'n.º do talão'} className="alvo num uppercase placeholder:normal-case" aria-invalid={!!e.referencia} />
-                {e.referencia && <p className="text-xs text-destructive-text">{e.referencia.message}</p>}
-              </div>
-            )}
             {e.linhas?.root?.message || e.linhas?.message ? <p className="mt-3 text-sm font-medium text-destructive-text">{e.linhas?.root?.message ?? e.linhas?.message}</p> : null}
-          </Cartao>
-
-          {/* 3 · onde e quando (mantém-se entre envelopes) */}
-          <section className="rounded-xl border bg-card shadow-card">
-            <button type="button" aria-expanded={verOnde || !!erroOnde} onClick={() => setVerOnde((v) => !v)} className="alvo flex w-full items-center gap-3 px-4 py-3 text-left sm:px-6">
-              <Wallet className="size-4 flex-none text-muted-foreground" />
-              <span className="min-w-0 flex-1 text-sm">
-                <span className="text-muted-foreground">Recebido em </span><span className="font-medium">{contaEscolhida?.nome ?? '—'}</span>
-                <span className="text-muted-foreground"> · {rotulos.metodo[metodo as keyof typeof rotulos.metodo] ?? metodo} · {quandoTexto}</span>
-              </span>
-              <span className="inline-flex flex-none items-center gap-1 text-xs font-medium text-primary"><Pencil className="size-3.5" />{verOnde ? 'Fechar' : 'Alterar'}</span>
-            </button>
-            {(verOnde || !!erroOnde) && (
-              <div className="grid gap-4 border-t px-4 py-4 sm:grid-cols-2 sm:px-6">
-                <CampoFormulario rotulo="Conta" erro={e.contaId?.message} obrigatorio>
-                  {(p) => (
-                    <Seleccao {...p} {...form.register('contaId', {
-                      onChange: (ev) => { const c = contas.data?.find((x: Conta) => String(x.id) === ev.target.value); if (c?.tipo) form.setValue('metodo', METODO_DA_CONTA[c.tipo]) },
-                    })}>
-                      {contasDoCaso.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                    </Seleccao>
-                  )}
-                </CampoFormulario>
-                <CampoFormulario rotulo="Forma de pagamento">
-                  {(p) => <Seleccao {...p} {...form.register('metodo')}>{Object.entries(rotulos.metodo).map(([k, r]) => <option key={k} value={k}>{r}</option>)}</Seleccao>}
-                </CampoFormulario>
+            {numerario && (
+              <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-[1fr_1fr]">
                 <div className="grid grid-cols-[1fr_auto] gap-3">
-                  <CampoFormulario rotulo={naMissao ? 'Data do pagamento' : 'Data'} erro={e.data?.message} obrigatorio>
+                  <CampoFormulario rotulo="Data" erro={e.data?.message} obrigatorio>
                     {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                   </CampoFormulario>
                   <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
+                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
                   </CampoFormulario>
                 </div>
-                {!naMissao && metodo === 'NUMERARIO' && contagensAbertas.length > 0 && (
-                  <CampoFormulario rotulo="Contagem do culto" ajuda="O dinheiro contado onde este valor estava: soma na conferência.">
+                {contagensAbertas.length > 0 && (
+                  <CampoFormulario rotulo="Contagem do culto" ajuda="Onde este dinheiro foi contado: soma na conferência.">
                     {(p) => (
                       <Seleccao {...p} {...form.register('contagemId')}>
                         <option value="">Sem contagem</option>
@@ -340,19 +386,17 @@ export default function PaginaEntrada() {
                     )}
                   </CampoFormulario>
                 )}
-                <CampoFormulario rotulo="Descrição" erro={e.descricao?.message} className="sm:col-span-2">
-                  {(p) => <Input {...p} {...form.register('descricao')} placeholder="ex.: Envelope do sábado" className="alvo" />}
-                </CampoFormulario>
               </div>
             )}
-          </section>
+          </Cartao>
         </div>
 
         <aside className="hidden lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4 lg:grid lg:gap-6">
           <Cartao titulo="Resumo">
-            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total do envelope</p>
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
             <p className="num mt-1 text-3xl font-bold tracking-tight"><Dinheiro valor={deCentimos(total)} /></p>
             <p className="mt-1 truncate text-sm text-muted-foreground">{anonimo ? 'Ofertas da salva' : membro ? nomeDe(membro) : 'Escolha o membro'}</p>
+            {conta && <p className="truncate text-sm text-muted-foreground">{anonimo ? 'Em numerário' : comoEntregou(conta).titulo}</p>}
             {total > 0 && (
               <div className="mt-4 grid gap-1.5 text-sm">
                 <div className="flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
@@ -361,6 +405,7 @@ export default function PaginaEntrada() {
                 </div>
                 <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-1)]" />Para a Missão</span><span className="num">{dinheiro(deCentimos(paraMissao))}</span></p>
                 <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-3)]" />Fica na igreja</span><span className="num">{dinheiro(deCentimos(total - paraMissao))}</span></p>
+                {naMissao && <p className="text-xs text-muted-foreground">Já está na Missão: não precisa de remessa.</p>}
               </div>
             )}
             <label className={cn('alvo mt-4 flex items-center gap-2 text-sm', (anonimo || !membro) && 'opacity-50')}>
@@ -372,37 +417,11 @@ export default function PaginaEntrada() {
             </Button>
             <Button type="button" variant="ghost" className="alvo mt-2 w-full" onClick={() => navigate('/tesouraria')}>{sessao.length ? 'Terminar' : t.comum.cancelar}</Button>
           </Cartao>
-          {sessao.length > 0 && (
-            <Cartao titulo="Nesta sessão" descricao={`${sessao.length} lançamento(s) · ${dinheiro(deCentimos(totalSessao))}`} icone={Receipt} semMargem>
-              <ul className="max-h-72 divide-y overflow-y-auto">
-                {sessao.map((x) => (
-                  <li key={x.id}>
-                    <Link to={`/tesouraria/movimentos/${x.id}`} className="flex items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-muted/50 sm:px-6">
-                      <span className="min-w-0"><span className="block truncate font-medium">{x.quem}</span>{x.recibo && <span className="text-xs text-muted-foreground">recibo n.º {x.recibo}</span>}</span>
-                      <span className="num flex-none"><Dinheiro valor={x.valor} /></span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Cartao>
-          )}
+          {sessao.length > 0 && <ListaSessao sessao={sessao} total={totalSessao} />}
         </aside>
       </div>
       {/* telemóvel: o que se lançou nesta sessão, e o total e o botão sempre à vista no fundo do ecrã */}
-      {sessao.length > 0 && (
-        <div className="mt-6 lg:hidden">
-          <Cartao titulo="Nesta sessão" descricao={`${sessao.length} lançamento(s) · ${dinheiro(deCentimos(totalSessao))}`} icone={Receipt} semMargem>
-            <ul className="divide-y">
-              {sessao.slice(0, 5).map((x) => (
-                <li key={x.id}><Link to={`/tesouraria/movimentos/${x.id}`} className="alvo flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                  <span className="min-w-0 truncate">{x.quem}{x.recibo && <span className="text-xs text-muted-foreground"> · n.º {x.recibo}</span>}</span>
-                  <span className="num flex-none"><Dinheiro valor={x.valor} /></span>
-                </Link></li>
-              ))}
-            </ul>
-          </Cartao>
-        </div>
-      )}
+      {sessao.length > 0 && <div className="mt-6 lg:hidden"><ListaSessao sessao={sessao.slice(0, 5)} total={totalSessao} n={sessao.length} /></div>}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -419,7 +438,26 @@ export default function PaginaEntrada() {
         </div>
       </div>
       <div className="h-24 lg:hidden" aria-hidden />
-      </>}
     </form>
+  )
+}
+
+function ListaSessao({ sessao, total, n }: { sessao: Lancada[]; total: number; n?: number }) {
+  return (
+    <Cartao titulo="Nesta sessão" descricao={`${n ?? sessao.length} lançamento(s) · ${dinheiro(deCentimos(total))}`} icone={Receipt} semMargem>
+      <ul className="max-h-72 divide-y overflow-y-auto">
+        {sessao.map((x) => (
+          <li key={x.id}>
+            <Link to={`/tesouraria/movimentos/${x.id}`} className="alvo flex items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-muted/50 sm:px-6">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{x.quem}</span>
+                <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">{x.comprovativo && <Paperclip className="size-3 flex-none" aria-label="com comprovativo" />}{[x.como, x.recibo && `recibo n.º ${x.recibo}`].filter(Boolean).join(' · ')}</span>
+              </span>
+              <span className="num flex-none"><Dinheiro valor={x.valor} /></span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Cartao>
   )
 }

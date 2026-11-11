@@ -496,3 +496,75 @@ export function useContribuicoesDoAno(ano: number) {
     staleTime: 60_000,
   })
 }
+
+/* ===================================================================== comprovativos (fotografia do talão, print M-Pesa, PDF) */
+export type Documento = Esquema<'Documento'> & { id: number; nomeFicheiro: string }
+const TIPOS_COMPROVATIVO = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+export const ACEITA_COMPROVATIVO = 'image/*,application/pdf'
+const MAX_COMPROVATIVO = 5 * 1024 * 1024
+
+/**
+ * Prepara o ficheiro para enviar em 3G: fotografias grandes são reduzidas (lado maior 1600 px, JPEG 80%) no próprio
+ * telemóvel; PDF segue como está. O tipo verdadeiro é verificado pela API pelos primeiros bytes.
+ */
+export async function prepararComprovativo(f: File): Promise<{ corpo: Blob; tipo: string; nome: string }> {
+  const ehImagem = f.type.startsWith('image/')
+  if (!ehImagem && f.type !== 'application/pdf') throw new Error('O comprovativo tem de ser uma fotografia ou um PDF.')
+  let corpo: Blob = f
+  let tipo = f.type
+  if (ehImagem && (f.size > 400 * 1024 || !TIPOS_COMPROVATIVO.includes(f.type))) {
+    try {
+      const img = await createImageBitmap(f)
+      const escala = Math.min(1, 1600 / Math.max(img.width, img.height))
+      const tela = document.createElement('canvas')
+      tela.width = Math.round(img.width * escala)
+      tela.height = Math.round(img.height * escala)
+      tela.getContext('2d')!.drawImage(img, 0, 0, tela.width, tela.height)
+      img.close()
+      const jpeg = await new Promise<Blob | null>((ok) => tela.toBlob(ok, 'image/jpeg', 0.8))
+      if (jpeg && (jpeg.size < f.size || !TIPOS_COMPROVATIVO.includes(f.type))) { corpo = jpeg; tipo = 'image/jpeg' }
+    } catch { /* o navegador não lê o formato (ex.: HEIC): envia-se como está e a API decide */ }
+  }
+  if (corpo.size > MAX_COMPROVATIVO) throw new Error('O ficheiro é demasiado grande (máximo 5 MB).')
+  return { corpo, tipo, nome: f.name }
+}
+
+export async function carregarComprovativo(transacaoId: number, f: File): Promise<Documento> {
+  const { corpo, tipo, nome } = await prepararComprovativo(f)
+  return (await dados(api.POST('/v1/tesouraria/documentos/carregar', {
+    params: { query: { transacaoId, tipo: 'COMPROVATIVO', nome } },
+    body: corpo as never,
+    bodySerializer: (b: unknown) => b as Blob,
+    headers: { 'Content-Type': tipo },
+  }))) as Documento
+}
+
+export function useDocumentos(transacaoId: number) {
+  return useQuery({
+    queryKey: [...k.um(transacaoId), 'documentos'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/documentos', { params: { query: { transacaoId, limite: 50 } } }))).dados as Documento[],
+  })
+}
+
+export function useCarregarComprovativo(transacaoId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (f: File) => carregarComprovativo(transacaoId, f),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...k.um(transacaoId), 'documentos'] }),
+  })
+}
+
+/** Abre o ficheiro num separador novo (o pedido leva o token; um <a href> directo não levaria). */
+export async function abrirDocumento(id: number) {
+  const janela = window.open('', '_blank')
+  try {
+    const blob = (await dados(api.GET('/v1/tesouraria/documentos/{id}/ficheiro', { params: { path: { id } }, parseAs: 'blob' }))) as unknown as Blob
+    const url = URL.createObjectURL(blob)
+    if (janela) janela.location.href = url
+    else window.location.href = url
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } catch (e) {
+    janela?.close()
+    throw e
+  }
+}

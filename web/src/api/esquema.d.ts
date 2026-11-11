@@ -4825,6 +4825,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/documentos/carregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Carregar o ficheiro de um comprovativo (fotografia do talão, print M-Pesa, PDF) e criar o documento
+         * @description O tipo é verificado pelos primeiros bytes (JPG, PNG, WebP ou PDF), até ficheiros.max.kb (5 MB). Indicar transacaoId ou despesaId (só um). A base de dados decide se o utilizador pode juntar documentos a esse registo.
+         */
+        post: operations["carregarDocumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/documentos/{id}": {
         parameters: {
             query?: never;
@@ -4844,6 +4864,26 @@ export interface paths {
          * @description Só os campos enviados mudam.
          */
         patch: operations["alterarDocumento"];
+        trace?: never;
+    };
+    "/v1/tesouraria/documentos/{id}/ficheiro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * O ficheiro do comprovativo
+         * @description 404 se o documento não for visível ou não tiver ficheiro guardado pela API.
+         */
+        get: operations["ficheiroDocumento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/tesouraria/documentos/{id}/reactivar": {
@@ -18883,6 +18923,45 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    carregarDocumento: {
+        parameters: {
+            query?: {
+                transacaoId?: number;
+                despesaId?: number;
+                tipo?: components["schemas"]["EnumTipoDocumento"];
+                /** @description Nome original do ficheiro */
+                nome?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/jpeg": string;
+                "image/png": string;
+                "image/webp": string;
+                "application/pdf": string;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Documento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     lerDocumento: {
         parameters: {
             query?: never;
@@ -18933,6 +19012,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Documento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    ficheiroDocumento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description O ficheiro */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                    "application/pdf": string;
                 };
             };
             400: components["responses"]["PedidoInvalido"];
