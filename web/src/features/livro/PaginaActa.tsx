@@ -4,6 +4,7 @@
  * votações, votos formais, encerramento e assinaturas. Enquanto a acta não for aprovada leva a marca RASCUNHO.
  * O PDF faz-se pela impressão do navegador ("Guardar como PDF"); a geração no servidor é da Fase 4.
  */
+import { Marca } from '@/components/layout/Marca'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -73,6 +74,7 @@ export default function PaginaActa() {
           </span>
         )}
         <header className="border-b-2 border-neutral-900 pb-3 text-center">
+          <Marca className="mx-auto mb-2 size-16" />
           <p className="text-[10pt] tracking-[0.2em] uppercase">Igreja Adventista do Sétimo Dia</p>
           {entidade && <p className="text-[10pt]">{entidade}</p>}
           <p className="mt-1 text-[15pt] font-bold">{igreja.nome}</p>

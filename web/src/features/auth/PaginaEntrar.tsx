@@ -128,7 +128,7 @@ export default function PaginaEntrar() {
       <div className="w-full max-w-[440px]">
         <section className="rounded-xl border bg-card px-6 py-10 text-card-foreground shadow-card sm:px-10">
           <div className="flex flex-col items-center gap-4 text-center">
-            <Marca className="size-14" />
+            <Marca className="size-20" />
             <div>
               <p className="text-lg font-semibold tracking-tight">{t.produto.nome}</p>
               <p className="text-sm text-muted-foreground">{t.produto.descricao}</p>

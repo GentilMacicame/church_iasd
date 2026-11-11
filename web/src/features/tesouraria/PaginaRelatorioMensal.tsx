@@ -5,6 +5,7 @@
  * membro, o recibo e o valor em cada fundo; as ofertas sem nome (salva) numa linha. Imprime-se em A4 e segue com
  * o talão do depósito.
  */
+import { CabecalhoDocumento } from '@/components/layout/Marca'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, FileText, Printer } from 'lucide-react'
@@ -103,8 +104,7 @@ export default function PaginaRelatorioMensal() {
           <div className="grid gap-6 print:block print:text-black">
             {/* cabeçalho impresso */}
             <div className="hidden print:mb-4 print:block">
-              <p className="text-sm">Igreja Adventista do Sétimo Dia · {entidadeNome}</p>
-              <p className="text-lg font-bold">{igreja.nome} — relatório da tesouraria de {nomeMes(ano, m)}</p>
+              <CabecalhoDocumento linha={entidadeNome} titulo={`${igreja.nome} — relatório da tesouraria de ${nomeMes(ano, m)}`} />
             </div>
 
             <Cartao titulo="Resumo por fundo" descricao={`O que cabe a ${entidadeNome} de ${nomeMes(ano, m)}`} semMargem className="print:border-0 print:shadow-none">

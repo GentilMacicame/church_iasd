@@ -3,6 +3,7 @@
  * por outra pessoa), emitir e imprimir o recibo, anular um pendente. Um movimento confirmado não se altera:
  * corrige-se com um estorno (a base de dados garante-o).
  */
+import { CabecalhoDocumento } from '@/components/layout/Marca'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Ban, Check, Plus, CircleCheck, Printer, Receipt, ShieldCheck, Undo2, Wallet } from 'lucide-react'
@@ -164,7 +165,7 @@ export default function PaginaMovimento() {
         <div className="hidden print:block">
           <div className="mx-auto max-w-[180mm] border border-black p-8 text-black">
             <div className="flex items-start justify-between">
-              <div><p className="text-sm">Igreja Adventista do Sétimo Dia</p><p className="text-lg font-bold">{igreja.nome}</p></div>
+              <CabecalhoDocumento titulo={igreja.nome} />
               <div className="text-right"><p className="text-sm">Recibo</p><p className="text-lg font-bold">n.º {recibo.data.numero}/{recibo.data.ano}</p></div>
             </div>
             <p className="mt-8">Recebemos de <strong>{quem(tr, nomeDe)}</strong> a quantia de <strong>{dinheiro(tr.valorTotal)}</strong>, em {data(tr.dataHora)}, por {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}:</p>

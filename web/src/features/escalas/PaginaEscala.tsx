@@ -4,6 +4,7 @@
  * ocupa a linha inteira. Tocar numa célula escala, troca ou retira. Publicar torna-a visível aos membros
  * (e activa os lembretes por SMS). Imprimir dá a folha para afixar, com as assinaturas.
  */
+import { Marca } from '@/components/layout/Marca'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -207,6 +208,7 @@ export default function PaginaEscala() {
     <>
       {/* cabeçalho da folha impressa */}
       <div className="mb-6 hidden text-center print:block">
+        <Marca className="mx-auto mb-2 size-12" />
         <p className="text-sm">Igreja Adventista do Sétimo Dia · {igreja.nome}</p>
         <h1 className="mt-1 text-xl font-bold">{p.titulo}</h1>
         <p className="text-sm">{data(p.dataInicio)} a {data(p.dataFim)}</p>
