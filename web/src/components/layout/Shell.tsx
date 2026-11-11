@@ -56,7 +56,10 @@ const NAV: GrupoNav[] = [
   },
   {
     rotulo: t.nav.administracao,
-    itens: [{ para: '/acessos', rotulo: t.nav.acessos, icone: KeyRound, permissao: 'nucleo.usuario.ler', fim: false }],
+    itens: [
+      { para: '/igrejas', rotulo: 'Igrejas', icone: Building2, permissao: 'organizacao.igreja.criar', fim: true },
+      { para: '/acessos', rotulo: t.nav.acessos, icone: KeyRound, permissao: 'nucleo.usuario.ler', fim: false },
+    ],
   },
 ]
 
@@ -195,6 +198,7 @@ function Caminho() {
     if (pathname === '/tesouraria/fundos') partes.push({ rotulo: 'Fundos e ofertas' })
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
   }
+  if (pathname === '/igrejas') partes.push({ rotulo: t.nav.administracao }, { rotulo: 'Igrejas' })
   if (pathname.startsWith('/acessos')) {
     partes.push({ rotulo: t.nav.administracao }, { rotulo: t.nav.acessos, para: '/acessos' })
     if (pathname === '/acessos/utilizadores/novo') partes.push({ rotulo: 'Novo utilizador' })

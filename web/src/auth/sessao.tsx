@@ -21,6 +21,8 @@ interface Sessao {
   pode: (codigo: string) => boolean
   entrar: (login: string, senha: string) => Promise<void>
   sair: () => Promise<void>
+  /** Volta a ler GET /v1/eu (ex.: depois de registar uma igreja nova, para aparecer na lista). */
+  recarregar: () => Promise<void>
   terminadaPorExpirar: boolean
 }
 
@@ -105,8 +107,8 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
   )
 
   const valor = useMemo<Sessao>(
-    () => ({ estado, usuario: eu?.usuario ?? null, igrejas, igreja, escolherIgreja, pode, entrar, sair, terminadaPorExpirar }),
-    [estado, eu, igrejas, igreja, escolherIgreja, pode, entrar, sair, terminadaPorExpirar],
+    () => ({ estado, usuario: eu?.usuario ?? null, igrejas, igreja, escolherIgreja, pode, entrar, sair, recarregar: carregarEu, terminadaPorExpirar }),
+    [estado, eu, igrejas, igreja, escolherIgreja, pode, entrar, sair, carregarEu, terminadaPorExpirar],
   )
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
 }

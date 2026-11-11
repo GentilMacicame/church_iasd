@@ -151,7 +151,7 @@ export default function PaginaEntrar() {
             )}
           </div>
         </section>
-        <p className="mt-6 text-center text-xs text-muted-foreground">Igreja Adventista do Sétimo Dia · Moçambique</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Moçambique</p>
       </div>
     </main>
   )

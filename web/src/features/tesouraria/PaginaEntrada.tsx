@@ -95,7 +95,9 @@ export default function PaginaEntrada() {
   const naMissaoContas = todas.filter((c) => daMissao(c))
   // por defeito: o caixa (envelopes do sábado); com ?onde=missao, a primeira conta da Missão
   // ?conta= (vindo da ficha de um movimento: "lançar outra entrada" do mesmo membro, da mesma forma)
-  const pedida = todas.find((c) => String(c.id) === params.get('conta'))
+  // ?contagem= (vindo da contagem do culto: "lançar entradas desta contagem"): o caixa dessa contagem
+  const contagemPedida = (contagens.data ?? []).find((c) => String(c.id) === params.get('contagem'))
+  const pedida = todas.find((c) => String(c.id) === (params.get('conta') ?? (contagemPedida ? String(contagemPedida.contaId) : null)))
   const inicial = pedida ?? (params.get('onde') === 'missao' ? naMissaoContas[0] : daIgreja.find((c) => c.tipo === 'CAIXA') ?? daIgreja[0])
   const membroPedido = Number(params.get('membro')) || null
 
@@ -110,7 +112,7 @@ export default function PaginaEntrada() {
     resolver: zodResolver(esquema),
     values: {
       contaId: inicial ? String(inicial.id) : '', metodo: METODO_DA_CONTA[inicial?.tipo ?? 'CAIXA'],
-      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: membroPedido, contagemId: '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
+      data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), membro: membroPedido, contagemId: contagemPedida ? String(contagemPedida.id) : '', referencia: '', descricao: '', recibo: true, linhas: linhasIniciais,
     },
     resetOptions: { keepDirtyValues: true },
   })

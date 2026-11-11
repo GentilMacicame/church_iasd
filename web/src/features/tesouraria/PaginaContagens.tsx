@@ -1,17 +1,19 @@
 /**
- * Contagem do numerário (P-06 passo 1) · "O dinheiro contado bate com o que foi lançado?"
- * Dois contadores (tesoureiro e diácono, pessoas diferentes) contam o dinheiro do culto; as entradas em numerário
- * desse culto ligam-se à contagem ao lançar. A conferência compara o contado com o lançado e confirmado.
+ * Contagem do numerário (P-06 passo 1) · "O dinheiro contado já está todo lançado?"
+ * 1. Contar: depois do culto, duas pessoas contam o dinheiro (dízimos, ofertas, Escola Sabatina, outras).
+ * 2. Lançar: cada envelope e a salva lançam-se em "Lançar entrada", ligados a esta contagem.
+ * 3. Conferir: quando o lançado é igual ao contado, a contagem confere-se.
+ * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar.
  */
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calculator, CircleCheck, HandCoins, Plus, Scale } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
-import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
+import { Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoData } from '@/components/comum/CampoData'
@@ -25,106 +27,162 @@ import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, type Conferencia } from './api'
 
+const ESTADO = {
+  ABERTA: { r: 'Por conferir', v: 'warning' as const },
+  CONFERIDA: { r: 'Conferida', v: 'success' as const },
+  DEPOSITADA: { r: 'Depositada', v: 'info' as const },
+}
+/** Valor sem "MT" (a tabela das partes já é toda em meticais): "1 200,00". */
+const mt = (c: number) => dinheiro(deCentimos(Math.abs(c))).replace(/\s*MT$/, '')
+
 export default function PaginaContagens() {
   const { pode } = useSessao()
   const conf = useConferencia()
   const contagens = useContagens()
   const basicos = useMembrosBasicos()
-  const { mudarEstado } = useContagensMut()
   const [nova, setNova] = useState(false)
   const nomes = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, `${m.nome} ${m.apelido}`])), [basicos.data])
   const porId = useMemo(() => new Map((contagens.data ?? []).map((c) => [c.id, c])), [contagens.data])
   const lista = [...(conf.data ?? [])].sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id)
   const abertas = lista.filter((c) => c.estado === 'ABERTA')
-  const comDiferenca = lista.filter((c) => centimos(c.diferenca) !== 0 && c.estado !== 'ABERTA')
+  const faltaLancar = abertas.reduce((s, c) => s + Math.max(0, centimos(c.diferenca)), 0)
   const mes = hojeIso().slice(0, 7)
   const doMes = lista.filter((c) => c.data.startsWith(mes))
-  const contadoMes = (doMes.reduce((s, c) => s + centimos(c.totalContado), 0) / 100).toFixed(2)
-
-  const conferir = (id: number) => mudarEstado.mutate({ id, estado: 'CONFERIDA' }, {
-    onSuccess: () => toast.success('Contagem conferida.'), onError: (e) => toast.error(mensagemDe(e)),
-  })
+  const contadoMes = deCentimos(doMes.reduce((s, c) => s + centimos(c.totalContado), 0))
 
   return (
     <>
-      <TituloPagina icone={Calculator} titulo="Contagem do numerário" descricao="O dinheiro de cada culto, contado por duas pessoas e comparado com o que se lançou"
+      <TituloPagina icone={Calculator} titulo="Contagem do numerário" descricao="O dinheiro de cada culto: quanto se contou e se já está todo lançado"
         accoes={pode('tesouraria.contagem_numerario.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova contagem</Button>} />
       <div className="grid gap-6">
+        <ol className="grid gap-3 rounded-xl border bg-card p-4 text-sm shadow-card sm:grid-cols-3 sm:p-5">
+          {[
+            { n: 1, t: 'Contar', d: 'Depois do culto, duas pessoas contam o dinheiro e registam a contagem.' },
+            { n: 2, t: 'Lançar', d: 'Cada envelope e a salva lançam-se em "Lançar entrada", escolhendo esta contagem.' },
+            { n: 3, t: 'Conferir', d: 'Quando o lançado é igual ao contado, carregue em "Conferir".' },
+          ].map((p) => (
+            <li key={p.n} className="flex gap-3">
+              <span className="flex size-7 flex-none items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{p.n}</span>
+              <span><span className="block font-medium">{p.t}</span><span className="text-muted-foreground">{p.d}</span></span>
+            </li>
+          ))}
+        </ol>
+
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <Indicador rotulo="Contado este mês" valor={<Dinheiro valor={contadoMes} />} nota={`${doMes.length} contagem(ns)`} icone={Calculator} aCarregar={conf.isPending} />
-          <Indicador rotulo="Por conferir" valor={abertas.length} nota="contagens abertas" icone={Scale} tom="warning" aCarregar={conf.isPending} />
-          <Indicador rotulo="Com diferença" valor={comDiferenca.length} nota="contado ≠ lançado" icone={HandCoins} tom={comDiferenca.length ? 'destructive' : 'success'} aCarregar={conf.isPending} />
+          <Indicador rotulo="Por conferir" valor={abertas.length} nota="contagens ainda abertas" icone={Scale} tom="warning" aCarregar={conf.isPending} />
+          <Indicador rotulo="Falta lançar" valor={<Dinheiro valor={deCentimos(faltaLancar)} />} nota="contado e ainda não lançado" icone={HandCoins} tom={faltaLancar ? 'destructive' : 'success'} aCarregar={conf.isPending} />
         </div>
-        <section className="min-w-0 rounded-xl border bg-card shadow-card">
-          <div className="border-b px-4 py-3 sm:px-6">
-            <h2 className="font-semibold">Conferência</h2>
-            <p className="text-sm text-muted-foreground">Ao lançar as entradas em numerário de um culto, escolha a contagem: o lançado soma aqui.</p>
-          </div>
-          {conf.isPending ? <LinhasACarregar linhas={4} />
-            : conf.isError ? <EstadoErro erro={conf.error} aoTentar={() => conf.refetch()} className="m-4" />
-            : lista.length === 0 ? <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe o total contado pelos dois contadores.</EstadoVazio>
-            : (
-              <Tabela>
-                <thead><tr><th className="sm:pl-6">Culto</th><th className="num">Contado</th><th className="num hidden sm:table-cell">Lançado</th><th className="num">Diferença</th><th>Estado</th><th className="sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
-                <tbody>
-                  {lista.map((c) => {
-                    const cont = porId.get(c.id)
-                    const dif = centimos(c.diferenca)
-                    return (
-                      <Fragment key={c.id}>
-                      <tr className={cn(c.dizimos != null && '[&>td]:border-b-0')}>
-                        <td className="sm:pl-6">
-                          <p className="font-medium"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</p>
-                          {cont && <p className="text-xs text-muted-foreground">{nomes.get(cont.contador1MembroId) ?? '—'} e {nomes.get(cont.contador2MembroId) ?? '—'}</p>}
-                        </td>
-                        <td className="num font-medium"><Dinheiro valor={c.totalContado} /></td>
-                        <td className="num hidden text-muted-foreground sm:table-cell"><Dinheiro valor={c.totalLancado} /></td>
-                        <td className={cn('num font-medium', dif === 0 ? 'text-success-text' : 'text-destructive-text')}>{dif === 0 ? 'certo' : <Dinheiro valor={c.diferenca} />}</td>
-                        <td><Pilula variante={c.estado === 'ABERTA' ? 'warning' : c.estado === 'CONFERIDA' ? 'success' : 'info'}>{c.estado === 'ABERTA' ? 'Aberta' : c.estado === 'CONFERIDA' ? 'Conferida' : 'Depositada'}</Pilula></td>
-                        <td className="text-right sm:pr-6">
-                          {c.estado === 'ABERTA' && pode('tesouraria.contagem_numerario.alterar') && (
-                            <Button size="sm" variant="outline" className="alvo" disabled={mudarEstado.isPending || dif !== 0} title={dif !== 0 ? 'O lançado tem de bater com o contado' : undefined}
-                              onClick={() => conferir(c.id)}><CircleCheck className="size-4" />Conferir</Button>
-                          )}
-                        </td>
-                      </tr>
-                      {c.dizimos != null && <LinhaPartes c={c} />}
-                      </Fragment>
-                    )
-                  })}
-                </tbody>
-              </Tabela>
-            )}
-        </section>
-        {abertas.some((c) => centimos(c.diferenca) !== 0) && pode('tesouraria.transacao.criar') && (
-          <p className="text-sm text-muted-foreground">Falta lançar parte do contado? <Link to="/tesouraria/entrada" className="font-medium text-primary hover:underline">Lançar entrada</Link> e escolha a contagem do culto.</p>
-        )}
+
+        {conf.isPending ? <div className="grid gap-4">{[0, 1].map((i) => <Barra key={i} className="h-40 w-full rounded-xl" />)}</div>
+          : conf.isError ? <EstadoErro erro={conf.error} aoTentar={() => conf.refetch()} />
+          : lista.length === 0 ? (
+            <div className="rounded-xl border bg-card shadow-card">
+              <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe o que os dois contadores contaram.</EstadoVazio>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {lista.map((c) => {
+                const cont = porId.get(c.id)
+                return <CartaoContagem key={c.id} c={c} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
+              })}
+            </div>
+          )}
       </div>
       {nova && <DialogoContagem aoFechar={() => setNova(false)} nomeDe={(id) => nomes.get(id)} />}
     </>
   )
 }
 
-/** Por baixo de cada contagem: cada parte, contado / lançado; a que não bate fica a vermelho. */
-function LinhaPartes({ c }: { c: Conferencia }) {
+/** Uma contagem: o contado, o lançado e o que falta, parte a parte, e as acções (lançar, conferir). */
+function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string }) {
+  const { pode } = useSessao()
+  const { mudarEstado } = useContagensMut()
+  const contado = centimos(c.totalContado), lancado = centimos(c.totalLancado), falta = contado - lancado
+  const pct = contado ? Math.min(100, Math.round((lancado / contado) * 100)) : 0
+  const aberta = c.estado === 'ABERTA'
+  const est = ESTADO[c.estado as keyof typeof ESTADO] ?? ESTADO.ABERTA
+  // com partes (contagens novas) mostra-se cada uma; nas antigas, só o total
+  const partes = c.dizimos != null
+    ? PARTES_CONTAGEM.map((p) => ({ rotulo: p.rotulo, contado: centimos(c[p.campo] ?? '0'), lancado: centimos(c[`${p.campo}Lancado`] ?? '0') })).filter((p) => p.contado || p.lancado)
+    : [{ rotulo: 'Total (contagem sem partes)', contado, lancado }]
+  const conferir = () => mudarEstado.mutate({ id: c.id, estado: 'CONFERIDA' }, {
+    onSuccess: () => toast.success('Contagem conferida.'), onError: (e) => toast.error(mensagemDe(e)),
+  })
+
   return (
-    <tr>
-      <td colSpan={6} className="pt-0 sm:px-6">
-        <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
-          {PARTES_CONTAGEM.map((p) => {
-            const contado = centimos(c[p.campo] ?? '0')
-            const lancado = centimos(c[`${p.campo}Lancado`] ?? '0')
-            if (!contado && !lancado) return null
-            const certo = contado === lancado
-            return (
-              <li key={p.campo} className={cn('tabular-nums', certo ? 'text-muted-foreground' : 'font-medium text-destructive-text')}>
-                {p.rotulo}: {dinheiro(deCentimos(contado))}{certo ? ' ✓' : ` · lançado ${dinheiro(deCentimos(lancado))}`}
-              </li>
-            )
-          })}
-        </ul>
-      </td>
-    </tr>
+    <section className="min-w-0 rounded-xl border bg-card shadow-card">
+      <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
+        <div className="min-w-0">
+          <h2 className="font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</h2>
+          {contadores && <p className="text-sm text-muted-foreground">Contado por {contadores}</p>}
+        </div>
+        <Pilula variante={est.v}>{est.r}</Pilula>
+      </header>
+
+      <div className="grid gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_1.5fr]">
+        <div className="grid content-start gap-3">
+          <dl className="grid grid-cols-3 gap-2">
+            <div><dt className="text-xs text-muted-foreground">Contado</dt><dd className="num font-semibold"><Dinheiro valor={c.totalContado} /></dd></div>
+            <div><dt className="text-xs text-muted-foreground">Já lançado</dt><dd className="num font-semibold"><Dinheiro valor={c.totalLancado} /></dd></div>
+            <div>
+              <dt className="text-xs text-muted-foreground">{falta >= 0 ? 'Falta lançar' : 'Lançado a mais'}</dt>
+              <dd className={cn('num font-semibold', falta === 0 ? 'text-success-text' : 'text-destructive-text')}>{falta === 0 ? 'nada ✓' : <Dinheiro valor={deCentimos(Math.abs(falta))} />}</dd>
+            </div>
+          </dl>
+          <div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${pct}% lançado`}>
+              <div className={cn('h-full rounded-full', falta === 0 ? 'bg-success' : 'bg-primary')} style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{pct}% do contado já está lançado</p>
+          </div>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-muted-foreground">
+              <th className="pb-1.5 text-left font-medium">Parte</th><th className="pb-1.5 text-right font-medium">Contado</th>
+              <th className="pb-1.5 text-right font-medium">Lançado</th><th className="pb-1.5 text-right font-medium">Falta</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {partes.map((p) => {
+              const f = p.contado - p.lancado
+              return (
+                <tr key={p.rotulo}>
+                  <td className="py-1.5">{p.rotulo}</td>
+                  <td className="num py-1.5 text-right">{mt(p.contado)}</td>
+                  <td className="num py-1.5 text-right text-muted-foreground">{mt(p.lancado)}</td>
+                  <td className={cn('num py-1.5 text-right font-medium', f === 0 ? 'text-success-text' : 'text-destructive-text')}>
+                    {f === 0 ? '✓' : `${mt(f)}${f < 0 ? ' a mais' : ''}`}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {aberta && (
+        <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
+          <p className="text-xs text-muted-foreground">
+            {falta === 0 ? 'Está tudo lançado: pode conferir.' : falta > 0 ? 'Lance o que falta (escolhendo esta contagem) para poder conferir.' : 'Lançou-se mais do que o contado: verifique as entradas ligadas a esta contagem.'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {falta > 0 && pode('tesouraria.transacao.criar') && (
+              <Button asChild size="sm" className="alvo">
+                <Link to={`/tesouraria/entrada?contagem=${c.id}`}><HandCoins className="size-4" />Lançar entradas desta contagem</Link>
+              </Button>
+            )}
+            {pode('tesouraria.contagem_numerario.alterar') && (
+              <Button size="sm" variant={falta === 0 ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || falta !== 0} onClick={conferir}>
+                <CircleCheck className="size-4" />Conferir
+              </Button>
+            )}
+          </div>
+        </footer>
+      )}
+    </section>
   )
 }
 

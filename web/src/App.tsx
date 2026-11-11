@@ -10,6 +10,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { SessaoProvider, useSessao } from '@/auth/sessao'
 import { Shell } from '@/components/layout/Shell'
 import { Marca } from '@/components/layout/Marca'
+import { Exige } from '@/components/layout/Exige'
 import { ErroApi } from '@/api/erros'
 
 const PaginaEntrar = lazy(() => import('@/features/auth/PaginaEntrar'))
@@ -33,6 +34,7 @@ const PaginaRemessas = lazy(() => import('@/features/tesouraria/PaginaRemessas')
 const PaginaFechos = lazy(() => import('@/features/tesouraria/PaginaFechos'))
 const PaginaContas = lazy(() => import('@/features/tesouraria/PaginaContas'))
 const PaginaFundos = lazy(() => import('@/features/tesouraria/PaginaFundos'))
+const PaginaIgrejas = lazy(() => import('@/features/igrejas/PaginaIgrejas'))
 const PaginaAcessos = lazy(() => import('@/features/acessos/PaginaAcessos'))
 const PaginaUtilizador = lazy(() => import('@/features/acessos/PaginaUtilizador'))
 const PaginaRelatorioMensal = lazy(() => import('@/features/tesouraria/PaginaRelatorioMensal'))
@@ -89,33 +91,34 @@ export default function App() {
                 <Route path="/entrar" element={<PaginaEntrar />} />
                 <Route element={<ComSessao><Shell /></ComSessao>}>
                   <Route index element={<PaginaInicio />} />
-                  <Route path="membros" element={<PaginaMembros />} />
-                  <Route path="membros/novo" element={<PaginaFormMembro />} />
-                  <Route path="membros/:id" element={<PaginaMembro />} />
-                  <Route path="membros/:id/editar" element={<PaginaFormMembro />} />
-                  <Route path="livro" element={<PaginaLivro />} />
-                  <Route path="reunioes" element={<PaginaReunioes />} />
-                  <Route path="reunioes/:id" element={<PaginaReuniao />} />
-                  <Route path="reunioes/:id/acta" element={<PaginaActa />} />
-                  <Route path="conselho" element={<PaginaConselho />} />
-                  <Route path="tesouraria" element={<PaginaTesouraria />} />
-                  <Route path="tesouraria/movimentos" element={<PaginaMovimentosTes />} />
-                  <Route path="tesouraria/movimentos/:id" element={<PaginaMovimentoTes />} />
-                  <Route path="tesouraria/entrada" element={<PaginaEntrada />} />
-                  <Route path="tesouraria/saida" element={<PaginaSaida />} />
-                  <Route path="tesouraria/despesas" element={<PaginaDespesas />} />
-                  <Route path="tesouraria/contagens" element={<PaginaContagens />} />
-                  <Route path="tesouraria/remessas" element={<PaginaRemessas />} />
-                  <Route path="tesouraria/fechos" element={<PaginaFechos />} />
-                  <Route path="tesouraria/contas" element={<PaginaContas />} />
-                  <Route path="tesouraria/fundos" element={<PaginaFundos />} />
-                  <Route path="tesouraria/relatorio-mensal" element={<PaginaRelatorioMensal />} />
-                  <Route path="acessos" element={<PaginaAcessos />} />
-                  <Route path="acessos/utilizadores/novo" element={<PaginaUtilizador />} />
-                  <Route path="acessos/utilizadores/:id" element={<PaginaUtilizador />} />
-                  <Route path="escalas" element={<PaginaEscalas />} />
-                  <Route path="escalas/nova" element={<PaginaNovaEscala />} />
-                  <Route path="escalas/:id" element={<PaginaEscala />} />
+                  <Route path="membros" element={<Exige permissao="secretaria.membro.ler"><PaginaMembros /></Exige>} />
+                  <Route path="membros/novo" element={<Exige permissao="secretaria.membro.criar"><PaginaFormMembro /></Exige>} />
+                  <Route path="membros/:id" element={<Exige permissao="secretaria.membro.ler"><PaginaMembro /></Exige>} />
+                  <Route path="membros/:id/editar" element={<Exige permissao="secretaria.membro.alterar"><PaginaFormMembro /></Exige>} />
+                  <Route path="livro" element={<Exige permissao="secretaria.movimento_membro.ler"><PaginaLivro /></Exige>} />
+                  <Route path="reunioes" element={<Exige permissao="secretaria.reuniao.ler"><PaginaReunioes /></Exige>} />
+                  <Route path="reunioes/:id" element={<Exige permissao="secretaria.reuniao.ler"><PaginaReuniao /></Exige>} />
+                  <Route path="reunioes/:id/acta" element={<Exige permissao="secretaria.reuniao.ler"><PaginaActa /></Exige>} />
+                  <Route path="conselho" element={<Exige permissao="secretaria.oficial.ler"><PaginaConselho /></Exige>} />
+                  <Route path="tesouraria" element={<Exige permissao="tesouraria.conta_financeira.ler"><PaginaTesouraria /></Exige>} />
+                  <Route path="tesouraria/movimentos" element={<Exige permissao="tesouraria.transacao.ler"><PaginaMovimentosTes /></Exige>} />
+                  <Route path="tesouraria/movimentos/:id" element={<Exige permissao="tesouraria.transacao.ler"><PaginaMovimentoTes /></Exige>} />
+                  <Route path="tesouraria/entrada" element={<Exige permissao="tesouraria.transacao.criar"><PaginaEntrada /></Exige>} />
+                  <Route path="tesouraria/saida" element={<Exige permissao="tesouraria.transacao.criar"><PaginaSaida /></Exige>} />
+                  <Route path="tesouraria/despesas" element={<Exige permissao="tesouraria.despesa.ler"><PaginaDespesas /></Exige>} />
+                  <Route path="tesouraria/contagens" element={<Exige permissao="tesouraria.contagem_numerario.ler"><PaginaContagens /></Exige>} />
+                  <Route path="tesouraria/remessas" element={<Exige permissao="tesouraria.remessa.ler"><PaginaRemessas /></Exige>} />
+                  <Route path="tesouraria/fechos" element={<Exige permissao="tesouraria.fecho_periodo.ler"><PaginaFechos /></Exige>} />
+                  <Route path="tesouraria/contas" element={<Exige permissao="tesouraria.conta_financeira.ler"><PaginaContas /></Exige>} />
+                  <Route path="tesouraria/fundos" element={<Exige permissao="tesouraria.fundo.ler"><PaginaFundos /></Exige>} />
+                  <Route path="tesouraria/relatorio-mensal" element={<Exige permissao="tesouraria.transacao.ler"><PaginaRelatorioMensal /></Exige>} />
+                  <Route path="igrejas" element={<Exige permissao="organizacao.igreja.criar"><PaginaIgrejas /></Exige>} />
+                  <Route path="acessos" element={<Exige permissao="nucleo.usuario.ler"><PaginaAcessos /></Exige>} />
+                  <Route path="acessos/utilizadores/novo" element={<Exige permissao="nucleo.usuario.criar"><PaginaUtilizador /></Exige>} />
+                  <Route path="acessos/utilizadores/:id" element={<Exige permissao="nucleo.usuario.ler"><PaginaUtilizador /></Exige>} />
+                  <Route path="escalas" element={<Exige permissao="actividades.escala_plano.ler"><PaginaEscalas /></Exige>} />
+                  <Route path="escalas/nova" element={<Exige permissao="actividades.escala_plano.criar"><PaginaNovaEscala /></Exige>} />
+                  <Route path="escalas/:id" element={<Exige permissao="actividades.escala_plano.ler"><PaginaEscala /></Exige>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Routes>

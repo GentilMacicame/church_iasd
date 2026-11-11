@@ -1,8 +1,8 @@
 /**
  * Marca da aplicação: o logotipo oficial da Igreja Adventista do Sétimo Dia.
  *
- * O ficheiro oficial (do kit de identidade visual da Igreja) fica em `web/public/logotipo-iasd.svg` (ou `.png`):
- * não se desenha à mão. Enquanto não estiver lá, mostra-se a marca neutra da aplicação. Usado no menu, no ecrã de
+ * O ficheiro oficial (o símbolo da Igreja, fundo transparente) está em `web/public/logotipo-iasd.png`; um `.svg` com o
+ * mesmo nome tem prioridade. Não se desenha à mão. Sem o ficheiro, mostra-se a marca neutra da aplicação. Usado no menu, no ecrã de
  * entrada, no ecrã de carregamento e no cabeçalho dos documentos impressos (recibo, acta, relatório, escala).
  */
 import { useState } from 'react'

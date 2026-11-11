@@ -3,7 +3,7 @@
  * traduzir num só sítio. As mensagens de erro de regras vêm da base de dados, já em português.
  */
 export const t = {
-  produto: { nome: 'Igreja', descricao: 'Gestão da igreja local' },
+  produto: { nome: 'Igreja Adventista do Sétimo Dia', descricao: 'Gestão da igreja local' },
   comum: {
     guardar: 'Guardar',
     cancelar: 'Cancelar',

@@ -95,6 +95,10 @@ src/
   parte da igreja). Contagem por partes (dízimos, ofertas, Escola Sabatina, outras) com a conferência parte a parte.
   Fecho do mês com a lista de verificação do mês a fechar (pendentes, contagens, remessa, saldos).
 
+- **Igrejas** (super-administrador e administração da Associação): registar igrejas (tipo, Associação, distrito,
+  igreja-mãe) com o seu administrador (perfil ADMIN; código por SMS para definir a senha), ver quem administra cada
+  uma e abri-la. As páginas exigem a mesma permissão que o menu ("Sem acesso a esta página").
+
 ## Por fazer (próximas iterações)
 
 - Secretaria: transferências com carta (P-02), disciplina e censura (P-03), eleição de oficiais (P-04).

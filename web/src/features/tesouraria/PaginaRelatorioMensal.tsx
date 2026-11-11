@@ -43,10 +43,15 @@ function mudarMes(mes: string, d: number) {
 export default function PaginaRelatorioMensal() {
   const igreja = useIgreja()
   const [params, setParams] = useSearchParams()
-  const anterior = mudarMes(hojeIso().slice(0, 7), -1)
-  const mes = params.get('mes') ?? anterior
-  const [ano, m] = mes.split('-').map(Number)
   const devidas = useRemessasDevidas()
+  // por defeito: o mês passado (o que se envia agora à Missão); se esse não tiver nada, o mês mais recente com dados
+  const actual = hojeIso().slice(0, 7)
+  const anterior = mudarMes(actual, -1)
+  const comDados = [...new Set((devidas.data ?? []).filter((d) => centimos(d.recebido) > 0)
+    .map((d) => `${d.ano}-${String(d.mes).padStart(2, '0')}`))].sort().reverse()
+  const mes = params.get('mes') ?? (comDados.includes(anterior) || !comDados.length ? anterior : comDados[0])
+  const [ano, m] = mes.split('-').map(Number)
+  const outroComDados = comDados.find((x) => x !== mes)
   const contrib = useContribuicoesDoMes(ano, m)
   const remessas = useRemessas()
   const fundos = useFundos()
@@ -91,6 +96,7 @@ export default function PaginaRelatorioMensal() {
           <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês anterior" onClick={() => setParams({ mes: mudarMes(mes, -1) })}><ChevronLeft className="size-4" /></Button>
           <span className="min-w-40 text-center text-sm font-medium first-letter:uppercase">{nomeMes(ano, m)}</span>
           <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês seguinte" disabled={mes >= hojeIso().slice(0, 7)} onClick={() => setParams({ mes: mudarMes(mes, 1) })}><ChevronRight className="size-4" /></Button>
+          {mes === actual && <Pilula variante="warning" className="ml-2">Mês em curso: ainda pode entrar mais até ao fim do mês</Pilula>}
         </div>
       </div>
 
@@ -98,7 +104,12 @@ export default function PaginaRelatorioMensal() {
         : falha ? <EstadoErro erro={falha} aoTentar={() => { devidas.refetch(); contrib.refetch() }} />
         : !resumo.length ? (
           <div className="rounded-xl border bg-card shadow-card">
-            <EstadoVazio icone={FileText} titulo="Sem dízimos nem ofertas da Missão neste mês">Escolha outro mês ou lance as entradas do mês.</EstadoVazio>
+            <EstadoVazio icone={FileText} titulo={`Sem dízimos nem ofertas da Missão em ${nomeMes(ano, m)}`}
+              accao={outroComDados && (() => { const [a2, m2] = outroComDados.split('-').map(Number); return (
+                <Button className="alvo" onClick={() => setParams({ mes: outroComDados })}>Ver {nomeMes(a2, m2)}</Button>
+              ) })()}>
+              {outroComDados ? 'Neste mês não entrou nada para a Missão. Há dados noutro mês:' : 'Ainda não há entradas para a Missão. Lance os dízimos e ofertas em "Lançar entrada".'}
+            </EstadoVazio>
           </div>
         ) : (
           <div className="grid gap-6 print:block print:text-black">
