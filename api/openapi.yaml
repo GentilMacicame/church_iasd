@@ -6406,6 +6406,212 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/distritos-administrativos:
+    get:
+      summary: 'Distritos administrativos: listar'
+      tags:
+      - Organização
+      operationId: listarDistritoAdministrativo
+      description: Distritos administrativos de cada província (e distritos municipais da Cidade de Maputo)
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: provinciaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DistritoAdministrativo'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Distritos administrativos: criar'
+      tags:
+      - Organização
+      x-permissao: organizacao.distrito_administrativo.criar
+      operationId: criarDistritoAdministrativo
+      description: Distritos administrativos de cada província (e distritos municipais da Cidade de Maputo)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/DistritoAdministrativo'
+              required:
+              - provinciaId
+              - nome
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistritoAdministrativo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/distritos-administrativos/{id}:
+    get:
+      summary: 'Distritos administrativos: ler um'
+      tags:
+      - Organização
+      operationId: lerDistritoAdministrativo
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistritoAdministrativo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Distritos administrativos: alterar'
+      tags:
+      - Organização
+      x-permissao: organizacao.distrito_administrativo.alterar
+      operationId: alterarDistritoAdministrativo
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistritoAdministrativo'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistritoAdministrativo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/distritos-administrativos/{id}/reactivar:
+    post:
+      summary: 'Distritos administrativos: reactivar'
+      tags:
+      - Organização
+      x-permissao: organizacao.distrito_administrativo.terminar
+      operationId: reactivarDistritoAdministrativo
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistritoAdministrativo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/distritos-administrativos/{id}/terminar:
+    post:
+      summary: 'Distritos administrativos: terminar'
+      tags:
+      - Organização
+      x-permissao: organizacao.distrito_administrativo.terminar
+      operationId: terminarDistritoAdministrativo
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistritoAdministrativo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/organizacao/distritos/{id}:
     get:
       summary: 'Distritos: ler um'
@@ -6804,6 +7010,14 @@ paths:
         in: query
         schema:
           type: integer
+      - name: provinciaId
+        in: query
+        schema:
+          type: integer
+      - name: distritoAdministrativoId
+        in: query
+        schema:
+          type: integer
       - name: tipo
         in: query
         schema:
@@ -6991,6 +7205,207 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Igreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/provincias:
+    get:
+      summary: 'Provincias: listar'
+      tags:
+      - Organização
+      operationId: listarProvincia
+      description: Províncias de Moçambique (e a Cidade de Maputo)
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Provincia'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Provincias: criar'
+      tags:
+      - Organização
+      x-permissao: organizacao.provincia.criar
+      operationId: criarProvincia
+      description: Províncias de Moçambique (e a Cidade de Maputo)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/Provincia'
+              required:
+              - nome
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provincia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/provincias/{id}:
+    get:
+      summary: 'Provincias: ler um'
+      tags:
+      - Organização
+      operationId: lerProvincia
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provincia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Provincias: alterar'
+      tags:
+      - Organização
+      x-permissao: organizacao.provincia.alterar
+      operationId: alterarProvincia
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Provincia'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provincia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/provincias/{id}/reactivar:
+    post:
+      summary: 'Provincias: reactivar'
+      tags:
+      - Organização
+      x-permissao: organizacao.provincia.terminar
+      operationId: reactivarProvincia
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provincia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/provincias/{id}/terminar:
+    post:
+      summary: 'Provincias: terminar'
+      tags:
+      - Organização
+      x-permissao: organizacao.provincia.terminar
+      operationId: terminarProvincia
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provincia'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -17456,6 +17871,49 @@ components:
       x-obrigatorios-ao-criar:
       - entidadeId
       - nome
+    DistritoAdministrativo:
+      type: object
+      description: Distritos administrativos de cada província (e distritos municipais da Cidade de Maputo)
+      x-tabela: organizacao.distrito_administrativo
+      x-prefixo: dad
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        provinciaId:
+          type: integer
+          format: int32
+          description: → organizacao.provincia
+        nome:
+          type: string
+          maxLength: 80
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - provinciaId
+      - nome
     Documento:
       type: object
       description: Comprovativos (facturas, talões, prints M-Pesa)
@@ -18296,7 +18754,19 @@ components:
         distritoId:
           type: integer
           format: int32
-          description: → organizacao.distrito
+          description: → organizacao.distrito · Distrito pastoral
+        provinciaId:
+          type: integer
+          format: int32
+          description: → organizacao.provincia · Província onde fica (V26)
+        distritoAdministrativoId:
+          type: integer
+          format: int32
+          description: → organizacao.distrito_administrativo · Distrito administrativo onde fica (V26)
+        localidade:
+          type: string
+          maxLength: 120
+          description: Localidade / bairro (V26)
         tipo:
           $ref: '#/components/schemas/EnumTipoIgreja'
         maeIgrejaId:
@@ -19370,6 +19840,48 @@ components:
       - relatorioId
       - membroId
       - presente
+    Provincia:
+      type: object
+      description: Províncias de Moçambique (e a Cidade de Maputo)
+      x-tabela: organizacao.provincia
+      x-prefixo: prv
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        nome:
+          type: string
+          maxLength: 60
+        codigo:
+          type: string
+          maxLength: 10
+          description: 'Sigla (ex.: MPC, GZA)'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - nome
     Recibo:
       type: object
       description: Recibos numerados por igreja e ano

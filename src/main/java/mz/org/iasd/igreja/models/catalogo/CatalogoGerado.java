@@ -28,9 +28,11 @@ import mz.org.iasd.igreja.models.nucleo.UsuarioIgreja;
 import mz.org.iasd.igreja.models.organizacao.Cargo;
 import mz.org.iasd.igreja.models.organizacao.Departamento;
 import mz.org.iasd.igreja.models.organizacao.Distrito;
+import mz.org.iasd.igreja.models.organizacao.DistritoAdministrativo;
 import mz.org.iasd.igreja.models.organizacao.Entidade;
 import mz.org.iasd.igreja.models.organizacao.Igreja;
 import mz.org.iasd.igreja.models.organizacao.IgrejaDepartamento;
+import mz.org.iasd.igreja.models.organizacao.Provincia;
 import mz.org.iasd.igreja.models.secretaria.Baptismo;
 import mz.org.iasd.igreja.models.secretaria.Consentimento;
 import mz.org.iasd.igreja.models.secretaria.Contacto;
@@ -162,6 +164,8 @@ public final class CatalogoGerado {
             LogAuditoria.class,
             Entidade.class,
             Distrito.class,
+            Provincia.class,
+            DistritoAdministrativo.class,
             Igreja.class,
             Departamento.class,
             IgrejaDepartamento.class,

@@ -154,7 +154,7 @@ grants = '\n'.join(f'GRANT SELECT ON ALL TABLES IN SCHEMA {sc} TO app_igreja;' f
 grants += '\n-- a senha continua ilegível\nREVOKE SELECT ON nucleo.usuario FROM app_igreja;\n' + f'GRANT SELECT ({", ".join(cols)}) ON nucleo.usuario TO app_igreja;'
 files.append((f'V{n}__vistas.sql', HEADER + '\n' + read('vistas.sql') + '\n' + grants + '\n'))
 n += 1
-files.append((f'V{n}__dados_referencia.sql', HEADER + '\n' + read('dados_referencia.sql') + '\n' + catalogo()))
+files.append((f'V{n}__dados_referencia.sql', HEADER + '\n' + read('dados_referencia.sql') + '\n' + read('provincias_distritos.sql') + '\n' + catalogo()))
 
 for f in os.listdir(OUT): os.remove(os.path.join(OUT, f))
 for name, content in files:

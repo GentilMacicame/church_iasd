@@ -1,0 +1,26 @@
+1. tesoureiro (qualquer utilizador): lê as províncias e os distritos
+ provincias 
+------------
+         11
+(1 row)
+
+ distritos_de_gaza 
+-------------------
+                14
+(1 row)
+
+   não autorizado: o administrador de uma igreja não cria nem altera províncias (recusado / 0 linhas)
+psql:database/tests/12_provincias_e_distritos.sql:14: ERROR:  new row violates row-level security policy for table "provincia"
+2. autorizado: a administração da Associação acrescenta um distrito
+        dad_nome        
+------------------------
+ Distrito novo de teste
+(1 row)
+
+3. igreja com o distrito: a província vem sozinha; distrito de outra província: recusado
+     igr_nome     | provincia | igr_localidade 
+------------------+-----------+----------------
+ Igreja de Chókwè | Gaza      | Bairro 3
+(1 row)
+
+psql:database/tests/12_provincias_e_distritos.sql:27: ERROR:  O distrito escolhido não pertence a essa província

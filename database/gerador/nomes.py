@@ -3,7 +3,7 @@ from defs import MODULES
 RES = {  # nome do recurso na API (plural, com hífen)
  'perfil':'perfis','permissao':'permissoes','perfil_permissao':'perfis-permissoes','usuario':'usuarios',
  'usuario_igreja':'usuarios-igreja','usuario_entidade':'usuarios-entidade','log_auditoria':'auditoria',
- 'entidade':'entidades','distrito':'distritos','igreja':'igrejas','departamento':'departamentos',
+ 'entidade':'entidades','distrito':'distritos','igreja':'igrejas','provincia':'provincias','distrito_administrativo':'distritos-administrativos','departamento':'departamentos',
  'igreja_departamento':'departamentos-igreja','cargo':'cargos',
  'familia':'familias','membro':'membros','contacto':'contactos','consentimento':'consentimentos','reuniao':'reunioes',
  'voto':'votos','reuniao_presenca':'presencas-reuniao','reuniao_ponto':'pontos-agenda','movimento_membro':'movimentos-membro','transferencia_membro':'transferencias','disciplina':'disciplinas',

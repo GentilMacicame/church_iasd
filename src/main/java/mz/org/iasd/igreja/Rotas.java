@@ -130,6 +130,12 @@ public final class Rotas {
         /** DistritosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String DISTRITOS = "/v1/organizacao/distritos";
 
+        /** ProvinciasController · rotas-padrão (V26) */
+        public static final String PROVINCIAS = "/v1/organizacao/provincias";
+
+        /** DistritosAdministrativosController · rotas-padrão (V26) */
+        public static final String DISTRITOS_ADMINISTRATIVOS = "/v1/organizacao/distritos-administrativos";
+
         /** EntidadesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String ENTIDADES = "/v1/organizacao/entidades";
 

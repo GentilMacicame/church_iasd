@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 432 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 444 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -204,6 +204,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/organizacao/departamentos/{id}/terminar` | DepartamentosController · terminar | `organizacao.departamento.terminar` |
 | GET | `/v1/organizacao/distritos` | DistritosController · listar | — |
 | POST | `/v1/organizacao/distritos` | DistritosController · criar | `organizacao.distrito.criar` |
+| GET | `/v1/organizacao/distritos-administrativos` | DistritosAdministrativosController · listar | — |
+| POST | `/v1/organizacao/distritos-administrativos` | DistritosAdministrativosController · criar | `organizacao.distrito_administrativo.criar` |
+| GET | `/v1/organizacao/distritos-administrativos/{id}` | DistritosAdministrativosController · obter | — |
+| PATCH | `/v1/organizacao/distritos-administrativos/{id}` | DistritosAdministrativosController · alterar | `organizacao.distrito_administrativo.alterar` |
+| POST | `/v1/organizacao/distritos-administrativos/{id}/reactivar` | DistritosAdministrativosController · reactivar | `organizacao.distrito_administrativo.terminar` |
+| POST | `/v1/organizacao/distritos-administrativos/{id}/terminar` | DistritosAdministrativosController · terminar | `organizacao.distrito_administrativo.terminar` |
 | GET | `/v1/organizacao/distritos/{id}` | DistritosController · obter | — |
 | PATCH | `/v1/organizacao/distritos/{id}` | DistritosController · alterar | `organizacao.distrito.alterar` |
 | POST | `/v1/organizacao/distritos/{id}/reactivar` | DistritosController · reactivar | `organizacao.distrito.terminar` |
@@ -221,6 +227,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/organizacao/igrejas/{id}` | IgrejasController · alterar | `organizacao.igreja.alterar` |
 | POST | `/v1/organizacao/igrejas/{id}/reactivar` | IgrejasController · reactivar | `organizacao.igreja.terminar` |
 | POST | `/v1/organizacao/igrejas/{id}/terminar` | IgrejasController · terminar | `organizacao.igreja.terminar` |
+| GET | `/v1/organizacao/provincias` | ProvinciasController · listar | — |
+| POST | `/v1/organizacao/provincias` | ProvinciasController · criar | `organizacao.provincia.criar` |
+| GET | `/v1/organizacao/provincias/{id}` | ProvinciasController · obter | — |
+| PATCH | `/v1/organizacao/provincias/{id}` | ProvinciasController · alterar | `organizacao.provincia.alterar` |
+| POST | `/v1/organizacao/provincias/{id}/reactivar` | ProvinciasController · reactivar | `organizacao.provincia.terminar` |
+| POST | `/v1/organizacao/provincias/{id}/terminar` | ProvinciasController · terminar | `organizacao.provincia.terminar` |
 
 ## secretaria
 

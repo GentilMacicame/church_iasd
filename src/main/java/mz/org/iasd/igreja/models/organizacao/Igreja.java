@@ -21,7 +21,10 @@ import mz.org.iasd.igreja.models.tipos.TipoIgreja;
  *
  * @param id Identificador
  * @param entidadeId Associação/Missão a que pertence — obrigatório ao criar
- * @param distritoId Referência a organizacao.distrito
+ * @param distritoId Distrito pastoral
+ * @param provinciaId Província onde fica (V26)
+ * @param distritoAdministrativoId Distrito administrativo onde fica (V26)
+ * @param localidade Localidade / bairro (V26)
  * @param tipo coluna {@code igr_tipo}
  * @param maeIgrejaId Igreja-mãe de um grupo ou filial
  * @param nome coluna {@code igr_nome} — obrigatório ao criar
@@ -46,6 +49,12 @@ public record Igreja(
         Integer entidadeId,
         @ColunaBd(value = "igr_dst_id", tipo = Tipo.INT)
         Integer distritoId,
+        @ColunaBd(value = "igr_prv_id", tipo = Tipo.INT)
+        Integer provinciaId,
+        @ColunaBd(value = "igr_dad_id", tipo = Tipo.INT)
+        Integer distritoAdministrativoId,
+        @ColunaBd(value = "igr_localidade", tipo = Tipo.TEXTO)
+        String localidade,
         @ColunaBd(value = "igr_tipo", tipo = Tipo.ENUM, naoNula = true)
         TipoIgreja tipo,
         @ColunaBd(value = "igr_mae_igr_id", tipo = Tipo.INT)

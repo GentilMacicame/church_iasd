@@ -61,8 +61,15 @@ M('V3__organizacao', 'organizacao', 'Organização',
  T('distrito', 'dst', 'Distritos pastorais de uma Associação/Missão', [
    ('ent_id', 'fk:entidade', NN), ('nome', 'VARCHAR(100)', NN),
    ('pastor_usu_id', 'fk:usuario', '', 'Pastor distrital')], uniq=[['ent_id', 'nome']]),
+ # V26: divisão administrativa de Moçambique (onde fica a igreja); o distrito pastoral é outra coisa (distrito)
+ T('provincia', 'prv', 'Províncias de Moçambique (e a Cidade de Maputo)', [
+   ('nome', 'VARCHAR(60)', NN), ('codigo', 'VARCHAR(10)', '', 'Sigla (ex.: MPC, GZA)')], uniq=[['nome']]),
+ T('distrito_administrativo', 'dad', 'Distritos administrativos de cada província (e distritos municipais da Cidade de Maputo)', [
+   ('prv_id', 'fk:provincia', NN), ('nome', 'VARCHAR(80)', NN)], uniq=[['prv_id', 'nome']]),
  T('igreja', 'igr', 'Igrejas organizadas, grupos organizados e grupos/filiais', [
-   ('ent_id', 'fk:entidade', NN, 'Associação/Missão a que pertence'), ('dst_id', 'fk:distrito'),
+   ('ent_id', 'fk:entidade', NN, 'Associação/Missão a que pertence'), ('dst_id', 'fk:distrito', '', 'Distrito pastoral'),
+   ('prv_id', 'fk:provincia', '', 'Província onde fica (V26)'), ('dad_id', 'fk:distrito_administrativo', '', 'Distrito administrativo onde fica (V26)'),
+   ('localidade', 'VARCHAR(120)', '', 'Localidade / bairro (V26)'),
    ('tipo', 'tipo_igreja_t', "NOT NULL DEFAULT 'IGREJA_ORGANIZADA'"),
    ('mae_igr_id', 'fk:igreja', '', 'Igreja-mãe de um grupo ou filial'),
    ('nome', 'VARCHAR(150)', NN), ('codigo_acms', 'VARCHAR(30)', '', 'Código no sistema da Associação (ACMS/eAdventist)'),
@@ -526,12 +533,12 @@ SCOPE = {
  'documento': ('custom', 'EXISTS (SELECT 1 FROM tesouraria.transacao x WHERE x.tra_id = @tra_id AND x.tra_igr_id = ANY ({A})) OR EXISTS (SELECT 1 FROM tesouraria.despesa x WHERE x.des_id = @des_id AND x.des_igr_id = ANY ({A}))'),
 }
 # Tabelas comuns que qualquer utilizador autenticado pode ler (escrever exige permissão)
-GLOBAL_READ = {'perfil', 'permissao', 'perfil_permissao', 'entidade', 'distrito', 'departamento', 'cargo',
+GLOBAL_READ = {'perfil', 'permissao', 'perfil_permissao', 'entidade', 'distrito', 'departamento', 'cargo', 'provincia', 'distrito_administrativo',
                'trimestre', 'sabado', 'pontuacao_config', 'calendario_oferta', 'categoria'}
 # V23: tabelas comuns definidas pela Associação/Missão (fundos gerais, plano de contas, calendário, lição). As linhas
 # comuns só se criam, alteram e terminam com a permissão ao nível da Associação (perfil em usuario_entidade) ou como
 # super-administrador; ter a permissão numa igreja não chega (antes chegava: um tesoureiro mudava o plano de todos).
-COMUNS_ASSOCIACAO = {'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config'}
+COMUNS_ASSOCIACAO = {'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config', 'provincia', 'distrito_administrativo'}
 # Tabelas que só os triggers do sistema escrevem (os utilizadores só lêem)
 SYSTEM_WRITE = {'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria'}
 
