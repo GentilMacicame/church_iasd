@@ -2,7 +2,9 @@
  * Rotas. Cada página é carregada só quando é aberta (lazy), para a primeira carga caber nos 300 KB
  * pensados para um Android em 3G.
  */
-import { lazy, Suspense, type ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { pagina } from '@/lib/paginas'
+import { ErroAplicacao } from '@/components/layout/ErroAplicacao'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
@@ -13,34 +15,34 @@ import { Marca } from '@/components/layout/Marca'
 import { Exige } from '@/components/layout/Exige'
 import { ErroApi } from '@/api/erros'
 
-const PaginaEntrar = lazy(() => import('@/features/auth/PaginaEntrar'))
-const PaginaInicio = lazy(() => import('@/features/inicio/PaginaInicio'))
-const PaginaMembros = lazy(() => import('@/features/membros/PaginaMembros'))
-const PaginaMembro = lazy(() => import('@/features/membros/PaginaMembro'))
-const PaginaFormMembro = lazy(() => import('@/features/membros/PaginaFormMembro'))
-const PaginaLivro = lazy(() => import('@/features/livro/PaginaLivro'))
-const PaginaReunioes = lazy(() => import('@/features/livro/PaginaReunioes'))
-const PaginaReuniao = lazy(() => import('@/features/livro/PaginaReuniao'))
-const PaginaActa = lazy(() => import('@/features/livro/PaginaActa'))
-const PaginaConselho = lazy(() => import('@/features/conselho/PaginaConselho'))
-const PaginaTesouraria = lazy(() => import('@/features/tesouraria/PaginaTesouraria'))
-const PaginaMovimentosTes = lazy(() => import('@/features/tesouraria/PaginaMovimentos'))
-const PaginaMovimentoTes = lazy(() => import('@/features/tesouraria/PaginaMovimento'))
-const PaginaEntrada = lazy(() => import('@/features/tesouraria/PaginaEntrada'))
-const PaginaSaida = lazy(() => import('@/features/tesouraria/PaginaSaida'))
-const PaginaDespesas = lazy(() => import('@/features/tesouraria/PaginaDespesas'))
-const PaginaContagens = lazy(() => import('@/features/tesouraria/PaginaContagens'))
-const PaginaRemessas = lazy(() => import('@/features/tesouraria/PaginaRemessas'))
-const PaginaFechos = lazy(() => import('@/features/tesouraria/PaginaFechos'))
-const PaginaContas = lazy(() => import('@/features/tesouraria/PaginaContas'))
-const PaginaFundos = lazy(() => import('@/features/tesouraria/PaginaFundos'))
-const PaginaIgrejas = lazy(() => import('@/features/igrejas/PaginaIgrejas'))
-const PaginaAcessos = lazy(() => import('@/features/acessos/PaginaAcessos'))
-const PaginaUtilizador = lazy(() => import('@/features/acessos/PaginaUtilizador'))
-const PaginaRelatorioMensal = lazy(() => import('@/features/tesouraria/PaginaRelatorioMensal'))
-const PaginaEscalas = lazy(() => import('@/features/escalas/PaginaEscalas'))
-const PaginaNovaEscala = lazy(() => import('@/features/escalas/PaginaNovaEscala'))
-const PaginaEscala = lazy(() => import('@/features/escalas/PaginaEscala'))
+const PaginaEntrar = pagina(() => import('@/features/auth/PaginaEntrar'))
+const PaginaInicio = pagina(() => import('@/features/inicio/PaginaInicio'))
+const PaginaMembros = pagina(() => import('@/features/membros/PaginaMembros'))
+const PaginaMembro = pagina(() => import('@/features/membros/PaginaMembro'))
+const PaginaFormMembro = pagina(() => import('@/features/membros/PaginaFormMembro'))
+const PaginaLivro = pagina(() => import('@/features/livro/PaginaLivro'))
+const PaginaReunioes = pagina(() => import('@/features/livro/PaginaReunioes'))
+const PaginaReuniao = pagina(() => import('@/features/livro/PaginaReuniao'))
+const PaginaActa = pagina(() => import('@/features/livro/PaginaActa'))
+const PaginaConselho = pagina(() => import('@/features/conselho/PaginaConselho'))
+const PaginaTesouraria = pagina(() => import('@/features/tesouraria/PaginaTesouraria'))
+const PaginaMovimentosTes = pagina(() => import('@/features/tesouraria/PaginaMovimentos'))
+const PaginaMovimentoTes = pagina(() => import('@/features/tesouraria/PaginaMovimento'))
+const PaginaEntrada = pagina(() => import('@/features/tesouraria/PaginaEntrada'))
+const PaginaSaida = pagina(() => import('@/features/tesouraria/PaginaSaida'))
+const PaginaDespesas = pagina(() => import('@/features/tesouraria/PaginaDespesas'))
+const PaginaContagens = pagina(() => import('@/features/tesouraria/PaginaContagens'))
+const PaginaRemessas = pagina(() => import('@/features/tesouraria/PaginaRemessas'))
+const PaginaFechos = pagina(() => import('@/features/tesouraria/PaginaFechos'))
+const PaginaContas = pagina(() => import('@/features/tesouraria/PaginaContas'))
+const PaginaFundos = pagina(() => import('@/features/tesouraria/PaginaFundos'))
+const PaginaIgrejas = pagina(() => import('@/features/igrejas/PaginaIgrejas'))
+const PaginaAcessos = pagina(() => import('@/features/acessos/PaginaAcessos'))
+const PaginaUtilizador = pagina(() => import('@/features/acessos/PaginaUtilizador'))
+const PaginaRelatorioMensal = pagina(() => import('@/features/tesouraria/PaginaRelatorioMensal'))
+const PaginaEscalas = pagina(() => import('@/features/escalas/PaginaEscalas'))
+const PaginaNovaEscala = pagina(() => import('@/features/escalas/PaginaNovaEscala'))
+const PaginaEscala = pagina(() => import('@/features/escalas/PaginaEscala'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,10 +55,19 @@ const queryClient = new QueryClient({
   },
 })
 
+/** Ecrã de arranque (a verificar a sessão, a carregar a aplicação): ao centro, o logotipo com um anel a rodar. */
 function Carregando() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center" aria-busy="true" aria-label="A carregar">
-      <Marca className="size-8 opacity-60" />
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-background px-4" role="status" aria-busy="true" aria-live="polite">
+      <div className="relative flex size-24 items-center justify-center">
+        <span aria-hidden className="absolute inset-0 rounded-full border-4 border-primary/15" />
+        <span aria-hidden className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary" />
+        <Marca className="size-12" />
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold">Igreja Adventista do Sétimo Dia</p>
+        <p className="mt-1 text-sm text-muted-foreground">A carregar…</p>
+      </div>
     </div>
   )
 }
@@ -84,6 +95,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={300}>
+        <ErroAplicacao>
         <BrowserRouter>
           <SessaoProvider>
             <Suspense fallback={<Carregando />}>
@@ -125,6 +137,7 @@ export default function App() {
             </Suspense>
           </SessaoProvider>
         </BrowserRouter>
+        </ErroAplicacao>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
