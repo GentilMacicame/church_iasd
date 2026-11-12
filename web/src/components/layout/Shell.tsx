@@ -5,9 +5,10 @@
  * O menu só mostra módulos que existem e que o utilizador pode abrir.
  */
 import { Suspense, useEffect, useState, type ComponentType } from 'react'
+import { pagina } from '@/lib/paginas'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
-  Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
+  Bell, Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
   SquaresFour as PhSquaresFour, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
@@ -25,6 +26,9 @@ import { cn } from '@/lib/utils'
 import { Marca } from './Marca'
 import { BarraCarregamento, CarregandoPagina } from './Carregamento'
 import { Inactividade } from './Inactividade'
+
+/** Sino de alertas: carregado a pedido (as fontes usam os módulos; não entram no pacote inicial). */
+const Sino = pagina(() => import('@/features/alertas/Sino'))
 
 /** Ícones do menu: Phosphor, linha fina normalmente e cheios no item activo. */
 interface ItemNav { para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string; fim?: boolean }
@@ -387,6 +391,9 @@ export function Shell() {
           <span className="hidden h-5 w-px bg-border sm:block" aria-hidden />
           <Caminho />
           <div className="ml-auto flex items-center gap-1">
+            <Suspense fallback={<span className={botaoIcone} aria-hidden><Bell className="size-[18px]" /></span>}>
+              <Sino />
+            </Suspense>
             <button type="button" onClick={alternar} className={botaoIcone} aria-label={t.nav.alternarTema}>
               {escuro ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
             </button>

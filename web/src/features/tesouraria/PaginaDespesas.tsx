@@ -4,8 +4,8 @@
  * pede não decide); a tesouraria paga com uma saída ligada à despesa, que não precisa de outra aprovação. A
  * despesa passa a PAGA quando o pagamento é confirmado (a base de dados faz isso).
  */
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -58,6 +58,23 @@ export default function PaginaDespesas() {
   const [pagar, setPagar] = useState<Despesa | null>(null)
   const [cancelar, setCancelar] = useState<Despesa | null>(null)
   const mut = useDespesasMut()
+  // vindo de um alerta (?despesa=id): abre logo a decisão ou o pagamento dessa despesa
+  const [params, setParams] = useSearchParams()
+  const pedida = Number(params.get('despesa')) || null
+  useEffect(() => {
+    if (!pedida || !q.data) return
+    const d = q.data.find((x) => x.id === pedida)
+    if (d && !d.endDate && d.estado === 'SUBMETIDA') {
+      setAba('decidir')
+      if (pode('tesouraria.despesa.aprovar') && d.solicitadoPorUsuarioId !== usuario?.id) setDecidir(d)
+    } else if (d && !d.endDate && d.estado === 'APROVADA') {
+      setAba('pagar')
+      if (pode('tesouraria.transacao.criar')) setPagar(d)
+    } else if (!d) {
+      toast.info('Essa despesa já não está pendente.')
+    }
+    setParams((p) => { const n = new URLSearchParams(p); n.delete('despesa'); return n }, { replace: true })
+  }, [pedida, q.data, pode, usuario?.id, setParams])
 
   const lista = q.data ?? []
   const soma = (l: Despesa[], campo: 'valorSolicitado' | 'valorAprovado') => deCentimos(l.reduce((s, d) => s + centimos(d[campo] ?? d.valorSolicitado), 0))

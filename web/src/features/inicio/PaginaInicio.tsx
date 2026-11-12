@@ -7,12 +7,11 @@
  *  3. tesouraria (entradas e saídas, onde está o dinheiro) e membros (livro do ano, composição).
  * Tudo vem das vistas da base de dados.
  */
-import { type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowRight, BarChart3, BellRing, BookOpen, Calculator, CalendarDays, CircleCheck, ClipboardCheck, ClipboardList, HandCoins,
-  Landmark, LayoutDashboard, Mail, Mic, Plus, ReceiptText, ShieldAlert, Sprout, UserCheck, Users, Wallet,
+  ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, HandCoins,
+  LayoutDashboard, Mic, Plus, Sprout, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -25,15 +24,14 @@ import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso 
 import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos } from '@/features/membros/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
-import { useContagens, useDespesas, useMovimentos, useRemessasDevidas, useResumoMensal } from '@/features/tesouraria/api'
+import { useResumoMensal } from '@/features/tesouraria/api'
 import { Paginada } from '@/components/comum/Paginacao'
+import { useAlertas } from '@/features/alertas/loja'
+import { TomAlerta } from '@/features/alertas/Sino'
 
 /* Linhas das vistas (nomes de campo como a API os devolve). */
 interface LinhaEscala { id: number; data: string; funcao: keyof typeof rotulos.funcaoEscala; membro: string; estado: string }
 interface LinhaMensal { ano: number; mes: number; baptismos: number; rebaptismos: number; profissoesDeFe: number; transferenciasEntrada: number; transferenciasSaida: number; falecimentos: number; remocoes: number; desaparecidos: number }
-interface LinhaMenor { id: number; nome: string; apelido: string; faltaEncarregado: boolean; faltaConsentimento: boolean }
-interface LinhaCarta { id: number; membro: string; validaAte: string; expirada: boolean }
-interface LinhaMandato { id: number; cargo: string; membro: string; fimPrevisto: string }
 interface LinhaSaldo { id: number; nome: string; tipo: string; moeda: string; saldo: string; entidadeId: number | null }
 
 /** Lê uma vista de relatório da igreja escolhida (só se o utilizador a puder ler). */
@@ -58,7 +56,6 @@ const quandoFalta = (d: number) => (d === 0 ? 'hoje' : d === 1 ? 'amanhã' : `da
 const ORDEM_FUNCOES = ['PREGADOR', 'TRADUTOR', 'ANCIAO_DO_DIA', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS', 'ACOMPANHANTE_BOAS_VINDAS', 'DIRECTOR_ES', 'PROFESSOR_ES', 'DIACONO', 'DIACONISA', 'RECEPCAO', 'MUSICA', 'SONOPLASTIA', 'LIMPEZA', 'OUTRA']
 const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const mt = (v: number) => dinheiro(deCentimos(Math.round(v * 100)))
-const mesAnterior = () => { const [a, m] = hojeIso().split('-').map(Number); return m === 1 ? { ano: a - 1, mes: 12 } : { ano: a, mes: m - 1 } }
 
 function useEscalaDoSabado() {
   const q = useRelatorio<LinhaEscala>('/v1/actividades/escalas-proximas', 'actividades.escala.ler')
@@ -69,89 +66,29 @@ function useEscalaDoSabado() {
 }
 
 /* ===================================================================== 1. o que precisa de atenção */
-interface Item { chave: string; icone: typeof Users; titulo: string; detalhe: ReactNode; n: number; para: string; tom: 'warning' | 'destructive' | 'info' }
-
-/** Pendentes da secretaria (só quem a lê). */
-function useAtencaoSecretaria(): { itens: Item[]; aCarregar: boolean } {
-  const igreja = useIgreja()
-  const { pode } = useSessao()
-  const porAprovar = useQuery({
-    queryKey: ['inicio', igreja.id, 'por-aprovar'],
-    enabled: pode('secretaria.membro.ler'),
-    queryFn: () => dados(api.GET('/v1/secretaria/membros', { params: { query: { igrejaId: igreja.id, validacao: 'PENDENTE', limite: 50 } } })),
-  })
-  const menores = useRelatorio<LinhaMenor>('/v1/secretaria/menores-pendentes', 'secretaria.membro.ler')
-  const cartas = useRelatorio<LinhaCarta>('/v1/secretaria/cartas-pendentes', 'secretaria.transferencia_membro.ler')
-  const mandatos = useRelatorio<LinhaMandato>('/v1/secretaria/mandatos-a-terminar', 'secretaria.oficial.ler')
-  const aprovar = porAprovar.data?.dados ?? []
-  const itens: Item[] = []
-  if (aprovar.length) itens.push({ chave: 'aprovar', icone: UserCheck, titulo: 'Registos de membros por aprovar', n: aprovar.length, para: '/membros?validacao=PENDENTE', tom: 'warning',
-    detalhe: aprovar.slice(0, 3).map((m) => `${m.nome} ${m.apelido}`).join(', ') + (aprovar.length > 3 ? '…' : '') })
-  if (menores.data?.length) itens.push({ chave: 'menores', icone: ShieldAlert, titulo: 'Menores sem encarregado ou consentimento', n: menores.data.length, para: '/membros', tom: 'warning',
-    detalhe: menores.data.slice(0, 3).map((m) => `${m.nome} ${m.apelido}`).join(', ') })
-  if (cartas.data?.length) {
-    const expiradas = cartas.data.filter((c) => c.expirada).length
-    itens.push({ chave: 'cartas', icone: Mail, titulo: 'Cartas de transferência pendentes', n: cartas.data.length, para: '/membros', tom: expiradas ? 'destructive' : 'info',
-      detalhe: expiradas ? `${expiradas} já expirada(s)` : cartas.data.slice(0, 2).map((c) => c.membro).join(', ') })
-  }
-  if (mandatos.data?.length) itens.push({ chave: 'mandatos', icone: CalendarDays, titulo: 'Mandatos a terminar nos próximos 60 dias', n: mandatos.data.length, para: '/conselho', tom: 'info',
-    detalhe: `O primeiro termina a ${data([...mandatos.data].sort((a, b) => a.fimPrevisto.localeCompare(b.fimPrevisto))[0].fimPrevisto)}` })
-  const aCarregar = [porAprovar, menores, cartas, mandatos].some((x) => x.isPending && x.fetchStatus !== 'idle')
-  return { itens, aCarregar }
-}
-
-/** Pendentes da tesouraria: só se monta para quem lê a tesouraria (os pedidos não correm para os outros). */
-function AtencaoTesouraria({ aoTer }: { aoTer: (itens: Item[], aCarregar: boolean) => ReactNode }) {
-  const { pode } = useSessao()
-  const desde = (() => { const d = new Date(); return new Date(Date.UTC(d.getFullYear(), d.getMonth() - 5, 1)).toISOString().slice(0, 10) })()
-  const movs = useMovimentos({ desde, ate: new Date().toISOString().slice(0, 10) })
-  const despesas = useDespesas()
-  const contagens = useContagens()
-  const devidas = useRemessasDevidas()
-  const itens: Item[] = []
-  const pendentes = (movs.data ?? []).filter((x) => !x.endDate && x.estado === 'PENDENTE')
-  const saidasPorAprovar = pendentes.filter((x) => x.tipo === 'SAIDA' && !x.aprovadoPorUsuarioId)
-  if (pendentes.length) itens.push({ chave: 'movs', icone: ReceiptText, titulo: 'Movimentos por confirmar', n: pendentes.length, para: '/tesouraria/movimentos', tom: 'warning',
-    detalhe: saidasPorAprovar.length ? `${saidasPorAprovar.length} saída(s) à espera de aprovação` : 'Confirme-os para entrarem nos saldos' })
-  const porDecidir = (despesas.data ?? []).filter((d) => !d.endDate && d.estado === 'SUBMETIDA')
-  if (porDecidir.length && pode('tesouraria.despesa.aprovar')) itens.push({ chave: 'despesas', icone: ClipboardList, titulo: 'Despesas por decidir', n: porDecidir.length, para: '/tesouraria/despesas', tom: 'warning',
-    detalhe: <>Total pedido: <Dinheiro valor={deCentimos(porDecidir.reduce((s, d) => s + centimos(d.valorSolicitado), 0))} /></> })
-  const porPagar = (despesas.data ?? []).filter((d) => !d.endDate && d.estado === 'APROVADA')
-  if (porPagar.length && pode('tesouraria.transacao.criar')) itens.push({ chave: 'pagar', icone: HandCoins, titulo: 'Despesas aprovadas por pagar', n: porPagar.length, para: '/tesouraria/despesas', tom: 'info',
-    detalhe: <><Dinheiro valor={deCentimos(porPagar.reduce((s, d) => s + centimos(d.valorAprovado ?? d.valorSolicitado), 0))} /> a pagar</> })
-  const abertas = (contagens.data ?? []).filter((c) => !c.endDate && c.estado === 'ABERTA')
-  if (abertas.length) itens.push({ chave: 'contagens', icone: Calculator, titulo: 'Contagens por conferir', n: abertas.length, para: '/tesouraria/contagens', tom: 'warning',
-    detalhe: `A mais antiga é de ${data([...abertas].sort((a, b) => a.data.localeCompare(b.data))[0].data)}` })
-  const ant = mesAnterior()
-  const emFalta = (devidas.data ?? []).filter((d) => (d.ano < ant.ano || (d.ano === ant.ano && d.mes <= ant.mes)) && centimos(d.emFalta) > 0)
-  if (emFalta.length) itens.push({ chave: 'remessa', icone: Landmark, titulo: 'Depósito à Missão em falta', n: new Set(emFalta.map((d) => `${d.ano}-${d.mes}`)).size, para: '/tesouraria/remessas', tom: 'destructive',
-    detalhe: <>Falta depositar <Dinheiro valor={deCentimos(emFalta.reduce((s, d) => s + centimos(d.emFalta), 0))} /> de meses anteriores</> })
-  return <>{aoTer(itens, [movs, despesas, contagens, devidas].some((x) => x.isPending))}</>
-}
-
-function ListaAtencao({ itens, aCarregar }: { itens: Item[]; aCarregar: boolean }) {
-  const total = itens.reduce((s, i) => s + i.n, 0)
+/**
+ * Os mesmos alertas do sino (features/alertas): tudo o que espera uma acção deste utilizador, em todo o sistema,
+ * cada um com a ligação para o ecrã onde se resolve.
+ */
+function ListaAtencao() {
+  const { alertas, aCarregar } = useAlertas()
   return (
-    <Cartao titulo="Precisa de atenção" descricao={aCarregar ? 'A verificar…' : total ? `${total} assunto(s) à espera de uma acção` : 'Nada à espera'} icone={ClipboardCheck} semMargem className="h-full lg:col-span-7">
-      {aCarregar && !itens.length ? (
+    <Cartao titulo="Precisa de atenção" descricao={aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${alertas.length} assunto(s) à espera de uma acção` : 'Nada à espera'} icone={ClipboardCheck} semMargem className="h-full lg:col-span-7">
+      {aCarregar && !alertas.length ? (
         <div className="grid gap-3 px-5 pb-5 sm:px-6" aria-busy="true" aria-label="A carregar">{[0, 1, 2].map((i) => <Barra key={i} className="h-12 w-full" />)}</div>
-      ) : !itens.length ? (
-        <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Não há registos por aprovar, movimentos por confirmar nem despesas por decidir.</EstadoVazio>
+      ) : !alertas.length ? (
+        <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Não há registos por aprovar, movimentos por confirmar, despesas por decidir nem relatórios por fechar.</EstadoVazio>
       ) : (
-        <Paginada itens={itens}>{(vis) => (
+        <Paginada itens={alertas}>{(vis) => (
         <ul className="divide-y border-t">
-          {vis.map((i) => (
-            <li key={i.chave}>
-              <Link to={i.para} className="alvo group flex items-center gap-3 px-5 py-3 hover:bg-muted/50 sm:px-6">
-                <span className={cn('flex size-9 flex-none items-center justify-center rounded-lg',
-                  i.tom === 'destructive' ? 'bg-tint-destructive text-destructive-text' : i.tom === 'warning' ? 'bg-tint-warning text-warning-text' : 'bg-tint-info text-info-text')}>
-                  <i.icone className="size-[18px]" aria-hidden />
-                </span>
+          {vis.map((a) => (
+            <li key={a.chave}>
+              <Link to={a.para} className="alvo group flex items-center gap-3 px-5 py-3 hover:bg-muted/50 sm:px-6">
+                <TomAlerta alerta={a} />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{i.titulo}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{i.detalhe}</span>
+                  <span className="block text-sm font-medium">{a.titulo}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{a.modulo}{a.detalhe ? ` · ${a.detalhe}` : ''}</span>
                 </span>
-                <Pilula variante={i.tom === 'destructive' ? 'destructive' : i.tom === 'warning' ? 'warning' : 'info'} className="tabular-nums">{i.n}</Pilula>
                 <ArrowRight aria-hidden className="size-4 flex-none text-muted-foreground transition-transform group-hover:translate-x-0.5" />
               </Link>
             </li>
@@ -392,15 +329,9 @@ export default function PaginaInicio() {
   const igreja = useIgreja()
   const { pode, usuario } = useSessao()
   const comTesouraria = pode('tesouraria.transacao.ler') && pode('tesouraria.conta_financeira.ler')
-  const secretaria = useAtencaoSecretaria()
   const podeMembros = pode('secretaria.membro.ler')
   const comLivro = pode('secretaria.movimento_membro.ler')
   const nome = usuario?.nome?.split(' ')[0]
-
-  const atencao = (extra: Item[] = [], aCarregarExtra = false) => (
-    <ListaAtencao itens={[...extra.filter((i) => i.tom === 'destructive'), ...secretaria.itens, ...extra.filter((i) => i.tom !== 'destructive')]}
-      aCarregar={secretaria.aCarregar || aCarregarExtra} />
-  )
 
   return (
     <>
@@ -421,7 +352,7 @@ export default function PaginaInicio() {
         <Indicadores comTesouraria={comTesouraria} />
 
         <div className="grid items-stretch gap-6 lg:grid-cols-12">
-          {comTesouraria ? <AtencaoTesouraria aoTer={(itens, aCarregar) => atencao(itens, aCarregar)} /> : atencao()}
+          <ListaAtencao />
           <ProximoSabado />
         </div>
 

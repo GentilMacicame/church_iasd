@@ -165,6 +165,18 @@ src/
     nas páginas da ES; sair com relatórios por enviar pede confirmação; relatórios em falta abrem o ecrã da classe;
     aviso do 13.º sábado nas ofertas. As recusas da base chegam com a frase da restrição (V29), não com o nome.
 
+- **Sino de alertas** (barra de topo, em todas as páginas; `features/alertas/`): tudo o que espera uma acção do
+  utilizador na igreja escolhida, um alerta por assunto, e cada um abre o ecrã onde se resolve. Secretaria: registos
+  por aprovar (ficha do membro), menores com a ficha incompleta, cartas por emitir e membros a aceitar
+  (transferências, separador certo), mandatos a terminar. Reuniões: actas por aprovar, reuniões passadas por marcar
+  como realizadas. Tesouraria: saídas por aprovar (não as próprias) e movimentos por confirmar (ficha do movimento),
+  despesas por decidir (não as próprias) ou pagar (abre o diálogo: `/tesouraria/despesas?despesa=id`), contagens,
+  depósito à Missão em falta, depósitos por confirmar (Associação), orçamento por aprovar, mês anterior por fechar.
+  Escola Sabatina: ofertas por lançar ou diferentes, relatórios prontos a fechar, relatórios em falta, relatórios
+  no telemóvel por enviar. Escalas por publicar. Cada fonte só existe para quem tem a permissão de agir e usa as
+  consultas do módulo (o que se aprova num ecrã tira o alerta). O número no sino conta os novos; abrir marca-os como
+  vistos (neste aparelho); refresca de 3 em 3 minutos. O "Precisa de atenção" do Início mostra os mesmos alertas.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

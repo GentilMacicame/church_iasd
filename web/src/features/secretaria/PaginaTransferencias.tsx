@@ -7,7 +7,7 @@
  * Carta só a membro activo e sem censura; as duas igrejas vêem a transferência (V27). A base de dados decide.
  */
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Ban, FileSignature, Plus, Printer, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,9 @@ export default function PaginaTransferencias() {
   const igreja = useIgreja()
   const { pode } = useSessao()
   const q = useTransferencias()
-  const [aba, setAba] = useState<'saidas' | 'entradas'>('saidas')
+  // ?aba=entradas (vindo de um alerta: membro a aceitar de outra igreja)
+  const [params] = useSearchParams()
+  const [aba, setAba] = useState<'saidas' | 'entradas'>(params.get('aba') === 'entradas' ? 'entradas' : 'saidas')
   const [novo, setNovo] = useState(false)
   const [accao, setAccao] = useState<Accao | null>(null)
   const { anular } = useTransferenciasMut()
