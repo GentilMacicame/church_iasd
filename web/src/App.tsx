@@ -59,6 +59,7 @@ const PaginaClassesES = pagina(() => import('@/features/escola-sabatina/PaginaCl
 const PaginaClasseES = pagina(() => import('@/features/escola-sabatina/PaginaClasse'))
 const PaginaTrimestresES = pagina(() => import('@/features/escola-sabatina/PaginaTrimestres'))
 const PaginaVisitantesES = pagina(() => import('@/features/escola-sabatina/PaginaVisitantes'))
+const PaginaRelatoriosES = pagina(() => import('@/features/escola-sabatina/PaginaRelatoriosES'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ export default function App() {
                   <Route path="escola-sabatina/classes" element={<Exige permissao="escola_sabatina.classe.ler"><PaginaClassesES /></Exige>} />
                   <Route path="escola-sabatina/classes/:id" element={<Exige permissao="escola_sabatina.classe.ler"><PaginaClasseES /></Exige>} />
                   <Route path="escola-sabatina/trimestres" element={<Exige permissao="escola_sabatina.trimestre.ler"><PaginaTrimestresES /></Exige>} />
+                  <Route path="escola-sabatina/relatorios" element={<Exige permissao="escola_sabatina.relatorio_sabado.ler"><PaginaRelatoriosES /></Exige>} />
                   <Route path="escola-sabatina/visitantes" element={<Exige permissao="escola_sabatina.visitante.ler"><PaginaVisitantesES /></Exige>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>

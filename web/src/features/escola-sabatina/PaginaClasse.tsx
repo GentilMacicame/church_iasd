@@ -1,35 +1,35 @@
 /**
- * Uma classe da Escola Sabatina (F-ES-02, F-ES-03): a configuração no trimestre (professor, auxiliar, secretário,
- * alvos, activa ou desactivada) e as matrículas (membros e interessados; sair da classe guarda a data, nada se apaga).
+ * Uma classe da Escola Sabatina (F-ES-02…05): o resumo da configuração no trimestre (professor, alvos, estado),
+ * a folha do trimestre (sábado a sábado, como o quadro) e as matrículas (membros e interessados; sair da classe
+ * guarda a data, nada se apaga). Editar abre o registo completo da classe (DialogoClasse).
  * Cada membro só tem uma matrícula activa: a base de dados recusa matricular quem já está noutra classe.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { ArrowLeft, Pencil, School, Target, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, School, Table2, UserMinus, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Avatar, Cartao, Pilula, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
-import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/comum/formulario'
+import { CampoFormulario, ErroFormulario } from '@/components/comum/formulario'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
-import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { Paginada } from '@/components/comum/Paginacao'
-import { Seleccao } from '@/components/comum/Seleccao'
 import { useSessao } from '@/auth/sessao'
 import { ErroApi, mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data } from '@/lib/formatos'
+import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import {
-  DIVISOES, matriculaActivaDe, nomeTrimestre, trimestreActual, useAlterarClasse, useClasses, useClassesTrimestre, useGravarClasseTrimestre, useMatricular,
-  useMatriculas, useMudarDeClasse, useTerminarClasse, useTirarMatricula, useTrimestres, type Classe, type ClasseTrimestre, type Divisao, type Trimestre,
+  matriculaActivaDe, nomeTrimestre, trimestreActual, useClasses, useClassesTrimestre, useMatricular,
+  useMatriculas, useMudarDeClasse, useTerminarClasse, useTirarMatricula, useTrimestres, type Classe,
 } from './api'
+import { DialogoClasse } from './DialogoClasse'
+import { FolhaClasse } from './FolhaClasse'
+import { EscolherTrimestre, textoMT } from './componentes'
+
+type Aba = 'folha' | 'matriculas'
 
 export default function PaginaClasse() {
   const id = Number(useParams().id)
@@ -42,48 +42,82 @@ export default function PaginaClasse() {
   const trimestre = trimestres.data?.find((x) => x.id === Number(params.get('trimestre'))) ?? trimestreActual(trimestres.data ?? [])
   const cts = useClassesTrimestre(trimestre?.id)
   const ct = cts.data?.find((c) => c.classeId === id)
+  const basicos = useMembrosBasicos()
+  const nomeDe = (mid?: number) => { const m = mid ? basicos.data?.find((x) => x.id === mid) : undefined; return m ? `${m.nome} ${m.apelido}` : null }
+  const aba: Aba = params.get('aba') === 'matriculas' ? 'matriculas' : 'folha'
+  const definir = (k: string, v: string) => setParams((p) => { const n = new URLSearchParams(p); n.set(k, v); return n }, { replace: true })
   const [editar, setEditar] = useState(false)
   const [terminar, setTerminar] = useState(false)
   const terminarClasse = useTerminarClasse()
+  const podeEditar = pode('escola_sabatina.classe.alterar') || pode('escola_sabatina.classe_trimestre.alterar') || pode('escola_sabatina.classe_trimestre.criar')
 
   if (classes.isError) return <EstadoErro erro={classes.error} aoTentar={() => classes.refetch()} />
   if (classes.isPending) return <Cartao><LinhasACarregar linhas={5} /></Cartao>
   if (!classe) return <Cartao><EstadoVazio icone={School} titulo="Classe não encontrada">A classe não existe ou foi terminada. <Link to="/escola-sabatina/classes" className="text-primary hover:underline">Ver as classes</Link></EstadoVazio></Cartao>
 
+  const resumo: [string, ReactNode][] = ct ? [
+    ['Professor / líder', nomeDe(ct.professorMembroId) ?? 'Ir. ________'],
+    ['Secretário(a)', nomeDe(ct.secretarioMembroId) ?? '—'],
+    ['Alvo de membros', ct.alvoMembros],
+    ['Alvo de E.D.', `${Math.round(Number(ct.alvoEstudoDiario ?? 1) * 100)}%`],
+    ['Alvo de filiais', ct.alvoFiliais],
+    ['Ofertas por sábado', textoMT(ct.alvoOfertaSabado)],
+    ['Alvo de baptismos', ct.alvoBaptismos],
+  ] : []
+
   return (
     <>
       <TituloPagina
-        antes={<Link to="/escola-sabatina/classes" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t.es.classes}</Link>}
+        antes={<Link to={`/escola-sabatina/classes${trimestre ? `?trimestre=${trimestre.id}` : ''}`} className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground print:hidden"><ArrowLeft className="size-4" />{t.es.classes}</Link>}
         icone={School}
-        titulo={classe.nome}
-        descricao={[rotulos.divisao[classe.divisao], classe.localReuniao].filter(Boolean).join(' · ')}
+        titulo={<span className="flex flex-wrap items-center gap-2">{classe.nome}{ct && (ct.estado === 'INACTIVO' ? <Pilula variante="secondary">Desactivado</Pilula> : <Pilula variante="success">Activo</Pilula>)}</span>}
+        descricao={[rotulos.divisao[classe.divisao], classe.localReuniao, trimestre && nomeTrimestre(trimestre)].filter(Boolean).join(' · ')}
         accoes={<>
-          {pode('escola_sabatina.classe.alterar') && <Button variant="outline" className="alvo" onClick={() => setEditar(true)}><Pencil className="size-4" />{t.comum.editar}</Button>}
-          {pode('escola_sabatina.classe.terminar') && <Button variant="ghost" className="alvo text-destructive-text" onClick={() => setTerminar(true)}>Terminar</Button>}
+          <EscolherTrimestre trimestres={trimestres.data ?? []} valor={trimestre?.id} aoMudar={(v) => definir('trimestre', v)} className="print:hidden" />
+          {podeEditar && <Button variant="outline" className="alvo print:hidden" onClick={() => setEditar(true)}><Pencil className="size-4" />{ct ? t.comum.editar : 'Configurar'}</Button>}
+          {pode('escola_sabatina.classe.terminar') && <Button variant="ghost" className="alvo text-destructive-text print:hidden" onClick={() => setTerminar(true)}>Terminar</Button>}
         </>}
       />
-      <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <Cartao titulo="No trimestre" icone={Target}
-            descricao="Professor, secretário e alvos. Sem esta configuração não se regista o relatório do sábado."
-            accoes={(trimestres.data?.length ?? 0) > 0 && (
-              <div className="w-48">
-                <Seleccao aria-label="Trimestre" value={trimestre?.id ?? ''} onChange={(e) => setParams({ trimestre: e.target.value }, { replace: true })}>
-                  {(trimestres.data ?? []).map((x) => <option key={x.id} value={x.id}>{nomeTrimestre(x)}</option>)}
-                </Seleccao>
+      <div className="grid gap-5">
+        {trimestre && !cts.isPending && (ct ? (
+          <dl className="grid grid-cols-2 overflow-hidden rounded-xl border bg-card shadow-card sm:grid-cols-4 lg:grid-cols-7">
+            {resumo.map(([r, v]) => (
+              <div key={r} className="border-r border-b px-4 py-3">
+                <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{r}</dt>
+                <dd className="mt-1 truncate text-sm font-semibold tabular-nums">{v}</dd>
               </div>
-            )}>
+            ))}
+          </dl>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/30 bg-tint-warning px-4 py-3 text-sm text-warning-text">
+            <p className="flex-1">Esta classe ainda não está configurada para o {nomeTrimestre(trimestre)} (professor e alvos). Sem isso não há folha nem relatórios do sábado.</p>
+            {podeEditar && <Button size="sm" onClick={() => setEditar(true)}>Configurar</Button>}
+          </div>
+        ))}
+
+        <div role="tablist" aria-label="Classe" className="flex gap-1 border-b print:hidden">
+          {([['folha', 'Folha do trimestre', Table2], ['matriculas', 'Matrículas', Users]] as const).map(([k, r, I]) => (
+            <button key={k} type="button" role="tab" aria-selected={aba === k} onClick={() => definir('aba', k)}
+              className={cn('alvo -mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+                aba === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+              <I className="size-4" />{r}
+            </button>
+          ))}
+        </div>
+
+        {aba === 'folha' ? (
+          <Cartao titulo={`Folha da classe${trimestre ? ` · ${nomeTrimestre(trimestre)}` : ''}`} descricao="Sábado a sábado, como o quadro da Escola Sabatina">
             {!trimestre ? <EstadoVazio>Ainda não há trimestres criados pela Associação.</EstadoVazio>
-              : cts.isPending ? <LinhasACarregar linhas={4} />
+              : cts.isPending ? <LinhasACarregar linhas={6} />
               : cts.isError ? <EstadoErro erro={cts.error} aoTentar={() => cts.refetch()} />
-              : <FormTrimestre key={`${trimestre.id}-${ct?.id ?? 'novo'}`} classe={classe} trimestre={trimestre} ct={ct} />}
+              : !ct ? <EstadoVazio icone={Table2}>Configure a classe para o trimestre para preencher a folha.</EstadoVazio>
+              : <FolhaClasse classe={classe} ct={ct} trimestre={trimestre} />}
           </Cartao>
-        </div>
-        <div className="lg:col-span-5">
-          <Matriculas classe={classe} />
-        </div>
+        ) : (
+          <div className="max-w-3xl"><Matriculas classe={classe} /></div>
+        )}
       </div>
-      {editar && <DialogoEditar classe={classe} aoFechar={() => setEditar(false)} />}
+      {editar && <DialogoClasse classe={classe} ct={ct} trimestre={trimestre} aoFechar={() => setEditar(false)} />}
       <DialogoConfirmar aberto={terminar} aoMudar={setTerminar} perigo titulo={`Terminar a classe ${classe.nome}?`}
         texto="A classe deixa de aparecer nas listas; os relatórios e as matrículas ficam no histórico." accao="Terminar"
         aCorrer={terminarClasse.isPending}
@@ -91,94 +125,6 @@ export default function PaginaClasse() {
           try { await terminarClasse.mutateAsync(classe.id); toast.success('Classe terminada.'); navigate('/escola-sabatina/classes') } catch (e) { toast.error(mensagemDe(e)) }
         }} />
     </>
-  )
-}
-
-const inteiro = z.coerce.number({ invalid_type_error: 'Escreva um número' }).int('Só números inteiros').min(0, 'Não pode ser negativo').max(9999)
-const esquemaCt = z.object({
-  professor: z.number().nullable(),
-  auxiliar: z.number().nullable(),
-  secretario: z.number().nullable(),
-  alvoMembros: inteiro,
-  alvoEstudo: z.coerce.number({ invalid_type_error: 'Escreva um número' }).min(0, 'Entre 0 e 100').max(100, 'Entre 0 e 100'),
-  alvoFiliais: inteiro,
-  alvoOferta: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Valor inválido (ex.: 650,00)'),
-  alvoBaptismos: inteiro,
-  activa: z.boolean(),
-})
-type ValoresCt = z.infer<typeof esquemaCt>
-
-function FormTrimestre({ classe, trimestre, ct }: { classe: Classe; trimestre: Trimestre; ct?: ClasseTrimestre }) {
-  const { pode } = useSessao()
-  const basicos = useMembrosBasicos()
-  const gravar = useGravarClasseTrimestre()
-  const [erro, setErro] = useState<string | null>(null)
-  const podeGravar = ct ? pode('escola_sabatina.classe_trimestre.alterar') : pode('escola_sabatina.classe_trimestre.criar')
-  const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
-  const form = useForm<ValoresCt>({
-    resolver: zodResolver(esquemaCt),
-    defaultValues: {
-      professor: ct?.professorMembroId ?? null, auxiliar: ct?.auxiliarMembroId ?? null, secretario: ct?.secretarioMembroId ?? null,
-      alvoMembros: ct?.alvoMembros ?? 0, alvoEstudo: Math.round(Number(ct?.alvoEstudoDiario ?? '1') * 100), alvoFiliais: ct?.alvoFiliais ?? 0,
-      alvoOferta: ct?.alvoOfertaSabado ?? '0.00', alvoBaptismos: ct?.alvoBaptismos ?? 0, activa: ct ? ct.estado !== 'INACTIVO' : true,
-    },
-  })
-  const e = form.formState.errors
-  const submeter = form.handleSubmit(async (v) => {
-    setErro(null)
-    try {
-      await gravar.mutateAsync({
-        id: ct?.id,
-        corpo: {
-          classeId: classe.id, trimestreId: trimestre.id,
-          professorMembroId: v.professor ?? undefined, auxiliarMembroId: v.auxiliar ?? undefined, secretarioMembroId: v.secretario ?? undefined,
-          alvoMembros: v.alvoMembros, alvoEstudoDiario: (v.alvoEstudo / 100).toFixed(4), alvoFiliais: v.alvoFiliais,
-          alvoOfertaSabado: v.alvoOferta, alvoBaptismos: v.alvoBaptismos, estado: v.activa ? 'ACTIVO' : 'INACTIVO',
-        } as never,
-      })
-      toast.success(ct ? 'Configuração gravada.' : `Classe configurada para o ${nomeTrimestre(trimestre)}.`)
-    } catch (err) {
-      setErro(aplicarErroApi(form, err))
-    }
-  })
-  const membro = (nome: 'professor' | 'auxiliar' | 'secretario', rotulo: string) => (
-    <CampoFormulario rotulo={rotulo} erro={e[nome]?.message}>
-      {(p) => <Controller control={form.control} name={nome} render={({ field }) => (
-        <CampoMembro id={p.id} valor={field.value} aoMudar={field.onChange} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']} />
-      )} />}
-    </CampoFormulario>
-  )
-
-  return (
-    <form onSubmit={submeter} noValidate className="grid gap-4">
-      <ErroFormulario mensagem={erro} />
-      {!ct && <p className="rounded-lg border border-warning/30 bg-tint-warning px-4 py-3 text-sm text-warning-text">Esta classe ainda não está configurada para o {nomeTrimestre(trimestre)}.</p>}
-      <fieldset disabled={!podeGravar} className="grid gap-4">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {membro('professor', 'Professor(a)')}
-          {membro('auxiliar', 'Auxiliar')}
-          {membro('secretario', 'Secretário(a)')}
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <CampoFormulario rotulo="Alvo de membros" erro={e.alvoMembros?.message}>{(p) => <Input {...p} inputMode="numeric" {...form.register('alvoMembros')} className="num" />}</CampoFormulario>
-          <CampoFormulario rotulo="Estudo diário (%)" erro={e.alvoEstudo?.message}>{(p) => <Input {...p} inputMode="numeric" {...form.register('alvoEstudo')} className="num" />}</CampoFormulario>
-          <CampoFormulario rotulo="Alvo de filiais" erro={e.alvoFiliais?.message}>{(p) => <Input {...p} inputMode="numeric" {...form.register('alvoFiliais')} className="num" />}</CampoFormulario>
-          <CampoFormulario rotulo="Oferta missionária por sábado" erro={e.alvoOferta?.message} className="col-span-2 sm:col-span-2">
-            {(p) => <Controller control={form.control} name="alvoOferta" render={({ field }) => <CampoDinheiro {...p} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />} />}
-          </CampoFormulario>
-          <CampoFormulario rotulo="Alvo de baptismos" erro={e.alvoBaptismos?.message}>{(p) => <Input {...p} inputMode="numeric" {...form.register('alvoBaptismos')} className="num" />}</CampoFormulario>
-        </div>
-        <label className="alvo flex items-center gap-3 text-sm">
-          <input type="checkbox" {...form.register('activa')} className="size-5 accent-[var(--primary)]" />
-          <span><span className="font-medium">Classe activa neste trimestre</span><span className="block text-xs text-muted-foreground">Desactivada: não entra na classificação nem nos relatórios em falta.</span></span>
-        </label>
-      </fieldset>
-      {podeGravar && (
-        <div className="flex justify-end">
-          <Button type="submit" className="alvo min-w-32" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? t.comum.aGravar : ct ? t.comum.guardar : 'Configurar'}</Button>
-        </div>
-      )}
-    </form>
   )
 }
 
@@ -298,50 +244,5 @@ function Matriculas({ classe }: { classe: Classe }) {
           try { await tirar.mutateAsync(aTirar!); toast.success('Saiu da classe.') } catch (e) { toast.error(mensagemDe(e)) } finally { setATirar(null) }
         }} />
     </Cartao>
-  )
-}
-
-const esquemaClasse = z.object({
-  nome: z.string().trim().min(1, t.comum.obrigatorio).max(100),
-  divisao: z.enum(DIVISOES as [Divisao, ...Divisao[]]),
-  localReuniao: z.string().trim().max(150),
-})
-
-function DialogoEditar({ classe, aoFechar }: { classe: Classe; aoFechar: () => void }) {
-  const alterar = useAlterarClasse()
-  const [erro, setErro] = useState<string | null>(null)
-  const form = useForm<z.infer<typeof esquemaClasse>>({
-    resolver: zodResolver(esquemaClasse),
-    defaultValues: { nome: classe.nome, divisao: classe.divisao, localReuniao: classe.localReuniao ?? '' },
-  })
-  const e = form.formState.errors
-  const submeter = form.handleSubmit(async (v) => {
-    setErro(null)
-    try {
-      await alterar.mutateAsync({ id: classe.id, corpo: { nome: v.nome, divisao: v.divisao, localReuniao: v.localReuniao || undefined } })
-      toast.success('Classe alterada.')
-      aoFechar()
-    } catch (err) {
-      setErro(aplicarErroApi(form, err))
-    }
-  })
-  return (
-    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={submeter} noValidate className="grid gap-4">
-          <DialogHeader><DialogTitle>Editar a classe</DialogTitle><DialogDescription>Nome, divisão e local de reunião.</DialogDescription></DialogHeader>
-          <ErroFormulario mensagem={erro} />
-          <CampoFormulario rotulo="Nome" erro={e.nome?.message} obrigatorio>{(p) => <Input {...p} {...form.register('nome')} />}</CampoFormulario>
-          <CampoFormulario rotulo="Divisão" erro={e.divisao?.message} obrigatorio>
-            {(p) => <Seleccao {...p} {...form.register('divisao')}>{DIVISOES.map((d) => <option key={d} value={d}>{rotulos.divisao[d]}</option>)}</Seleccao>}
-          </CampoFormulario>
-          <CampoFormulario rotulo="Local de reunião" erro={e.localReuniao?.message}>{(p) => <Input {...p} {...form.register('localReuniao')} />}</CampoFormulario>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={aoFechar}>{t.comum.cancelar}</Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? t.comum.aGravar : t.comum.guardar}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   )
 }

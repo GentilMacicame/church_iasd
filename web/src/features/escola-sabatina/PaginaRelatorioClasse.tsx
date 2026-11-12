@@ -1,6 +1,7 @@
 /**
- * Relatório de uma classe num sábado (P-05; F-ES-04, F-ES-05, F-ES-06) · pensado para o telemóvel e sem rede.
- * Números (M.M., M.P., E.D., visitantes, filiais), chamada com botões grandes, visitantes e as três ofertas.
+ * Relatório de uma classe num sábado (P-05; F-ES-04, F-ES-05, F-ES-06) · no computador e no telemóvel, sem rede.
+ * M.M. (membros matriculados), M.P. (membros presentes), E.D. (estudo diário), visitantes e filiais; chamada nominal
+ * em tabela; as três ofertas; visitantes; e ao lado o resumo do sábado (como a linha do quadro) com as acções.
  * Tudo fica no telemóvel; "Guardar" envia (ou deixa na fila até haver rede). Com o relatório na base de dados:
  * o tesoureiro lança as ofertas (P-05 passo 5) e o secretário fecha (passo 6); só o director reabre.
  */
@@ -8,7 +9,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  AlertTriangle, ArrowLeft, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Minus, Plus, Trash2, UserPlus, Users,
+  AlertTriangle, ArrowLeft, BarChart3, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Minus, Plus, Save, Table2, Trash2, UserPlus, Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,54 +26,68 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useContasIgreja } from '@/features/tesouraria/api'
-import { useFecharRelatorio, useLancarOfertas, useReabrirRelatorio, type Relatorio } from './api'
+import { nomeTrimestre, useFecharRelatorio, useLancarOfertas, useReabrirRelatorio, type Relatorio } from './api'
+import { textoMT, textoPct, tomPct } from './componentes'
 import {
   chaveRelatorio, contarChamada, descartarRascunho, enviarRascunho, gravarRascunho, lerRascunho, rascunhoDoPacote, useEmLinha, usePacote,
   type Numeros, type PacoteRelatorio, type Rascunho,
 } from './offline'
 import { AvisosRede } from './PaginaSabado'
 
-/** Número com botões − e + grandes (alvos de 44px), para o polegar. */
-function Contador({ rotulo, sigla, valor, aoMudar, desactivado, ajuda, max }: {
-  rotulo: string; sigla?: string; valor: number; aoMudar: (v: number) => void; desactivado?: boolean; ajuda?: ReactNode; max?: number
+/**
+ * Um número do sábado (M.M., M.P., E.D., visitantes, filiais) num cartão compacto: a sigla, o nome por extenso,
+ * o valor grande e, para o polegar, − e + discretos. Só de leitura quando fechado ou contado pela chamada.
+ */
+function Numero({ sigla, rotulo, valor, aoMudar, so, ajuda, max, extra }: {
+  sigla: string; rotulo: string; valor: number; aoMudar?: (v: number) => void; so?: boolean; ajuda?: ReactNode; max?: number; extra?: ReactNode
 }) {
-  const id = `n-${rotulo.replace(/\W/g, '')}`
+  const id = `n-${sigla.replace(/\W/g, '')}`
   return (
-    <div className="grid gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {rotulo}{sigla && <span className="ml-1 text-xs font-normal text-muted-foreground">({sigla})</span>}
-      </label>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="icon" className="size-11 flex-none" aria-label={`Menos ${rotulo.toLowerCase()}`}
-          disabled={desactivado || valor <= 0} onClick={() => aoMudar(Math.max(0, valor - 1))}><Minus className="size-4" /></Button>
-        <Input id={id} inputMode="numeric" value={String(valor)} disabled={desactivado}
-          onChange={(e) => { const n = Number(e.target.value.replace(/\D/g, '') || 0); aoMudar(Math.min(n, 9999)) }}
-          className="num h-11 min-w-0 text-center text-lg font-semibold" />
-        <Button type="button" variant="outline" size="icon" className="size-11 flex-none" aria-label={`Mais ${rotulo.toLowerCase()}`}
-          disabled={desactivado || (max != null && valor >= max)} onClick={() => aoMudar(valor + 1)}><Plus className="size-4" /></Button>
+    <div className="flex min-w-0 flex-col rounded-lg border bg-card p-3">
+      <div className="flex items-start justify-between gap-2">
+        <label htmlFor={id} className="min-w-0">
+          <span className="block text-xs font-bold tracking-wide text-foreground uppercase">{sigla}</span>
+          <span className="block truncate text-[11px] text-muted-foreground">{rotulo}</span>
+        </label>
+        {extra}
       </div>
-      {ajuda && <p className="text-xs text-muted-foreground">{ajuda}</p>}
+      {so || !aoMudar ? (
+        <span id={id} className="mt-2 block h-10 text-center text-3xl leading-10 font-bold tabular-nums">{valor}</span>
+      ) : (
+        <div className="mt-2 flex items-center gap-1">
+          <button type="button" aria-label={`Menos: ${rotulo}`} disabled={valor <= 0} onClick={() => aoMudar(Math.max(0, valor - 1))}
+            className="flex size-10 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"><Minus className="size-4" /></button>
+          <input id={id} inputMode="numeric" value={String(valor)} onFocus={(e) => e.target.select()}
+            onChange={(e) => aoMudar(Math.min(Number(e.target.value.replace(/\D/g, '') || 0), 9999))}
+            className="h-10 w-full min-w-0 rounded-md border border-input bg-background text-center text-2xl font-bold tabular-nums outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
+          <button type="button" aria-label={`Mais: ${rotulo}`} disabled={max != null && valor >= max} onClick={() => aoMudar(valor + 1)}
+            className="flex size-10 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"><Plus className="size-4" /></button>
+        </div>
+      )}
+      {ajuda && <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{ajuda}</p>}
     </div>
   )
 }
 
-/** Botão grande de ligar/desligar (chamada). */
-function Alternar({ ligado, aoMudar, children, desactivado, tom = 'primary' }: {
-  ligado: boolean; aoMudar: (v: boolean) => void; children: ReactNode; desactivado?: boolean; tom?: 'primary' | 'success'
-}) {
+/** Percentagem pequena a cores (ao lado dos números e no resumo). */
+function PctPilula({ v, tipo = 'presenca' }: { v: number | null; tipo?: 'presenca' | 'alvo' }) {
+  return <span className={cn('rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums', v == null ? 'text-muted-foreground' : tomPct(v, tipo))}>{textoPct(v)}</span>
+}
+
+/** Caixa de marcar da chamada (alvo de 44px; só um ✓ quando o relatório está fechado). */
+function Marca({ ligado, aoMudar, so, rotulo, tom = 'primary' }: { ligado: boolean; aoMudar: (v: boolean) => void; so?: boolean; rotulo: string; tom?: 'primary' | 'success' }) {
+  if (so) return ligado ? <Check className={cn('mx-auto size-5', tom === 'success' ? 'text-success-text' : 'text-primary')} aria-label={`${rotulo}: sim`} /> : <span className="block text-center text-muted-foreground" aria-label={`${rotulo}: não`}>—</span>
   return (
-    <button type="button" aria-pressed={ligado} disabled={desactivado} onClick={() => aoMudar(!ligado)}
-      className={cn(
-        'alvo inline-flex min-h-11 min-w-[6.5rem] items-center justify-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-40',
-        ligado
-          ? tom === 'success' ? 'border-success/40 bg-tint-success text-success-text' : 'border-primary bg-primary text-primary-foreground'
-          : 'border-input bg-card text-muted-foreground hover:bg-muted',
-      )}>
-      {ligado && <Check className="size-4" aria-hidden />}{children}
+    <button type="button" role="checkbox" aria-checked={ligado} aria-label={rotulo} onClick={() => aoMudar(!ligado)}
+      className="alvo mx-auto flex size-11 items-center justify-center rounded-md hover:bg-muted">
+      <span className={cn('flex size-6 items-center justify-center rounded-md border-2 transition-colors',
+        ligado ? (tom === 'success' ? 'border-success bg-success text-white' : 'border-primary bg-primary text-primary-foreground') : 'border-input bg-card')}>
+        {ligado && <Check className="size-4" strokeWidth={3} />}
+      </span>
     </button>
   )
 }
@@ -180,96 +195,147 @@ export default function PaginaRelatorioClasse() {
   const matriculados = r.numeros.membrosMatriculados ?? p.alunos.length
   const totalOfertas = ['oferta', 'oferta13Sabado', 'ofertaDespesas'].reduce((s, k) => s + (centimos(r.numeros[k as 'oferta'] || '0') || 0), 0)
 
+  const alvo = Number(p.classeTrimestre.alvoOfertaSabado ?? 0)
+  const oferta = (centimos(r.numeros.oferta || '0') || 0) / 100
+  const pctPres = matriculados ? presentes / matriculados : null
+  const pctEd = presentes ? estudaram / presentes : null
+  const porGuardar = alterado || r.porEnviar
+  const resumo: [string, ReactNode][] = [
+    ['M.M. · membros matriculados', matriculados],
+    ['M.P. · membros presentes', presentes],
+    ['% Presença', <PctPilula key="p" v={pctPres} />],
+    ['E.D. · estudo diário', estudaram],
+    ['% E.D.', <PctPilula key="e" v={pctEd} />],
+    ['Visitantes', r.numeros.visitantes],
+    ['Filiais', r.numeros.filiais],
+  ]
+  const botaoGuardar = (classe?: string) => (
+    <Button type="button" className={cn('alvo h-11', classe)} disabled={aEnviar} onClick={() => void guardar()}>
+      <Save className="size-4" />{aEnviar ? t.comum.aGravar : emLinha ? 'Guardar relatório' : 'Guardar no telemóvel'}
+    </Button>
+  )
+
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 pb-24">
+    <div className="pb-24 lg:pb-6">
       <TituloPagina
         antes={<Link to={`/escola-sabatina/sabado?trimestre=${p.trimestre.id}&sabado=${p.sabado.id}`} className="alvo mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t.es.sabado}</Link>}
         icone={BookOpen}
         titulo={p.classe.nome}
         descricao={<>
-          {rotulos.divisao[p.classe.divisao]} · {p.sabado.numero}.º sábado · {data(p.sabado.data)}
-          {p.sabado.decimoTerceiro && <> · <strong className="font-medium text-foreground">13.º sábado</strong></>}
+          {rotulos.divisao[p.classe.divisao]} · {p.sabado.numero}.º sábado · {data(p.sabado.data)} · {nomeTrimestre(p.trimestre)}
+          {p.sabado.decimoTerceiro && <> · <strong className="font-semibold text-warning-text">13.º sábado</strong></>}
         </>}
-        accoes={<span className="flex flex-wrap gap-1.5">
+        accoes={<span className="flex flex-wrap items-center gap-1.5">
           {r.conflito ? <Pilula variante="warning">Conflito</Pilula> : r.erro ? <Pilula variante="destructive">Recusado</Pilula> : r.porEnviar ? <Pilula variante="info">Por enviar</Pilula> : alterado ? <Pilula variante="warning">Por guardar</Pilula> : null}
-          {rel ? <Pilula variante={fechado ? 'success' : 'warning'}>{rotulos.estadoRelatorio[rel.estado]}</Pilula> : <Pilula variante="outline">Novo</Pilula>}
+          {rel ? <Pilula variante={fechado ? 'success' : 'warning'}>{fechado && <Lock className="size-3" />}{rotulos.estadoRelatorio[rel.estado]}</Pilula> : <Pilula variante="outline">Novo</Pilula>}
+          <Button asChild variant="ghost" size="sm" className="print:hidden"><Link to={`/escola-sabatina/classes/${p.classe.id}?trimestre=${p.trimestre.id}`}><Table2 className="size-4" />Folha da classe</Link></Button>
         </span>}
       />
-      <AvisosRede />
-      {r.conflito ? (
-        <div role="alert" className="grid gap-3 rounded-lg border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
-          <p className="flex items-start gap-2"><AlertTriangle className="mt-0.5 size-4 flex-none" aria-hidden />{r.erro ?? 'Outra pessoa alterou este relatório.'}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" className="alvo" disabled={aEnviar || !emLinha} onClick={() => void gravarPorCima()}>Gravar por cima</Button>
-            <Button size="sm" variant="outline" className="alvo" disabled={aEnviar} onClick={() => void desfazer()}>Descartar as minhas alterações</Button>
-          </div>
-        </div>
-      ) : r.erro && <ErroFormulario mensagem={r.erro} />}
-      {fechado && (
-        <div role="status" className="flex items-start gap-2 rounded-lg border border-success/20 bg-tint-success px-4 py-3 text-sm text-success-text">
-          <Lock className="mt-0.5 size-4 flex-none" aria-hidden />
-          <p>Relatório fechado: as ofertas estão conferidas com a tesouraria. Para corrigir, o director da ES reabre-o.</p>
-        </div>
-      )}
 
-      <Cartao titulo="Números do sábado" icone={Users}>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="grid gap-1.5">
-            <Contador rotulo="Membros matriculados" sigla="M.M." valor={matriculados} desactivado={fechado || r.numeros.membrosMatriculados == null}
-              aoMudar={(v) => mudarNumero('membrosMatriculados', v)} />
-            {!fechado && (
-              <button type="button" className="alvo justify-self-start text-xs font-medium text-primary hover:underline"
-                onClick={() => mudarNumero('membrosMatriculados', r.numeros.membrosMatriculados == null ? p.alunos.length : null)}>
-                {r.numeros.membrosMatriculados == null ? `Calculado pelas matrículas (${p.alunos.length}) · indicar à mão` : 'Usar as matrículas'}
-              </button>
+      <div className="grid gap-3">
+        <AvisosRede />
+        {r.conflito ? (
+          <div role="alert" className="grid gap-3 rounded-lg border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
+            <p className="flex items-start gap-2"><AlertTriangle className="mt-0.5 size-4 flex-none" aria-hidden />{r.erro ?? 'Outra pessoa alterou este relatório.'}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" className="alvo" disabled={aEnviar || !emLinha} onClick={() => void gravarPorCima()}>Gravar por cima</Button>
+              <Button size="sm" variant="outline" className="alvo" disabled={aEnviar} onClick={() => void desfazer()}>Descartar as minhas alterações</Button>
+            </div>
+          </div>
+        ) : r.erro && <ErroFormulario mensagem={r.erro} />}
+        {fechado && (
+          <div role="status" className="flex items-center gap-2 rounded-lg border border-success/20 bg-tint-success px-4 py-2.5 text-sm text-success-text">
+            <Lock className="size-4 flex-none" aria-hidden />
+            <p>Relatório fechado: as ofertas estão conferidas com a tesouraria. Para corrigir, o director da ES reabre-o.</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid min-w-0 gap-5">
+          <Cartao titulo="Números do sábado" icone={Users} descricao={chamada ? 'M.P. e E.D. contados pela chamada nominal' : 'Escreva ou use − e +'}>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <Numero sigla="M.M." rotulo="Membros matriculados" valor={matriculados} so={fechado || r.numeros.membrosMatriculados == null}
+                aoMudar={(v) => mudarNumero('membrosMatriculados', v)}
+                ajuda={fechado ? undefined : (
+                  <button type="button" className="font-medium text-primary hover:underline"
+                    onClick={() => mudarNumero('membrosMatriculados', r.numeros.membrosMatriculados == null ? p.alunos.length : null)}>
+                    {r.numeros.membrosMatriculados == null ? 'pelas matrículas · mudar' : 'usar as matrículas'}
+                  </button>
+                )} />
+              <Numero sigla="M.P." rotulo="Membros presentes" valor={presentes} so={fechado || !!chamada} max={matriculados || undefined}
+                aoMudar={(v) => mudarNumero('membrosPresentes', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">presença <PctPilula v={pctPres} /></span>} />
+              <Numero sigla="E.D." rotulo="Estudo diário" valor={estudaram} so={fechado || !!chamada} max={presentes}
+                aoMudar={(v) => mudarNumero('estudoDiario', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">estudo <PctPilula v={pctEd} /></span>} />
+              <Numero sigla="Visit." rotulo="Visitantes" valor={r.numeros.visitantes} so={fechado} aoMudar={(v) => mudarNumero('visitantes', v)} />
+              <Numero sigla="Fil." rotulo="Filiais" valor={r.numeros.filiais} so={fechado} aoMudar={(v) => mudarNumero('filiais', v)} />
+            </div>
+            {presentes > matriculados && (
+              <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-warning-text"><AlertTriangle className="size-3.5" />Há mais presentes do que matriculados: a base de dados não aceita. Corrija o M.M. ou o M.P.</p>
             )}
-          </div>
-          <Contador rotulo="Membros presentes" sigla="M.P." valor={presentes} desactivado={fechado || !!chamada}
-            aoMudar={(v) => mudarNumero('membrosPresentes', v)} ajuda={chamada ? 'Contado pela chamada' : undefined} />
-          <Contador rotulo="Estudo diário" sigla="E.D." valor={estudaram} desactivado={fechado || !!chamada} max={presentes}
-            aoMudar={(v) => mudarNumero('estudoDiario', v)} ajuda={chamada ? 'Contado pela chamada' : 'Quantos estudaram a lição todos os dias'} />
-          <Contador rotulo="Visitantes" valor={r.numeros.visitantes} desactivado={fechado} aoMudar={(v) => mudarNumero('visitantes', v)} />
-          <Contador rotulo="Filiais" valor={r.numeros.filiais} desactivado={fechado} aoMudar={(v) => mudarNumero('filiais', v)} ajuda="Escolas sabatinas filiais dirigidas pela classe" />
-        </div>
-        {presentes > matriculados && (
-          <p className="mt-4 text-xs font-medium text-warning-text">Há mais presentes do que matriculados: a base de dados não aceita. Corrija o M.M. ou os presentes.</p>
-        )}
-      </Cartao>
+          </Cartao>
 
-      <Chamada p={p} r={r} fechado={fechado} mudar={mudar} />
+          <Chamada p={p} r={r} fechado={fechado} mudar={mudar} />
 
-      <Visitantes p={p} r={r} fechado={fechado} mudar={mudar} />
-
-      <Cartao titulo="Ofertas" descricao={t.es.separadas} icone={Coins}>
-        {p.sabado.decimoTerceiro && (
-          <p className="mb-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-2.5 text-sm text-warning-text">
-            Hoje é o 13.º sábado: não se esqueça de anotar a oferta do 13.º sábado separada da oferta missionária.
-          </p>
-        )}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {([['oferta', t.es.oferta], ['oferta13Sabado', t.es.oferta13], ['ofertaDespesas', t.es.ofertaDespesas]] as const).map(([k, rotulo]) => (
-            <CampoFormulario key={k} rotulo={rotulo}>
-              {(a) => <CampoDinheiro {...a} value={r.numeros[k]} disabled={fechado} onChange={(v) => mudarNumero(k, v)} className="h-11 text-base" />}
+          <Cartao titulo="Ofertas" descricao={t.es.separadas} icone={Coins}>
+            {p.sabado.decimoTerceiro && !fechado && (
+              <p className="mb-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-2.5 text-sm text-warning-text">
+                Hoje é o 13.º sábado: anote a oferta do 13.º sábado separada da oferta missionária.
+              </p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([['oferta', t.es.oferta, alvo ? `Alvo do sábado: ${textoMT(alvo)}` : undefined], ['oferta13Sabado', t.es.oferta13, undefined], ['ofertaDespesas', t.es.ofertaDespesas, 'Fica na Escola Sabatina local']] as const).map(([k, rotulo, ajuda]) => (
+                <CampoFormulario key={k} rotulo={rotulo} ajuda={ajuda}>
+                  {(a) => fechado
+                    ? <p className="h-10 rounded-md border bg-muted/40 px-3 text-right text-base leading-10 font-semibold tabular-nums">{dinheiro(r.numeros[k])}</p>
+                    : <CampoDinheiro {...a} value={r.numeros[k]} onChange={(v) => mudarNumero(k, v)} className="h-10 text-base font-semibold" />}
+                </CampoFormulario>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t pt-3 text-sm">
+              <span className="text-muted-foreground">Total das três ofertas</span>
+              <Dinheiro valor={deCentimos(totalOfertas)} className="text-base font-bold" />
+            </div>
+            <CampoFormulario rotulo="Observações" className="mt-4">
+              {(a) => <Textarea {...a} rows={2} maxLength={500} value={r.numeros.observacoes} disabled={fechado} onChange={(e) => mudarNumero('observacoes', e.target.value)} placeholder="Opcional" />}
             </CampoFormulario>
-          ))}
-        </div>
-        <p className="mt-4 flex justify-between border-t pt-3 text-sm"><span className="text-muted-foreground">Total</span><Dinheiro valor={deCentimos(totalOfertas)} className="font-semibold" /></p>
-        <CampoFormulario rotulo="Observações" className="mt-4">
-          {(a) => <Textarea {...a} rows={2} maxLength={500} value={r.numeros.observacoes} disabled={fechado} onChange={(e) => mudarNumero('observacoes', e.target.value)} />}
-        </CampoFormulario>
-      </Cartao>
+          </Cartao>
 
-      {rel && <Tesouraria rel={rel} emLinha={emLinha} porGuardar={alterado || r.porEnviar} />}
+          <Visitantes p={p} r={r} fechado={fechado} mudar={mudar} />
+        </div>
+
+        <aside className="grid gap-5 lg:sticky lg:top-[calc(var(--header-height)+1rem)]">
+          <Cartao titulo="Resumo do sábado" icone={BarChart3} semMargem>
+            <dl className="divide-y border-t text-sm">
+              {resumo.map(([rot, v]) => (
+                <div key={rot} className="flex items-center justify-between gap-3 px-5 py-2">
+                  <dt className="text-muted-foreground">{rot}</dt><dd className="font-semibold tabular-nums">{v}</dd>
+                </div>
+              ))}
+              <div className="flex items-center justify-between gap-3 bg-muted/30 px-5 py-2">
+                <dt className="text-muted-foreground">Oferta missionária</dt>
+                <dd className="flex items-center gap-2 font-semibold tabular-nums">{alvo > 0 && <PctPilula v={oferta / alvo} tipo="alvo" />}{textoMT(oferta)}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-5 py-2.5">
+                <dt className="font-medium">Total das ofertas</dt><dd className="text-base font-bold tabular-nums"><Dinheiro valor={deCentimos(totalOfertas)} /></dd>
+              </div>
+            </dl>
+            {!fechado && (
+              <div className="hidden gap-2 border-t p-4 lg:grid">
+                {botaoGuardar('w-full')}
+                {porGuardar && <Button type="button" variant="ghost" size="sm" onClick={() => void desfazer()}>Desfazer alterações</Button>}
+              </div>
+            )}
+          </Cartao>
+          {rel && <Tesouraria rel={rel} emLinha={emLinha} porGuardar={porGuardar} />}
+        </aside>
+      </div>
 
       {!fechado && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:left-[var(--sidebar-width)]">
-          <div className="mx-auto flex max-w-3xl items-center justify-end gap-2">
-            {(alterado || r.porEnviar) && (
-              <Button type="button" variant="ghost" className="alvo mr-auto" onClick={() => void desfazer()}>Desfazer alterações</Button>
-            )}
-            <Button type="button" className="alvo h-11 min-w-40" disabled={aEnviar} onClick={() => void guardar()}>
-              {aEnviar ? t.comum.aGravar : emLinha ? 'Guardar relatório' : 'Guardar no telemóvel'}
-            </Button>
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="flex items-center justify-end gap-2">
+            {porGuardar && <Button type="button" variant="ghost" className="alvo mr-auto" onClick={() => void desfazer()}>Desfazer</Button>}
+            {botaoGuardar('min-w-40')}
           </div>
         </div>
       )}
@@ -291,40 +357,58 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
   const contagem = chamada ? contarChamada(chamada) : null
 
   return (
-    <Cartao titulo="Chamada" icone={CheckCheck}
-      descricao={chamada ? `${contagem!.presentes} presentes · ${contagem!.estudaram} estudaram a lição` : 'Opcional: marca quem veio e quem estudou; os números contam-se sozinhos.'}
-      accoes={!fechado && chamada && p.presencas.length === 0 && (
-        <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmarTirar(true)}>Sem chamada</Button>
+    <Cartao titulo="Chamada nominal" icone={CheckCheck} semMargem
+      descricao={chamada ? `${contagem!.presentes} de ${p.alunos.length} presentes · ${contagem!.estudaram} estudaram a lição` : 'Opcional: marque quem veio e quem estudou; M.P. e E.D. contam-se sozinhos.'}
+      accoes={!fechado && chamada && (
+        <span className="flex gap-1">
+          <Button type="button" variant="outline" size="sm" onClick={todos}>Todos presentes</Button>
+          {p.presencas.length === 0 && <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmarTirar(true)}>Sem chamada</Button>}
+        </span>
       )}>
       {p.alunos.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          A classe não tem alunos matriculados neste sábado. <Link to={`/escola-sabatina/classes/${p.classe.id}`} className="font-medium text-primary hover:underline">Matricular alunos</Link>
+        <p className="px-5 pb-5 text-sm text-muted-foreground sm:px-6">
+          A classe não tem alunos matriculados neste sábado. <Link to={`/escola-sabatina/classes/${p.classe.id}?aba=matriculas`} className="font-medium text-primary hover:underline">Matricular alunos</Link>
         </p>
       ) : !chamada ? (
-        <Button type="button" variant="outline" className="alvo justify-self-start" disabled={fechado} onClick={comecar}>
-          <CheckCheck className="size-4" />Fazer a chamada ({p.alunos.length} alunos)
-        </Button>
+        <div className="px-5 pb-5 sm:px-6">
+          <Button type="button" variant="outline" className="alvo" disabled={fechado} onClick={comecar}><CheckCheck className="size-4" />Fazer a chamada ({p.alunos.length} alunos)</Button>
+        </div>
       ) : (
-        <>
-          {!fechado && <Button type="button" variant="outline" size="sm" className="alvo mb-3 justify-self-start" onClick={todos}>Marcar todos presentes</Button>}
-          <ul className="-mx-5 divide-y border-y sm:-mx-6">
-            {p.alunos.map((a) => {
+        <table className="w-full border-t text-sm">
+          <thead>
+            <tr className="bg-muted/50 text-xs text-muted-foreground">
+              <th className="w-14 py-2 pl-5 text-left font-medium sm:pl-6">N.º</th>
+              <th className="py-2 pl-1 text-left font-medium">Aluno</th>
+              <th className="w-24 py-2 text-center font-medium">Presente</th>
+              <th className="w-28 py-2 pr-3 text-center font-medium sm:pr-4">Estudou a lição</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {p.alunos.map((a, i) => {
               const v = chamada[a.membroId] ?? { presente: false, estudouLicao: false }
               return (
-                <li key={a.membroId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-2.5 sm:px-6">
-                  <span className="flex min-w-0 flex-1 basis-40 items-center gap-2.5">
-                    <Avatar id={a.membroId} nome={a.nome} apelido={a.apelido} tamanho={30} />
-                    <span className="truncate text-sm font-medium">{a.nome} {a.apelido}</span>
-                  </span>
-                  <span className="flex gap-2">
-                    <Alternar ligado={v.presente} desactivado={fechado} aoMudar={(x) => marcar(a.membroId, 'presente', x)}>Presente</Alternar>
-                    <Alternar ligado={v.estudouLicao} desactivado={fechado} tom="success" aoMudar={(x) => marcar(a.membroId, 'estudouLicao', x)}>Estudou</Alternar>
-                  </span>
-                </li>
+                <tr key={a.membroId} className={cn('hover:bg-muted/40', !v.presente && 'text-muted-foreground')}>
+                  <td className="py-1 pl-5 tabular-nums sm:pl-6">{i + 1}</td>
+                  <td className="py-1 pl-1">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <Avatar id={a.membroId} nome={a.nome} apelido={a.apelido} tamanho={28} />
+                      <span className={cn('truncate', v.presente && 'font-medium text-foreground')}>{a.nome} {a.apelido}</span>
+                    </span>
+                  </td>
+                  <td className="py-1"><Marca ligado={v.presente} so={fechado} rotulo={`${a.nome} ${a.apelido} presente`} aoMudar={(x) => marcar(a.membroId, 'presente', x)} /></td>
+                  <td className="py-1 pr-3 sm:pr-4"><Marca ligado={v.estudouLicao} so={fechado} tom="success" rotulo={`${a.nome} ${a.apelido} estudou a lição`} aoMudar={(x) => marcar(a.membroId, 'estudouLicao', x)} /></td>
+                </tr>
               )
             })}
-          </ul>
-        </>
+          </tbody>
+          <tfoot>
+            <tr className="border-t bg-muted/30 text-sm font-semibold">
+              <td className="py-2 pl-5 sm:pl-6" colSpan={2}>Total</td>
+              <td className="py-2 text-center tabular-nums">{contagem!.presentes}</td>
+              <td className="py-2 pr-3 text-center tabular-nums sm:pr-4">{contagem!.estudaram}</td>
+            </tr>
+          </tfoot>
+        </table>
       )}
       <DialogoConfirmar aberto={confirmarTirar} aoMudar={setConfirmarTirar} titulo="Registar sem chamada?"
         texto="As marcações desta chamada perdem-se e os presentes e o estudo diário passam a ser escritos à mão." accao="Sem chamada"
@@ -357,44 +441,63 @@ function Visitantes({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho;
   }
 
   return (
-    <Cartao titulo="Visitantes" icone={UserPlus} descricao="Nome e contacto para o seguimento (anonimizados ao fim de 12 meses se não se tornarem membros).">
+    <Cartao titulo="Visitantes" icone={UserPlus} semMargem
+      descricao={`${total} com nome e contacto · para o seguimento (anonimizados ao fim de 12 meses se não se tornarem membros)`}>
       {total > 0 && (
-        <ul className="-mx-5 mb-4 divide-y border-y sm:-mx-6">
-          {p.visitantes.map((v) => (
-            <li key={v.id} className="flex items-center gap-3 px-5 py-2.5 text-sm sm:px-6">
-              <span className="min-w-0 flex-1"><span className="font-medium">{v.nome}</span>{v.telefone && <span className="text-muted-foreground"> · {v.telefone}</span>}</span>
-              {v.convidadoPorMembroId && <span className="hidden text-xs text-muted-foreground sm:inline">convidado por {nomeDe(v.convidadoPorMembroId) ?? '—'}</span>}
-            </li>
-          ))}
-          {novos.map((v) => (
-            <li key={v.local} className="flex items-center gap-3 px-5 py-2.5 text-sm sm:px-6">
-              <span className="min-w-0 flex-1"><span className="font-medium">{v.nome}</span>{v.telefone && <span className="text-muted-foreground"> · {v.telefone}</span>}</span>
-              <Pilula variante="info">Por enviar</Pilula>
-              {!fechado && (
-                <Button type="button" variant="ghost" size="icon" className="size-11" aria-label={`Tirar ${v.nome}`}
-                  onClick={() => mudar((x) => ({ ...x, visitantesNovos: x.visitantesNovos.filter((y) => y.local !== v.local) }))}>
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <table className="w-full border-t text-sm">
+          <thead>
+            <tr className="bg-muted/50 text-xs text-muted-foreground">
+              <th className="py-2 pl-5 text-left font-medium sm:pl-6">Nome</th>
+              <th className="py-2 text-left font-medium">Telefone</th>
+              <th className="hidden py-2 text-left font-medium sm:table-cell">Convidado por</th>
+              <th className="w-24 py-2 pr-5 sm:pr-6"><span className="sr-only">Estado</span></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {p.visitantes.map((v) => (
+              <tr key={v.id}>
+                <td className="py-2.5 pl-5 font-medium sm:pl-6">{v.anonimizadoEm ? <span className="text-muted-foreground">(anonimizado)</span> : v.nome}</td>
+                <td className="py-2.5 tabular-nums text-muted-foreground">{v.telefone ?? '—'}</td>
+                <td className="hidden py-2.5 text-muted-foreground sm:table-cell">{v.convidadoPorMembroId ? nomeDe(v.convidadoPorMembroId) ?? '—' : '—'}</td>
+                <td className="py-2.5 pr-5 text-right sm:pr-6"><Pilula variante="success">Registado</Pilula></td>
+              </tr>
+            ))}
+            {novos.map((v) => (
+              <tr key={v.local}>
+                <td className="py-1.5 pl-5 font-medium sm:pl-6">{v.nome}</td>
+                <td className="py-1.5 tabular-nums text-muted-foreground">{v.telefone ?? '—'}</td>
+                <td className="hidden py-1.5 text-muted-foreground sm:table-cell">{v.convidadoPorMembroId ? nomeDe(v.convidadoPorMembroId) ?? '—' : '—'}</td>
+                <td className="py-1.5 pr-3 text-right sm:pr-4">
+                  <span className="inline-flex items-center gap-1">
+                    <Pilula variante="info">Por enviar</Pilula>
+                    {!fechado && (
+                      <Button type="button" variant="ghost" size="icon" className="size-9" aria-label={`Tirar ${v.nome}`}
+                        onClick={() => mudar((x) => ({ ...x, visitantesNovos: x.visitantesNovos.filter((y) => y.local !== v.local) }))}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
       {!fechado && (
-        <div className="grid gap-3">
+        <div className="grid gap-3 border-t bg-muted/20 px-5 py-4 sm:px-6">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid items-end gap-3 sm:grid-cols-[1.4fr_1fr_1.4fr_auto]">
             <CampoFormulario rotulo="Nome do visitante">
-              {(a) => <Input {...a} value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} className="h-11" />}
+              {(a) => <Input {...a} value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); juntar() } }} />}
             </CampoFormulario>
             <CampoFormulario rotulo="Telefone">
-              {(a) => <Input {...a} value={telefone} onChange={(e) => setTelefone(e.target.value)} inputMode="tel" maxLength={20} className="h-11" />}
+              {(a) => <Input {...a} value={telefone} onChange={(e) => setTelefone(e.target.value)} inputMode="tel" maxLength={20} placeholder="84 123 4567" />}
             </CampoFormulario>
-            <CampoFormulario rotulo="Convidado por" className="sm:col-span-2">
+            <CampoFormulario rotulo="Convidado por">
               {(a) => <CampoMembro id={a.id} valor={convidou} aoMudar={setConvidou} nomeDe={nomeDe} vazio="Ninguém / não sabe" />}
             </CampoFormulario>
+            <Button type="button" variant="outline" className="alvo" onClick={juntar}><Plus className="size-4" />Juntar</Button>
           </div>
-          <Button type="button" variant="outline" className="alvo justify-self-start" onClick={juntar}><Plus className="size-4" />Juntar visitante</Button>
         </div>
       )}
     </Cartao>

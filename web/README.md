@@ -158,6 +158,17 @@ src/
   - **Trimestres** (Associação): novo trimestre com os sábados gerados (13 ou 14) e o 13.º sábado marcado; mudar o
     13.º sábado; criar os sábados em falta; pesos da pontuação por defeito e por trimestre.
   - **Visitantes**: por acompanhar / tornaram-se membros, ligar o visitante ao registo de membro.
+  - **Quadro das classes** (Classes): n.º, nome do grupo, professor/líder, alvos de membros, E.D., filiais, ofertas por
+    sábado e baptismos, estado (activo/desactivado, a cinzento), total; registo e edição num só formulário
+    (`DialogoClasse`: classe + configuração no trimestre).
+  - **Folha da classe** (separador da classe): sábado a sábado como a folha do quadro: M.M., M.P., % presença, E.D.,
+    % E.D., visitantes, oferta do sábado, alvo, total acumulado, % do alvo, 13.º sábado, despesas da ES, filiais e a
+    linha total/média; escreve-se nas células (Enter desce) e grava os sábados alterados; percentagens a cores.
+  - **Relatórios** (Escola Sabatina › Relatórios): resumo do trimestre por classe (médias, % presença, % E.D.,
+    visitantes, filiais, ofertas e alvo, 13.º sábado, baptismos e alvo, barras de dados, média das activas),
+    classificação (pontuação, posição, lugar com medalhas e gráfico), quadro comparativo com a média, evolução
+    sábado a sábado e por divisão (Associação); imprimir e exportar.
+  - Ecrã do sábado: números em cartões, chamada em tabela, ofertas, visitantes em tabela e o resumo do sábado ao lado.
   - Cenários tratados: dois telemóveis no mesmo relatório (o envio pára e pergunta "Gravar por cima" ou
     "Descartar"); resposta perdida a meio do envio (o relatório e cada visitante levam `Idempotency-Key`: repetir
     não duplica); membro já matriculado noutra classe ("Mudar para esta classe", fica o histórico); início do

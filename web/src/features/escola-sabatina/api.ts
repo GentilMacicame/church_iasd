@@ -194,6 +194,60 @@ export function useRelatoriosSabado(sabado?: number) {
   })
 }
 
+/** Os relatórios de uma classe no trimestre (a folha da classe: um por sábado). */
+export function useRelatoriosClasse(classeTrimestre?: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: !!classeTrimestre,
+    queryKey: [...chavesES.todos(igreja.id), 'relatorios-classe', classeTrimestre ?? 0],
+    networkMode: 'always',
+    queryFn: () => comCache(`relatorios-classe:${classeTrimestre}`, () => todas<Relatorio>(async (depois) =>
+      dados(api.GET('/v1/escola-sabatina/relatorios-sabado', { params: { query: { igrejaId: igreja.id, classeTrimestreId: classeTrimestre!, limite: 50, depois } } })))),
+  })
+}
+
+/** Que relatórios têm chamada nominal (aí M.P. e E.D. contam-se pela chamada e não se escrevem à mão). */
+export function useComChamada(relatorios: number[]) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: relatorios.length > 0,
+    queryKey: [...chavesES.todos(igreja.id), 'com-chamada', relatorios.join(',')],
+    queryFn: async () => {
+      const r = await Promise.all(relatorios.map(async (id) => {
+        const p = await dados(api.GET('/v1/escola-sabatina/presencas', { params: { query: { igrejaId: igreja.id, relatorioId: id, limite: 1 } } }))
+        return [id, p.dados.length > 0] as const
+      }))
+      return new Set(r.filter(([, tem]) => tem).map(([id]) => id))
+    },
+  })
+}
+
+export interface LinhaFolha {
+  sabadoId: number; relatorioId?: number; membrosMatriculados?: number; membrosPresentes: number; estudoDiario: number
+  visitantes: number; filiais: number; oferta: string; oferta13Sabado: string; ofertaDespesas: string; comChamada: boolean
+}
+
+/** Grava uma linha da folha da classe: cria o relatório do sábado ou altera-o (a base decide se pode). */
+export function useGravarLinhaFolha(classeTrimestre: number) {
+  const invalidar = useInvalidarES()
+  return useMutation({
+    mutationFn: async (l: LinhaFolha) => {
+      const corpo = {
+        ...(l.membrosMatriculados != null ? { membrosMatriculados: l.membrosMatriculados } : {}),
+        ...(l.comChamada ? {} : { membrosPresentes: l.membrosPresentes, estudoDiario: l.estudoDiario }),
+        visitantes: l.visitantes, filiais: l.filiais, oferta: l.oferta, oferta13Sabado: l.oferta13Sabado, ofertaDespesas: l.ofertaDespesas,
+      }
+      return l.relatorioId
+        ? dados(api.PATCH('/v1/escola-sabatina/relatorios-sabado/{id}', { params: { path: { id: l.relatorioId } }, body: corpo as never }))
+        : dados(api.POST('/v1/escola-sabatina/relatorios-sabado', {
+          params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+          body: { classeTrimestreId: classeTrimestre, sabadoId: l.sabadoId, membrosPresentes: l.membrosPresentes, estudoDiario: l.estudoDiario, ...corpo } as never,
+        }))
+    },
+    onSettled: invalidar,
+  })
+}
+
 export function useRelatorio(id: number) {
   return useQuery({
     enabled: id > 0,

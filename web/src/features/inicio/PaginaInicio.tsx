@@ -7,6 +7,7 @@
  *  3. tesouraria (entradas e saídas, onde está o dinheiro) e membros (livro do ano, composição).
  * Tudo vem das vistas da base de dados.
  */
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -25,8 +26,7 @@ import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos } from '@/features/membros/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
 import { useResumoMensal } from '@/features/tesouraria/api'
-import { Paginada } from '@/components/comum/Paginacao'
-import { useAlertas } from '@/features/alertas/loja'
+import { useAlertas, type Alerta } from '@/features/alertas/loja'
 import { TomAlerta } from '@/features/alertas/Sino'
 
 /* Linhas das vistas (nomes de campo como a API os devolve). */
@@ -67,34 +67,100 @@ function useEscalaDoSabado() {
 
 /* ===================================================================== 1. o que precisa de atenção */
 /**
- * Os mesmos alertas do sino (features/alertas): tudo o que espera uma acção deste utilizador, em todo o sistema,
- * cada um com a ligação para o ecrã onde se resolve.
+ * Os alertas do sino (features/alertas) agrupados por assunto: uma linha por tipo ("Saídas por aprovar · 2"),
+ * a mais grave primeiro. Com um só assunto, leva directamente a ele; com vários, à lista onde se resolvem.
+ * O detalhe de cada um fica no sino.
  */
+const GRUPOS: Record<string, { rotulo: string; lista: string }> = {
+  membro: { rotulo: 'Registos de membros por aprovar', lista: '/membros?validacao=PENDENTE' },
+  menor: { rotulo: 'Menores com a ficha incompleta', lista: '/secretaria/relatorio' },
+  carta: { rotulo: 'Cartas de transferência por emitir', lista: '/transferencias?aba=saidas' },
+  aceitar: { rotulo: 'Transferências por aceitar', lista: '/transferencias?aba=entradas' },
+  mandatos: { rotulo: 'Mandatos a terminar', lista: '/conselho' },
+  acta: { rotulo: 'Actas por aprovar', lista: '/reunioes' },
+  realizada: { rotulo: 'Reuniões por concluir', lista: '/reunioes' },
+  reunioes: { rotulo: 'Reuniões por concluir', lista: '/reunioes' },
+  aprovar: { rotulo: 'Saídas por aprovar', lista: '/tesouraria/movimentos?ver=pendentes' },
+  confirmar: { rotulo: 'Movimentos por confirmar', lista: '/tesouraria/movimentos?ver=pendentes' },
+  movimentos: { rotulo: 'Movimentos por confirmar', lista: '/tesouraria/movimentos?ver=pendentes' },
+  despesa: { rotulo: 'Despesas por decidir', lista: '/tesouraria/despesas' },
+  despesas: { rotulo: 'Despesas por tratar', lista: '/tesouraria/despesas' },
+  pagar: { rotulo: 'Despesas aprovadas por pagar', lista: '/tesouraria/despesas' },
+  contagem: { rotulo: 'Contagens por conferir', lista: '/tesouraria/contagens' },
+  deposito: { rotulo: 'Depósito à Missão em falta', lista: '/tesouraria/remessas' },
+  remessa: { rotulo: 'Depósitos por confirmar', lista: '/tesouraria/remessas' },
+  orcamento: { rotulo: 'Orçamento por aprovar', lista: '/tesouraria/orcamento' },
+  fecho: { rotulo: 'Mês por fechar', lista: '/tesouraria/fechos' },
+  'es-lancar': { rotulo: 'Ofertas da Escola Sabatina por lançar', lista: '/escola-sabatina' },
+  'es-diferente': { rotulo: 'Ofertas da ES diferentes do lançado', lista: '/escola-sabatina' },
+  'es-fechar': { rotulo: 'Relatórios do sábado por fechar', lista: '/escola-sabatina' },
+  'es-ofertas': { rotulo: 'Relatórios do sábado por tratar', lista: '/escola-sabatina' },
+  'es-falta': { rotulo: 'Relatórios do sábado em falta', lista: '/escola-sabatina/sabado' },
+  'es-enviar': { rotulo: 'Relatórios guardados no telemóvel', lista: '/escola-sabatina/sabado' },
+  escala: { rotulo: 'Escalas por publicar', lista: '/escalas' },
+}
+const PESO_TOM: Record<string, number> = { destructive: 0, warning: 1, info: 2 }
+
+interface Grupo { chave: string; rotulo: string; modulo: string; n: number; para: string; primeiro: Alerta; tom: Alerta['tom'] }
+
+function agrupar(alertas: Alerta[]): Grupo[] {
+  const m = new Map<string, { itens: Alerta[]; extra: number }>()
+  for (const a of alertas) {
+    const pfx = a.chave.split(':')[0]
+    const g = m.get(GRUPOS[pfx]?.rotulo ?? pfx) ?? { itens: [], extra: 0 }
+    // "E mais N…" conta como N assuntos
+    const resto = a.chave.endsWith(':resto') ? Number(/(\d+)/.exec(a.titulo)?.[1] ?? 1) : 0
+    if (resto) g.extra += resto; else g.itens.push(a)
+    m.set(GRUPOS[pfx]?.rotulo ?? pfx, g)
+  }
+  return [...m.entries()].map(([rotulo, g]) => {
+    const primeiro = g.itens[0] ?? alertas.find((a) => (GRUPOS[a.chave.split(':')[0]]?.rotulo ?? '') === rotulo)!
+    const n = g.itens.length + g.extra
+    const pfx = primeiro.chave.split(':')[0]
+    const tom = [...g.itens].sort((a, b) => PESO_TOM[a.tom] - PESO_TOM[b.tom])[0]?.tom ?? primeiro.tom
+    return { chave: rotulo, rotulo, modulo: primeiro.modulo, n, primeiro, tom, para: n === 1 ? primeiro.para : GRUPOS[pfx]?.lista ?? primeiro.para }
+  }).sort((a, b) => PESO_TOM[a.tom] - PESO_TOM[b.tom] || b.n - a.n)
+}
+
 function ListaAtencao() {
   const { alertas, aCarregar } = useAlertas()
+  const grupos = agrupar(alertas)
+  // os 7 mais urgentes; o resto com "Mostrar mais" (o cartão fica à altura do próximo sábado)
+  const [todos, setTodos] = useState(false)
+  const visiveis = todos ? grupos : grupos.slice(0, 7)
   return (
-    <Cartao titulo="Precisa de atenção" descricao={aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${alertas.length} assunto(s) à espera de uma acção` : 'Nada à espera'} icone={ClipboardCheck} semMargem className="h-full lg:col-span-7">
+    <Cartao titulo="Precisa de atenção" icone={ClipboardCheck} semMargem className="h-full lg:col-span-7"
+      descricao={aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${alertas.length} assunto(s) em ${grupos.length} tipo(s) · o detalhe está no sino` : 'Nada à espera'}>
       {aCarregar && !alertas.length ? (
         <div className="grid gap-3 px-5 pb-5 sm:px-6" aria-busy="true" aria-label="A carregar">{[0, 1, 2].map((i) => <Barra key={i} className="h-12 w-full" />)}</div>
       ) : !alertas.length ? (
         <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Não há registos por aprovar, movimentos por confirmar, despesas por decidir nem relatórios por fechar.</EstadoVazio>
       ) : (
-        <Paginada itens={alertas}>{(vis) => (
+        <>
         <ul className="divide-y border-t">
-          {vis.map((a) => (
-            <li key={a.chave}>
-              <Link to={a.para} className="alvo group flex items-center gap-3 px-5 py-3 hover:bg-muted/50 sm:px-6">
-                <TomAlerta alerta={a} />
+          {visiveis.map((g) => (
+            <li key={g.chave}>
+              <Link to={g.para} className="alvo group flex items-center gap-3 px-5 py-2.5 hover:bg-muted/50 sm:px-6">
+                <TomAlerta alerta={{ ...g.primeiro, tom: g.tom }} />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{a.titulo}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{a.modulo}{a.detalhe ? ` · ${a.detalhe}` : ''}</span>
+                  <span className="block text-sm font-medium">{g.rotulo}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {g.modulo} · {g.n === 1 ? g.primeiro.titulo : `${g.primeiro.titulo} e mais ${g.n - 1}`}
+                  </span>
                 </span>
+                <Pilula variante={g.tom === 'destructive' ? 'destructive' : g.tom === 'warning' ? 'warning' : 'info'} className="min-w-7 justify-center tabular-nums">{g.n}</Pilula>
                 <ArrowRight aria-hidden className="size-4 flex-none text-muted-foreground transition-transform group-hover:translate-x-0.5" />
               </Link>
             </li>
           ))}
         </ul>
-        )}</Paginada>
+        {grupos.length > 7 && (
+          <button type="button" onClick={() => setTodos((x) => !x)}
+            className="alvo mt-auto w-full border-t px-5 py-2.5 text-left text-sm font-medium text-primary hover:bg-muted/50 sm:px-6">
+            {todos ? 'Mostrar menos' : `Mostrar mais ${grupos.length - 7} tipo(s)`}
+          </button>
+        )}
+        </>
       )}
     </Cartao>
   )

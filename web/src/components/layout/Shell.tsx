@@ -71,6 +71,7 @@ const NAV: GrupoNav[] = [
       { para: '/escola-sabatina', rotulo: 'Painel', icone: PhGraduationCap, permissao: 'escola_sabatina.relatorio_sabado.ler', fim: true },
       { para: '/escola-sabatina/sabado', rotulo: t.es.sabado, icone: PhNotebook, permissao: 'escola_sabatina.relatorio_sabado.ler', fim: false },
       { para: '/escola-sabatina/classes', rotulo: t.es.classes, icone: PhChalkboard, permissao: 'escola_sabatina.classe.ler', fim: false },
+      { para: '/escola-sabatina/relatorios', rotulo: 'Relatórios', icone: PhChartBar, permissao: 'escola_sabatina.relatorio_sabado.ler', fim: true },
       { para: '/escola-sabatina/visitantes', rotulo: t.es.visitantes, icone: PhUserPlus, permissao: 'escola_sabatina.visitante.ler', fim: true },
       { para: '/escola-sabatina/trimestres', rotulo: t.es.trimestres, icone: PhCalendarCheck, permissao: 'escola_sabatina.trimestre.ler', fim: true },
     ],
@@ -240,11 +241,12 @@ function Caminho() {
   }
   if (pathname.startsWith('/escola-sabatina')) {
     partes.push({ rotulo: t.nav.escolaSabatina, para: '/escola-sabatina' })
-    if (pathname.startsWith('/escola-sabatina/sabado') || pathname.startsWith('/escola-sabatina/relatorios')) partes.push({ rotulo: t.es.sabado, para: '/escola-sabatina/sabado' })
+    if (pathname.startsWith('/escola-sabatina/sabado') || /^\/escola-sabatina\/relatorios\/\d+/.test(pathname)) partes.push({ rotulo: t.es.sabado, para: '/escola-sabatina/sabado' })
     if (/^\/escola-sabatina\/sabado\/\d+/.test(pathname)) partes.push({ rotulo: 'Classe' })
     if (pathname.startsWith('/escola-sabatina/classes')) partes.push({ rotulo: t.es.classes, para: '/escola-sabatina/classes' })
     if (/^\/escola-sabatina\/classes\/\d+/.test(pathname)) partes.push({ rotulo: 'Classe' })
     if (pathname === '/escola-sabatina/trimestres') partes.push({ rotulo: t.es.trimestres })
+    if (pathname === '/escola-sabatina/relatorios') partes.push({ rotulo: 'Relatórios' })
     if (pathname === '/escola-sabatina/visitantes') partes.push({ rotulo: t.es.visitantes })
   }
   if (pathname.startsWith('/escalas')) {

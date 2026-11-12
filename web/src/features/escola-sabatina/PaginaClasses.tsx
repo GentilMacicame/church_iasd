@@ -1,33 +1,31 @@
 /**
- * Classes da Escola Sabatina (F-ES-02, F-ES-03) · "Que classes temos e quem as dirige neste trimestre?"
- * As classes são da igreja (por divisão, do rol do berço aos adultos); em cada trimestre cada classe tem professor,
- * secretário, alvos e pode estar activa ou desactivada. Abrir uma classe: matrículas e configuração.
+ * Classes da Escola Sabatina (F-ES-02, F-ES-03) · o quadro das classes do trimestre: n.º, nome do grupo,
+ * professor/líder, alvos (membros, E.D., filiais, ofertas por sábado, baptismos) e estado (activa / desactivada).
+ * Registar e editar fazem-se num só formulário (DialogoClasse); abrir a classe mostra a folha do trimestre.
  */
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { ChevronRight, Plus, School } from 'lucide-react'
+import { ChevronRight, Copy, Pencil, Plus, School } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
-import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/comum/formulario'
-import { Seleccao } from '@/components/comum/Seleccao'
-import { useIgreja, useSessao } from '@/auth/sessao'
-import { rotulos, t } from '@/i18n/pt-MZ'
+import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
+import { rotulos, t } from '@/i18n/pt-MZ'
+import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { DIVISOES, nomeTrimestre, trimestreActual, useClasses, useClassesTrimestre, useCopiarConfiguracao, useCriarClasse, useTrimestres, type Divisao } from './api'
+import {
+  nomeTrimestre, trimestreActual, useClasses, useClassesTrimestre, useCopiarConfiguracao, useTrimestres, type Classe, type ClasseTrimestre,
+} from './api'
+import { DialogoClasse } from './DialogoClasse'
+import { EscolherTrimestre, Folha, textoMT } from './componentes'
 
 export default function PaginaClasses() {
   const { pode } = useSessao()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const [nova, setNova] = useState(false)
+  const [editar, setEditar] = useState<{ classe?: Classe; ct?: ClasseTrimestre; numero?: number } | null>(null)
   const trimestres = useTrimestres()
   const trimestre = trimestres.data?.find((x) => x.id === Number(params.get('trimestre'))) ?? trimestreActual(trimestres.data ?? [])
   const classes = useClasses()
@@ -36,9 +34,19 @@ export default function PaginaClasses() {
   const nomeDe = (id?: number) => { const m = id ? basicos.data?.find((x) => x.id === id) : undefined; return m ? `${m.nome} ${m.apelido}` : null }
   const lista = classes.data ?? []
   const config = new Map((cts.data ?? []).map((c) => [c.classeId, c]))
-  const activas = lista.filter((c) => config.get(c.id)?.estado === 'ACTIVO').length
+  // activas primeiro (pela ordem do nome), depois as desactivadas e as por configurar, como no quadro
+  const ordenadas = [...lista].sort((a, b) => {
+    const pa = config.get(a.id)?.estado === 'ACTIVO' ? 0 : config.has(a.id) ? 1 : 2
+    const pb = config.get(b.id)?.estado === 'ACTIVO' ? 0 : config.has(b.id) ? 1 : 2
+    return pa - pb || a.nome.localeCompare(b.nome, 'pt', { numeric: true })
+  })
+  const activas = lista.filter((c) => config.get(c.id)?.estado === 'ACTIVO')
   const semConfig = lista.filter((c) => !config.has(c.id)).length
-  // início do trimestre: copiar a configuração do trimestre anterior para as classes por configurar
+  const somaAlvo = (k: 'alvoMembros' | 'alvoBaptismos') => activas.reduce((s, c) => s + (config.get(c.id)?.[k] ?? 0), 0)
+  const somaOfertas = activas.reduce((s, c) => s + Number(config.get(c.id)?.alvoOfertaSabado ?? 0), 0)
+  const linkClasse = (id: number) => `/escola-sabatina/classes/${id}${trimestre ? `?trimestre=${trimestre.id}` : ''}`
+  const podeEditar = pode('escola_sabatina.classe.alterar') || pode('escola_sabatina.classe_trimestre.alterar') || pode('escola_sabatina.classe_trimestre.criar')
+
   const anterior = trimestre ? [...(trimestres.data ?? [])].filter((x) => x.dataInicio < trimestre.dataInicio).sort((a, b) => b.dataInicio.localeCompare(a.dataInicio))[0] : undefined
   const copiar = useCopiarConfiguracao()
   const copiarAnterior = async () => {
@@ -52,122 +60,112 @@ export default function PaginaClasses() {
       toast.error(mensagemDe(e))
     }
   }
-  const linkClasse = (id: number) => `/escola-sabatina/classes/${id}${trimestre ? `?trimestre=${trimestre.id}` : ''}`
 
   return (
     <>
       <TituloPagina
         icone={School}
         titulo={t.es.classes}
-        descricao="Classes por divisão, matrículas, professores e alvos de cada trimestre"
+        descricao="Classes (grupos) do trimestre: professor, alvos e estado"
         accoes={<>
-          {(trimestres.data?.length ?? 0) > 0 && (
-            <div className="w-56">
-              <Seleccao aria-label="Trimestre" value={trimestre?.id ?? ''} onChange={(e) => setParams({ trimestre: e.target.value }, { replace: true })}>
-                {(trimestres.data ?? []).map((x) => <option key={x.id} value={x.id}>{nomeTrimestre(x)}</option>)}
-              </Seleccao>
-            </div>
-          )}
-          {pode('escola_sabatina.classe.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova classe</Button>}
+          <EscolherTrimestre trimestres={trimestres.data ?? []} valor={trimestre?.id} aoMudar={(v) => setParams({ trimestre: v }, { replace: true })} />
+          {pode('escola_sabatina.classe.criar') && <Button className="alvo" onClick={() => setEditar({})}><Plus className="size-4" />Registar classe</Button>}
         </>}
       />
       <div className="grid gap-6">
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Indicador rotulo="Classes" valor={lista.length} nota="da igreja" icone={School} aCarregar={classes.isPending} />
-          <Indicador rotulo="Activas" valor={activas} nota={trimestre ? nomeTrimestre(trimestre) : 'no trimestre'} tom="success" aCarregar={classes.isPending || cts.isPending} />
-          <Indicador rotulo="Por configurar" valor={semConfig} nota="sem professor nem alvos" tom="warning" aCarregar={classes.isPending || cts.isPending} />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <Indicador rotulo="Classes activas" valor={activas.length} nota={`de ${lista.length} registadas`} icone={School} aCarregar={classes.isPending || cts.isPending} />
+          <Indicador rotulo="Alvo de membros" valor={somaAlvo('alvoMembros')} nota="soma das classes activas" tom="info" aCarregar={cts.isPending} />
+          <Indicador rotulo="Alvo de ofertas" valor={textoMT(somaOfertas)} nota="por sábado, todas as classes" tom="success" aCarregar={cts.isPending} />
+          <Indicador rotulo="Alvo de baptismos" valor={somaAlvo('alvoBaptismos')} nota={semConfig ? `${semConfig} classe(s) por configurar` : 'no trimestre'} tom={semConfig ? 'warning' : 'primary'} aCarregar={cts.isPending} />
         </div>
-        <Cartao titulo="Todas as classes" descricao={trimestre ? `Configuração no ${nomeTrimestre(trimestre)}` : undefined} semMargem
+
+        <Cartao
+          titulo={trimestre ? `Quadro das classes · ${nomeTrimestre(trimestre)}` : 'Quadro das classes'}
+          descricao="Clique numa classe para abrir a folha do trimestre (sábado a sábado) e as matrículas"
           accoes={anterior && semConfig > 0 && !cts.isPending && pode('escola_sabatina.classe_trimestre.criar') && (
             <Button variant="outline" size="sm" className="alvo" disabled={copiar.isPending} onClick={() => void copiarAnterior()}>
-              {copiar.isPending ? 'A copiar…' : `Copiar do ${nomeTrimestre(anterior)}`}
+              <Copy className="size-4" />{copiar.isPending ? 'A copiar…' : `Copiar do ${nomeTrimestre(anterior)}`}
             </Button>
           )}>
-          {classes.isPending ? <LinhasACarregar linhas={4} />
-            : classes.isError ? <EstadoErro erro={classes.error} aoTentar={() => classes.refetch()} className="mx-6 mb-6" />
+          {classes.isPending || (trimestre && cts.isPending) ? <LinhasACarregar linhas={5} />
+            : classes.isError ? <EstadoErro erro={classes.error} aoTentar={() => classes.refetch()} />
             : lista.length === 0 ? (
               <EstadoVazio icone={School} titulo="Ainda não há classes"
-                accao={pode('escola_sabatina.classe.criar') && <Button size="sm" onClick={() => setNova(true)}><Plus className="size-4" />Nova classe</Button>}>
-                Crie as classes (unidades de acção) da Escola Sabatina e matricule os alunos.
+                accao={pode('escola_sabatina.classe.criar') && <Button size="sm" onClick={() => setEditar({})}><Plus className="size-4" />Registar classe</Button>}>
+                Registe as classes (grupos) da Escola Sabatina com o professor e os alvos do trimestre.
               </EstadoVazio>
             ) : (
-              <Tabela>
-                <thead><tr><th className="sm:pl-6">Classe</th><th className="hidden sm:table-cell">Divisão</th><th className="hidden md:table-cell">Professor</th><th>No trimestre</th><th className="sm:pr-6" /></tr></thead>
+              <Folha minimo="min-w-[60rem]">
+                <thead>
+                  <tr>
+                    <th className="w-12 centro">N.º</th><th className="text-left">Nome do grupo</th><th className="text-left">Professor / líder</th>
+                    <th className="num">Alvo de membros</th><th className="num">Alvo de E.D.</th><th className="num">Alvo de filiais</th>
+                    <th className="num">Alvo de ofertas por sábado</th><th className="centro">Estado</th><th className="num">Alvo de baptismos</th>
+                    {podeEditar && <th className="w-12"><span className="sr-only">Editar</span></th>}
+                  </tr>
+                </thead>
                 <tbody>
-                  {lista.map((c) => {
+                  {ordenadas.map((c, i) => {
                     const ct = config.get(c.id)
+                    const inactiva = ct?.estado === 'INACTIVO'
                     return (
-                      <tr key={c.id} onClick={() => navigate(linkClasse(c.id))} className="cursor-pointer">
-                        <td className="sm:pl-6">
-                          <Link to={linkClasse(c.id)} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{c.nome}</Link>
-                          <span className="block text-xs text-muted-foreground sm:hidden">{rotulos.divisao[c.divisao]}</span>
-                          {c.localReuniao && <span className="hidden text-xs text-muted-foreground sm:block">{c.localReuniao}</span>}
+                      <tr key={c.id} onClick={() => navigate(linkClasse(c.id))} className={cn('cursor-pointer', inactiva && 'text-muted-foreground [&_td]:bg-muted/40')}>
+                        <td className="centro font-semibold tabular-nums">{i + 1}</td>
+                        <td>
+                          <Link to={linkClasse(c.id)} onClick={(e) => e.stopPropagation()} className={cn('font-medium hover:text-primary', !inactiva && 'text-primary')}>
+                            {c.nome}{inactiva && ' (desactivado)'}
+                          </Link>
+                          <span className="block text-xs text-muted-foreground">{rotulos.divisao[c.divisao]}{c.localReuniao ? ` · ${c.localReuniao}` : ''}</span>
                         </td>
-                        <td className="hidden sm:table-cell">{rotulos.divisao[c.divisao]}</td>
-                        <td className="hidden md:table-cell">{nomeDe(ct?.professorMembroId) ?? <span className="text-muted-foreground">—</span>}</td>
-                        <td>{!ct ? <Pilula variante="outline">Por configurar</Pilula> : ct.estado === 'ACTIVO' ? <Pilula variante="success">Activa</Pilula> : <Pilula variante="secondary">Desactivada</Pilula>}</td>
-                        <td className="w-10 sm:pr-6"><ChevronRight aria-hidden className="size-4 text-muted-foreground" /></td>
+                        <td>{nomeDe(ct?.professorMembroId) ?? <span className="text-muted-foreground">Ir. ________</span>}</td>
+                        {ct ? (
+                          <>
+                            <td className="num tabular-nums">{ct.alvoMembros}</td>
+                            <td className="num tabular-nums">{Math.round(Number(ct.alvoEstudoDiario ?? 1) * 100)}%</td>
+                            <td className="num tabular-nums">{ct.alvoFiliais}</td>
+                            <td className="num tabular-nums">{textoMT(ct.alvoOfertaSabado)}</td>
+                            <td className="centro">
+                              {inactiva ? <Pilula variante="secondary">Desactivado</Pilula> : <Pilula variante="success">Activo</Pilula>}
+                            </td>
+                            <td className="num tabular-nums">{ct.alvoBaptismos}</td>
+                          </>
+                        ) : (
+                          <td colSpan={6} className="centro">
+                            <Pilula variante="warning">Por configurar neste trimestre</Pilula>
+                          </td>
+                        )}
+                        {podeEditar && (
+                          <td className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="size-9" aria-label={`Editar ${c.nome}`} onClick={() => setEditar({ classe: c, ct, numero: i + 1 })}>
+                              <Pencil className="size-4" />
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     )
                   })}
                 </tbody>
-              </Tabela>
+                {activas.length > 0 && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={3}>Total das classes activas ({activas.length})</td>
+                      <td className="num tabular-nums">{somaAlvo('alvoMembros')}</td>
+                      <td className="num tabular-nums">{Math.round(activas.reduce((s, c) => s + Number(config.get(c.id)?.alvoEstudoDiario ?? 1), 0) / activas.length * 100)}%</td>
+                      <td className="num tabular-nums">{activas.reduce((s, c) => s + (config.get(c.id)?.alvoFiliais ?? 0), 0)}</td>
+                      <td className="num tabular-nums">{textoMT(somaOfertas)}</td>
+                      <td />
+                      <td className="num tabular-nums">{somaAlvo('alvoBaptismos')}</td>
+                      {podeEditar && <td />}
+                    </tr>
+                  </tfoot>
+                )}
+              </Folha>
             )}
+          {lista.length > 0 && <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><ChevronRight className="size-3" />Os desactivados aparecem a cinzento e ficam fora das médias e da classificação.</p>}
         </Cartao>
       </div>
-      {nova && <DialogoClasse aoFechar={() => setNova(false)} aoCriar={(id) => navigate(linkClasse(id))} />}
+      {editar && <DialogoClasse {...editar} trimestre={trimestre} aoFechar={() => setEditar(null)} aoGravar={(id) => { if (!editar.classe) navigate(linkClasse(id)) }} />}
     </>
-  )
-}
-
-const esquema = z.object({
-  nome: z.string().trim().min(1, t.comum.obrigatorio).max(100),
-  divisao: z.enum(DIVISOES as [Divisao, ...Divisao[]]),
-  localReuniao: z.string().trim().max(150),
-})
-type Valores = z.infer<typeof esquema>
-
-export function DialogoClasse({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (id: number) => void }) {
-  const igreja = useIgreja()
-  const criar = useCriarClasse()
-  const [erro, setErro] = useState<string | null>(null)
-  const form = useForm<Valores>({ resolver: zodResolver(esquema), defaultValues: { nome: '', divisao: 'ADULTOS', localReuniao: '' } })
-  const e = form.formState.errors
-  const submeter = form.handleSubmit(async (v) => {
-    setErro(null)
-    try {
-      const c = await criar.mutateAsync({ igrejaId: igreja.id, nome: v.nome, divisao: v.divisao, localReuniao: v.localReuniao || undefined })
-      toast.success('Classe criada. Configure-a para o trimestre e matricule os alunos.')
-      aoFechar()
-      aoCriar(c.id)
-    } catch (err) {
-      setErro(aplicarErroApi(form, err))
-    }
-  })
-  return (
-    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={submeter} noValidate className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle>Nova classe</DialogTitle>
-            <DialogDescription>Uma unidade de acção da Escola Sabatina, numa divisão.</DialogDescription>
-          </DialogHeader>
-          <ErroFormulario mensagem={erro} />
-          <CampoFormulario rotulo="Nome" erro={e.nome?.message} obrigatorio>
-            {(p) => <Input {...p} {...form.register('nome')} placeholder="ex.: Classe dos Fiéis" autoFocus />}
-          </CampoFormulario>
-          <CampoFormulario rotulo="Divisão" erro={e.divisao?.message} obrigatorio>
-            {(p) => <Seleccao {...p} {...form.register('divisao')}>{DIVISOES.map((d) => <option key={d} value={d}>{rotulos.divisao[d]}</option>)}</Seleccao>}
-          </CampoFormulario>
-          <CampoFormulario rotulo="Local de reunião" erro={e.localReuniao?.message}>
-            {(p) => <Input {...p} {...form.register('localReuniao')} placeholder="ex.: Sala 2, debaixo da mangueira" />}
-          </CampoFormulario>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={aoFechar}>{t.comum.cancelar}</Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? t.comum.aGravar : 'Criar classe'}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   )
 }
