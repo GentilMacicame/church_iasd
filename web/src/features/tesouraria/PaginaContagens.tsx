@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoTransferencia } from './DialogoTransferencia'
 import { PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, type Conferencia } from './api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 const ESTADO = {
   ABERTA: { r: 'Por conferir', v: 'warning' as const },
@@ -82,12 +83,14 @@ export default function PaginaContagens() {
               <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe o que os dois contadores contaram.</EstadoVazio>
             </div>
           ) : (
+            <Paginada itens={lista} className="rounded-xl border bg-card">{(vis) => (
             <div className="grid gap-4">
-              {lista.map((c) => {
+              {vis.map((c) => {
                 const cont = porId.get(c.id)
                 return <CartaoContagem key={c.id} c={c} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
               })}
             </div>
+            )}</Paginada>
           )}
       </div>
       {nova && <DialogoContagem aoFechar={() => setNova(false)} nomeDe={(id) => nomes.get(id)} />}

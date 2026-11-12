@@ -32,6 +32,7 @@ import { EscolherDoConselho } from '@/features/conselho/EscolherDoConselho'
 import { useCriarVoto, usePontos, usePresencas, useReuniao, useReuniaoMut, useVotos, type EstadoPonto, type Ponto, type Presenca, type Reuniao, type TipoVoto, type Voto } from './api'
 import { PilulaEstadoReuniao } from './PaginaReunioes'
 import { CartaoDevocional } from './Devocional'
+import { Paginada } from '@/components/comum/Paginacao'
 
 const n = z.string().regex(/^\d*$/, 'Só algarismos')
 const esquema = z.object({
@@ -189,8 +190,9 @@ export default function PaginaReuniao() {
               : pontos.isError ? <EstadoErro erro={pontos.error} aoTentar={() => pontos.refetch()} className="mx-6 mb-6" />
               : !listaPontos.length ? <EstadoVazio icone={ListChecks} titulo="Sem pontos na agenda">Acrescente os assuntos a tratar: o que se discutiu, se foi votado e o que se decidiu.</EstadoVazio>
               : (
+                <Paginada itens={listaPontos}>{(vis, ini) => (
                 <ol className="divide-y border-t">
-                  {listaPontos.map((p, i) => (
+                  {vis.map((p, iLocal) => { const i = ini + iLocal; return (
                     <li key={p.id}>
                       <button type="button" disabled={fechada || !pode('secretaria.reuniao_ponto.alterar')} onClick={() => setPonto(p)}
                         className="flex w-full gap-4 px-4 py-4 text-left enabled:hover:bg-muted/40 sm:px-6">
@@ -206,8 +208,9 @@ export default function PaginaReuniao() {
                         </span>
                       </button>
                     </li>
-                  ))}
+                  ) })}
                 </ol>
+                )}</Paginada>
               )}
           </Cartao>
 
@@ -290,8 +293,9 @@ function Presencas({ reuniaoId, fechada, oficiais, presencas, aCarregar, nomeDe 
       {aCarregar ? <div className="px-6 pb-6"><Barra className="h-32 w-full" /></div>
         : !pessoas.length ? <EstadoVazio icone={Users} titulo="Sem conselho registado">Registe os oficiais em <Link to="/conselho" className="font-medium text-primary hover:underline">Conselho da igreja</Link> ou acrescente participantes abaixo.</EstadoVazio>
         : (
+          <Paginada itens={pessoas}>{(vis) => (
           <ul className="divide-y border-t">
-            {pessoas.map((m) => {
+            {vis.map((m) => {
               const p = porMembro.get(m)
               return (
                 <li key={m} className="px-4 py-3 sm:px-6">
@@ -319,6 +323,7 @@ function Presencas({ reuniaoId, fechada, oficiais, presencas, aCarregar, nomeDe 
               )
             })}
           </ul>
+          )}</Paginada>
         )}
       {podeMarcar && (
         <div className="grid gap-1.5 border-t px-4 py-3 sm:px-6">

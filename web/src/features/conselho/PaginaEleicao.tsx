@@ -26,6 +26,7 @@ import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { CampoVoto } from '@/features/livro/CampoVoto'
 import { useCargos, useConselho, useConselhoMut, useIgrejaDados } from './api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 interface Linha { chave: string; cargoId: string; membroId: number | null; resultado?: { ok: boolean; texto: string } }
 const nova = (cargoId = '', membroId: number | null = null): Linha => ({ chave: crypto.randomUUID(), cargoId, membroId })
@@ -138,8 +139,9 @@ export default function PaginaEleicao() {
               Comece pelos cargos em exercício (para eleger os sucessores) ou junte os cargos um a um.
             </EstadoVazio>
           ) : (
+            <Paginada itens={linhas}>{(vis, ini) => (
             <ul className="divide-y">
-              {linhas.map((l, i) => (
+              {vis.map((l, iLocal) => { const i = ini + iLocal; return (
                 <li key={l.chave} className={cn('grid gap-2 px-4 py-3 sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center sm:px-6', l.resultado?.ok && 'bg-success/5')}>
                   <span className="hidden text-sm text-muted-foreground tabular-nums sm:block">{i + 1}.</span>
                   <CampoEscolha id={`ele-car-${l.chave}`} valor={l.cargoId} aoMudar={(v) => mudar(l.chave, { cargoId: v })} vazio="Cargo…" pesquisar="Pesquisar cargo…" disabled={l.resultado?.ok}
@@ -161,8 +163,9 @@ export default function PaginaEleicao() {
                     <Trash2 className="size-4" />
                   </Button>
                 </li>
-              ))}
+              ) })}
             </ul>
+            )}</Paginada>
           )}
         </Cartao>
 

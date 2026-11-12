@@ -134,6 +134,10 @@ src/
 - **Contribuições por família** em Lançar entrada: "Um membro", "Uma família" (ex.: Família Macicame, com recibo) ou
   "Ofertas da salva"; o nome da família aparece nos movimentos, na ficha e no recibo.
 
+- **Paginação de 10 em 10** em todas as tabelas (o componente `Tabela` pagina sozinho; as linhas de total ficam sempre;
+  ao imprimir ou guardar em PDF saem todas) e nas listas (`Paginada`): movimentos, membros, famílias, reconciliação,
+  contagens, pontos da agenda, presenças, alvos, pendentes do Início, proposta da eleição.
+
 ## Por fazer (próximas iterações)
 
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).

@@ -19,6 +19,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamilias, useFamiliasMut, useFamiliasResumo, type Familia } from './api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 const normal = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -61,8 +62,9 @@ export default function PaginaFamilias() {
                   {pesquisa ? 'Experimente outro nome.' : 'Crie uma família (ex.: "Família Chirindza") e junte-lhe os membros da casa.'}
                 </EstadoVazio>
               ) : (
+                <Paginada itens={lista}>{(vis) => (
                 <ul className="max-h-[60dvh] divide-y overflow-y-auto">
-                  {lista.map((f) => {
+                  {vis.map((f) => {
                     const r = res.get(f.id)
                     return (
                       <li key={f.id}>
@@ -78,6 +80,7 @@ export default function PaginaFamilias() {
                     )
                   })}
                 </ul>
+                )}</Paginada>
               )}
             </Cartao>
             <div className="lg:col-span-7">

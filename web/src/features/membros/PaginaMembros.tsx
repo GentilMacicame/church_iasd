@@ -14,6 +14,7 @@ import { useSessao } from '@/auth/sessao'
 import { f, rotulos, t } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
 import { useContagemPorAprovar, useListaMembros, useMembrosBasicos, type EstadoMembro, type Membro } from './api'
+import { ControlosPaginacao, usePaginacao } from '@/components/comum/Paginacao'
 
 const OUTROS_ESTADOS: EstadoMembro[] = ['TRANSFERIDO', 'FALECIDO', 'REMOVIDO', 'DESAPARECIDO']
 
@@ -113,6 +114,7 @@ export default function PaginaMembros() {
   const total = basicos.data?.length ?? 0
   const saidas = OUTROS_ESTADOS.reduce((s, e) => s + (contagens[e] ?? 0), 0)
   const membros = (lista.data?.pages.flatMap((p) => p.dados) ?? []) as Membro[]
+  const pag = usePaginacao(membros)
   const totalFiltro = !q && !soPorAprovar ? (estado ? contagens[estado] ?? 0 : total) : null
 
   /** Um filtro de cada vez: estado OU "por aprovar". */
@@ -190,7 +192,7 @@ export default function PaginaMembros() {
           ) : (
             <>
               <div className="hidden md:block">
-                <Tabela>
+                <Tabela porPagina={false}>
                   <thead>
                     <tr>
                       <th className="sm:pl-6">{t.membros.colunas.nome}</th>
@@ -201,11 +203,12 @@ export default function PaginaMembros() {
                       <th className="sm:pr-6"><span className="sr-only">Abrir</span></th>
                     </tr>
                   </thead>
-                  <tbody>{membros.map((m) => <LinhaTabela key={m.id} m={m} />)}</tbody>
+                  <tbody>{pag.visiveis.map((m) => <LinhaTabela key={m.id} m={m} />)}</tbody>
                 </Tabela>
               </div>
-              <ul className="md:hidden">{membros.map((m) => <LinhaLista key={m.id} m={m} />)}</ul>
-              {lista.hasNextPage && (
+              <ul className="md:hidden">{pag.visiveis.map((m) => <LinhaLista key={m.id} m={m} />)}</ul>
+              <ControlosPaginacao {...pag} />
+              {lista.hasNextPage && pag.pagina === pag.paginas && (
                 <div className="border-t p-3 text-center">
                   <Button variant="outline" size="sm" className="alvo" disabled={lista.isFetchingNextPage} onClick={() => lista.fetchNextPage()}>
                     {lista.isFetchingNextPage ? 'A carregar…' : t.comum.carregarMais}

@@ -20,6 +20,7 @@ import { centimos, data, deCentimos } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { Exportar } from '@/components/comum/Exportar'
 import { useContasIgreja, useExtractosMut, useMovimentos, usePorReconciliar, type PorReconciliar, type Transacao } from './api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 const DIA = 86_400_000
 const somarDias = (iso: string, n: number) => new Date(Date.parse(iso + 'T12:00:00Z') + n * DIA).toISOString().slice(0, 10)
@@ -91,8 +92,9 @@ export default function PaginaReconciliacao() {
               <Indicador rotulo="Débitos por ligar" valor={<Dinheiro valor={deCentimos(saidas)} />} icone={ArrowUpRight} tom="destructive" />
             </div>
             <Cartao titulo="Linhas do extracto por ligar" descricao="Para cada linha, ligue o movimento sugerido ou escolha outro. Se não houver movimento, registe-o primeiro (ex.: comissão do banco como saída)." semMargem>
+              <Paginada itens={lista}>{(vis) => (
               <ul className="divide-y">
-                {lista.map((l) => {
+                {vis.map((l) => {
                   const v = centimos(l.valor)
                   const sug = movs.isPending ? null : sugestoes(l)
                   return (
@@ -125,6 +127,7 @@ export default function PaginaReconciliacao() {
                   )
                 })}
               </ul>
+              )}</Paginada>
             </Cartao>
           </div>
         )}

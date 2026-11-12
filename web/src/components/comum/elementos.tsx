@@ -2,11 +2,12 @@
  * Componentes partilhados do Design System (equivalentes aos x-ui.* do SGMS): cabeçalho de página,
  * indicador (stat), cartão, pílula, avatar, dinheiro e par rótulo/valor.
  */
-import type { ComponentType, ReactNode } from 'react'
+import { Children, Fragment, cloneElement, isValidElement, type ComponentType, type ReactElement, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { dinheiro, iniciais, tomPessoa } from '@/lib/formatos'
 import { t } from '@/i18n/pt-MZ'
+import { ControlosPaginacao, POR_PAGINA, usePagina } from './Paginacao'
 
 type Icone = ComponentType<{ className?: string }>
 export type Tom = 'primary' | 'success' | 'warning' | 'destructive' | 'info'
@@ -153,18 +154,54 @@ export function Campo({ rotulo, children }: { rotulo: string; children?: ReactNo
   )
 }
 
-/** Tabela no estilo do Design System (cabeçalho com faixa suave, linhas com realce). */
-export function Tabela({ children, className }: { children: ReactNode; className?: string }) {
+/** Linhas de total (fundo "bg-muted/30") ou com data-fixa: ficam sempre à vista, fora da paginação. */
+function linhaFixa(el: ReactElement<{ className?: string; 'data-fixa'?: boolean }>) {
+  return !!el.props['data-fixa'] || /\bbg-muted\/30\b/.test(el.props.className ?? '')
+}
+
+/**
+ * Tabela no estilo do Design System (cabeçalho com faixa suave, linhas com realce). Pagina sozinha: mostra 10 linhas
+ * de cada vez (porPagina) com os controlos por baixo; as linhas de total ficam sempre; ao imprimir, saem todas.
+ */
+export function Tabela({ children, className, porPagina = POR_PAGINA }: { children: ReactNode; className?: string; porPagina?: number | false }) {
+  // as linhas do <tbody> (achata os .map() e fragmentos)
+  const linhas: ReactElement[] = []
+  Children.forEach(children, (c) => {
+    if (isValidElement<{ children?: ReactNode }>(c) && c.type === 'tbody') {
+      const juntar = (n: ReactNode) => Children.forEach(n, (x) => {
+        if (isValidElement<{ children?: ReactNode }>(x) && x.type === Fragment) juntar(x.props.children)
+        else if (isValidElement(x)) linhas.push(x)
+      })
+      juntar(c.props.children)
+    }
+  })
+  const paginaveis = linhas.filter((l) => !linhaFixa(l as ReactElement<{ className?: string }>))
+  const limite = porPagina === false ? Infinity : porPagina
+  const p = usePagina(paginaveis.length, Number.isFinite(limite) ? limite : 1_000_000)
+  const activa = paginaveis.length > limite
+  const conteudo = !activa ? children : Children.map(children, (c) => {
+    if (!(isValidElement<{ children?: ReactNode }>(c) && c.type === 'tbody')) return c
+    let i = 0
+    const marcar = (l: ReactElement<{ className?: string }>) => {
+      if (linhaFixa(l)) return l
+      const n = i++
+      return p.naPagina(n) ? l : cloneElement(l, { className: cn(l.props.className, 'hidden print:table-row') })
+    }
+    return cloneElement(c, {}, linhas.map((l) => marcar(l as ReactElement<{ className?: string }>)))
+  })
   return (
-    <div className="relative w-full min-w-0 overflow-x-auto">
-      <table className={cn(
-        'w-full border-collapse text-sm text-foreground',
-        '[&_thead_tr]:border-b [&_th]:h-10 [&_th]:bg-muted/50 [&_th]:px-4 [&_th]:text-left [&_th]:align-middle [&_th]:text-xs [&_th]:font-medium [&_th]:whitespace-nowrap [&_th]:text-muted-foreground',
-        '[&_td]:border-t [&_td]:px-4 [&_td]:py-3 [&_td]:align-middle [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/50',
-        '[&_.num]:text-right', className,
-      )}>
-        {children}
-      </table>
+    <div className="relative w-full min-w-0">
+      <div className="overflow-x-auto">
+        <table className={cn(
+          'w-full border-collapse text-sm text-foreground',
+          '[&_thead_tr]:border-b [&_th]:h-10 [&_th]:bg-muted/50 [&_th]:px-4 [&_th]:text-left [&_th]:align-middle [&_th]:text-xs [&_th]:font-medium [&_th]:whitespace-nowrap [&_th]:text-muted-foreground',
+          '[&_td]:border-t [&_td]:px-4 [&_td]:py-3 [&_td]:align-middle [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/50',
+          '[&_.num]:text-right', className,
+        )}>
+          {conteudo}
+        </table>
+      </div>
+      {activa && <ControlosPaginacao {...p} total={paginaveis.length} />}
     </div>
   )
 }

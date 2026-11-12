@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos } from '@/features/membros/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
 import { useContagens, useDespesas, useMovimentos, useRemessasDevidas, useResumoMensal } from '@/features/tesouraria/api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 /* Linhas das vistas (nomes de campo como a API os devolve). */
 interface LinhaEscala { id: number; data: string; funcao: keyof typeof rotulos.funcaoEscala; membro: string; estado: string }
@@ -137,8 +138,9 @@ function ListaAtencao({ itens, aCarregar }: { itens: Item[]; aCarregar: boolean 
       ) : !itens.length ? (
         <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Não há registos por aprovar, movimentos por confirmar nem despesas por decidir.</EstadoVazio>
       ) : (
+        <Paginada itens={itens}>{(vis) => (
         <ul className="divide-y border-t">
-          {itens.map((i) => (
+          {vis.map((i) => (
             <li key={i.chave}>
               <Link to={i.para} className="alvo group flex items-center gap-3 px-5 py-3 hover:bg-muted/50 sm:px-6">
                 <span className={cn('flex size-9 flex-none items-center justify-center rounded-lg',
@@ -155,6 +157,7 @@ function ListaAtencao({ itens, aCarregar }: { itens: Item[]; aCarregar: boolean 
             </li>
           ))}
         </ul>
+        )}</Paginada>
       )}
     </Cartao>
   )

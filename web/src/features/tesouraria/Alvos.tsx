@@ -21,6 +21,7 @@ import { t } from '@/i18n/pt-MZ'
 import { centimos, data, diasAte, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useAlvos, useAlvosMut, useFundos, useProgressoAlvos, type Alvo } from './api'
+import { Paginada } from '@/components/comum/Paginacao'
 
 export function CartaoAlvos() {
   const { pode } = useSessao()
@@ -43,8 +44,9 @@ export function CartaoAlvos() {
             Por exemplo: 300 000 MT para o telhado até Dezembro, ou o alvo da oferta do 13.º sábado.
           </EstadoVazio>
         ) : (
+          <Paginada itens={lista}>{(vis) => (
           <ul className="divide-y">
-            {lista.map((a) => {
+            {vis.map((a) => {
               const p = prog.get(a.id)
               const feito = centimos(p?.arrecadado ?? '0'), meta = centimos(a.valorAlvo)
               const pct = meta ? Math.round((feito / meta) * 100) : 0
@@ -74,6 +76,7 @@ export function CartaoAlvos() {
               )
             })}
           </ul>
+          )}</Paginada>
         )}
       {novo && <DialogoAlvo aoFechar={() => setNovo(false)} />}
       <DialogoConfirmar aberto={!!aTerminar} aoMudar={(v) => !v && setATerminar(null)} titulo="Terminar este alvo?" accao="Terminar"
