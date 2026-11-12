@@ -22,13 +22,13 @@ import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { Paginada } from '@/components/comum/Paginacao'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { useSessao } from '@/auth/sessao'
-import { mensagemDe } from '@/api/erros'
+import { ErroApi, mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import {
-  DIVISOES, nomeTrimestre, trimestreActual, useAlterarClasse, useClasses, useClassesTrimestre, useGravarClasseTrimestre, useMatricular,
-  useMatriculas, useTerminarClasse, useTirarMatricula, useTrimestres, type Classe, type ClasseTrimestre, type Divisao, type Trimestre,
+  DIVISOES, matriculaActivaDe, nomeTrimestre, trimestreActual, useAlterarClasse, useClasses, useClassesTrimestre, useGravarClasseTrimestre, useMatricular,
+  useMatriculas, useMudarDeClasse, useTerminarClasse, useTirarMatricula, useTrimestres, type Classe, type ClasseTrimestre, type Divisao, type Trimestre,
 } from './api'
 
 export default function PaginaClasse() {
@@ -192,6 +192,9 @@ function Matriculas({ classe }: { classe: Classe }) {
   const [aTirar, setATirar] = useState<number | null>(null)
   const [historico, setHistorico] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [mudar, setMudar] = useState<{ membroId: number; anterior: number; classeId: number; desde: string } | null>(null)
+  const mudarDeClasse = useMudarDeClasse(classe.id)
+  const todasClasses = useClasses()
   const membros = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, m])), [basicos.data])
   const nomeDe = (id: number) => { const m = membros.get(id); return m && `${m.nome} ${m.apelido}` }
   const activas = (q.data ?? []).filter((m) => !m.dataSaida).sort((a, b) => (nomeDe(a.membroId) ?? '').localeCompare(nomeDe(b.membroId) ?? '', 'pt'))
@@ -200,18 +203,58 @@ function Matriculas({ classe }: { classe: Classe }) {
   useEffect(() => {
     if (novo == null) return
     setErro(null)
-    matricular.mutateAsync(novo)
-      .then(() => toast.success(`${nomeDe(novo) ?? 'Membro'} matriculado(a).`))
-      .catch((e) => setErro(mensagemDe(e)))
+    setMudar(null)
+    const membroId = novo
+    matricular.mutateAsync(membroId)
+      .then(() => toast.success(`${nomeDe(membroId) ?? 'Membro'} matriculado(a).`))
+      .catch(async (e) => {
+        // já está noutra classe: diz qual e oferece a mudança
+        if (e instanceof ErroApi && e.estado === 409) {
+          const actual = await matriculaActivaDe(membroId).catch(() => undefined)
+          if (actual && actual.classeId !== classe.id) {
+            setMudar({ membroId, anterior: actual.id, classeId: actual.classeId, desde: actual.dataEntrada })
+            return
+          }
+        }
+        setErro(mensagemDe(e))
+      })
       .finally(() => setNovo(null))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [novo])
+
+  const confirmarMudanca = async () => {
+    if (!mudar) return
+    try {
+      await mudarDeClasse.mutateAsync({ membroId: mudar.membroId, anterior: mudar.anterior })
+      toast.success(`${nomeDe(mudar.membroId) ?? 'Membro'} mudou para ${classe.nome}.`)
+      setMudar(null)
+    } catch (e) {
+      setErro(mensagemDe(e))
+    }
+  }
 
   return (
     <Cartao titulo="Matrículas" icone={Users} descricao={`${activas.length} aluno(s) na classe`}
       accoes={antigas.length > 0 && <Button variant="ghost" size="sm" onClick={() => setHistorico((x) => !x)}>{historico ? 'Ocultar saídas' : `Saídas (${antigas.length})`}</Button>}>
       <div className="grid gap-3">
         <ErroFormulario mensagem={erro} />
+        {mudar && (
+          <div role="alert" className="grid gap-3 rounded-lg border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
+            <p>
+              <strong className="font-medium">{nomeDe(mudar.membroId) ?? 'Este membro'}</strong> está na classe{' '}
+              <strong className="font-medium">{todasClasses.data?.find((c) => c.id === mudar.classeId)?.nome ?? 'outra classe'}</strong> desde {data(mudar.desde)}.
+              Cada pessoa só está numa classe de cada vez.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {pode('escola_sabatina.matricula.alterar') && (
+                <Button size="sm" className="alvo" disabled={mudarDeClasse.isPending} onClick={() => void confirmarMudanca()}>
+                  {mudarDeClasse.isPending ? 'A mudar…' : `Mudar para ${classe.nome}`}
+                </Button>
+              )}
+              <Button size="sm" variant="outline" className="alvo" onClick={() => setMudar(null)}>{t.comum.cancelar}</Button>
+            </div>
+          </div>
+        )}
         {pode('escola_sabatina.matricula.criar') && (
           <CampoFormulario rotulo="Matricular" ajuda="Membros e interessados; quem está noutra classe tem de sair dela primeiro.">
             {(p) => <CampoMembro id={p.id} valor={novo} aoMudar={setNovo} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']}

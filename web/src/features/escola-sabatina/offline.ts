@@ -69,6 +69,14 @@ export interface Rascunho {
   porEnviar: boolean
   actualizadoEm: string
   erro?: string
+  /** Idempotency-Key do POST que cria o relatório (repetir depois de a resposta se perder não duplica) */
+  chaveCriar?: string
+  /** modificadoEm do relatório em que este rascunho se baseou: se mudou na base, outra pessoa alterou-o */
+  baseModificadoEm?: string
+  /** outra pessoa alterou (ou criou) o relatório entretanto: o envio espera pela decisão do secretário */
+  conflito?: boolean
+  /** o secretário decidiu gravar por cima do que outra pessoa gravou */
+  forcar?: boolean
 }
 
 export const chaveRelatorio = (classeTrimestre: number, sabado: number) => `${classeTrimestre}:${sabado}`
@@ -158,6 +166,8 @@ export function rascunhoDoPacote(p: PacoteRelatorio): Rascunho {
     visitantesNovos: [],
     porEnviar: false,
     actualizadoEm: new Date().toISOString(),
+    chaveCriar: crypto.randomUUID(),
+    baseModificadoEm: r?.modificadoEm,
   }
 }
 
@@ -235,44 +245,68 @@ function corpoNumeros(r: Rascunho, criar: boolean) {
   }
 }
 
+const CONFLITO = 'Outra pessoa alterou este relatório depois de o abrir neste telemóvel. Grave por cima ou descarte as suas alterações.'
+const CONFLITO_CRIADO = 'Outra pessoa já registou o relatório desta classe neste sábado. Grave por cima ou descarte as suas alterações.'
+
 async function passos(chave: string): Promise<ResultadoEnvio> {
   let r = await lerRascunho(chave)
   if (!r || !r.porEnviar) return 'enviado'
+  if (r.conflito && !r.forcar) return 'recusado'
   const guardar = async (mudanca: Partial<Rascunho>) => {
     r = { ...r!, ...mudanca }
     await gravar('rascunhos', chave, r)
   }
+  const relatorioDaBase = async (id: number) =>
+    (await dados(api.GET('/v1/escola-sabatina/relatorios-sabado/{id}', { params: { path: { id } } }))) as Relatorio
+  const alterar = async (id: number) => {
+    const rel = (await dados(api.PATCH('/v1/escola-sabatina/relatorios-sabado/{id}', { params: { path: { id } }, body: corpoNumeros(r!, false) as never }))) as Relatorio
+    await guardar({ baseModificadoEm: rel.modificadoEm })
+  }
   try {
+    if (!r.chaveCriar) await guardar({ chaveCriar: crypto.randomUUID() })
     // 1. o relatório: criar (o M.M. vazio é calculado pelas matrículas) ou alterar
     if (!r.relatorioId) {
       try {
         const criado = (await dados(api.POST('/v1/escola-sabatina/relatorios-sabado', {
+          params: { header: { 'Idempotency-Key': r.chaveCriar! } },
           body: { classeTrimestreId: r.classeTrimestreId, sabadoId: r.sabadoId, ...corpoNumeros(r, true) } as never,
         }))) as Relatorio
-        await guardar({ relatorioId: criado.id })
+        await guardar({ relatorioId: criado.id, baseModificadoEm: criado.modificadoEm })
       } catch (erro) {
-        // outro telemóvel já o abriu: usa-se esse e grava-se por cima
+        // outro telemóvel já o registou: só se grava por cima com a decisão do secretário
         if (!(erro instanceof ErroApi && erro.estado === 409)) throw erro
         const existentes = (await dados(api.GET('/v1/escola-sabatina/relatorios-sabado', {
           params: { query: { igrejaId: r.igrejaId, classeTrimestreId: r.classeTrimestreId, sabadoId: r.sabadoId, limite: 5 } },
         }))).dados as Relatorio[]
         if (!existentes[0]) throw erro
+        if (!r.forcar) {
+          await guardar({ conflito: true, erro: CONFLITO_CRIADO })
+          return 'recusado'
+        }
         await guardar({ relatorioId: existentes[0].id })
-        await dados(api.PATCH('/v1/escola-sabatina/relatorios-sabado/{id}', { params: { path: { id: existentes[0].id } }, body: corpoNumeros(r, false) as never }))
+        await alterar(existentes[0].id)
       }
     } else {
-      await dados(api.PATCH('/v1/escola-sabatina/relatorios-sabado/{id}', { params: { path: { id: r.relatorioId } }, body: corpoNumeros(r, false) as never }))
+      if (!r.forcar && r.baseModificadoEm) {
+        const actual = await relatorioDaBase(r.relatorioId)
+        if (actual.modificadoEm !== r.baseModificadoEm) {
+          await guardar({ conflito: true, erro: CONFLITO })
+          return 'recusado'
+        }
+      }
+      await alterar(r.relatorioId)
     }
     const id = r.relatorioId!
     // 2. a chamada inteira de uma vez (a base recalcula M.P. e E.D.)
     if (r.chamada && Object.keys(r.chamada).length) {
       const lista = Object.entries(r.chamada).map(([m, p]) => ({ membroId: Number(m), presente: p.presente, estudouLicao: p.presente && p.estudouLicao }))
-      await dados(api.PUT('/v1/escola-sabatina/relatorios-sabado/{id}/presencas', { params: { path: { id } }, body: lista }))
+      const rel = (await dados(api.PUT('/v1/escola-sabatina/relatorios-sabado/{id}/presencas', { params: { path: { id } }, body: lista }))) as Relatorio
+      await guardar({ baseModificadoEm: rel.modificadoEm })
     }
-    // 3. os visitantes novos, um a um (cada um enviado fica marcado: repetir não duplica)
+    // 3. os visitantes novos, um a um, cada um com a sua Idempotency-Key (repetir não duplica)
     for (const v of r.visitantesNovos.filter((x) => !x.enviado)) {
       await dados(api.POST('/v1/escola-sabatina/relatorios-sabado/{id}/visitantes', {
-        params: { path: { id } },
+        params: { path: { id }, header: { 'Idempotency-Key': v.local } },
         body: { nome: v.nome, telefone: v.telefone || undefined, convidadoPorMembroId: v.convidadoPorMembroId } as never,
       }))
       await guardar({ visitantesNovos: r.visitantesNovos.map((x) => (x.local === v.local ? { ...x, enviado: true } : x)) })
@@ -305,7 +339,7 @@ export function enviarRascunho(chave: string): Promise<ResultadoEnvio> {
 export async function sincronizarTudo(): Promise<void> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return
   for (const r of await porEnviar()) {
-    if (r.erro) continue
+    if (r.erro || r.conflito) continue
     if ((await enviarRascunho(r.chave)) === 'sem-rede') return
   }
 }

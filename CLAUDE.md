@@ -12,7 +12,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V28 |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V29 |
 | Contrato da API | **Concluído.** `api/openapi.yaml` (320 caminhos, 446 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, conselho, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V28 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V29 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–14 (tem de dar 15× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–15 (tem de dar 16× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V29__...sql`, `V30__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V30__...sql`, `V31__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -107,6 +107,9 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
     `<pfx>_estado`, `<pfx>_criado_em`, `<pfx>_criado_por`, `<pfx>_modificado_em`,
     `<pfx>_modificado_por`, `<pfx>_end_date`.
   - Únicos são parciais: `... WHERE <pfx>_end_date IS NULL`.
+  - Cada CHECK e cada único tem a frase em português no `COMMENT ON CONSTRAINT/INDEX` (V29; formato
+    `"[campoJson] Mensagem"`). A API devolve-a em vez de "Valor não permitido". Restrição nova = COMMENT novo
+    (o teste `15_mensagens_das_restricoes` falha se um CHECK ficar sem frase).
 - Dinheiro: `DECIMAL(12,2)`/`DECIMAL(14,2)`. Datas-hora: `TIMESTAMPTZ`.
 - Enums em `nucleo` (`estado_membro_t`, `tipo_movimento_t`, ...).
 - Lista de prefixos e descrição de cada tabela/coluna: `database/gerador/defs.py` e
@@ -268,7 +271,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 15× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 16× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

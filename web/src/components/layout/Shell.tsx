@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Pilula } from '@/components/comum/elementos'
+import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { useTema } from '@/lib/tema'
@@ -143,9 +144,11 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
 }
 
 function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; aberta: boolean; aoFechar: () => void }) {
-  const { igreja, sair } = useSessao()
+  const { igreja } = useSessao()
+  const sairSeguro = useSairSeguro()
   return (
     <>
+      {sairSeguro.dialogo}
       <aside
         aria-label="Navegação principal"
         className={cn(
@@ -172,7 +175,7 @@ function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; abe
           <Navegacao encolhida={encolhida} aoEscolher={aoFechar} />
         </div>
         <div className="border-t border-sidebar-border p-2.5">
-          <button type="button" onClick={() => sair()}
+          <button type="button" onClick={() => void sairSeguro.pedir()}
             className={cn('alvo flex min-h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-sm font-medium text-sidebar-foreground hover:bg-tint-destructive hover:text-destructive-text', encolhida && 'lg:justify-center lg:px-0')}>
             <PhSignOut className="size-5 shrink-0" />
             <span className={cn(encolhida && 'lg:hidden')}>{t.nav.sair}</span>
@@ -263,12 +266,15 @@ function Caminho() {
 }
 
 function MenuUtilizador() {
-  const { usuario, igreja, igrejas, escolherIgreja, sair } = useSessao()
+  const { usuario, igreja, igrejas, escolherIgreja } = useSessao()
+  const sairSeguro = useSairSeguro()
   const { alternar } = useTema()
   const nome = usuario?.nome ?? '—'
   const iniciais = nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('')
   const perfis = igreja?.perfis?.map((p) => rotulos.perfil[p] ?? p) ?? []
   return (
+    <>
+      {sairSeguro.dialogo}
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button type="button" className="flex items-center gap-2.5 rounded-md py-1 pr-2 pl-1 text-left transition-colors hover:bg-accent">
@@ -305,12 +311,38 @@ function MenuUtilizador() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={alternar}><SunMoon className="size-4" /> {t.nav.alternarTema}</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => sair()} className="text-destructive-text focus:text-destructive-text">
+        <DropdownMenuItem onSelect={() => void sairSeguro.pedir()} className="text-destructive-text focus:text-destructive-text">
           <LogOut className="size-4" /> {t.nav.sair}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   )
+}
+
+/**
+ * Sair com relatórios da Escola Sabatina por enviar: avisa primeiro (ficam no telemóvel e são enviados quando
+ * alguém entrar com rede, mas quem sai deve saber). Devolve a função de sair e o diálogo a desenhar.
+ */
+function useSairSeguro() {
+  const { sair, pode } = useSessao()
+  const [porEnviar, setPorEnviar] = useState(0)
+  const pedir = async () => {
+    if (pode('escola_sabatina.relatorio_sabado.criar') || pode('escola_sabatina.relatorio_sabado.alterar')) {
+      try {
+        const n = (await (await import('@/features/escola-sabatina/offline')).porEnviar()).length
+        if (n > 0) { setPorEnviar(n); return }
+      } catch { /* sem o módulo ou sem armazenamento: sai */ }
+    }
+    void sair()
+  }
+  const dialogo = (
+    <DialogoConfirmar aberto={porEnviar > 0} aoMudar={(v) => !v && setPorEnviar(0)} perigo
+      titulo="Há relatórios por enviar"
+      texto={`${porEnviar} relatório(s) da Escola Sabatina ainda não chegaram ao servidor. Ficam guardados neste telemóvel e são enviados quando alguém entrar com rede. Sair mesmo assim?`}
+      accao="Sair" aoConfirmar={() => { setPorEnviar(0); void sair() }} />
+  )
+  return { pedir, dialogo }
 }
 
 /**

@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  ArrowLeft, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Minus, Plus, Trash2, UserPlus, Users,
+  AlertTriangle, ArrowLeft, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Minus, Plus, Trash2, UserPlus, Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -139,8 +139,24 @@ export default function PaginaRelatorioClasse() {
       else {
         const depois = await lerRascunho(chave)
         if (depois) setR(depois)
-        toast.error(t.es.recusado)
+        if (depois?.conflito) toast.warning('Outra pessoa alterou este relatório: escolha se grava por cima.')
+        else toast.error(t.es.recusado)
       }
+    } finally {
+      setAEnviar(false)
+    }
+  }
+
+  // outra pessoa alterou o relatório: o secretário decide gravar por cima
+  const gravarPorCima = async () => {
+    if (!r) return
+    setAEnviar(true)
+    try {
+      await gravarRascunho({ ...r, porEnviar: true, forcar: true, conflito: false, erro: undefined })
+      const res = await enviarRascunho(chave)
+      if (res === 'enviado') { toast.success(t.es.enviado); setAlterado(false); pacoteIniciado.current = null }
+      else if (res === 'sem-rede') { toast.info(t.es.guardadoTelemovel); setR((x) => x && { ...x, porEnviar: true, forcar: true, conflito: false, erro: undefined }) }
+      else { const depois = await lerRascunho(chave); if (depois) setR(depois); toast.error(t.es.recusado) }
     } finally {
       setAEnviar(false)
     }
@@ -175,12 +191,20 @@ export default function PaginaRelatorioClasse() {
           {p.sabado.decimoTerceiro && <> · <strong className="font-medium text-foreground">13.º sábado</strong></>}
         </>}
         accoes={<span className="flex flex-wrap gap-1.5">
-          {r.erro ? <Pilula variante="destructive">Recusado</Pilula> : r.porEnviar ? <Pilula variante="info">Por enviar</Pilula> : alterado ? <Pilula variante="warning">Por guardar</Pilula> : null}
+          {r.conflito ? <Pilula variante="warning">Conflito</Pilula> : r.erro ? <Pilula variante="destructive">Recusado</Pilula> : r.porEnviar ? <Pilula variante="info">Por enviar</Pilula> : alterado ? <Pilula variante="warning">Por guardar</Pilula> : null}
           {rel ? <Pilula variante={fechado ? 'success' : 'warning'}>{rotulos.estadoRelatorio[rel.estado]}</Pilula> : <Pilula variante="outline">Novo</Pilula>}
         </span>}
       />
       <AvisosRede />
-      {r.erro && <ErroFormulario mensagem={r.erro} />}
+      {r.conflito ? (
+        <div role="alert" className="grid gap-3 rounded-lg border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
+          <p className="flex items-start gap-2"><AlertTriangle className="mt-0.5 size-4 flex-none" aria-hidden />{r.erro ?? 'Outra pessoa alterou este relatório.'}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" className="alvo" disabled={aEnviar || !emLinha} onClick={() => void gravarPorCima()}>Gravar por cima</Button>
+            <Button size="sm" variant="outline" className="alvo" disabled={aEnviar} onClick={() => void desfazer()}>Descartar as minhas alterações</Button>
+          </div>
+        </div>
+      ) : r.erro && <ErroFormulario mensagem={r.erro} />}
       {fechado && (
         <div role="status" className="flex items-start gap-2 rounded-lg border border-success/20 bg-tint-success px-4 py-3 text-sm text-success-text">
           <Lock className="mt-0.5 size-4 flex-none" aria-hidden />
@@ -217,6 +241,11 @@ export default function PaginaRelatorioClasse() {
       <Visitantes p={p} r={r} fechado={fechado} mudar={mudar} />
 
       <Cartao titulo="Ofertas" descricao={t.es.separadas} icone={Coins}>
+        {p.sabado.decimoTerceiro && (
+          <p className="mb-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-2.5 text-sm text-warning-text">
+            Hoje é o 13.º sábado: não se esqueça de anotar a oferta do 13.º sábado separada da oferta missionária.
+          </p>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           {([['oferta', t.es.oferta], ['oferta13Sabado', t.es.oferta13], ['ofertaDespesas', t.es.ofertaDespesas]] as const).map(([k, rotulo]) => (
             <CampoFormulario key={k} rotulo={rotulo}>

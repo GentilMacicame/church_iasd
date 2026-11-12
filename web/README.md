@@ -158,6 +158,12 @@ src/
   - **Trimestres** (Associação): novo trimestre com os sábados gerados (13 ou 14) e o 13.º sábado marcado; mudar o
     13.º sábado; criar os sábados em falta; pesos da pontuação por defeito e por trimestre.
   - **Visitantes**: por acompanhar / tornaram-se membros, ligar o visitante ao registo de membro.
+  - Cenários tratados: dois telemóveis no mesmo relatório (o envio pára e pergunta "Gravar por cima" ou
+    "Descartar"); resposta perdida a meio do envio (o relatório e cada visitante levam `Idempotency-Key`: repetir
+    não duplica); membro já matriculado noutra classe ("Mudar para esta classe", fica o histórico); início do
+    trimestre ("Copiar do trimestre anterior" a configuração das classes); sem rede não há logout por inactividade
+    nas páginas da ES; sair com relatórios por enviar pede confirmação; relatórios em falta abrem o ecrã da classe;
+    aviso do 13.º sábado nas ofertas. As recusas da base chegam com a frase da restrição (V29), não com o nome.
 
 ## Por fazer (próximas iterações)
 

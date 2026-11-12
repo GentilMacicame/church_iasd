@@ -42,6 +42,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import mz.org.iasd.igreja.repositories.auth.AuthRepository;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
+import mz.org.iasd.igreja.infraestrutura.erros.MensagensRestricoes;
 import mz.org.iasd.igreja.infraestrutura.erros.TradutorErrosSql;
 import mz.org.iasd.igreja.controllers.escolasabatina.RelatoriosEscolaSabatinaController;
 import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
@@ -555,6 +556,30 @@ class BaseDadosTest {
         var depoisChamada = ExecutorTransaccao.executar(api, directorEs,
                 c -> RelatoriosSabadoService.gravarPresencas(c, ers, chamada));
         assertEquals(1, depoisChamada.getInt("membrosPresentes"));
+
+        // V29: a recusa por CHECK chega com a frase escrita na base (lida como a API a lê, com o papel da API)
+        var frases = ExecutorTransaccao.executar(api, null, c -> {
+            Map<String, String> m = new java.util.HashMap<>();
+            try (PreparedStatement ps = c.prepareStatement("SELECT nome, mensagem FROM nucleo.fn_mensagens_restricoes()");
+                 java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    m.put(rs.getString(1), rs.getString(2));
+                }
+            }
+            return m;
+        });
+        MensagensRestricoes.definir(frases);
+        try {
+            SQLException demais = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, directorEs,
+                    c -> TabelaRepository.actualizar(c, Catalogo.de(RelatorioSabado.class), ers,
+                            List.of(TabelaRepository.Valor.campo(Catalogo.de(RelatorioSabado.class), "membrosPresentes", "11")), null)));
+            TradutorErrosSql.Traducao t = TradutorErrosSql.traduzir(demais);
+            assertEquals(422, t.estadoHttp());
+            assertEquals("validacao", t.codigo());
+            assertTrue(t.mensagem().startsWith("Os números do relatório não batem"), t.mensagem());
+        } finally {
+            MensagensRestricoes.definir(Map.of());
+        }
 
         // fechar antes de lançar as ofertas → 422
         SQLException cedo = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, directorEs,

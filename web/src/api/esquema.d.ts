@@ -11295,7 +11295,10 @@ export interface operations {
     criarRelatorio: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -11605,7 +11608,10 @@ export interface operations {
     criarVEscolaSabatinaRelatoriosSabadoIdVisitantes: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 id: components["parameters"]["Id"];
             };

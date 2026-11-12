@@ -2923,7 +2923,8 @@ paths:
       x-permissao: escola_sabatina.relatorio_sabado.criar
       operationId: criarRelatorio
       description: Relatório de cada classe em cada sábado (linha da folha "Grupo N")
-      parameters: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -3272,6 +3273,7 @@ paths:
       operationId: criarVEscolaSabatinaRelatoriosSabadoIdVisitantes
       parameters:
       - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:

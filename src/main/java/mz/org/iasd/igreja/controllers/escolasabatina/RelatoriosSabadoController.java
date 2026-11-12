@@ -45,9 +45,13 @@ import mz.org.iasd.igreja.services.escolasabatina.RelatoriosSabadoService;
  *   POST   /v1/escola-sabatina/relatorios-sabado/{id}/fechar     …relatorio_sabado.fechar (passo 6)
  *   POST   /v1/escola-sabatina/relatorios-sabado/{id}/reabrir    …relatorio_sabado.reabrir
  * </pre>
+ *
+ * Os POST aceitam {@code Idempotency-Key} (opcional; obrigatório nas ofertas): o frontend envia o relatório e os
+ * visitantes a partir da fila sem rede e, se a resposta se perder, repete o pedido sem duplicar.
  */
 @Path(Rotas.EscolaSabatina.RELATORIOS_SABADO)
 @RequestScoped
+@Idempotente(opcional = true)
 public class RelatoriosSabadoController extends BaseTabelaController {
 
     @Override

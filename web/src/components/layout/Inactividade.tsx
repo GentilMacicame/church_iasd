@@ -3,6 +3,7 @@
  * contagem de 30 s; "Continuar" mantém a sessão, e no fim da contagem faz logout. A última actividade é partilhada
  * entre separadores (localStorage), para um separador esquecido não terminar a sessão de quem está a usar outro.
  * É uma protecção de ecrã (computador partilhado na igreja); o token de 15 min e a renovação continuam a valer.
+ * Excepção: sem rede, nas páginas da Escola Sabatina (relatório do sábado sem rede, P-05), não faz logout.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Clock } from 'lucide-react'
@@ -43,6 +44,13 @@ export function Inactividade() {
   // verificação a cada segundo: abre o aviso, conta, e faz logout no fim
   useEffect(() => {
     const t = setInterval(() => {
+      // sem rede, no relatório do sábado da Escola Sabatina: não se faz logout (sem rede não se volta a entrar e o
+      // secretário ficaria sem o ecrã até a rede voltar); a contagem recomeça quando a rede voltar
+      if (!navigator.onLine && window.location.pathname.startsWith('/escola-sabatina')) {
+        ultima.current = Date.now()
+        setRestam(null)
+        return
+      }
       const ultimaVista = Math.max(ultima.current, ler())
       ultima.current = ultimaVista
       const parado = Date.now() - ultimaVista

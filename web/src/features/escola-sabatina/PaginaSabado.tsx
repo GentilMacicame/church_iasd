@@ -26,7 +26,7 @@ import { chaveRelatorio, lerPacote, porEnviar, sincronizarTudo, useEmLinha, useP
 export function AvisosRede() {
   const emLinha = useEmLinha()
   const fila = usePorEnviar()
-  const recusados = fila.filter((r) => r.erro)
+  const recusados = fila.filter((r) => r.erro || r.conflito)
   return (
     <div className="grid gap-3 empty:hidden">
       {!emLinha && (
@@ -54,6 +54,7 @@ export function AvisosRede() {
 }
 
 function EstadoClasse({ rel, rascunho }: { rel?: Relatorio; rascunho?: Rascunho }) {
+  if (rascunho?.conflito) return <Pilula variante="warning">Conflito</Pilula>
   if (rascunho?.erro) return <Pilula variante="destructive">Recusado</Pilula>
   if (rascunho?.porEnviar) return <Pilula variante="info">Por enviar</Pilula>
   if (!rel) return <Pilula variante="outline">Por fazer</Pilula>

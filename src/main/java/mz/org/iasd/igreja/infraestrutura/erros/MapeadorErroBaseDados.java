@@ -20,8 +20,12 @@ public class MapeadorErroBaseDados implements ExceptionMapper<ErroBaseDados> {
     @Inject
     ContextoPedido contexto;
 
+    @Inject
+    CarregadorMensagensRestricoes mensagens;
+
     @Override
     public Response toResponse(ErroBaseDados e) {
+        mensagens.garantir();
         TradutorErrosSql.Traducao t = TradutorErrosSql.traduzir(e.sql());
         if (t.estadoHttp() >= 500) {
             LOG.log(Level.SEVERE, "Erro da base de dados [pedido " + contexto.pedidoId() + "] SQLSTATE "

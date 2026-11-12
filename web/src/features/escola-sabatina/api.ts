@@ -33,7 +33,9 @@ type Corpo<P extends keyof paths, M extends 'post' | 'patch'> = paths[P][M] exte
 /** Linhas das vistas (GET /v1/escola-sabatina/<relatório>): DECIMAL chega como texto, nunca float. */
 export interface LinhaPainel {
   ano: number; trimestre: number; classesActivas: number; membros: string; presencaMedia: string | null; estudoDiarioMedio: string | null
-  ofertasMissionarias: string; oferta13Sabado: string; ofertaDespesas: string; visitantes: number; baptismos: number; alvoBaptismos: number
+  ofertasMissionarias: string; oferta13Sabado: string; ofertaDespesas: string
+  /** somas: podem chegar como texto (DECIMAL) */
+  visitantes: number | string; baptismos: number | string; alvoBaptismos: number | string
 }
 export interface LinhaClassificacao {
   id: number; trimestreId: number; classe: string; divisao: Divisao; professor: string | null; pontuacao: string; lugar: number
@@ -366,6 +368,57 @@ export function useMatricular(classe: number) {
     mutationFn: (membroId: number) =>
       dados(api.POST('/v1/escola-sabatina/matriculas', { body: { classeId: classe, membroId, dataEntrada: hojeIso() } })),
     onSuccess: invalidar,
+  })
+}
+
+/** A matrícula activa do membro (noutra classe), para lhe oferecer a mudança. */
+export async function matriculaActivaDe(membroId: number): Promise<Matricula | undefined> {
+  const r = await dados(api.GET('/v1/escola-sabatina/matriculas', { params: { query: { membroId, limite: 50 } } }))
+  return (r.dados as Matricula[]).find((m) => !m.dataSaida)
+}
+
+/** Muda o membro para esta classe: sai da anterior hoje e entra nesta hoje (as duas ficam no histórico). */
+export function useMudarDeClasse(classe: number) {
+  const invalidar = useInvalidarES()
+  return useMutation({
+    mutationFn: async ({ membroId, anterior }: { membroId: number; anterior: number }) => {
+      await dados(api.PATCH('/v1/escola-sabatina/matriculas/{id}', { params: { path: { id: anterior } }, body: { dataSaida: hojeIso() } }))
+      await dados(api.POST('/v1/escola-sabatina/matriculas', { body: { classeId: classe, membroId, dataEntrada: hojeIso() } }))
+    },
+    onSuccess: invalidar,
+  })
+}
+
+/**
+ * Início do trimestre: copia a configuração do trimestre anterior (professor, auxiliar, secretário, alvos, activa)
+ * para as classes que ainda não estão configuradas. Devolve quantas foram copiadas e as recusas da base.
+ */
+export function useCopiarConfiguracao() {
+  const invalidar = useInvalidarES()
+  const igreja = useIgreja()
+  return useMutation({
+    mutationFn: async ({ de, para }: { de: number; para: number }) => {
+      const [anteriores, actuais] = await Promise.all([lerClassesTrimestre(igreja.id, de), lerClassesTrimestre(igreja.id, para)])
+      const feitas = new Set(actuais.map((c) => c.classeId))
+      let copiadas = 0
+      const erros: string[] = []
+      for (const c of anteriores.filter((x) => !feitas.has(x.classeId))) {
+        try {
+          await dados(api.POST('/v1/escola-sabatina/classes-trimestre', {
+            body: {
+              classeId: c.classeId, trimestreId: para, professorMembroId: c.professorMembroId, auxiliarMembroId: c.auxiliarMembroId,
+              secretarioMembroId: c.secretarioMembroId, alvoMembros: c.alvoMembros, alvoEstudoDiario: c.alvoEstudoDiario,
+              alvoFiliais: c.alvoFiliais, alvoOfertaSabado: c.alvoOfertaSabado, alvoBaptismos: c.alvoBaptismos, estado: c.estado,
+            } as never,
+          }))
+          copiadas++
+        } catch (e) {
+          erros.push(e instanceof Error ? e.message : String(e))
+        }
+      }
+      return { copiadas, erros }
+    },
+    onSettled: invalidar,
   })
 }
 

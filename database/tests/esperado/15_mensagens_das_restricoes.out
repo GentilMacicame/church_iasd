@@ -1,0 +1,21 @@
+1. a API (app_igreja) lê as frases: CHECK e índices únicos
+              nome               |                                                                                                mensagem                                                                                                
+---------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ chk_ers_numeros                 | Os números do relatório não batem: os presentes não podem ser mais do que os matriculados, quem estudou a lição não pode ser mais do que os presentes, e visitantes e filiais não podem ser negativos.
+ chk_tra_quem_regista_nao_aprova | Quem regista o movimento não o pode aprovar; tem de ser outra pessoa.
+ uq_ema_activa                   | [membroId] Este membro já está matriculado noutra classe; tire-o primeiro dessa classe.
+ uq_ers_ect_id_esa_id            | Esta classe já tem relatório neste sábado.
+(4 rows)
+
+2. todos os CHECK com significado (não os chk_*_end_date) têm frase
+ check_sem_frase 
+-----------------
+(0 rows)
+
+3. todos os únicos da Escola Sabatina têm frase
+ unico_sem_frase 
+-----------------
+(0 rows)
+
+4. quem não é app_igreja não chama a função
+psql:database/tests/15_mensagens_das_restricoes.sql:31: ERROR:  permission denied for schema nucleo at character 22

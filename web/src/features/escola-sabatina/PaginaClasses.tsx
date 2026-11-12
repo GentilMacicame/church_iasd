@@ -19,8 +19,9 @@ import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/co
 import { Seleccao } from '@/components/comum/Seleccao'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
+import { mensagemDe } from '@/api/erros'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { DIVISOES, nomeTrimestre, trimestreActual, useClasses, useClassesTrimestre, useCriarClasse, useTrimestres, type Divisao } from './api'
+import { DIVISOES, nomeTrimestre, trimestreActual, useClasses, useClassesTrimestre, useCopiarConfiguracao, useCriarClasse, useTrimestres, type Divisao } from './api'
 
 export default function PaginaClasses() {
   const { pode } = useSessao()
@@ -37,6 +38,20 @@ export default function PaginaClasses() {
   const config = new Map((cts.data ?? []).map((c) => [c.classeId, c]))
   const activas = lista.filter((c) => config.get(c.id)?.estado === 'ACTIVO').length
   const semConfig = lista.filter((c) => !config.has(c.id)).length
+  // início do trimestre: copiar a configuração do trimestre anterior para as classes por configurar
+  const anterior = trimestre ? [...(trimestres.data ?? [])].filter((x) => x.dataInicio < trimestre.dataInicio).sort((a, b) => b.dataInicio.localeCompare(a.dataInicio))[0] : undefined
+  const copiar = useCopiarConfiguracao()
+  const copiarAnterior = async () => {
+    if (!anterior || !trimestre) return
+    try {
+      const r = await copiar.mutateAsync({ de: anterior.id, para: trimestre.id })
+      if (r.copiadas) toast.success(`${r.copiadas} classe(s) configurada(s) como no ${nomeTrimestre(anterior)}. Reveja os alvos.`)
+      else if (!r.erros.length) toast.info(`O ${nomeTrimestre(anterior)} não tem classes por copiar.`)
+      if (r.erros.length) toast.error(`${r.erros.length} classe(s) não copiada(s): ${r.erros[0]}`)
+    } catch (e) {
+      toast.error(mensagemDe(e))
+    }
+  }
   const linkClasse = (id: number) => `/escola-sabatina/classes/${id}${trimestre ? `?trimestre=${trimestre.id}` : ''}`
 
   return (
@@ -62,7 +77,12 @@ export default function PaginaClasses() {
           <Indicador rotulo="Activas" valor={activas} nota={trimestre ? nomeTrimestre(trimestre) : 'no trimestre'} tom="success" aCarregar={classes.isPending || cts.isPending} />
           <Indicador rotulo="Por configurar" valor={semConfig} nota="sem professor nem alvos" tom="warning" aCarregar={classes.isPending || cts.isPending} />
         </div>
-        <Cartao titulo="Todas as classes" descricao={trimestre ? `Configuração no ${nomeTrimestre(trimestre)}` : undefined} semMargem>
+        <Cartao titulo="Todas as classes" descricao={trimestre ? `Configuração no ${nomeTrimestre(trimestre)}` : undefined} semMargem
+          accoes={anterior && semConfig > 0 && !cts.isPending && pode('escola_sabatina.classe_trimestre.criar') && (
+            <Button variant="outline" size="sm" className="alvo" disabled={copiar.isPending} onClick={() => void copiarAnterior()}>
+              {copiar.isPending ? 'A copiar…' : `Copiar do ${nomeTrimestre(anterior)}`}
+            </Button>
+          )}>
           {classes.isPending ? <LinhasACarregar linhas={4} />
             : classes.isError ? <EstadoErro erro={classes.error} aoTentar={() => classes.refetch()} className="mx-6 mb-6" />
             : lista.length === 0 ? (

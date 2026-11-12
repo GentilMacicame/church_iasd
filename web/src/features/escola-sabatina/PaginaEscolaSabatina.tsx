@@ -17,7 +17,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, dinheiro } from '@/lib/formatos'
 import {
-  nomeTrimestre, pct, trimestreActual, useClassificacao, useConferencia, useEmFalta, useEvolucao, usePainel, useResumoClasses, useTrimestres,
+  nomeTrimestre, pct, trimestreActual, useClasses, useClassesTrimestre, useClassificacao, useSabados, useConferencia, useEmFalta, useEvolucao, usePainel, useResumoClasses, useTrimestres,
 } from './api'
 
 function Diferenca({ v, percentagem }: { v: string | null; percentagem?: boolean }) {
@@ -56,6 +56,16 @@ export default function PaginaEscolaSabatina() {
   const porConferir = (conferencia.data ?? []).filter((l) => l.situacao !== 'Conferido' && l.situacao !== 'Sem oferta')
   const faltaTrimestre = (emFalta.data ?? []).filter((l) => !trimestre || (l.data >= trimestre.dataInicio && l.data <= trimestre.dataFim))
   const alunosPorClasse = new Map((resumo.data ?? []).map((r) => [r.id, r]))
+  // relatório em falta → ecrã da classe nesse sábado (o nome da classe é único na igreja)
+  const sabados = useSabados(trimestre?.id)
+  const classes = useClasses()
+  const cts = useClassesTrimestre(trimestre?.id)
+  const ligacaoEmFalta = (classe: string, numero: number) => {
+    const cl = classes.data?.find((c) => c.nome === classe)
+    const ct = cl && cts.data?.find((c) => c.classeId === cl.id)
+    const sb = sabados.data?.find((x) => x.numero === numero)
+    return ct && sb ? `/escola-sabatina/sabado/${ct.id}/${sb.id}` : undefined
+  }
 
   return (
     <>
@@ -86,7 +96,7 @@ export default function PaginaEscolaSabatina() {
               <Indicador rotulo="Classes activas" valor={p?.classesActivas ?? 0} nota={p ? `${Number(p.membros).toLocaleString('pt-PT')} matriculados (média)` : 'sem relatórios ainda'} icone={Users} aCarregar={painel.isPending} />
               <Indicador rotulo="Presença média" valor={pct(p?.presencaMedia)} nota={`estudo diário ${pct(p?.estudoDiarioMedio)}`} icone={BookOpenCheck} tom="success" aCarregar={painel.isPending} />
               <Indicador rotulo="Ofertas missionárias" valor={dinheiro(p?.ofertasMissionarias ?? '0.00')} nota={`13.º sábado ${dinheiro(p?.oferta13Sabado ?? '0.00')}`} icone={Coins} tom="info" aCarregar={painel.isPending} />
-              <Indicador rotulo="Visitantes" valor={p?.visitantes ?? 0} nota={`baptismos ${p?.baptismos ?? 0} de ${p?.alvoBaptismos ?? 0}`} icone={UserPlus} tom="warning" aCarregar={painel.isPending} />
+              <Indicador rotulo="Visitantes" valor={Number(p?.visitantes ?? 0)} nota={`baptismos ${Number(p?.baptismos ?? 0)} de ${Number(p?.alvoBaptismos ?? 0)}`} icone={UserPlus} tom="warning" aCarregar={painel.isPending} />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-12">
@@ -132,12 +142,20 @@ export default function PaginaEscolaSabatina() {
                     : faltaTrimestre.length === 0 ? <EstadoVazio icone={BookOpenCheck}>Todos os relatórios estão feitos.</EstadoVazio>
                     : (
                       <ul className="divide-y border-t text-sm">
-                        {faltaTrimestre.slice(0, 8).map((l, i) => (
-                          <li key={i} className="flex items-center justify-between gap-3 px-5 py-2.5 sm:px-6">
+                        {faltaTrimestre.slice(0, 8).map((l, i) => {
+                          const para = pode('escola_sabatina.relatorio_sabado.criar') ? ligacaoEmFalta(l.classe, l.sabado) : undefined
+                          const conteudo = <>
                             <span className="truncate font-medium">{l.classe}</span>
                             <span className="flex-none text-xs tabular-nums text-muted-foreground">{l.sabado}.º · {data(l.data)}</span>
-                          </li>
-                        ))}
+                          </>
+                          return (
+                            <li key={i}>
+                              {para
+                                ? <Link to={para} className="alvo flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-muted/50 sm:px-6">{conteudo}</Link>
+                                : <span className="flex items-center justify-between gap-3 px-5 py-2.5 sm:px-6">{conteudo}</span>}
+                            </li>
+                          )
+                        })}
                         {faltaTrimestre.length > 8 && <li className="px-5 py-2.5 text-xs text-muted-foreground sm:px-6">e mais {faltaTrimestre.length - 8}</li>}
                       </ul>
                     )}

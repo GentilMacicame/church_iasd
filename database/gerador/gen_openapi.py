@@ -146,7 +146,8 @@ for fname, schema, title, desc, tables in MODULES:
                                    operationId=f'listar{S}', description=t.desc, parameters=params, responses=resp('200', lista))}
         ro = t.name in SYSTEM_WRITE
         if not ro:
-            post_params = [IDEMP] if t.schema == 'tesouraria' else []
+            # tesouraria: dinheiro; relatório do sábado: enviado da fila sem rede (repetir não duplica)
+            post_params = [IDEMP] if t.schema == 'tesouraria' or t.name == 'relatorio_sabado' else []
             paths[base_p]['post'] = op(f'{nome}: criar', tag, f'{code}.criar', operationId=f'criar{S}', description=t.desc,
                                        parameters=post_params,
                                        requestBody={'required': True, 'content': {'application/json': {'schema': create}}},
@@ -250,16 +251,16 @@ acao('/v1/tesouraria/mpesa', 'Iniciar um pagamento M-Pesa (cria a transacção p
 acao('/v1/tesouraria/mpesa/callback', 'Resposta da Vodacom (conta de serviço; idempotente)', PAG, 'perfil INTEGRACAO', {'type': 'object'}, None)
 
 # rotas aninhadas (atalhos para tabelas-filho)
-def aninhada(path, filho, summary, tag, perm_ler, perm_criar=None):
+def aninhada(path, filho, summary, tag, perm_ler, perm_criar=None, idemp=False):
     idp = [{'$ref': '#/components/parameters/Id'}]
     paths[path] = {'get': op(summary, tag, perm_ler, operationId='listar' + re.sub(r'[^A-Za-z]', '', path.title()), parameters=idp,
                              responses=resp('200', {'type': 'array', 'items': ref(filho)}))}
     if perm_criar:
         paths[path]['post'] = op('Criar ' + summary.lower(), tag, perm_criar, operationId='criar' + re.sub(r'[^A-Za-z]', '', path.title()),
-                                 parameters=idp, requestBody={'required': True, 'content': {'application/json': {'schema': ref(filho)}}},
+                                 parameters=idp + ([IDEMP] if idemp else []), requestBody={'required': True, 'content': {'application/json': {'schema': ref(filho)}}},
                                  responses=resp('201', ref(filho), 'Criado'))
 aninhada('/v1/secretaria/reunioes/{id}/votos', 'Voto', 'Votos da reunião', SEC, 'secretaria.voto.ler', 'secretaria.voto.criar')
-aninhada('/v1/escola-sabatina/relatorios-sabado/{id}/visitantes', 'Visitante', 'Visitantes do relatório', ES, 'escola_sabatina.visitante.ler', 'escola_sabatina.visitante.criar')
+aninhada('/v1/escola-sabatina/relatorios-sabado/{id}/visitantes', 'Visitante', 'Visitantes do relatório', ES, 'escola_sabatina.visitante.ler', 'escola_sabatina.visitante.criar', idemp=True)
 aninhada('/v1/tesouraria/transacoes/{id}/linhas', 'TransacaoLinha', 'Linhas da transacção', TES, 'tesouraria.transacao_linha.ler')
 
 # relatórios (vistas)

@@ -50,6 +50,38 @@ class TradutorErrosSqlTest {
     }
 
     @Test
+    void fraseDaRestricaoEscritaNaBase() {
+        MensagensRestricoes.definir(java.util.Map.of(
+                "chk_ers_numeros", "Os presentes não podem ser mais do que os matriculados.",
+                "uq_ema_activa", "[membroId] Este membro já está matriculado noutra classe.",
+                "uq_usu_email", "Já existe um utilizador com este e-mail."));
+        try {
+            TradutorErrosSql.Traducao chk = TradutorErrosSql.comFrase("chk_ers_numeros",
+                    new TradutorErrosSql.Traducao(422, "validacao", "Valor não permitido (chk_ers_numeros)", null));
+            assertEquals("Os presentes não podem ser mais do que os matriculados.", chk.mensagem());
+            assertEquals("validacao", chk.codigo());
+            assertNull(chk.campo());
+
+            TradutorErrosSql.Traducao uq = TradutorErrosSql.comFrase("uq_ema_activa",
+                    new TradutorErrosSql.Traducao(409, "duplicado", "Já existe um registo com estes dados", null));
+            assertEquals("Este membro já está matriculado noutra classe.", uq.mensagem());
+            assertEquals("membroId", uq.campo());
+
+            // sem campo na frase: fica o deduzido do nome
+            assertEquals("email", TradutorErrosSql.comFrase("uq_usu_email",
+                    new TradutorErrosSql.Traducao(409, "duplicado", "x", "email")).campo());
+            // CHECK padrão de fim, sem comentário próprio
+            assertEquals("A data de fim não pode ser anterior à criação do registo.",
+                    TradutorErrosSql.comFrase("chk_mem_end_date", new TradutorErrosSql.Traducao(422, "validacao", "x", null)).mensagem());
+            // sem frase: mensagem genérica
+            assertEquals("Valor não permitido (chk_outra)", TradutorErrosSql.comFrase("chk_outra",
+                    new TradutorErrosSql.Traducao(422, "validacao", "Valor não permitido (chk_outra)", null)).mensagem());
+        } finally {
+            MensagensRestricoes.definir(java.util.Map.of());
+        }
+    }
+
+    @Test
     void campoAPartirDaRestricao() {
         assertEquals("igrejaId", TradutorErrosSql.campoDaRestricao("fk_mem_igr_id"));
         assertEquals("email", TradutorErrosSql.campoDaRestricao("uq_usu_email"));

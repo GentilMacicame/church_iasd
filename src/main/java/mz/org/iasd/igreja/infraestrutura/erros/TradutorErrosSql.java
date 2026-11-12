@@ -17,7 +17,8 @@ import mz.org.iasd.igreja.comum.Nomes;
  *   40001 / 40P01 → 503 tentar_novamente (depois de 3 tentativas)
  * </pre>
  *
- * A mensagem das regras de negócio vem da base de dados, já em português, e passa tal e qual.
+ * A mensagem das regras de negócio vem da base de dados, já em português, e passa tal e qual; a das restrições
+ * (CHECK e únicos) também, a partir do COMMENT de cada uma (V29, {@link MensagensRestricoes}).
  * Nunca se devolve SQL nem stack traces ao cliente.
  */
 public final class TradutorErrosSql {
@@ -56,9 +57,10 @@ public final class TradutorErrosSql {
         return switch (estado) {
             case "42501" -> new Traducao(403, "sem_permissao", mensagemPermissao(mensagemBd), null);
             case "P0001" -> new Traducao(422, "regra_negocio", mensagemBd, null);
-            case "23514" -> new Traducao(422, "validacao",
-                    "Valor não permitido" + (restricao != null ? " (" + restricao + ")" : ""), campoDaRestricao(restricao));
-            case "23505" -> new Traducao(409, "duplicado", "Já existe um registo com estes dados", campoDaRestricao(restricao));
+            case "23514" -> comFrase(restricao, new Traducao(422, "validacao",
+                    "Valor não permitido" + (restricao != null ? " (" + restricao + ")" : ""), campoDaRestricao(restricao)));
+            case "23505" -> comFrase(restricao, new Traducao(409, "duplicado", "Já existe um registo com estes dados",
+                    campoDaRestricao(restricao)));
             case "23503" -> new Traducao(422, "referencia_invalida", "O registo indicado não existe", campoDaRestricao(restricao));
             case "23502" -> new Traducao(400, "campo_obrigatorio", "Falta preencher um campo obrigatório", Nomes.campo(coluna));
             case "57014" -> new Traducao(503, "tentar_novamente",
@@ -73,6 +75,18 @@ public final class TradutorErrosSql {
                     ? new Traducao(503, "tentar_novamente", "Base de dados indisponível de momento. Tente de novo.", null)
                     : new Traducao(500, "erro_interno", "Erro interno. Se persistir, contacte o suporte.", null);
         };
+    }
+
+    /**
+     * Usa a frase da restrição escrita na base de dados (V29, {@link MensagensRestricoes}) quando existe; o campo
+     * da frase tem prioridade sobre o deduzido do nome.
+     */
+    static Traducao comFrase(String restricao, Traducao generica) {
+        MensagensRestricoes.Mensagem m = MensagensRestricoes.de(restricao);
+        if (m == null) {
+            return generica;
+        }
+        return new Traducao(generica.estadoHttp(), generica.codigo(), m.texto(), m.campo() != null ? m.campo() : generica.campo());
     }
 
     /** As recusas por RLS e por falta de GRANT vêm em inglês; as de nucleo.fn_exigir já vêm em português. */
