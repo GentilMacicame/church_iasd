@@ -6,7 +6,7 @@ RES = {  # nome do recurso na API (plural, com hífen)
  'entidade':'entidades','distrito':'distritos','igreja':'igrejas','provincia':'provincias','distrito_administrativo':'distritos-administrativos','departamento':'departamentos',
  'igreja_departamento':'departamentos-igreja','cargo':'cargos',
  'familia':'familias','membro':'membros','contacto':'contactos','consentimento':'consentimentos','reuniao':'reunioes',
- 'voto':'votos','reuniao_presenca':'presencas-reuniao','reuniao_ponto':'pontos-agenda','movimento_membro':'movimentos-membro','transferencia_membro':'transferencias','disciplina':'disciplinas',
+ 'voto':'votos','reuniao_presenca':'presencas-reuniao','reuniao_ponto':'pontos-agenda','mandato':'mandatos','movimento_membro':'movimentos-membro','transferencia_membro':'transferencias','disciplina':'disciplinas',
  'oficial':'oficiais','baptismo':'baptismos',
  'actividade':'actividades','material':'materiais','escala':'escalas','escala_plano':'planos-escala','escala_dia':'dias-escala',
  'trimestre':'trimestres','sabado':'sabados','classe':'classes','classe_trimestre':'classes-trimestre','matricula':'matriculas',

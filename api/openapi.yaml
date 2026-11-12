@@ -8859,6 +8859,111 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/mandatos:
+    get:
+      summary: 'Mandatos: listar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.ler
+      operationId: listarMandato
+      description: 'Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: votoId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ate
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mandato'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Mandatos: criar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.criar
+      operationId: criarMandato
+      description: 'Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/Mandato'
+              required:
+              - igrejaId
+              - nome
+              - dataInicio
+              - dataFim
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandato'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/secretaria/mandatos-a-terminar:
     get:
       summary: 'Relatório: Mandatos a terminar'
@@ -8891,6 +8996,126 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/mandatos/{id}:
+    get:
+      summary: 'Mandatos: ler um'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.ler
+      operationId: lerMandato
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandato'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Mandatos: alterar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.alterar
+      operationId: alterarMandato
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mandato'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandato'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/mandatos/{id}/reactivar:
+    post:
+      summary: 'Mandatos: reactivar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.terminar
+      operationId: reactivarMandato
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandato'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/mandatos/{id}/terminar:
+    post:
+      summary: 'Mandatos: terminar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.mandato.terminar
+      operationId: terminarMandato
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandato'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -9534,6 +9759,10 @@ paths:
         schema:
           type: integer
       - name: votoId
+        in: query
+        schema:
+          type: integer
+      - name: mandatoId
         in: query
         schema:
           type: integer
@@ -19090,6 +19319,66 @@ components:
       - tabela
       - registoId
       - accao
+    Mandato:
+      type: object
+      description: 'Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)'
+      x-tabela: secretaria.mandato
+      x-prefixo: mdt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        nome:
+          type: string
+          maxLength: 100
+          description: 'Ex.: Mandato 2026–2027'
+        dataInicio:
+          type: string
+          format: date
+        dataFim:
+          type: string
+          format: date
+          description: Último dia do mandato
+        votoId:
+          type: integer
+          format: int32
+          description: → secretaria.voto · Voto da igreja que elegeu os oficiais deste mandato
+        observacoes:
+          type: string
+          maxLength: 255
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - nome
+      - dataInicio
+      - dataFim
     Material:
       type: object
       description: Material necessário para uma actividade
@@ -19546,6 +19835,14 @@ components:
           type: string
           format: date
           description: Fim do mandato pela duração definida na igreja (preenchido sozinho; pode corrigir-se)
+        mandatoId:
+          type: integer
+          format: int32
+          description: '→ secretaria.mandato · Mandato a que pertence (V31): dá o início e o fim previsto'
+        orgao:
+          type: string
+          maxLength: 10
+          description: CONSELHO (conselho da igreja) ou DIRECCAO (direcção / departamentos); vazio = pelo cargo (V31)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:

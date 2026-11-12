@@ -25,6 +25,8 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param dataInicio coluna {@code ofi_data_inicio} — obrigatório ao criar
  * @param dataFim Fim efectivo (mandato terminado antes ou depois do previsto)
  * @param fimPrevisto Fim do mandato pela duração definida na igreja (preenchido sozinho; pode corrigir-se)
+ * @param mandatoId Mandato a que pertence (V31): dá o início e o fim previsto
+ * @param orgao CONSELHO (conselho da igreja) ou DIRECCAO (direcção / departamentos); vazio = pelo cargo (V31)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -50,6 +52,10 @@ public record Oficial(
         LocalDate dataFim,
         @ColunaBd(value = "ofi_fim_previsto", tipo = Tipo.DATA)
         LocalDate fimPrevisto,
+        @ColunaBd(value = "ofi_mdt_id", tipo = Tipo.INT)
+        Integer mandatoId,
+        @ColunaBd(value = "ofi_orgao", tipo = Tipo.TEXTO)
+        String orgao,
         @ColunaBd(value = "ofi_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "ofi_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

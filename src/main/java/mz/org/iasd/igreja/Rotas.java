@@ -186,6 +186,9 @@ public final class Rotas {
         /** OficiaisController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String OFICIAIS = "/v1/secretaria/oficiais";
 
+        /** MandatosController · rotas-padrão (V31): o período dos oficiais, com o conselho e a direcção */
+        public static final String MANDATOS = "/v1/secretaria/mandatos";
+
         /** PontosAgendaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String PONTOS_AGENDA = "/v1/secretaria/pontos-agenda";
 

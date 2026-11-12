@@ -38,6 +38,7 @@ import mz.org.iasd.igreja.models.secretaria.Consentimento;
 import mz.org.iasd.igreja.models.secretaria.Contacto;
 import mz.org.iasd.igreja.models.secretaria.Disciplina;
 import mz.org.iasd.igreja.models.secretaria.Familia;
+import mz.org.iasd.igreja.models.secretaria.Mandato;
 import mz.org.iasd.igreja.models.secretaria.Membro;
 import mz.org.iasd.igreja.models.secretaria.MovimentoMembro;
 import mz.org.iasd.igreja.models.secretaria.Oficial;
@@ -181,6 +182,7 @@ public final class CatalogoGerado {
             MovimentoMembro.class,
             TransferenciaMembro.class,
             Disciplina.class,
+            Mandato.class,
             Oficial.class,
             Baptismo.class,
             Actividade.class,

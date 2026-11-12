@@ -76,10 +76,12 @@ SELECT o.ofi_id, o.ofi_igr_id, o.ofi_mem_id, m.mem_nome || ' ' || m.mem_apelido 
        CASE WHEN o.ofi_data_inicio > CURRENT_DATE THEN 'FUTURO'
             WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE THEN 'TERMINADO'
             WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE + 60 THEN 'A_TERMINAR'
-            ELSE 'ACTIVO' END AS estado_mandato
+            ELSE 'ACTIVO' END AS estado_mandato,
+       o.ofi_mdt_id AS mandato_id, md.mdt_nome AS mandato, COALESCE(o.ofi_orgao, CASE WHEN c.car_conselho THEN 'CONSELHO' ELSE 'DIRECCAO' END) AS orgao
 FROM secretaria.oficial o
 JOIN organizacao.cargo c   ON c.car_id = o.ofi_car_id
 JOIN secretaria.membro m   ON m.mem_id = o.ofi_mem_id
+LEFT JOIN secretaria.mandato md ON md.mdt_id = o.ofi_mdt_id
 WHERE o.ofi_end_date IS NULL;
 
 

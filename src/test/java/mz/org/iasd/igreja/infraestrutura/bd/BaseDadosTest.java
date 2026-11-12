@@ -65,6 +65,7 @@ import mz.org.iasd.igreja.models.secretaria.Membro;
 import mz.org.iasd.igreja.models.actividades.Escala;
 import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.secretaria.Familia;
+import mz.org.iasd.igreja.models.secretaria.Mandato;
 import mz.org.iasd.igreja.models.secretaria.Oficial;
 import mz.org.iasd.igreja.models.secretaria.Reuniao;
 import mz.org.iasd.igreja.models.secretaria.ReuniaoPonto;
@@ -598,6 +599,46 @@ class BaseDadosTest {
 
         JsonArray conferencia = ExecutorTransaccao.executar(api, directorEs, c -> RelatoriosEscolaSabatinaController.CONFERENCIA_OFERTAS.consultar(c, Map.of()));
         assertEquals("Conferido", conferencia.getJsonObject(0).getString("situacao"));
+    }
+
+    // ------------------------------------------------------------------ V31: mandatos, conselho e direcção
+
+    @Test
+    void mandatoComOficiaisNoConselhoENaDireccao() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v31@teste.mz", "+258840000311", "SECRETARIO");
+        int membro;
+        int cargoConselho;
+        try (Connection dono = ligarComoDono()) {
+            membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_estado) VALUES ("
+                    + igrejaCentral + ", 'Rute', 'Mandato', 'ACTIVO') RETURNING mem_id");
+            cargoConselho = inserir(dono, "SELECT car_id FROM organizacao.cargo WHERE car_conselho ORDER BY car_id LIMIT 1");
+        }
+        var mandato = Catalogo.de(Mandato.class);
+        var oficial = Catalogo.de(Oficial.class);
+
+        // autorizado: o secretário cria o mandato e elege o oficial dentro dele (datas e órgão vêm sozinhos)
+        JsonObject mdt = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, mandato, Json.createObjectBuilder()
+                .add("igrejaId", igrejaCentral).add("nome", "Mandato 2033–2034").add("dataInicio", "2033-01-01").add("dataFim", "2034-12-31").build()));
+        long mdtId = mdt.getJsonNumber("id").longValue();
+        JsonObject ofi = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, oficial, Json.createObjectBuilder()
+                .add("membroId", membro).add("cargoId", cargoConselho).add("igrejaId", igrejaCentral).add("mandatoId", mdtId).build()));
+        assertEquals("2033-01-01", ofi.getString("dataInicio"));
+        assertEquals("2034-12-31", ofi.getString("fimPrevisto"));
+        assertEquals("CONSELHO", ofi.getString("orgao"));
+        JsonArray conselho = ExecutorTransaccao.executar(api, secretario, c -> RelatoriosSecretariaController.CONSELHO.consultar(c,
+                Map.of("igrejaId", String.valueOf(igrejaCentral))));
+        assertTrue(conselho.stream().map(JsonValue::asJsonObject)
+                .anyMatch(o -> o.getInt("membroId") == membro && o.getInt("mandatoId") == mdtId && "CONSELHO".equals(o.getString("orgao"))), conselho.toString());
+
+        // um mandato que se sobrepõe: 422 com a frase da base
+        SQLException sobreposto = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, mandato,
+                Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("nome", "Mandato sobreposto").add("dataInicio", "2034-06-01").add("dataFim", "2035-05-31").build())));
+        assertEquals(422, TradutorErrosSql.traduzir(sobreposto).estadoHttp());
+
+        // não autorizado: o tesoureiro não cria mandatos (403)
+        SQLException semPermissao = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, mandato,
+                Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("nome", "Mandato do tesoureiro").add("dataInicio", "2040-01-01").add("dataFim", "2040-12-31").build())));
+        assertEquals(403, TradutorErrosSql.traduzir(semPermissao).estadoHttp());
     }
 
     // ------------------------------------------------------------------ V30: painel geral das igrejas

@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 448 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 454 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -275,7 +275,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/secretaria/familias/{id}` | FamiliasController · alterar | `secretaria.familia.alterar` |
 | POST | `/v1/secretaria/familias/{id}/reactivar` | FamiliasController · reactivar | `secretaria.familia.terminar` |
 | POST | `/v1/secretaria/familias/{id}/terminar` | FamiliasController · terminar | `secretaria.familia.terminar` |
+| GET | `/v1/secretaria/mandatos` | MandatosController · listar | `secretaria.mandato.ler` |
+| POST | `/v1/secretaria/mandatos` | MandatosController · criar | `secretaria.mandato.criar` |
 | GET | `/v1/secretaria/mandatos-a-terminar` | RelatoriosSecretariaController · mandatosATerminar | `secretaria.oficial.ler` |
+| GET | `/v1/secretaria/mandatos/{id}` | MandatosController · obter | `secretaria.mandato.ler` |
+| PATCH | `/v1/secretaria/mandatos/{id}` | MandatosController · alterar | `secretaria.mandato.alterar` |
+| POST | `/v1/secretaria/mandatos/{id}/reactivar` | MandatosController · reactivar | `secretaria.mandato.terminar` |
+| POST | `/v1/secretaria/mandatos/{id}/terminar` | MandatosController · terminar | `secretaria.mandato.terminar` |
 | GET | `/v1/secretaria/membros` | MembrosController · listar | `secretaria.membro.ler` |
 | POST | `/v1/secretaria/membros` | MembrosController · criar | `secretaria.membro.criar` |
 | GET | `/v1/secretaria/membros-basico` | RelatoriosSecretariaController · membrosBasico | `secretaria.membro.ler` |

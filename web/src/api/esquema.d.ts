@@ -3513,6 +3513,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/secretaria/mandatos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mandatos: listar
+         * @description Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)
+         */
+        get: operations["listarMandato"];
+        put?: never;
+        /**
+         * Mandatos: criar
+         * @description Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)
+         */
+        post: operations["criarMandato"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/secretaria/mandatos-a-terminar": {
         parameters: {
             query?: never;
@@ -3527,6 +3551,67 @@ export interface paths {
         get: operations["relVSecretariaMandatosATerminar"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/mandatos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mandatos: ler um */
+        get: operations["lerMandato"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Mandatos: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarMandato"];
+        trace?: never;
+    };
+    "/v1/secretaria/mandatos/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mandatos: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarMandato"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/mandatos/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mandatos: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarMandato"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7681,6 +7766,40 @@ export interface components {
             readonly criadoPor?: number | null;
             readonly modificadoPor?: number | null;
         };
+        /** @description Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31) */
+        Mandato: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /** @description Ex.: Mandato 2026–2027 */
+            nome?: string;
+            /** Format: date */
+            dataInicio?: string;
+            /**
+             * Format: date
+             * @description Último dia do mandato
+             */
+            dataFim?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.voto · Voto da igreja que elegeu os oficiais deste mandato
+             */
+            votoId?: number;
+            observacoes?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Material necessário para uma actividade */
         Material: {
             /** Format: int32 */
@@ -7938,6 +8057,13 @@ export interface components {
              * @description Fim do mandato pela duração definida na igreja (preenchido sozinho; pode corrigir-se)
              */
             fimPrevisto?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.mandato · Mandato a que pertence (V31): dá o início e o fim previsto
+             */
+            mandatoId?: number;
+            /** @description CONSELHO (conselho da igreja) ou DIRECCAO (direcção / departamentos); vazio = pelo cargo (V31) */
+            orgao?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -16387,6 +16513,77 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarMandato: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                votoId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["Mandato"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarMandato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["Mandato"], "igrejaId" | "nome" | "dataInicio" | "dataFim">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mandato"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     relVSecretariaMandatosATerminar: {
         parameters: {
             query?: {
@@ -16406,6 +16603,122 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerMandato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mandato"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarMandato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Mandato"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mandato"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarMandato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mandato"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarMandato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mandato"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -16900,6 +17213,7 @@ export interface operations {
                 membroId?: number;
                 cargoId?: number;
                 votoId?: number;
+                mandatoId?: number;
                 estado?: components["schemas"]["EnumEstadoRegisto"];
                 desde?: string;
                 ate?: string;

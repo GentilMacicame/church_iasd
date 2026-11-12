@@ -81,8 +81,11 @@ src/
   conta, enviar o código por SMS (o "convite": o utilizador define a senha em "Esqueci a senha"), desactivar/reactivar.
   As regras são da base de dados: ninguém altera os próprios perfis nem dá um perfil com mais permissões do que as suas.
 
-- **Conselho da igreja e reuniões** (F-SEC-07/08, P-04): conselho com cargos, contactos e mandatos (em exercício, a
-  terminar, terminados), duração dos mandatos por igreja; reunião com número, presidente e secretário escolhidos do
+- **Mandatos, conselho e direcção** (F-SEC-07, V31): cada mandato (início e duração de 1–5 anos ou outra data) mostra-se
+  como raiz de uma hierarquia com dois ramos — Conselho da igreja e Direcção — e os oficiais agrupados por cargo; acrescentar
+  oficial (o órgão vem do cargo e pode mudar-se), passar de órgão, corrigir datas, terminar antes do fim; oficiais antigos sem
+  mandato associam-se a um.
+- **Reuniões** (F-SEC-08, P-04): reunião com número, presidente e secretário escolhidos do
   conselho (secretário oficial por defeito), presenças (presente/ausente com justificação), agenda com deliberações e
   votações, votos formais, encerramento, estados (convocada → realizada → acta aprovada, que fecha o registo) e a
   acta formal para imprimir/guardar em PDF (A4, assinaturas do Presidente e do Secretário). O campo de escolher membro
@@ -118,9 +121,9 @@ src/
   dado pelo encarregado). **Relatório da secretaria** (F-SEC-10): movimento do livro mês a mês, membros por estado,
   pendentes (menores sem encarregado ou consentimento, censuras, transferências), para imprimir.
 
-- **Eleição de oficiais** (P-04, F-SEC-08) em Conselho › Eleição de oficiais: a comissão de nomeações prepara a lista
+- **Eleição de oficiais** (P-04, F-SEC-08) em Mandatos e conselho › Eleição de oficiais: a comissão de nomeações prepara a lista
   (cargo → membro, guardada no aparelho) e imprime o relatório; com o voto da igreja (ELEICAO) registam-se todos os
-  mandatos de uma vez e terminam-se os anteriores na véspera; cada recusa da base (censura, membro de outra igreja) aparece na linha.
+  eleitos de uma vez no mandato escolhido (ou criado ali) e terminam-se os anteriores na véspera; cada recusa da base (censura, membro de outra igreja) aparece na linha.
 - **PDF**: "Imprimir / guardar PDF" nos documentos (relatórios, orçamento, carta, relatório da comissão) com nome de
   ficheiro útil; "Exportar" (PDF ou CSV) descarrega os relatórios da API (`?formato=pdf`).
 

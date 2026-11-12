@@ -1,0 +1,33 @@
+1. autorizado: o administrador da igreja 1 cria o mandato de 2030
+   mdt_nome   | mdt_data_inicio | mdt_data_fim 
+--------------+-----------------+--------------
+ Mandato 2030 | 2030-01-01      | 2030-12-31
+(1 row)
+
+   um mandato que se sobrepõe: recusado; fim antes do início: recusado
+psql:database/tests/17_mandatos.sql:13: ERROR:  O mandato coincide com o "Mandato 2030"; os mandatos da mesma igreja não se sobrepõem
+psql:database/tests/17_mandatos.sql:14: ERROR:  new row for relation "mandato" violates check constraint "chk_mdt_datas"
+2. oficiais no mandato: início e fim previsto vêm do mandato; o órgão vem do cargo (ou indica-se)
+  orgao   | oficiais |   inicio   | fim_previsto 
+----------+----------+------------+--------------
+ CONSELHO |        2 | 2030-01-01 | 2030-12-31
+ DIRECCAO |        1 | 2030-01-01 | 2030-12-31
+(2 rows)
+
+   órgão inválido: recusado
+psql:database/tests/17_mandatos.sql:29: ERROR:  new row for relation "oficial" violates check constraint "chk_ofi_orgao"
+3. o mandato passa a acabar mais tarde: os oficiais acompanham
+ ofi_fim_previsto 
+------------------
+ 2031-06-30
+(1 row)
+
+4. mandato de outra igreja: o oficial da igreja 1 não entra nele (nem o vê)
+psql:database/tests/17_mandatos.sql:45: ERROR:  O mandato indicado não existe ou foi terminado
+5. não autorizado: o tesoureiro não cria mandatos (recusado) e o mandato da outra igreja não é visível
+psql:database/tests/17_mandatos.sql:49: ERROR:  new row violates row-level security policy for table "mandato"
+ ve_mandato_de_outra_igreja 
+----------------------------
+                          0
+(1 row)
+

@@ -53,7 +53,7 @@ const NAV: GrupoNav[] = [
       { para: '/membros', rotulo: t.nav.membros, icone: PhUsersThree, permissao: 'secretaria.membro.ler', fim: false },
       { para: '/livro', rotulo: t.livro.titulo, icone: PhBookOpenText, permissao: 'secretaria.movimento_membro.ler', fim: false },
       { para: '/reunioes', rotulo: t.livro.reunioes, icone: PhChatsCircle, permissao: 'secretaria.reuniao.ler', fim: false },
-      { para: '/conselho', rotulo: 'Conselho da igreja', icone: PhUserList, permissao: 'secretaria.oficial.ler', fim: false },
+      { para: '/conselho', rotulo: 'Mandatos e conselho', icone: PhUserList, permissao: 'secretaria.oficial.ler', fim: false },
       { para: '/familias', rotulo: 'Famílias', icone: PhHouseLine, permissao: 'secretaria.familia.ler', fim: true },
       { para: '/transferencias', rotulo: 'Transferências', icone: PhArrowsLeftRight, permissao: 'secretaria.transferencia_membro.ler', fim: true },
       { para: '/disciplina', rotulo: 'Disciplina', icone: PhGavel, permissao: 'secretaria.disciplina.ler', fim: true },
@@ -222,7 +222,7 @@ function Caminho() {
     if (/^\/reunioes\/\d+\/acta/.test(pathname)) partes.push({ rotulo: 'Acta' })
   }
   if (pathname.startsWith('/conselho')) {
-    partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Conselho da igreja', para: '/conselho' })
+    partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Mandatos e conselho', para: '/conselho' })
     if (pathname === '/conselho/eleicao') partes.push({ rotulo: 'Eleição de oficiais' })
   }
   if (pathname === '/familias') partes.push({ rotulo: t.nav.secretaria }, { rotulo: 'Famílias' })

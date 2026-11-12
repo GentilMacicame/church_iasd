@@ -2,19 +2,19 @@
  * Eleição de oficiais (P-04, F-SEC-08):
  *   1. a comissão de nomeações prepara a lista (cargo → membro) e imprime o relatório para ler à igreja;
  *   2. a igreja vota o relatório (voto do tipo ELEICAO, em reunião regular ou assembleia administrativa);
- *   3. o secretário regista todos os mandatos com esse voto e, se quiser, termina os mandatos anteriores desses cargos.
+ *   3. o secretário escolhe (ou cria) o mandato e regista nele os eleitos com esse voto (o órgão — conselho ou direcção —
+ *      vem do cargo) e, se quiser, termina os mandatos anteriores desses cargos.
  * A lista fica guardada neste aparelho até ser registada (a comissão reúne-se semanas antes do voto). A base de dados
  * recusa membros que não estejam activos nesta igreja ou que estejam sob censura, e explica porquê em cada linha.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, ListPlus, Printer, Trash2, Vote, XCircle } from 'lucide-react'
+import { CalendarPlus, CheckCircle2, ListPlus, Printer, Trash2, Vote, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Cartao, Indicador, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
-import { CampoData } from '@/components/comum/CampoData'
 import { CampoEscolha } from '@/components/comum/CampoEscolha'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { CabecalhoDocumento } from '@/components/layout/Marca'
@@ -25,7 +25,10 @@ import { cn } from '@/lib/utils'
 import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { CampoVoto } from '@/features/livro/CampoVoto'
-import { useCargos, useConselho, useConselhoMut, useIgrejaDados } from './api'
+import { ROTULO_MANDATO, useCargos, useConselho, useConselhoMut, useIgrejaDados, useMandatos, vigencia } from './api'
+import { DialogoMandato } from './DialogoMandato'
+import { anosInteiros, diaSeguinte } from './mandatos'
+import { Seleccao } from '@/components/comum/Seleccao'
 import { Paginada } from '@/components/comum/Paginacao'
 
 interface Linha { chave: string; cargoId: string; membroId: number | null; resultado?: { ok: boolean; texto: string } }
@@ -50,12 +53,19 @@ export default function PaginaEleicao() {
   const { registar, terminarMandato } = useConselhoMut()
   const rascunho = useRascunho(igreja.id)
   const [linhas, setLinhas] = useState<Linha[]>(() => rascunho.ler()?.linhas.map((l) => ({ ...l, resultado: undefined })) ?? [])
-  const [inicio, setInicio] = useState(() => rascunho.ler()?.inicio ?? `${new Date().getFullYear() + 1}-01-01`)
+  const [inicio] = useState(() => rascunho.ler()?.inicio ?? `${new Date().getFullYear() + 1}-01-01`)
   const [voto, setVoto] = useState('')
+  const mandatos = useMandatos()
+  const abertos = (mandatos.data ?? []).filter((m) => vigencia(m) !== 'TERMINADO')
+  const [mandatoEscolhido, setMandatoEscolhido] = useState('')
+  const [novoMandato, setNovoMandato] = useState(false)
+  // por defeito, o próximo mandato (a eleição prepara o seguinte); senão o actual
+  const mandatoId = mandatoEscolhido || String([...abertos].reverse().find((m) => vigencia(m) === 'FUTURO')?.id ?? abertos[0]?.id ?? '')
+  const mandato = abertos.find((m) => String(m.id) === mandatoId)
   const [terminarAnteriores, setTerminarAnteriores] = useState(true)
   const [aRegistar, setARegistar] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  useEffect(() => { rascunho.gravar(linhas.length ? { linhas: linhas.map(({ resultado: _r, ...l }) => l), inicio } : null) }, [linhas, inicio]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { rascunho.gravar(linhas.length ? { linhas: linhas.map((l) => ({ chave: l.chave, cargoId: l.cargoId, membroId: l.membroId })), inicio } : null) }, [linhas, inicio]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const listaCargos = useMemo(() => (cargos.data ?? []).filter((c) => !c.endDate)
     .sort((a, b) => Number(!!b.conselho) - Number(!!a.conselho) || a.nome.localeCompare(b.nome, 'pt')), [cargos.data])
@@ -76,7 +86,8 @@ export default function PaginaEleicao() {
   const registarTudo = async () => {
     setErro(null)
     if (!voto) return setErro('Escolha o voto da igreja que aprovou o relatório da comissão.')
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(inicio)) return setErro('Escreva o início dos mandatos como dd/mm/aaaa.')
+    if (!mandato) return setErro('Escolha o mandato dos eleitos (ou crie-o).')
+    const inicio = mandato.dataInicio
     const aFazer = porRegistar.filter((l) => l.cargoId && l.membroId)
     if (!aFazer.length) return setErro('Não há eleitos por registar: escolha o membro de cada cargo.')
     setARegistar(true)
@@ -85,7 +96,7 @@ export default function PaginaEleicao() {
     const resultados = new Map<string, { ok: boolean; texto: string }>()
     for (const l of aFazer) {
       try {
-        const r = await registar.mutateAsync({ membroId: l.membroId!, cargoId: Number(l.cargoId), dataInicio: inicio, votoId: Number(voto) }) as { id: number }
+        const r = await registar.mutateAsync({ membroId: l.membroId!, cargoId: Number(l.cargoId), mandatoId: mandato.id, votoId: Number(voto) }) as { id: number }
         novos.add(r.id); cargosEleitos.add(Number(l.cargoId))
         resultados.set(l.chave, { ok: true, texto: 'Registado' })
       } catch (e) {
@@ -116,7 +127,7 @@ export default function PaginaEleicao() {
     <>
       <div className="print:hidden">
       <TituloPagina icone={Vote} titulo="Eleição de oficiais" descricao="Proposta da comissão de nomeações, voto da igreja e registo dos mandatos"
-        antes={<Link to="/conselho" className="text-sm text-muted-foreground hover:underline print:hidden">← Conselho da igreja</Link>}
+        antes={<Link to="/conselho" className="text-sm text-muted-foreground hover:underline print:hidden">← Mandatos e conselho</Link>}
         accoes={linhas.length > 0 && <Button variant="outline" className="alvo print:hidden" onClick={() => imprimirComo(`Relatório da comissão de nomeações - ${igreja.nome}`)}><Printer className="size-4" />Imprimir / guardar PDF</Button>} />
       </div>
 
@@ -124,7 +135,7 @@ export default function PaginaEleicao() {
         <div className="grid gap-3 sm:grid-cols-3">
           <Indicador rotulo="Cargos na proposta" valor={String(linhas.length)} icone={ListPlus} />
           <Indicador rotulo="Com membro escolhido" valor={`${completas.length} de ${linhas.length}`} icone={CheckCircle2} tom={completas.length === linhas.length && linhas.length ? 'success' : 'warning'} />
-          <Indicador rotulo="Mandatos de" valor={`${anos} ${anos === 1 ? 'ano' : 'anos'}`} nota={/^\d{4}-\d{2}-\d{2}$/.test(inicio) ? `a partir de ${data(inicio)}` : undefined} icone={Vote} tom="info" />
+          <Indicador rotulo="Mandato" valor={mandato?.nome ?? '—'} nota={mandato ? `${data(mandato.dataInicio)} → ${data(mandato.dataFim)}` : 'escolha-o no passo 2'} icone={Vote} tom="info" />
         </div>
 
         <Cartao titulo="1. Proposta da comissão de nomeações" descricao="Um cargo por linha (repita o cargo para vários anciãos ou diaconisas). Fica guardada neste aparelho até ao registo." semMargem
@@ -179,13 +190,21 @@ export default function PaginaEleicao() {
                   <CampoVoto id="ele-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA']} preferir="ELEICAO" />
                 </div>
                 <div className="grid gap-1.5">
-                  <label htmlFor="ele-ini" className="text-sm font-medium">Início dos mandatos</label>
-                  <CampoData id="ele-ini" value={inicio} onChange={setInicio} className="alvo" />
+                  <label htmlFor="ele-mdt" className="text-sm font-medium">Mandato dos eleitos</label>
+                  <div className="flex gap-2">
+                    <Seleccao id="ele-mdt" value={mandatoId} onChange={(e) => setMandatoEscolhido(e.target.value)} className="min-w-0 flex-1">
+                      {!abertos.length && <option value="">Nenhum — crie o mandato</option>}
+                      {abertos.map((m) => <option key={m.id} value={m.id}>{m.nome} · {ROTULO_MANDATO[vigencia(m)].toLowerCase()}</option>)}
+                    </Seleccao>
+                    {pode('secretaria.mandato.criar') && (
+                      <Button type="button" variant="outline" size="icon" className="alvo flex-none" aria-label="Novo mandato" title="Novo mandato" onClick={() => setNovoMandato(true)}><CalendarPlus className="size-4" /></Button>
+                    )}
+                  </div>
                 </div>
               </div>
               <label className="flex items-start gap-3 text-sm">
                 <input type="checkbox" checked={terminarAnteriores} onChange={(e) => setTerminarAnteriores(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-primary)]" />
-                <span>Terminar os mandatos actuais destes cargos na véspera ({/^\d{4}-\d{2}-\d{2}$/.test(inicio) ? data(vesperaDe(inicio)) : '—'})</span>
+                <span>Terminar os mandatos actuais destes cargos na véspera ({mandato ? data(vesperaDe(mandato.dataInicio)) : '—'})</span>
               </label>
               <div className="flex justify-end">
                 <Button className="alvo" disabled={aRegistar || !completas.length} onClick={registarTudo}>
@@ -197,11 +216,18 @@ export default function PaginaEleicao() {
         )}
       </div>
 
+      {novoMandato && (
+        <DialogoMandato anosPadrao={(mandatos.data?.[0] && anosInteiros(mandatos.data[0].dataInicio, mandatos.data[0].dataFim)) || anos} aoFechar={() => setNovoMandato(false)} aoGravar={(id) => setMandatoEscolhido(String(id))}
+          inicioSugerido={mandatos.data?.length ? diaSeguinte(mandatos.data[0].dataFim) : inicio} />
+      )}
+
       {/* relatório da comissão para ler e votar na igreja */}
       <article className="documento-a4 hidden gap-5 text-[11pt] text-black print:grid">
         <CabecalhoDocumento titulo={igreja.nome} linha="Comissão de nomeações" />
         <h2 className="text-center text-base font-bold uppercase">Relatório da comissão de nomeações</h2>
-        <p>A comissão de nomeações propõe à igreja os seguintes irmãos para os cargos indicados, para mandatos de {anos} {anos === 1 ? 'ano' : 'anos'} a partir de {/^\d{4}-\d{2}-\d{2}$/.test(inicio) ? dataCompleta(inicio) : '—'}:</p>
+        <p>A comissão de nomeações propõe à igreja os seguintes irmãos para os cargos indicados, {mandato
+          ? <>no {mandato.nome}, de {dataCompleta(mandato.dataInicio)} a {dataCompleta(mandato.dataFim)}:</>
+          : <>para mandatos de {anos} {anos === 1 ? 'ano' : 'anos'} a partir de {/^\d{4}-\d{2}-\d{2}$/.test(inicio) ? dataCompleta(inicio) : '—'}:</>}</p>
         <table className="w-full border-collapse text-[10.5pt]">
           <thead><tr><th className="border-b border-black py-1 text-left">Cargo</th><th className="border-b border-black py-1 text-left">Proposto(a)</th></tr></thead>
           <tbody>

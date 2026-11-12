@@ -262,3 +262,70 @@ CREATE TRIGGER trg_rpr_10_acta_aberta
 CREATE TRIGGER trg_rpt_10_acta_aberta
     BEFORE INSERT OR UPDATE ON secretaria.reuniao_ponto
     FOR EACH ROW EXECUTE FUNCTION secretaria.fn_reuniao_acta_aberta();
+
+-- ---------------------------------------------------------------- mandatos, conselho e direcção (V31)
+-- Mandato: os da mesma igreja não se sobrepõem (só os activos)
+CREATE FUNCTION secretaria.fn_mdt_validar() RETURNS trigger AS $$
+DECLARE v_outro TEXT;
+BEGIN
+    -- datas ao contrário: fica para a CHECK chk_mdt_datas (com a sua frase)
+    IF NEW.mdt_end_date IS NULL AND NEW.mdt_data_fim > NEW.mdt_data_inicio THEN
+        SELECT mdt_nome INTO v_outro FROM secretaria.mandato
+         WHERE mdt_igr_id = NEW.mdt_igr_id AND mdt_id <> NEW.mdt_id AND mdt_end_date IS NULL
+           AND daterange(mdt_data_inicio, mdt_data_fim, '[]') && daterange(NEW.mdt_data_inicio, NEW.mdt_data_fim, '[]')
+         LIMIT 1;
+        IF FOUND THEN
+            RAISE EXCEPTION 'O mandato coincide com o "%"; os mandatos da mesma igreja não se sobrepõem', v_outro;
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_mdt_10_validar
+    BEFORE INSERT OR UPDATE ON secretaria.mandato
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mdt_validar();
+
+-- Mudar as datas do mandato: os oficiais que seguiam o mandato acompanham-no (início e fim previsto)
+CREATE FUNCTION secretaria.fn_mdt_propagar() RETURNS trigger AS $$
+BEGIN
+    UPDATE secretaria.oficial
+       SET ofi_fim_previsto = CASE WHEN ofi_fim_previsto = OLD.mdt_data_fim THEN NEW.mdt_data_fim ELSE ofi_fim_previsto END,
+           ofi_data_inicio  = CASE WHEN ofi_data_inicio = OLD.mdt_data_inicio THEN NEW.mdt_data_inicio ELSE ofi_data_inicio END
+     WHERE ofi_mdt_id = NEW.mdt_id AND ofi_end_date IS NULL AND ofi_data_fim IS NULL;
+    RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_mdt_20_propagar
+    AFTER UPDATE OF mdt_data_inicio, mdt_data_fim ON secretaria.mandato
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mdt_propagar();
+
+-- Oficial: o mandato é da mesma igreja e dá o início e o fim previsto; o órgão vem do cargo se não se indicar.
+-- Corre antes de trg_ofi_05_fim_previsto (que só calcula pela duração da igreja quando não há fim previsto).
+CREATE FUNCTION secretaria.fn_ofi_mandato() RETURNS trigger AS $$
+DECLARE m RECORD;
+BEGIN
+    IF NEW.ofi_mdt_id IS NOT NULL
+       AND (TG_OP = 'INSERT' OR NEW.ofi_mdt_id IS DISTINCT FROM OLD.ofi_mdt_id) THEN
+        SELECT mdt_igr_id, mdt_data_inicio, mdt_data_fim, mdt_end_date INTO m FROM secretaria.mandato WHERE mdt_id = NEW.ofi_mdt_id;
+        IF NOT FOUND OR m.mdt_end_date IS NOT NULL THEN
+            RAISE EXCEPTION 'O mandato indicado não existe ou foi terminado';
+        END IF;
+        IF m.mdt_igr_id <> NEW.ofi_igr_id THEN
+            RAISE EXCEPTION 'O mandato é de outra igreja';
+        END IF;
+        NEW.ofi_data_inicio := COALESCE(NEW.ofi_data_inicio, m.mdt_data_inicio);
+        IF NEW.ofi_fim_previsto IS NULL OR TG_OP = 'UPDATE' THEN
+            NEW.ofi_fim_previsto := GREATEST(m.mdt_data_fim, NEW.ofi_data_inicio);
+        END IF;
+    END IF;
+    IF NEW.ofi_orgao IS NULL THEN
+        SELECT CASE WHEN car_conselho THEN 'CONSELHO' ELSE 'DIRECCAO' END INTO NEW.ofi_orgao
+          FROM organizacao.cargo WHERE car_id = NEW.ofi_car_id;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_ofi_04_mandato
+    BEFORE INSERT OR UPDATE ON secretaria.oficial
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_ofi_mandato();
+
