@@ -58,7 +58,9 @@ function useVista<T>(caminho: string) {
 function MembrosPorAprovar() {
   const igreja = useIgreja()
   const q = useQuery({
-    queryKey: ['membros', igreja.id, 'por-aprovar'],
+    // chave própria (o contador do Início usa ['membros', igreja, 'por-aprovar'] com outra forma de dados);
+    // fica debaixo de 'membros' para os módulos a invalidarem quando aprovam um registo
+    queryKey: ['membros', igreja.id, 'alertas-por-aprovar'],
     queryFn: async () => (await dados(api.GET('/v1/secretaria/membros', { params: { query: { igrejaId: igreja.id, validacao: 'PENDENTE', limite: 50 } } }))).dados as
       { id: number; nome: string; apelido: string; criadoEm?: string }[],
   })
