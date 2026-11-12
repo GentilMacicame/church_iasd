@@ -51,6 +51,15 @@ const PaginaDisciplina = pagina(() => import('@/features/secretaria/PaginaDiscip
 const PaginaFamilias = pagina(() => import('@/features/secretaria/PaginaFamilias'))
 const PaginaRelatorioSecretaria = pagina(() => import('@/features/secretaria/PaginaRelatorioSecretaria'))
 
+const PaginaEscolaSabatina = pagina(() => import('@/features/escola-sabatina/PaginaEscolaSabatina'))
+const PaginaSabadoES = pagina(() => import('@/features/escola-sabatina/PaginaSabado'))
+const PaginaRelatorioClasse = pagina(() => import('@/features/escola-sabatina/PaginaRelatorioClasse'))
+const PaginaAbrirRelatorio = pagina(() => import('@/features/escola-sabatina/PaginaAbrirRelatorio'))
+const PaginaClassesES = pagina(() => import('@/features/escola-sabatina/PaginaClasses'))
+const PaginaClasseES = pagina(() => import('@/features/escola-sabatina/PaginaClasse'))
+const PaginaTrimestresES = pagina(() => import('@/features/escola-sabatina/PaginaTrimestres'))
+const PaginaVisitantesES = pagina(() => import('@/features/escola-sabatina/PaginaVisitantes'))
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -145,6 +154,14 @@ export default function App() {
                   <Route path="escalas" element={<Exige permissao="actividades.escala_plano.ler"><PaginaEscalas /></Exige>} />
                   <Route path="escalas/nova" element={<Exige permissao="actividades.escala_plano.criar"><PaginaNovaEscala /></Exige>} />
                   <Route path="escalas/:id" element={<Exige permissao="actividades.escala_plano.ler"><PaginaEscala /></Exige>} />
+                  <Route path="escola-sabatina" element={<Exige permissao="escola_sabatina.relatorio_sabado.ler"><PaginaEscolaSabatina /></Exige>} />
+                  <Route path="escola-sabatina/sabado" element={<Exige permissao="escola_sabatina.relatorio_sabado.ler"><PaginaSabadoES /></Exige>} />
+                  <Route path="escola-sabatina/sabado/:ect/:esa" element={<Exige permissao="escola_sabatina.relatorio_sabado.ler"><PaginaRelatorioClasse /></Exige>} />
+                  <Route path="escola-sabatina/relatorios/:id" element={<Exige permissao="escola_sabatina.relatorio_sabado.ler"><PaginaAbrirRelatorio /></Exige>} />
+                  <Route path="escola-sabatina/classes" element={<Exige permissao="escola_sabatina.classe.ler"><PaginaClassesES /></Exige>} />
+                  <Route path="escola-sabatina/classes/:id" element={<Exige permissao="escola_sabatina.classe.ler"><PaginaClasseES /></Exige>} />
+                  <Route path="escola-sabatina/trimestres" element={<Exige permissao="escola_sabatina.trimestre.ler"><PaginaTrimestresES /></Exige>} />
+                  <Route path="escola-sabatina/visitantes" element={<Exige permissao="escola_sabatina.visitante.ler"><PaginaVisitantesES /></Exige>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Routes>

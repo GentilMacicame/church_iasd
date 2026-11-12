@@ -12,6 +12,12 @@ for (const f of ['/logotipo-iasd.svg', '/logotipo-iasd.png']) {
   }).catch(() => {})
 }
 
+// PWA: a aplicação abre sem rede (relatório do sábado da Escola Sabatina, P-05). Só no build de produção:
+// no `npm run dev` um service worker atrapalharia o recarregamento do Vite.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}) })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

@@ -10,7 +10,7 @@ import {
   Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -58,6 +58,16 @@ const NAV: GrupoNav[] = [
       { para: '/tesouraria/reconciliacao', rotulo: 'Reconciliação', icone: PhListChecks, permissao: 'tesouraria.extrato_linha.ler', fim: true },
       { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: PhWallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
       { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: PhHandCoins, permissao: 'tesouraria.fundo.ler', fim: true },
+    ],
+  },
+  {
+    rotulo: t.nav.escolaSabatina,
+    itens: [
+      { para: '/escola-sabatina', rotulo: 'Painel', icone: PhGraduationCap, permissao: 'escola_sabatina.relatorio_sabado.ler', fim: true },
+      { para: '/escola-sabatina/sabado', rotulo: t.es.sabado, icone: PhNotebook, permissao: 'escola_sabatina.relatorio_sabado.ler', fim: false },
+      { para: '/escola-sabatina/classes', rotulo: t.es.classes, icone: PhChalkboard, permissao: 'escola_sabatina.classe.ler', fim: false },
+      { para: '/escola-sabatina/visitantes', rotulo: t.es.visitantes, icone: PhUserPlus, permissao: 'escola_sabatina.visitante.ler', fim: true },
+      { para: '/escola-sabatina/trimestres', rotulo: t.es.trimestres, icone: PhCalendarCheck, permissao: 'escola_sabatina.trimestre.ler', fim: true },
     ],
   },
   {
@@ -221,6 +231,15 @@ function Caminho() {
     if (pathname === '/acessos/utilizadores/novo') partes.push({ rotulo: 'Novo utilizador' })
     else if (/^\/acessos\/utilizadores\/\d+/.test(pathname)) partes.push({ rotulo: 'Utilizador' })
   }
+  if (pathname.startsWith('/escola-sabatina')) {
+    partes.push({ rotulo: t.nav.escolaSabatina, para: '/escola-sabatina' })
+    if (pathname.startsWith('/escola-sabatina/sabado') || pathname.startsWith('/escola-sabatina/relatorios')) partes.push({ rotulo: t.es.sabado, para: '/escola-sabatina/sabado' })
+    if (/^\/escola-sabatina\/sabado\/\d+/.test(pathname)) partes.push({ rotulo: 'Classe' })
+    if (pathname.startsWith('/escola-sabatina/classes')) partes.push({ rotulo: t.es.classes, para: '/escola-sabatina/classes' })
+    if (/^\/escola-sabatina\/classes\/\d+/.test(pathname)) partes.push({ rotulo: 'Classe' })
+    if (pathname === '/escola-sabatina/trimestres') partes.push({ rotulo: t.es.trimestres })
+    if (pathname === '/escola-sabatina/visitantes') partes.push({ rotulo: t.es.visitantes })
+  }
   if (pathname.startsWith('/escalas')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: t.nav.escalas, para: '/escalas' })
     if (pathname === '/escalas/nova') partes.push({ rotulo: t.escalas.nova })
@@ -294,12 +313,29 @@ function MenuUtilizador() {
   )
 }
 
+/**
+ * Relatórios da Escola Sabatina guardados no telemóvel sem rede (P-05): enviam-se ao abrir a aplicação e quando
+ * a rede volta. O código só é carregado para quem regista relatórios.
+ */
+function useFilaEscolaSabatina() {
+  const { pode } = useSessao()
+  const activo = pode('escola_sabatina.relatorio_sabado.criar') || pode('escola_sabatina.relatorio_sabado.alterar')
+  useEffect(() => {
+    if (!activo) return
+    const enviar = () => void import('@/features/escola-sabatina/offline').then((m) => m.sincronizarTudo()).catch(() => { /* sem rede */ })
+    enviar()
+    window.addEventListener('online', enviar)
+    return () => window.removeEventListener('online', enviar)
+  }, [activo])
+}
+
 export function Shell() {
   const [encolhida, setEncolhida] = useState(lerEncolhida)
   const [gaveta, setGaveta] = useState(false)
   const { escuro, alternar } = useTema()
   const { pathname } = useLocation()
   useEffect(() => setGaveta(false), [pathname])
+  useFilaEscolaSabatina()
 
   const encolher = () => setEncolhida((v) => {
     try { localStorage.setItem(CHAVE_ENCOLHIDA, v ? '0' : '1') } catch { /* sem armazenamento */ }

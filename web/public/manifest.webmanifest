@@ -1,0 +1,15 @@
+{
+  "name": "Igreja Adventista do Sétimo Dia",
+  "short_name": "Igreja",
+  "description": "Gestão da igreja local: membros, escalas, tesouraria e Escola Sabatina.",
+  "lang": "pt-MZ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    { "src": "/marca.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/logotipo-iasd.png", "sizes": "156x156", "type": "image/png", "purpose": "any" }
+  ]
+}

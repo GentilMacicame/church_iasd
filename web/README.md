@@ -138,7 +138,27 @@ src/
   ao imprimir ou guardar em PDF saem todas) e nas listas (`Paginada`): movimentos, membros, famílias, reconciliação,
   contagens, pontos da agenda, presenças, alvos, pendentes do Início, proposta da eleição.
 
+- **Escola Sabatina** (F-ES-01…08, P-05), em `features/escola-sabatina/`:
+  - **Painel e classificação**: indicadores do trimestre (classes activas, presença e estudo diário médios, ofertas,
+    visitantes, baptismos face ao alvo), lugar e pontuação de cada classe com a diferença para a média, presença
+    sábado a sábado, relatórios em falta, ofertas por conferir com a tesouraria, resumo das classes (exportar PDF/CSV).
+  - **Relatório do sábado**: as classes do sábado (por fazer, aberto, fechado, por enviar) e o ecrã de cada classe,
+    pensado para o telemóvel: M.M. (pelas matrículas ou à mão), M.P., E.D., visitantes e filiais com botões − e +,
+    chamada nominal com botões grandes (presente / estudou; conta os números sozinha), visitantes com contacto e
+    quem convidou, as três ofertas separadas. O tesoureiro lança as ofertas na tesouraria (uma linha por fundo,
+    Idempotency-Key); o secretário fecha; só o director reabre.
+  - **Sem rede**: o ecrã de cada classe do sábado fica guardado no telemóvel (IndexedDB) quando se abre a lista com
+    rede; o relatório, a chamada e os visitantes ficam num rascunho local e "Guardar" põe-no na fila, enviada logo,
+    ao voltar a rede e ao abrir a aplicação (`offline.ts`; envio retomável, sem duplicar). Uma recusa da base de
+    dados fica no rascunho com a mensagem para corrigir. Service worker em `public/sw.js` (só no build de produção:
+    a aplicação abre sem rede; a API nunca passa pela cache) e `manifest.webmanifest`. Sem rede ao abrir, a sessão
+    continua com a última cópia de `GET /v1/eu` e renova-se quando a rede volta.
+  - **Classes**: classes por divisão, matrículas (membros e interessados; sair guarda a data) e a configuração no
+    trimestre (professor, auxiliar, secretário, alvos, activa ou desactivada).
+  - **Trimestres** (Associação): novo trimestre com os sábados gerados (13 ou 14) e o 13.º sábado marcado; mudar o
+    13.º sábado; criar os sábados em falta; pesos da pontuação por defeito e por trimestre.
+  - **Visitantes**: por acompanhar / tornaram-se membros, ligar o visitante ao registo de membro.
+
 ## Por fazer (próximas iterações)
 
-- Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

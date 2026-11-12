@@ -6,7 +6,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { api, aoSessaoTerminar, dados, definirToken, renovarSessao } from '@/api/cliente'
+import { api, aoSessaoTerminar, dados, definirToken, renovarSessao, ultimaRenovacaoSemRede } from '@/api/cliente'
 import type { paths } from '@/api/esquema'
 
 type Eu = paths['/v1/eu']['get']['responses']['200']['content']['application/json']
@@ -28,6 +28,21 @@ interface Sessao {
 
 const Contexto = createContext<Sessao | null>(null)
 const CHAVE_IGREJA = 'igreja.escolhida'
+/**
+ * Cópia de GET /v1/eu (nome, igrejas, permissões) para a aplicação abrir sem rede (relatório do sábado da ES).
+ * Serve só para mostrar menus e ecrãs: sem token, a API não responde a nada até a rede voltar e a sessão ser
+ * renovada. Apaga-se ao sair.
+ */
+const CHAVE_EU = 'igreja.eu'
+
+function lerEuGuardado(): Eu | null {
+  try {
+    const v = localStorage.getItem(CHAVE_EU)
+    return v ? (JSON.parse(v) as Eu) : null
+  } catch {
+    return null
+  }
+}
 
 function lerIgrejaGuardada(): number | null {
   try {
@@ -49,6 +64,7 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
     const r = await dados(api.GET('/v1/eu'))
     setEu(r)
     setEstado('autenticado')
+    try { localStorage.setItem(CHAVE_EU, JSON.stringify(r)) } catch { /* sem armazenamento */ }
   }, [])
 
   // ao abrir a aplicação: o cookie de renovação ainda é válido? então a sessão continua
@@ -59,8 +75,26 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
       setTerminadaPorExpirar(true)
       queryClient.clear()
     })
+    // sem rede ao abrir: continua com a última cópia e renova quando a rede voltar
+    const semRede = () => {
+      const guardado = ultimaRenovacaoSemRede() ? lerEuGuardado() : null
+      if (!guardado) return setEstado('anonimo')
+      setEu(guardado)
+      setEstado('autenticado')
+      const voltou = () => {
+        window.removeEventListener('online', voltou)
+        renovarSessao().then((ok) => (ok ? carregarEu() : aoPerderSessao())).catch(() => {})
+      }
+      window.addEventListener('online', voltou)
+    }
+    const aoPerderSessao = () => {
+      if (ultimaRenovacaoSemRede()) return
+      setEu(null)
+      setEstado('anonimo')
+      setTerminadaPorExpirar(true)
+    }
     renovarSessao()
-      .then((ok) => (ok ? carregarEu() : setEstado('anonimo')))
+      .then((ok) => (ok ? carregarEu() : semRede()))
       .catch(() => setEstado('anonimo'))
   }, [carregarEu, queryClient])
 
@@ -79,6 +113,7 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
       await api.POST('/v1/auth/sair')
     } finally {
       definirToken(null)
+      try { localStorage.removeItem(CHAVE_EU) } catch { /* sem armazenamento */ }
       setEu(null)
       setEstado('anonimo')
       queryClient.clear()

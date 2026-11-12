@@ -14,6 +14,12 @@ export type Esquema<N extends keyof components['schemas']> = components['schemas
 let tokenAcesso: string | null = null
 let aoTerminarSessao: (() => void) | null = null
 let renovacaoEmCurso: Promise<boolean> | null = null
+let renovacaoSemRede = false
+
+/** A última renovação falhou por falta de rede (e não por a sessão ter acabado)? */
+export function ultimaRenovacaoSemRede() {
+  return renovacaoSemRede
+}
 
 export function definirToken(token: string | null) {
   tokenAcesso = token
@@ -31,6 +37,7 @@ export function aoSessaoTerminar(fn: () => void) {
 /** Pede um token novo com o cookie de renovação. Um só pedido de cada vez, mesmo com vários 401. */
 export function renovarSessao(): Promise<boolean> {
   renovacaoEmCurso ??= (async () => {
+    renovacaoSemRede = false
     try {
       const r = await fetch('/v1/auth/renovar', { method: 'POST', credentials: 'same-origin' })
       if (!r.ok) return false
@@ -38,6 +45,7 @@ export function renovarSessao(): Promise<boolean> {
       tokenAcesso = corpo.tokenAcesso
       return true
     } catch {
+      renovacaoSemRede = true
       return false
     } finally {
       setTimeout(() => (renovacaoEmCurso = null), 0)
@@ -56,6 +64,8 @@ async function fetchComSessao(pedido: Request): Promise<Response> {
   const publico = new URL(pedido.url).pathname.startsWith('/v1/auth/')
   if (resposta.status !== 401 || publico) return resposta
   if (await renovarSessao()) return fetch(comToken(tokenAcesso))
+  // sem rede para renovar: a sessão não acabou (o pedido falha e repete-se quando a rede voltar)
+  if (renovacaoSemRede) return resposta
   tokenAcesso = null
   aoTerminarSessao?.()
   return resposta
