@@ -11,7 +11,7 @@ import {
   Bell, Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -31,11 +31,22 @@ import { Inactividade } from './Inactividade'
 const Sino = pagina(() => import('@/features/alertas/Sino'))
 
 /** Ícones do menu: Phosphor, linha fina normalmente e cheios no item activo. */
-interface ItemNav { para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string; fim?: boolean }
+interface ItemNav {
+  para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string; fim?: boolean
+  /** só para quem acompanha várias igrejas (pastor do distrito, Associação, super-administrador) */
+  direccao?: boolean
+}
+/** Perfis de quem acompanha mais do que uma igreja. */
+const PERFIS_DIRECCAO = ['PASTOR', 'ADMIN_ASSOCIACAO', 'SECRETARIO_ASSOCIACAO', 'TESOUREIRO_ASSOCIACAO']
 interface GrupoNav { rotulo?: string; itens: ItemNav[] }
 
 const NAV: GrupoNav[] = [
-  { itens: [{ para: '/', rotulo: t.nav.inicio, icone: PhSquaresFour, fim: true }] },
+  {
+    itens: [
+      { para: '/', rotulo: t.nav.inicio, icone: PhSquaresFour, fim: true },
+      { para: '/painel-geral', rotulo: 'Painel geral', icone: PhChartLineUp, permissao: 'organizacao.igreja.ler', fim: true, direccao: true },
+    ],
+  },
   {
     rotulo: t.nav.secretaria,
     itens: [
@@ -95,12 +106,13 @@ function lerEncolhida() {
 }
 
 function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?: () => void }) {
-  const { pode } = useSessao()
+  const { pode, igrejas } = useSessao()
   const { pathname } = useLocation()
+  const direccao = igrejas.length > 1 || igrejas.some((i) => i.perfis?.some((p) => PERFIS_DIRECCAO.includes(p)))
   return (
     <nav aria-label="Principal">
       {NAV.map((grupo, i) => {
-        const itens = grupo.itens.filter((it) => !it.permissao || pode(it.permissao))
+        const itens = grupo.itens.filter((it) => (!it.permissao || pode(it.permissao)) && (!it.direccao || direccao))
         if (!itens.length) return null
         return (
           <div key={i} className={cn(grupo.rotulo && 'mt-5')}>
@@ -239,6 +251,7 @@ function Caminho() {
     if (pathname === '/acessos/utilizadores/novo') partes.push({ rotulo: 'Novo utilizador' })
     else if (/^\/acessos\/utilizadores\/\d+/.test(pathname)) partes.push({ rotulo: 'Utilizador' })
   }
+  if (pathname === '/painel-geral') partes.push({ rotulo: 'Painel geral' })
   if (pathname.startsWith('/escola-sabatina')) {
     partes.push({ rotulo: t.nav.escolaSabatina, para: '/escola-sabatina' })
     if (pathname.startsWith('/escola-sabatina/sabado') || /^\/escola-sabatina\/relatorios\/\d+/.test(pathname)) partes.push({ rotulo: t.es.sabado, para: '/escola-sabatina/sabado' })

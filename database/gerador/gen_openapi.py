@@ -284,6 +284,11 @@ for p_, v_, perm in [('relatorio-mensal', 'secretaria.vw_relatorio_mensal_membro
     rel(f'/v1/secretaria/{p_}', v_, SEC, perm, ANO if p_ == 'relatorio-mensal' else ())
 rel('/v1/organizacao/directorio-igrejas', 'organizacao.vw_directorio_igrejas', TITULO['organizacao'], 'qualquer utilizador com sessão',
     [{'name': 'entidadeId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas desta Associação/Missão'}])
+PAINEL = [{'name': 'entidadeId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas desta Associação/Missão'},
+          {'name': 'distritoId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas deste distrito pastoral'}]
+for p_, v_ in [('painel-igrejas', 'vw_painel_igrejas'), ('painel-igrejas-mensal', 'vw_painel_igrejas_mensal')]:
+    rel(f'/v1/organizacao/{p_}', 'organizacao.' + v_, TITULO['organizacao'],
+        'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)', PAINEL)
 for p_, v_ in [('classificacao', 'vw_classificacao'), ('painel', 'vw_painel'), ('evolucao', 'vw_evolucao_sabado'),
                ('relatorios-em-falta', 'vw_relatorios_em_falta'), ('conferencia-ofertas', 'vw_conferencia_ofertas'),
                ('relatorio-associacao', 'vw_relatorio_associacao')]:

@@ -600,6 +600,51 @@ class BaseDadosTest {
         assertEquals("Conferido", conferencia.getJsonObject(0).getString("situacao"));
     }
 
+    // ------------------------------------------------------------------ V30: painel geral das igrejas
+
+    @Test
+    void painelGeralSoComAsIgrejasDoDistritoDoPastor() throws Exception {
+        int pastor;
+        int semPerfil;
+        int igrejaDoDistrito;
+        try (Connection dono = ligarComoDono()) {
+            pastor = inserir(dono, "INSERT INTO nucleo.usuario (usu_nome, usu_email, usu_senha_hash) "
+                    + "VALUES ('Pastor do distrito', 'pastor.distrito@teste.mz', 'x') RETURNING usu_id");
+            semPerfil = inserir(dono, "INSERT INTO nucleo.usuario (usu_nome, usu_email, usu_senha_hash) "
+                    + "VALUES ('Sem perfil', 'sem.perfil.painel@teste.mz', 'x') RETURNING usu_id");
+            // na outra Missão, para não mudar o número de igrejas da Associação de Teste (paginacaoPorCursor)
+            int outraMissao = inserir(dono, "SELECT ent_id FROM organizacao.entidade WHERE ent_nome = 'Outra Missão'");
+            int distrito = inserir(dono, "INSERT INTO organizacao.distrito (dst_ent_id, dst_nome, dst_pastor_usu_id) VALUES ("
+                    + outraMissao + ", 'Distrito Norte', " + pastor + ") RETURNING dst_id");
+            igrejaDoDistrito = inserir(dono, "INSERT INTO organizacao.igreja (igr_ent_id, igr_nome, igr_dst_id) VALUES ("
+                    + outraMissao + ", 'Igreja do Distrito Norte', " + distrito + ") RETURNING igr_id");
+            inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_estado) VALUES ("
+                    + igrejaDoDistrito + ", 'Ana', 'Norte', 'ACTIVO') RETURNING mem_id");
+        }
+
+        // autorizado: o pastor do distrito vê só as igrejas do seu distrito, com os membros e a tesouraria
+        JsonArray doPastor = ExecutorTransaccao.executar(api, pastor,
+                c -> RelatoriosOrganizacaoController.PAINEL_IGREJAS.consultar(c, Map.of()));
+        assertEquals(1, doPastor.size(), doPastor.toString());
+        JsonObject linha = doPastor.getJsonObject(0);
+        assertEquals(igrejaDoDistrito, linha.getInt("id"));
+        assertEquals("Distrito Norte", linha.getString("distritoPastoral"));
+        assertTrue(linha.getBoolean("veMembros"));
+        assertTrue(linha.getBoolean("veTesouraria"));
+        assertEquals(1, linha.getInt("membrosActivos"));
+        JsonArray mensal = ExecutorTransaccao.executar(api, pastor,
+                c -> RelatoriosOrganizacaoController.PAINEL_IGREJAS_MENSAL.consultar(c, Map.of()));
+        assertEquals(12, mensal.size(), "12 meses da única igreja do distrito");
+
+        // não autorizado: sem perfil, não vê nenhuma igreja
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil,
+                c -> RelatoriosOrganizacaoController.PAINEL_IGREJAS.consultar(c, Map.of())).size());
+        // o tesoureiro da Igreja Central não vê a igreja do distrito
+        JsonArray doTesoureiro = ExecutorTransaccao.executar(api, tesoureiro,
+                c -> RelatoriosOrganizacaoController.PAINEL_IGREJAS.consultar(c, Map.of()));
+        assertTrue(doTesoureiro.stream().map(JsonValue::asJsonObject).noneMatch(o -> o.getInt("id") == igrejaDoDistrito), doTesoureiro.toString());
+    }
+
     // ------------------------------------------------------------------ apoio
 
     record Tesouraria(long conta, long fundoLocal, long categoriaLuz) {

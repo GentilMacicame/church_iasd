@@ -12,7 +12,7 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V29 |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 65 tabelas, 6 schemas, migrações V1–V30 |
 | Contrato da API | **Concluído.** `api/openapi.yaml` (320 caminhos, 446 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, conselho, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V29 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V30 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–15 (tem de dar 16× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–16 (tem de dar 17× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V30__...sql`, `V31__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V31__...sql`, `V32__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -144,6 +144,8 @@ Usa `/nova-tabela` para seguir este processo.
 - Segregação: quem cria uma saída não a aprova; ninguém altera os próprios perfis; não se dá um
   perfil com mais permissões do que as próprias.
 - Linha que existe mas não é visível → a API responde **404**, não 403.
+- Painel geral (V30, `/v1/organizacao/painel-igrejas`): sem `igrejaId`, cada um recebe só as igrejas a que tem acesso
+  (vistas `security_invoker`): pastor do distrito (`distrito.dst_pastor_usu_id`) → as do distrito; Associação → as suas.
 - `nucleo.fn_minhas_permissoes()` → `(codigo, igr_id)`; o frontend usa-a para menus e botões
   (`pode('tesouraria.transacao.aprovar', igrejaId)`). Esconder botões é UX, não segurança.
 
@@ -271,7 +273,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 16× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 17× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

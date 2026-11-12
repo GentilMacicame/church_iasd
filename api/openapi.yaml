@@ -7268,6 +7268,114 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/painel-igrejas:
+    get:
+      summary: 'Relatório: Painel igrejas'
+      tags:
+      - Organização
+      x-permissao: 'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)'
+      operationId: relVOrganizacaoPainelIgrejas
+      description: Lido da vista organizacao.vw_painel_igrejas.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
+        description: Só as igrejas desta Associação/Missão
+      - name: distritoId
+        in: query
+        schema:
+          type: integer
+        description: Só as igrejas deste distrito pastoral
+      x-vista: organizacao.vw_painel_igrejas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/painel-igrejas-mensal:
+    get:
+      summary: 'Relatório: Painel igrejas mensal'
+      tags:
+      - Organização
+      x-permissao: 'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)'
+      operationId: relVOrganizacaoPainelIgrejasMensal
+      description: Lido da vista organizacao.vw_painel_igrejas_mensal.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
+        description: Só as igrejas desta Associação/Missão
+      - name: distritoId
+        in: query
+        schema:
+          type: integer
+        description: Só as igrejas deste distrito pastoral
+      x-vista: organizacao.vw_painel_igrejas_mensal
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/organizacao/provincias:
     get:
       summary: 'Provincias: listar'

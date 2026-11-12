@@ -60,6 +60,7 @@ const PaginaClasseES = pagina(() => import('@/features/escola-sabatina/PaginaCla
 const PaginaTrimestresES = pagina(() => import('@/features/escola-sabatina/PaginaTrimestres'))
 const PaginaVisitantesES = pagina(() => import('@/features/escola-sabatina/PaginaVisitantes'))
 const PaginaRelatoriosES = pagina(() => import('@/features/escola-sabatina/PaginaRelatoriosES'))
+const PaginaPainelGeral = pagina(() => import('@/features/painel-geral/PaginaPainelGeral'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +121,7 @@ export default function App() {
                 <Route path="/entrar" element={<PaginaEntrar />} />
                 <Route element={<ComSessao><Shell /></ComSessao>}>
                   <Route index element={<PaginaInicio />} />
+                  <Route path="painel-geral" element={<Exige permissao="organizacao.igreja.ler"><PaginaPainelGeral /></Exige>} />
                   <Route path="membros" element={<Exige permissao="secretaria.membro.ler"><PaginaMembros /></Exige>} />
                   <Route path="membros/novo" element={<Exige permissao="secretaria.membro.criar"><PaginaFormMembro /></Exige>} />
                   <Route path="membros/:id" element={<Exige permissao="secretaria.membro.ler"><PaginaMembro /></Exige>} />

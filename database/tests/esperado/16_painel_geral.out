@@ -1,0 +1,46 @@
+0. uma igreja num outro distrito, para o pastor do distrito 1 não a ver
+              igr_nome               
+-------------------------------------
+ Igreja de outro distrito (teste 16)
+(1 row)
+
+1. pastor do distrito: vê só as igrejas do seu distrito, com membros e tesouraria
+              nome               | distrito_pastoral | ve_membros | ve_tesouraria | tem_membros 
+---------------------------------+-------------------+------------+---------------+-------------
+ Igreja Adventista do Sétimo Dia | Distrito Centro   | t          | t             | t
+(1 row)
+
+ igrejas_fora_do_distrito 
+--------------------------
+                        0
+(1 row)
+
+   e a série mensal: 12 meses por igreja
+ meses_por_igreja | linhas_de_fora 
+------------------+----------------
+               12 |              0
+(1 row)
+
+2. super-administrador: vê todas as igrejas (incluindo a do outro distrito)
+ ve_todas | ve_a_de_fora 
+----------+--------------
+ t        | t
+(1 row)
+
+3. tesoureiro da igreja 1: só a sua igreja
+ igr_id | ve_membros | ve_tesouraria 
+--------+------------+---------------
+      1 | t          | t
+(1 row)
+
+4. não autorizado: utilizador sem perfil não vê nenhuma igreja
+ igrejas 
+---------
+       0
+(1 row)
+
+ linhas_mensais 
+----------------
+              0
+(1 row)
+

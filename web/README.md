@@ -188,6 +188,13 @@ src/
   consultas do módulo (o que se aprova num ecrã tira o alerta). O número no sino conta os novos; abrir marca-os como
   vistos (neste aparelho); refresca de 3 em 3 minutos. O "Precisa de atenção" do Início mostra os mesmos alertas.
 
+- **Painel geral das igrejas** (`/painel-geral`, menu só para quem acompanha várias igrejas): indicadores (igrejas, membros
+  activos, transferidos no ano, dizimistas e % dos activos, saldo, entradas e saídas, dízimos, por depositar à Missão),
+  gráficos dos últimos 12 meses (entradas e saídas, dízimos, movimento de membros), comparativo de uma medida igreja a
+  igreja com a média e o quadro de todas as igrejas (ordenável, total; "sem acesso" onde não pode ver). Filtros por
+  Associação, distrito pastoral e nome. O pastor do distrito vê só as igrejas do seu distrito (a base de dados decide:
+  vistas V30 `security_invoker`).
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

@@ -136,6 +136,9 @@ public final class Rotas {
         /** RelatoriosOrganizacaoController · GET /v1/organizacao/directorio-igrejas (V27) */
         public static final String RELATORIOS = "/v1/organizacao";
         public static final String DIRECTORIO_IGREJAS = "directorio-igrejas";
+        /** RelatoriosOrganizacaoController · GET /v1/organizacao/painel-igrejas e painel-igrejas-mensal (V30) */
+        public static final String PAINEL_IGREJAS = "painel-igrejas";
+        public static final String PAINEL_IGREJAS_MENSAL = "painel-igrejas-mensal";
 
         /** DistritosAdministrativosController · rotas-padrão (V26) */
         public static final String DISTRITOS_ADMINISTRATIVOS = "/v1/organizacao/distritos-administrativos";

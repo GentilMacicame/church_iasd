@@ -2883,6 +2883,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/organizacao/painel-igrejas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Painel igrejas
+         * @description Lido da vista organizacao.vw_painel_igrejas.
+         */
+        get: operations["relVOrganizacaoPainelIgrejas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/organizacao/painel-igrejas-mensal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Painel igrejas mensal
+         * @description Lido da vista organizacao.vw_painel_igrejas_mensal.
+         */
+        get: operations["relVOrganizacaoPainelIgrejasMensal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/organizacao/provincias": {
         parameters: {
             query?: never;
@@ -15038,6 +15078,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Igreja"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVOrganizacaoPainelIgrejas: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                /** @description Só as igrejas desta Associação/Missão */
+                entidadeId?: number;
+                /** @description Só as igrejas deste distrito pastoral */
+                distritoId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVOrganizacaoPainelIgrejasMensal: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                /** @description Só as igrejas desta Associação/Missão */
+                entidadeId?: number;
+                /** @description Só as igrejas deste distrito pastoral */
+                distritoId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
