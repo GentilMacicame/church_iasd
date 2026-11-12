@@ -1,18 +1,18 @@
 /**
  * Lista de escolha com pesquisa (combobox): para listas longas (Associações, distritos, províncias, ...), em vez
  * da lista nativa. Pesquisa sem acentos nem maiúsculas ("chokwe" encontra "Chókwè"); teclado: ↑ ↓ Enter Esc.
- * Abre num popover (não estica os diálogos). Para listas curtas continua a usar-se <Seleccao>.
+ * Abre num popover (não estica os diálogos). <Seleccao> usa-a por dentro: todas as listas têm pesquisa.
  */
 import { useMemo, useRef, useState } from 'react'
 import { Check, ChevronDown, Search } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
-export interface OpcaoEscolha { valor: string; rotulo: string; detalhe?: string }
+export interface OpcaoEscolha { valor: string; rotulo: string; detalhe?: string; desactivada?: boolean }
 
 const normal = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
-export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…', semOpcoes = 'Sem opções', pesquisar = 'Pesquisar…', disabled, invalido, permitirLimpar }: {
+export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…', semOpcoes = 'Sem opções', pesquisar = 'Pesquisar…', disabled, invalido, permitirLimpar, aoFechar, rotuloAcessivel }: {
   id?: string
   valor: string
   aoMudar: (valor: string) => void
@@ -25,6 +25,9 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
   disabled?: boolean
   invalido?: boolean
   permitirLimpar?: boolean
+  /** ao fechar a lista (para o "blur" dos formulários) */
+  aoFechar?: () => void
+  rotuloAcessivel?: string
 }) {
   const [aberto, setAberto] = useState(false)
   const [busca, setBusca] = useState('')
@@ -36,7 +39,7 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
     return q ? opcoes.filter((o) => normal(`${o.rotulo} ${o.detalhe ?? ''}`).includes(q)) : opcoes
   }, [opcoes, busca])
 
-  const escolher = (o: OpcaoEscolha) => { aoMudar(o.valor); setAberto(false); setBusca('') }
+  const escolher = (o: OpcaoEscolha) => { if (o.desactivada) return; aoMudar(o.valor); setAberto(false); setBusca(''); aoFechar?.() }
   const mover = (d: number) => {
     setActivo((a) => {
       const n = Math.max(0, Math.min(filtradas.length - 1, a + d))
@@ -46,9 +49,9 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
   }
 
   return (
-    <Popover open={aberto} onOpenChange={(v) => { setAberto(v); if (v) { setBusca(''); setActivo(Math.max(0, opcoes.findIndex((o) => o.valor === valor))) } }}>
+    <Popover open={aberto} onOpenChange={(v) => { setAberto(v); if (!v) aoFechar?.(); if (v) { setBusca(''); setActivo(Math.max(0, opcoes.findIndex((o) => o.valor === valor))) } }}>
       <PopoverTrigger asChild>
-        <button id={id} type="button" role="combobox" aria-expanded={aberto} aria-haspopup="listbox" disabled={disabled} aria-invalid={invalido || undefined}
+        <button id={id} type="button" role="combobox" aria-label={rotuloAcessivel} aria-expanded={aberto} aria-haspopup="listbox" disabled={disabled} aria-invalid={invalido || undefined}
           className={cn('alvo flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(0_0_0/0.04)]',
             'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive')}>
           <span className={cn('truncate', escolhida ? 'text-foreground' : 'text-muted-foreground')}>{escolhida ? escolhida.rotulo : (opcoes.length ? vazio : semOpcoes)}</span>
@@ -74,9 +77,9 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
         <ul ref={lista} role="listbox" className="max-h-64 overflow-y-auto p-1">
           {filtradas.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted-foreground">{opcoes.length ? 'Nada encontrado' : semOpcoes}</li>}
           {filtradas.map((o, i) => (
-            <li key={o.valor} role="option" aria-selected={o.valor === valor}
+            <li key={o.valor} role="option" aria-selected={o.valor === valor} aria-disabled={o.desactivada || undefined}
               onMouseEnter={() => setActivo(i)} onMouseDown={(e) => e.preventDefault()} onClick={() => escolher(o)}
-              className={cn('flex min-h-9 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm', i === activo && 'bg-accent text-accent-foreground')}>
+              className={cn('flex min-h-9 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm', i === activo && 'bg-accent text-accent-foreground', o.desactivada && 'cursor-not-allowed opacity-50')}>
               <Check className={cn('size-4 flex-none', o.valor === valor ? 'text-primary' : 'invisible')} aria-hidden />
               <span className="min-w-0">
                 <span className="block truncate">{o.rotulo}</span>

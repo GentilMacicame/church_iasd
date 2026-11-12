@@ -25,10 +25,11 @@ export function Valor({ tr, className }: { tr: Transacao; className?: string }) 
   )
 }
 
-export function quem(tr: Transacao, nomeDe: (id: number) => string | undefined): string {
+export function quem(tr: Transacao, nomeDe: (id: number) => string | undefined, familiaDe?: (id: number) => string | undefined): string {
   if (tr.estornoTransacaoId) return `Estorno do n.º ${tr.estornoTransacaoId}`
   if (tr.tipo === 'SAIDA') return tr.beneficiario ?? '—'
   if (tr.membroId) return nomeDe(tr.membroId) ?? `Membro ${tr.membroId}`
+  if (tr.familiaId) return familiaDe?.(tr.familiaId) ?? `Família n.º ${tr.familiaId}`
   return tr.anonimo ? 'Anónimo' : '—'
 }
 

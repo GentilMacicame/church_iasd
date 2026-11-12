@@ -128,6 +128,12 @@ src/
   oração, num cartão da reunião; entram no texto da acta.
 - **Menu** com ícones Phosphor (linha fina; cheio no item activo).
 
+- **Todas as listas com pesquisa**: `Seleccao` (a lista usada nos formulários e filtros) passou a ser uma lista com pesquisa
+  sem acentos e com teclado, com a mesma interface de um `<select>` (por dentro há um `<select>` escondido, que o
+  formulário lê).
+- **Contribuições por família** em Lançar entrada: "Um membro", "Uma família" (ex.: Família Macicame, com recibo) ou
+  "Ofertas da salva"; o nome da família aparece nos movimentos, na ficha e no recibo.
+
 ## Por fazer (próximas iterações)
 
 - Escola Sabatina com o relatório do sábado offline (PWA, IndexedDB, P-05).

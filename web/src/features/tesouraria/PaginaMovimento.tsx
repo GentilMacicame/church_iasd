@@ -17,6 +17,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, dinheiro } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { useFamiliasResumo } from '@/features/secretaria/api'
 import { useAccao, useCategorias, useContas, useEstornosDe, useFundos, useLinhas, useRecibo, useTransacao } from './api'
 import { DialogoEstorno } from './Estorno'
 import { CartaoComprovativos } from './Comprovativos'
@@ -38,6 +39,8 @@ export default function PaginaMovimento() {
   const [estorno, setEstorno] = useState(false)
   const estornos = useEstornosDe(id)
   const nomeDe = (mid: number) => { const m = basicos.data?.find((x) => x.id === mid); return m && `${m.nome} ${m.apelido}` }
+  const familias = useFamiliasResumo()
+  const nomeFamilia = (fid: number) => familias.data?.find((f) => f.id === fid)?.nome
 
   const voltar = <Link to="/tesouraria/movimentos" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground print:hidden"><ArrowLeft className="size-4" /> {t.tesouraria.movimentos}</Link>
   if (q.isPending) return <>{voltar}<Barra className="h-48 w-full" /></>
@@ -52,7 +55,7 @@ export default function PaginaMovimento() {
   const fuiEu = tr.criadoPor === usuario?.id
   const podeConfirmar = pendente && pode('tesouraria.transacao.alterar') && (!saida || aprovada)
   const podeAprovar = pendente && saida && !aprovada && pode('tesouraria.transacao.aprovar')
-  const podeRecibo = tr.estado === 'CONFIRMADA' && tr.tipo === 'ENTRADA' && !!tr.membroId && !recibo.data && recibo.isSuccess && pode('tesouraria.recibo.criar')
+  const podeRecibo = tr.estado === 'CONFIRMADA' && tr.tipo === 'ENTRADA' && !!(tr.membroId || tr.familiaId) && !recibo.data && recibo.isSuccess && pode('tesouraria.recibo.criar')
   const estornosValidos = (estornos.data ?? []).filter((x) => !x.endDate)
   const podeEstornar = tr.estado === 'CONFIRMADA' && !tr.endDate && !tr.estornoTransacaoId && tr.tipo !== 'TRANSFERENCIA' && pode('tesouraria.transacao.criar') && linhas.isSuccess
   const fundoDe = (fid: number) => fundos.data?.find((f) => f.id === fid)?.nome ?? `Fundo ${fid}`
@@ -69,7 +72,7 @@ export default function PaginaMovimento() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">{rotulos.tipoTransacao[tr.tipo]} · {quem(tr, nomeDe)}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">{rotulos.tipoTransacao[tr.tipo]} · {quem(tr, nomeDe, nomeFamilia)}</h1>
                 <PilulaEstado tr={tr} />
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{quando.charAt(0).toUpperCase() + quando.slice(1)} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
@@ -168,7 +171,7 @@ export default function PaginaMovimento() {
               <CabecalhoDocumento titulo={igreja.nome} />
               <div className="text-right"><p className="text-sm">Recibo</p><p className="text-lg font-bold">n.º {recibo.data.numero}/{recibo.data.ano}</p></div>
             </div>
-            <p className="mt-8">Recebemos de <strong>{quem(tr, nomeDe)}</strong> a quantia de <strong>{dinheiro(tr.valorTotal)}</strong>, em {data(tr.dataHora)}, por {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}:</p>
+            <p className="mt-8">Recebemos de <strong>{quem(tr, nomeDe, nomeFamilia)}</strong> a quantia de <strong>{dinheiro(tr.valorTotal)}</strong>, em {data(tr.dataHora)}, por {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}:</p>
             <table className="mt-4 w-full text-sm">
               <tbody>
                 {(linhas.data ?? []).map((l) => <tr key={l.id} className="border-b border-black/30"><td className="py-1">{fundoDe(l.fundoId)}</td><td className="py-1 text-right">{dinheiro(l.valor)}</td></tr>)}

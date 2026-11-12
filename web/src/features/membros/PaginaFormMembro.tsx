@@ -206,9 +206,12 @@ export default function PaginaFormMembro() {
   const form = useForm<Valores>({ resolver: zodResolver(esquema), defaultValues: VAZIO })
   const { register, formState: { errors: e, isSubmitting, dirtyFields } } = form
 
+  // carrega a ficha uma vez, quando chega; "form" não entra nas dependências: no React Hook Form 7.54 é um objecto novo
+  // sempre que o estado do formulário muda, e cada mudança (escrever, escolher) voltava a repor os dados antigos
+  const { reset } = form
   useEffect(() => {
-    if (id && existente.data) form.reset(paraForm(existente.data))
-  }, [id, existente.data, form])
+    if (id && existente.data) reset(paraForm(existente.data))
+  }, [id, existente.data, reset])
 
   const nasc = form.watch('dataNascimento')
   const anos = /^\d{4}-\d{2}-\d{2}$/.test(nasc) ? idade(nasc) : null

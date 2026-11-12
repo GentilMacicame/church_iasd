@@ -2,7 +2,7 @@
  * Lançar entrada (P-06 passos 2 e 3) · os dízimos e ofertas de um membro (com recibo numerado) ou as ofertas da salva
  * (sem nome). Pensada para o sábado, envelope a envelope, e para os comprovativos que chegam durante a semana:
  *
- * 1. Quem contribui: o membro, ou as ofertas da salva.
+ * 1. Quem contribui: o membro, a família (ex.: família Macicame) ou as ofertas da salva.
  * 2. Como entregou: uma escolha por conta real (envelope em numerário no caixa; M-Pesa ou depósito na conta da igreja;
  *    depósito ou M-Pesa directamente na Missão). A forma de pagamento sai da conta, não se escolhe à parte.
  *    O que não é numerário pede o comprovativo: referência e a descrição que o membro mandou.
@@ -16,7 +16,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Banknote, Paperclip, ChevronDown, FileCheck2, HandCoins, HandHeart, Landmark, Plus, Receipt, Smartphone, UserRound, Users, Wallet } from 'lucide-react'
+import { ArrowLeft, Banknote, Home, Paperclip, ChevronDown, FileCheck2, HandCoins, HandHeart, Landmark, Plus, Receipt, Smartphone, UserRound, Users, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,7 @@ import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/co
 import { CampoData } from '@/components/comum/CampoData'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
+import { CampoEscolha } from '@/components/comum/CampoEscolha'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { Barra, EstadoErro } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
@@ -32,6 +33,7 @@ import { mensagemDe } from '@/api/erros'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { useFamiliasResumo } from '@/features/secretaria/api'
 import { cn } from '@/lib/utils'
 import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useCriarMovimento, useFundos, type Conta } from './api'
 import { CampoComprovativo } from './Comprovativos'
@@ -86,7 +88,12 @@ export default function PaginaEntrada() {
   const [params] = useSearchParams()
   const [verCategorias, setVerCategorias] = useState(false)
   const [verOutros, setVerOutros] = useState(false)
-  const [salva, setSalva] = useState(false)          // ofertas sem nome (salva): só em numerário
+  // quem contribui: um membro, uma família (entrega em nome da casa) ou as ofertas da salva (sem nome, em numerário)
+  const [quem, setQuem] = useState<'membro' | 'familia' | 'salva'>('membro')
+  const salva = quem === 'salva'
+  const [familia, setFamilia] = useState('')
+  const [erroFamilia, setErroFamilia] = useState<string | null>(null)
+  const familias = useFamiliasResumo()
   const [comprovativo, setComprovativo] = useState<File | null>(null)   // fotografia/PDF: enviado depois de gravar
 
   const todas = (contas.data ?? []).filter((c) => !c.endDate)
@@ -122,6 +129,9 @@ export default function PaginaEntrada() {
   const e = form.formState.errors
   const contagensAbertas = (contagens.data ?? []).filter((c) => c.estado === 'ABERTA' && !c.endDate)
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
+  const porFamilia = quem === 'familia'
+  const familiaId = porFamilia && familia ? Number(familia) : null
+  const nomeFamilia = (id: number) => familias.data?.find((f) => f.id === id)?.nome
   const fundoPorId = new Map((fundos.data ?? []).map((f) => [f.id, f]))
   const conta = todas.find((c) => String(c.id) === form.watch('contaId'))
   const naMissao = !!conta && daMissao(conta)
@@ -147,7 +157,8 @@ export default function PaginaEntrada() {
   const abertosOutros = verOutros || outrosComValor > 0 || principais.length === 0
 
   // o que o membro escolhido já deu este ano
-  const doMembro = (contribuicoes.data ?? []).filter((c) => c.membroId === membro)
+  const doMembro = (contribuicoes.data ?? []).filter((c) => (familiaId != null ? c.familiaId === familiaId : membro != null && c.membroId === membro))
+  const contribuinte = familiaId != null ? nomeFamilia(familiaId) ?? 'Família' : membro != null ? nomeDe(membro) : undefined
   const anoMembro = doMembro.reduce((s, c) => s + centimos(c.valor), 0)
   const ultima = [...doMembro].sort((a, b) => b.dataHora.localeCompare(a.dataHora))[0]
   const totalSessao = sessao.reduce((s, x) => s + centimos(x.valor), 0)
@@ -159,11 +170,13 @@ export default function PaginaEntrada() {
     form.clearErrors(['contaId', 'referencia'])
     setErro(null)
   }
-  const escolherSalva = (sim: boolean) => {
-    setSalva(sim)
+  const escolherQuem = (q: 'membro' | 'familia' | 'salva') => {
+    setQuem(q)
     form.clearErrors('membro')
-    if (!sim) return
-    form.setValue('membro', null)
+    setErroFamilia(null)
+    if (q !== 'membro') form.setValue('membro', null)
+    if (q !== 'familia') setFamilia('')
+    if (q !== 'salva') return
     // ofertas da salva: só em numerário, no caixa da igreja
     const caixa = daIgreja.find((c) => c.tipo === 'CAIXA')
     if (caixa) escolherConta(caixa)
@@ -172,20 +185,24 @@ export default function PaginaEntrada() {
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     const preenchidas = v.linhas.filter((l) => l.valor && centimos(l.valor) > 0 && fundoVisivel(l.fundoId))
-    if (!anonimo && v.membro == null) {
+    if (porFamilia && familiaId == null) {
+      setErroFamilia('Escolha a família (ex.: Família Macicame)')
+      return
+    }
+    if (!anonimo && !porFamilia && v.membro == null) {
       form.setError('membro', { message: naMissao ? 'Diga que membro pagou na Missão' : 'Escolha o membro (ou "Ofertas da salva" para ofertas sem nome)' })
       return
     }
     if (naMissao && !v.referencia) { form.setError('referencia', { message: 'Escreva a referência do comprovativo' }); return }
     try {
-      const membroId = anonimo ? null : v.membro
+      const membroId = anonimo || porFamilia ? null : v.membro
       const { transacao: tr, recibo, erroRecibo } = await criar.mutateAsync({
         chave,
         confirmar: true,
-        recibo: v.recibo && membroId != null && pode('tesouraria.recibo.criar'),
+        recibo: v.recibo && (membroId != null || familiaId != null) && pode('tesouraria.recibo.criar'),
         corpo: {
           tipo: 'ENTRADA', metodo: v.metodo as never, valorTotal: deCentimos(total), contaId: Number(v.contaId),
-          membroId: membroId ?? undefined, anonimo: membroId == null, contagemId: numerario && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
+          membroId: membroId ?? undefined, familiaId: familiaId ?? undefined, anonimo: membroId == null && familiaId == null, contagemId: numerario && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
           referencia: v.referencia || undefined,
           descricao: v.descricao || (naMissao ? 'Pago directamente na Missão' : anonimo ? 'Ofertas da salva' : numerario ? 'Envelope' : undefined),
           linhas: preenchidas.map((l) => ({ fundoId: l.fundoId, categoriaId: Number(l.categoriaId), valor: l.valor })),
@@ -202,12 +219,13 @@ export default function PaginaEntrada() {
           toast.warning('A entrada foi gravada, mas o comprovativo não foi carregado', { description: `${mensagemDe(errFicheiro)} Junte-o na ficha do movimento.` })
         }
       }
-      setSessao((s) => [{ id: tr.id, quem: membroId ? nomeDe(membroId) ?? 'Membro' : 'Ofertas da salva', como: conta ? comoEntregou(conta).titulo : '', valor: tr.valorTotal, recibo: numero, comprovativo: juntou }, ...s])
+      setSessao((s) => [{ id: tr.id, quem: membroId ? nomeDe(membroId) ?? 'Membro' : familiaId ? nomeFamilia(familiaId) ?? 'Família' : 'Ofertas da salva', como: conta ? comoEntregou(conta).titulo : '', valor: tr.valorTotal, recibo: numero, comprovativo: juntou }, ...s])
       toast.success(numero ? `Entrada gravada. Recibo n.º ${numero}.` : 'Entrada gravada e confirmada.')
       if (erroRecibo) toast.warning('O recibo não foi emitido', { description: `${mensagemDe(erroRecibo)} Emita-o na ficha do movimento.` })
       setChave(crypto.randomUUID())
       // pronto para a entrada seguinte: mantém como foi entregue, a data e a hora
       form.reset({ ...v, membro: null, referencia: '', descricao: '', linhas: linhasIniciais })
+      setFamilia('')
       setComprovativo(null)
       setVerOutros(false)
     } catch (err) {
@@ -260,23 +278,32 @@ export default function PaginaEntrada() {
 
           {/* 1 · quem contribui */}
           <Cartao titulo="1. Quem contribui" icone={UserRound}>
-            <div role="radiogroup" aria-label="Quem contribui" className="mb-4 grid grid-cols-2 gap-2">
-              {[{ v: false, r: 'Um membro', I: UserRound, d: 'Com recibo numerado' }, { v: true, r: 'Ofertas da salva', I: Users, d: 'Sem nome, em numerário' }].map((o) => (
-                <button key={o.r} type="button" role="radio" aria-checked={anonimo === o.v} onClick={() => escolherSalva(o.v)}
-                  className={cn('alvo flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left', anonimo === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
-                  <o.I className={cn('size-5 flex-none', anonimo === o.v ? 'text-primary' : 'text-muted-foreground')} />
+            <div role="radiogroup" aria-label="Quem contribui" className="mb-4 grid gap-2 sm:grid-cols-3">
+              {([{ v: 'membro', r: 'Um membro', I: UserRound, d: 'Com recibo numerado' }, { v: 'familia', r: 'Uma família', I: Home, d: 'Em nome da casa, com recibo' }, { v: 'salva', r: 'Ofertas da salva', I: Users, d: 'Sem nome, em numerário' }] as const).map((o) => (
+                <button key={o.r} type="button" role="radio" aria-checked={quem === o.v} onClick={() => escolherQuem(o.v)}
+                  className={cn('alvo flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left', quem === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
+                  <o.I className={cn('size-5 flex-none', quem === o.v ? 'text-primary' : 'text-muted-foreground')} />
                   <span className="min-w-0"><span className="block text-sm font-medium">{o.r}</span><span className="block text-xs text-muted-foreground">{o.d}</span></span>
                 </button>
               ))}
             </div>
-            {!anonimo && (
+            {porFamilia && (
+              <div className="grid gap-1.5">
+                <label htmlFor="ent-familia" className="text-sm font-medium">Família <span className="text-destructive" aria-hidden>*</span></label>
+                <CampoEscolha id="ent-familia" valor={familia} aoMudar={(v) => { setFamilia(v); setErroFamilia(null) }} invalido={!!erroFamilia}
+                  vazio="Procurar a família pelo nome…" pesquisar="Pesquisar família…" semOpcoes="Ainda não há famílias registadas (Secretaria › Famílias)"
+                  opcoes={(familias.data ?? []).map((f) => ({ valor: String(f.id), rotulo: f.nome, detalhe: `${f.membrosActivos} membro(s) activo(s)` }))} />
+                {erroFamilia && <p className="text-xs font-medium text-destructive-text">{erroFamilia}</p>}
+              </div>
+            )}
+            {!anonimo && !porFamilia && (
               <CampoFormulario rotulo="Membro" erro={e.membro?.message} obrigatorio>
                 {(p) => <Controller control={form.control} name="membro" render={({ field }) => (
                   <CampoMembro id={p.id} valor={field.value} aoMudar={(x) => { field.onChange(x); form.clearErrors('membro') }} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']} vazio="Procurar o membro pelo nome…" />
                 )} />}
               </CampoFormulario>
             )}
-            {!anonimo && membro != null && (
+            {!anonimo && contribuinte && (
               <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                 <span>Este ano: <strong className="num text-foreground">{dinheiro(deCentimos(anoMembro))}</strong> em {new Set(doMembro.map((c) => c.id)).size} entrega(s)</span>
                 {ultima && <span>Última: {dataEcra(ultima.dataHora)}</span>}
@@ -405,7 +432,7 @@ export default function PaginaEntrada() {
           <Cartao titulo="Resumo">
             <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
             <p className="num mt-1 text-3xl font-bold tracking-tight"><Dinheiro valor={deCentimos(total)} /></p>
-            <p className="mt-1 truncate text-sm text-muted-foreground">{anonimo ? 'Ofertas da salva' : membro ? nomeDe(membro) : 'Escolha o membro'}</p>
+            <p className="mt-1 truncate text-sm text-muted-foreground">{anonimo ? 'Ofertas da salva' : contribuinte ?? (porFamilia ? 'Escolha a família' : 'Escolha o membro')}</p>
             {conta && <p className="truncate text-sm text-muted-foreground">{anonimo ? 'Em numerário' : comoEntregou(conta).titulo}</p>}
             {total > 0 && (
               <div className="mt-4 grid gap-1.5 text-sm">
@@ -418,8 +445,8 @@ export default function PaginaEntrada() {
                 {naMissao && <p className="text-xs text-muted-foreground">Já está na Missão: não entra no depósito do fim do mês.</p>}
               </div>
             )}
-            <label className={cn('alvo mt-4 flex items-center gap-2 text-sm', (anonimo || !membro) && 'opacity-50')}>
-              <input type="checkbox" disabled={anonimo || !membro} checked={form.watch('recibo') && !anonimo} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />
+            <label className={cn('alvo mt-4 flex items-center gap-2 text-sm', (anonimo || !contribuinte) && 'opacity-50')}>
+              <input type="checkbox" disabled={anonimo || !contribuinte} checked={form.watch('recibo') && !anonimo} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />
               Emitir recibo numerado
             </label>
             <Button type="submit" disabled={form.formState.isSubmitting || total <= 0} className="alvo mt-4 h-11 w-full text-base">
@@ -439,7 +466,7 @@ export default function PaginaEntrada() {
             <p className="num truncate text-xl font-bold"><Dinheiro valor={deCentimos(total)} /></p>
             {total > 0 && paraMissao > 0 && <p className="num truncate text-[11px] text-muted-foreground">Missão {dinheiro(deCentimos(paraMissao))} · igreja {dinheiro(deCentimos(total - paraMissao))}</p>}
           </div>
-          {membro && !anonimo && (
+          {contribuinte && !anonimo && (
             <label className="alvo flex items-center gap-1.5 text-xs">
               <input type="checkbox" checked={form.watch('recibo')} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />Recibo
             </label>

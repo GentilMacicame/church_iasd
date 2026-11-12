@@ -10,6 +10,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { useFamiliasResumo } from '@/features/secretaria/api'
 import { useContas, useMovimentos, type Transacao } from './api'
 import { PilulaEstado, Valor, quem } from './comum'
 
@@ -37,6 +38,7 @@ export default function PaginaMovimentos() {
   const { desde, ate, nome } = limitesDoMes(mes)
   const q = useMovimentos({ desde, ate })
   const basicos = useMembrosBasicos()
+  const familias = useFamiliasResumo()
   const contas = useContas()
   const nomes = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, `${m.nome} ${m.apelido}`])), [basicos.data])
   const contaDe = useMemo(() => new Map((contas.data ?? []).map((c) => [c.id, c.nome])), [contas.data])
@@ -104,7 +106,7 @@ export default function PaginaMovimentos() {
                     <tr key={tr.id} onClick={() => navigate(`/tesouraria/movimentos/${tr.id}`)} className={cn('cursor-pointer', tr.endDate && 'opacity-60')}>
                       <td className="hidden tabular-nums whitespace-nowrap text-muted-foreground sm:table-cell sm:pl-6">{data(tr.dataHora)}</td>
                       <td>
-                        <Link to={`/tesouraria/movimentos/${tr.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{quem(tr, (id) => nomes.get(id))}</Link>
+                        <Link to={`/tesouraria/movimentos/${tr.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{quem(tr, (id) => nomes.get(id), (id) => familias.data?.find((f) => f.id === id)?.nome)}</Link>
                         <p className="text-xs text-muted-foreground"><span className="tabular-nums sm:hidden">{data(tr.dataHora)} · </span>{rotulos.tipoTransacao[tr.tipo]} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
                       </td>
                       <td className="hidden text-muted-foreground md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}{naMissao.has(tr.contaId ?? 0) && <span className="block text-xs text-info-text">pago na Missão</span>}</td>
