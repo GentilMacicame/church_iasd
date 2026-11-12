@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  AlertTriangle, ArrowLeft, BarChart3, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Minus, Plus, Save, Table2, Trash2, UserPlus, Users,
+  AlertTriangle, ArrowLeft, BarChart3, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Plus, Save, Table2, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -39,37 +39,39 @@ import {
 import { AvisosRede } from './PaginaSabado'
 
 /**
- * Um número do sábado (M.M., M.P., E.D., visitantes, filiais) num cartão compacto: a sigla, o nome por extenso,
- * o valor grande e, para o polegar, − e + discretos. Só de leitura quando fechado ou contado pela chamada.
+ * Um número do sábado (M.M., M.P., E.D., visitantes, filiais): o nome por extenso com a sigla por cima, um campo
+ * grande e igual para todos, e uma linha de ajuda (a % ou a origem do valor). Só de leitura quando fechado ou
+ * contado pela chamada (mesma altura, fundo cinzento).
  */
-function Numero({ sigla, rotulo, valor, aoMudar, so, ajuda, max, extra }: {
-  sigla: string; rotulo: string; valor: number; aoMudar?: (v: number) => void; so?: boolean; ajuda?: ReactNode; max?: number; extra?: ReactNode
+function Numero({ sigla, rotulo, valor, aoMudar, so, ajuda }: {
+  sigla: string; rotulo: string; valor: number; aoMudar?: (v: number) => void; so?: boolean; ajuda?: ReactNode
 }) {
   const id = `n-${sigla.replace(/\W/g, '')}`
   return (
-    <div className="flex min-w-0 flex-col rounded-lg border bg-card p-3">
-      <div className="flex items-start justify-between gap-2">
-        <label htmlFor={id} className="min-w-0">
-          <span className="block text-xs font-bold tracking-wide text-foreground uppercase">{sigla}</span>
-          <span className="block truncate text-[11px] text-muted-foreground">{rotulo}</span>
-        </label>
-        {extra}
-      </div>
+    <div className="grid min-w-0 content-start gap-1.5">
+      <label htmlFor={id} className="min-w-0">
+        <span className="block text-xs font-bold tracking-wide text-primary">{sigla}</span>
+        <span className="block truncate text-sm font-medium">{rotulo}</span>
+      </label>
       {so || !aoMudar ? (
-        <span id={id} className="mt-2 block h-10 text-center text-3xl leading-10 font-bold tabular-nums">{valor}</span>
+        <div id={id} className="flex h-12 items-center justify-center rounded-md border bg-muted/50 text-2xl font-bold tabular-nums text-foreground/80">{valor}</div>
       ) : (
-        <div className="mt-2 flex items-center gap-1">
-          <button type="button" aria-label={`Menos: ${rotulo}`} disabled={valor <= 0} onClick={() => aoMudar(Math.max(0, valor - 1))}
-            className="flex size-10 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"><Minus className="size-4" /></button>
-          <input id={id} inputMode="numeric" value={String(valor)} onFocus={(e) => e.target.select()}
-            onChange={(e) => aoMudar(Math.min(Number(e.target.value.replace(/\D/g, '') || 0), 9999))}
-            className="h-10 w-full min-w-0 rounded-md border border-input bg-background text-center text-2xl font-bold tabular-nums outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
-          <button type="button" aria-label={`Mais: ${rotulo}`} disabled={max != null && valor >= max} onClick={() => aoMudar(valor + 1)}
-            className="flex size-10 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"><Plus className="size-4" /></button>
-        </div>
+        <input id={id} inputMode="numeric" value={String(valor)} onFocus={(e) => e.target.select()}
+          onChange={(e) => aoMudar(Math.min(Number(e.target.value.replace(/\D/g, '') || 0), 9999))}
+          className="h-12 w-full min-w-0 rounded-md border border-input bg-card text-center text-2xl font-bold tabular-nums shadow-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
       )}
-      {ajuda && <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{ajuda}</p>}
+      <div className="flex min-h-5 items-center justify-center text-xs text-muted-foreground">{ajuda}</div>
     </div>
+  )
+}
+
+/** Título de um passo do relatório ("1 Números do sábado"). */
+function Passo({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <span className="flex items-center gap-2.5">
+      <span className="flex size-6 flex-none items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{n}</span>
+      {children}
+    </span>
   )
 }
 
@@ -227,7 +229,7 @@ export default function PaginaRelatorioClasse() {
         </>}
         accoes={<span className="flex flex-wrap items-center gap-1.5">
           {r.conflito ? <Pilula variante="warning">Conflito</Pilula> : r.erro ? <Pilula variante="destructive">Recusado</Pilula> : r.porEnviar ? <Pilula variante="info">Por enviar</Pilula> : alterado ? <Pilula variante="warning">Por guardar</Pilula> : null}
-          {rel ? <Pilula variante={fechado ? 'success' : 'warning'}>{fechado && <Lock className="size-3" />}{rotulos.estadoRelatorio[rel.estado]}</Pilula> : <Pilula variante="outline">Novo</Pilula>}
+          {rel ? <Pilula variante={fechado ? 'success' : 'warning'}>{fechado && <Lock className="size-3" />}{rotulos.estadoRelatorio[rel.estado]}</Pilula> : <Pilula variante="warning">Por registar</Pilula>}
           <Button asChild variant="ghost" size="sm" className="print:hidden"><Link to={`/escola-sabatina/classes/${p.classe.id}?trimestre=${p.trimestre.id}`}><Table2 className="size-4" />Folha da classe</Link></Button>
         </span>}
       />
@@ -253,20 +255,20 @@ export default function PaginaRelatorioClasse() {
 
       <div className="mt-4 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid min-w-0 gap-5">
-          <Cartao titulo="Números do sábado" icone={Users} descricao={chamada ? 'M.P. e E.D. contados pela chamada nominal' : 'Escreva ou use − e +'}>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          <Cartao titulo={<Passo n={1}>Números do sábado</Passo>} descricao={chamada ? 'M.P. e E.D. contam-se pela chamada nominal (passo 2).' : 'Quantos estavam matriculados, presentes, estudaram a lição todos os dias, visitantes e filiais.'}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-5">
               <Numero sigla="M.M." rotulo="Membros matriculados" valor={matriculados} so={fechado || r.numeros.membrosMatriculados == null}
                 aoMudar={(v) => mudarNumero('membrosMatriculados', v)}
                 ajuda={fechado ? undefined : (
                   <button type="button" className="font-medium text-primary hover:underline"
                     onClick={() => mudarNumero('membrosMatriculados', r.numeros.membrosMatriculados == null ? p.alunos.length : null)}>
-                    {r.numeros.membrosMatriculados == null ? 'pelas matrículas · mudar' : 'usar as matrículas'}
+                    {r.numeros.membrosMatriculados == null ? 'Pelas matrículas · alterar' : 'Usar as matrículas'}
                   </button>
                 )} />
-              <Numero sigla="M.P." rotulo="Membros presentes" valor={presentes} so={fechado || !!chamada} max={matriculados || undefined}
-                aoMudar={(v) => mudarNumero('membrosPresentes', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">presença <PctPilula v={pctPres} /></span>} />
-              <Numero sigla="E.D." rotulo="Estudo diário" valor={estudaram} so={fechado || !!chamada} max={presentes}
-                aoMudar={(v) => mudarNumero('estudoDiario', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">estudo <PctPilula v={pctEd} /></span>} />
+              <Numero sigla="M.P." rotulo="Membros presentes" valor={presentes} so={fechado || !!chamada}
+                aoMudar={(v) => mudarNumero('membrosPresentes', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">Presença <PctPilula v={pctPres} /></span>} />
+              <Numero sigla="E.D." rotulo="Estudo diário" valor={estudaram} so={fechado || !!chamada}
+                aoMudar={(v) => mudarNumero('estudoDiario', v)} ajuda={<span className="inline-flex items-center gap-1 whitespace-nowrap">Estudo <PctPilula v={pctEd} /></span>} />
               <Numero sigla="Visit." rotulo="Visitantes" valor={r.numeros.visitantes} so={fechado} aoMudar={(v) => mudarNumero('visitantes', v)} />
               <Numero sigla="Fil." rotulo="Filiais" valor={r.numeros.filiais} so={fechado} aoMudar={(v) => mudarNumero('filiais', v)} />
             </div>
@@ -277,7 +279,7 @@ export default function PaginaRelatorioClasse() {
 
           <Chamada p={p} r={r} fechado={fechado} mudar={mudar} />
 
-          <Cartao titulo="Ofertas" descricao={t.es.separadas} icone={Coins}>
+          <Cartao titulo={<Passo n={3}>Ofertas</Passo>} descricao={t.es.separadas}>
             {p.sabado.decimoTerceiro && !fechado && (
               <p className="mb-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-2.5 text-sm text-warning-text">
                 Hoje é o 13.º sábado: anote a oferta do 13.º sábado separada da oferta missionária.
@@ -357,7 +359,7 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
   const contagem = chamada ? contarChamada(chamada) : null
 
   return (
-    <Cartao titulo="Chamada nominal" icone={CheckCheck} semMargem
+    <Cartao titulo={<Passo n={2}>Chamada nominal <span className="text-sm font-normal text-muted-foreground">(opcional)</span></Passo>} semMargem
       descricao={chamada ? `${contagem!.presentes} de ${p.alunos.length} presentes · ${contagem!.estudaram} estudaram a lição` : 'Opcional: marque quem veio e quem estudou; M.P. e E.D. contam-se sozinhos.'}
       accoes={!fechado && chamada && (
         <span className="flex gap-1">
@@ -441,7 +443,7 @@ function Visitantes({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho;
   }
 
   return (
-    <Cartao titulo="Visitantes" icone={UserPlus} semMargem
+    <Cartao titulo={<Passo n={4}>Visitantes</Passo>} semMargem
       descricao={`${total} com nome e contacto · para o seguimento (anonimizados ao fim de 12 meses se não se tornarem membros)`}>
       {total > 0 && (
         <table className="w-full border-t text-sm">
