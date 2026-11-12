@@ -6,14 +6,15 @@ import { Suspense, type ReactNode } from 'react'
 import { pagina } from '@/lib/paginas'
 import { ErroAplicacao } from '@/components/layout/ErroAplicacao'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SessaoProvider, useSessao } from '@/auth/sessao'
 import { Shell } from '@/components/layout/Shell'
 import { Marca } from '@/components/layout/Marca'
 import { Exige } from '@/components/layout/Exige'
-import { ErroApi } from '@/api/erros'
+import { ErroApi, mensagemDe } from '@/api/erros'
 
 const PaginaEntrar = pagina(() => import('@/features/auth/PaginaEntrar'))
 const PaginaInicio = pagina(() => import('@/features/inicio/PaginaInicio'))
@@ -62,7 +63,25 @@ const PaginaVisitantesES = pagina(() => import('@/features/escola-sabatina/Pagin
 const PaginaRelatoriosES = pagina(() => import('@/features/escola-sabatina/PaginaRelatoriosES'))
 const PaginaPainelGeral = pagina(() => import('@/features/painel-geral/PaginaPainelGeral'))
 
+/**
+ * Qualquer gravação que falhe (criar, alterar, aprovar, terminar…) mostra o aviso de erro ao centro, com a mensagem
+ * da base de dados. Não repete: se o ecrã já mostrou o mesmo erro (toast.error no catch), fica só esse. 401 é a
+ * sessão a terminar (já tratado); uma mutação pode dispensar o aviso com meta: { semAviso: true }.
+ */
+const avisarErros = new MutationCache({
+  onError: (erro, _vars, _ctx, mutacao) => {
+    if (mutacao.meta?.semAviso || (erro instanceof ErroApi && erro.estado === 401)) return
+    const texto = mensagemDe(erro)
+    // espera o ecrã reagir primeiro (o catch do formulário corre a seguir a esta função)
+    setTimeout(() => {
+      if (toast.getToasts().some((t) => 'title' in t && t.type === 'error' && t.title === texto)) return
+      toast.error(texto, { id: `erro:${texto}` })
+    }, 60)
+  },
+})
+
 const queryClient = new QueryClient({
+  mutationCache: avisarErros,
   defaultOptions: {
     queries: {
       staleTime: 30_000,
