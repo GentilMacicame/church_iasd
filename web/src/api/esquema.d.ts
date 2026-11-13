@@ -8201,6 +8201,8 @@ export interface components {
             descricao?: string;
             /** @description IGREJA ou ENTIDADE (Associação/Missão) */
             ambito?: string;
+            /** @description Código fixo dos perfis do sistema (ADMIN, PASTOR, ...): não muda, ao contrário do nome; vazio nos perfis criados pelos utilizadores (V32) */
+            codigo?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;

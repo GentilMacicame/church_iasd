@@ -1,0 +1,65 @@
+1. os perfis do sistema têm código (igual ao nome que tinham)
+ perfis_com_codigo | codigo_igual_ao_nome 
+-------------------+----------------------
+                13 |                   13
+(1 row)
+
+2. o pastor do distrito mantém o acesso quando o perfil PASTOR muda de nome
+ pastor_mantem_as_igrejas | tinha_igrejas 
+--------------------------+---------------
+ t                        | t
+(1 row)
+
+3. autorizado (super-administrador): o código do perfil não muda; perfis do sistema não se terminam
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:23: ERROR:  O código de um perfil não se altera
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:24: ERROR:  Os perfis do sistema não se terminam
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:25: ERROR:  O âmbito de um perfil do sistema não se altera
+   perfil novo com código: recusado; sem código: aceite
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:27: ERROR:  O código de um perfil do sistema só é definido pelo sistema (deixe o código vazio)
+        per_nome        | per_codigo 
+------------------------+------------
+ Coordenador (teste 18) | 
+(1 row)
+
+   não autorizado: o tesoureiro não muda o nome do perfil (nenhuma linha alterada)
+ per_nome 
+----------
+ PASTOR
+(1 row)
+
+4. o código da categoria não muda (R3 = ofertas da Escola Sabatina); o nome sim
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:37: ERROR:  O código não se altera depois de criado (é o identificador usado pelas regras): termine este registo e crie outro
+ categoria_r3 
+--------------
+            1
+(1 row)
+
+   nem o código de uma permissão
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:41: ERROR:  O código não se altera depois de criado (é o identificador usado pelas regras): termine este registo e crie outro
+5. super-administrador: ninguém lhe muda as permissões
+          usu_nome           | usu_super_admin 
+-----------------------------+-----------------
+ Segundo super-administrador | t
+(1 row)
+
+   outro super-administrador não lhe retira o acesso total, não o inactiva nem o termina
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:47: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:48: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:49: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+   o próprio também não; mas muda os seus contactos
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:51: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:52: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+   não autorizado: o administrador da igreja não toca no super-administrador
+psql:database/tests/18_codigos_fixos_e_super_admin.sql:56: ERROR:  As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)
+          usu_nome           | usu_super_admin | usu_estado | activo 
+-----------------------------+-----------------+------------+--------
+ Administrador               | t               | ACTIVO     | t
+ Segundo super-administrador | t               | ACTIVO     | t
+(2 rows)
+
+6. manutenção da base (sem utilizador na sessão): pode retirar o acesso total
+          usu_nome           | usu_super_admin 
+-----------------------------+-----------------
+ Segundo super-administrador | f
+(1 row)
+

@@ -78,8 +78,8 @@ export function useAdministradores(igrejas: number[]) {
     queryKey: [...k, 'administradores', igrejas],
     enabled: igrejas.length > 0,
     queryFn: async () => {
-      const perfis = (await dados(api.GET('/v1/nucleo/perfis', { params: { query: { limite: 100 } } }))).dados as { id: number; nome: string }[]
-      const admin = perfis.find((p) => p.nome === 'ADMIN')
+      const perfis = (await dados(api.GET('/v1/nucleo/perfis', { params: { query: { limite: 100 } } }))).dados as { id: number; nome: string; codigo?: string | null }[]
+      const admin = perfis.find((p) => p.codigo === 'ADMIN')
       if (!admin) return new Map<number, string[]>()
       const ligacoes = (await Promise.all(igrejas.map((igrejaId) => todas<UsuarioIgreja>((depois) =>
         dados(api.GET('/v1/nucleo/usuarios-igreja', { params: { query: { igrejaId, perfilId: admin.id, limite: 200, depois } as never } })))))).flat()
@@ -96,8 +96,8 @@ export interface NovoAdministrador { nome: string; email: string; telefone: stri
 
 /** Cria o utilizador e dá-lhe o perfil ADMIN na igreja; pode enviar já o código por SMS para definir a senha. */
 async function criarAdministrador(igrejaId: number, a: NovoAdministrador) {
-  const perfis = (await dados(api.GET('/v1/nucleo/perfis', { params: { query: { limite: 100 } } }))).dados as { id: number; nome: string }[]
-  const admin = perfis.find((p) => p.nome === 'ADMIN')
+  const perfis = (await dados(api.GET('/v1/nucleo/perfis', { params: { query: { limite: 100 } } }))).dados as { id: number; nome: string; codigo?: string | null }[]
+  const admin = perfis.find((p) => p.codigo === 'ADMIN')
   if (!admin) throw new Error('O perfil ADMIN não existe nesta instalação.')
   const u = (await dados(api.POST('/v1/nucleo/usuarios', { body: { nome: a.nome, email: a.email || undefined, telefone: a.telefone || undefined } as never }))) as Usuario
   await dados(api.POST('/v1/nucleo/usuarios-igreja', { body: { usuarioId: u.id, igrejaId, perfilId: admin.id } as never }))

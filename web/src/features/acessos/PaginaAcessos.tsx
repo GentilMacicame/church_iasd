@@ -306,7 +306,8 @@ function AbaPerfis({ aoVerPermissoes }: { aoVerPermissoes: (id: number) => void 
                 {seleccionado.ambito === 'IGREJA' && <div><dt className="text-muted-foreground">Utilizadores nesta igreja</dt><dd>{utilizadoresDe(seleccionado.id)} atribuído(s)</dd></div>}
                 <div><dt className="text-muted-foreground">Permissões</dt><dd>{permissoesDe(seleccionado.id).length} de {(permissoes.data ?? []).length}</dd></div>
                 <div><dt className="text-muted-foreground">Estado</dt><dd>{seleccionado.endDate ? <Pilula variante="secondary">Inactivo</Pilula> : <Pilula variante="success">Activo</Pilula>}</dd></div>
-                {pode('nucleo.perfil.terminar') && (
+                {seleccionado.codigo && <div><dt className="text-muted-foreground">Perfil do sistema</dt><dd>Código {seleccionado.codigo}: não se desactiva</dd></div>}
+                {pode('nucleo.perfil.terminar') && !seleccionado.codigo && (
                   <div className="border-t pt-4">
                     <Button variant="outline" className={cn('alvo w-full', !seleccionado.endDate && 'text-destructive-text hover:text-destructive-text')} onClick={() => setAlternar(seleccionado)}>
                       {seleccionado.endDate ? 'Activar perfil' : 'Desactivar perfil'}

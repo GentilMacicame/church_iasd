@@ -24,8 +24,9 @@ M('V2__nucleo', 'nucleo', 'Núcleo: acesso e auditoria',
   'Utilizadores, perfis, permissões e o histórico de todas as alterações.', [
  T('perfil', 'per', 'Perfis de acesso (Admin, Secretário, Tesoureiro, ...)', [
    ('nome', 'VARCHAR(50)', NN), ('descricao', 'VARCHAR(255)'),
-   ('ambito', 'VARCHAR(10)', "NOT NULL DEFAULT 'IGREJA'", 'IGREJA ou ENTIDADE (Associação/Missão)')],
-   uniq=[['nome']], checks=[('chk_per_ambito', "@ambito IN ('IGREJA', 'ENTIDADE')")]),
+   ('ambito', 'VARCHAR(10)', "NOT NULL DEFAULT 'IGREJA'", 'IGREJA ou ENTIDADE (Associação/Missão)'),
+   ('codigo', 'VARCHAR(30)', '', 'Código fixo dos perfis do sistema (ADMIN, PASTOR, ...): não muda, ao contrário do nome; vazio nos perfis criados pelos utilizadores (V32)')],
+   uniq=[['nome'], ['codigo']], checks=[('chk_per_ambito', "@ambito IN ('IGREJA', 'ENTIDADE')")]),
  T('permissao', 'prm', 'Permissões elementares (ex.: transacao.aprovar)', [
    ('codigo', 'VARCHAR(80)', NN), ('descricao', 'VARCHAR(255)')], uniq=[['codigo']]),
  T('perfil_permissao', 'ppe', 'Que permissões cada perfil tem', [

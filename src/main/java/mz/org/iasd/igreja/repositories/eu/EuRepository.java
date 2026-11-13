@@ -80,7 +80,8 @@ public final class EuRepository {
     static Map<Integer, TreeSet<String>> perfis(Connection c) throws SQLException {
         Map<Integer, TreeSet<String>> r = new TreeMap<>();
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT u.uig_igr_id, p.per_nome FROM nucleo.usuario_igreja u "
+                // o código fixo (V32) identifica os perfis do sistema mesmo que o nome mude; os outros vão pelo nome
+                "SELECT u.uig_igr_id, COALESCE(p.per_codigo, p.per_nome) FROM nucleo.usuario_igreja u "
                         + "JOIN nucleo.perfil p ON p.per_id = u.uig_per_id "
                         + "WHERE u.uig_usu_id = nucleo.fn_usuario_sessao() AND u.uig_end_date IS NULL "
                         + "AND u.uig_estado = 'ACTIVO'");

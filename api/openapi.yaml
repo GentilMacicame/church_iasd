@@ -20136,6 +20136,11 @@ components:
           type: string
           maxLength: 10
           description: IGREJA ou ENTIDADE (Associação/Missão)
+        codigo:
+          type: string
+          maxLength: 30
+          description: 'Código fixo dos perfis do sistema (ADMIN, PASTOR, ...): não muda, ao contrário do nome; vazio nos perfis criados pelos
+            utilizadores (V32)'
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:

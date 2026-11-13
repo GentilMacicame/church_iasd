@@ -20,6 +20,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param nome coluna {@code per_nome} — obrigatório ao criar
  * @param descricao coluna {@code per_descricao}
  * @param ambito IGREJA ou ENTIDADE (Associação/Missão)
+ * @param codigo Código fixo dos perfis do sistema (ADMIN, PASTOR, ...): não muda, ao contrário do nome; vazio nos perfis criados pelos utilizadores (V32)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -37,6 +38,8 @@ public record Perfil(
         String descricao,
         @ColunaBd(value = "per_ambito", tipo = Tipo.TEXTO, naoNula = true)
         String ambito,
+        @ColunaBd(value = "per_codigo", tipo = Tipo.TEXTO)
+        String codigo,
         @ColunaBd(value = "per_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "per_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

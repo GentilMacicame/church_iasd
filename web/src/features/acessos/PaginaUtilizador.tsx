@@ -53,7 +53,7 @@ export default function PaginaUtilizador() {
   const [carregado, setCarregado] = useState(false)
 
   const actuais = useMemo(() => (ligacoes.data ?? []).filter((l) => l.usuarioId === id && !l.endDate), [ligacoes.data, id])
-  const daIgreja = (perfis.data ?? []).filter((p) => p.ambito === 'IGREJA' && !p.endDate && p.nome !== 'MEMBRO')
+  const daIgreja = (perfis.data ?? []).filter((p) => p.ambito === 'IGREJA' && !p.endDate && p.codigo !== 'MEMBRO')
   const nomeDe = (mid: number) => { const m = basicos.data?.find((x) => x.id === mid); return m && `${m.nome} ${m.apelido}` }
 
   useEffect(() => {
@@ -188,7 +188,10 @@ export default function PaginaUtilizador() {
                   </Button>
                 </>
               )}
-              {!proprio && (
+              {conta.superAdmin && (
+                <p className="mt-3 text-sm text-muted-foreground">As permissões do super-administrador não podem ser alteradas: a conta não se desactiva.</p>
+              )}
+              {!proprio && !conta.superAdmin && (
                 <Button variant="outline" className={cn('alvo mt-3 w-full', !conta.endDate && 'text-destructive-text hover:text-destructive-text')} onClick={() => setAlternar(true)}>
                   <Power className="size-4" />{conta.endDate ? 'Reactivar conta' : 'Desactivar conta'}
                 </Button>
