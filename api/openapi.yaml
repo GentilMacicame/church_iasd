@@ -8166,6 +8166,109 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/organizacao/painel-periodo:
+    get:
+      summary: Dashboard por período (igreja a igreja)
+      tags:
+      - Organização
+      x-permissao: 'qualquer utilizador com sessão: só as igrejas e as áreas que pode ver'
+      operationId: painelPeriodo
+      x-funcao-bd: organizacao.fn_painel_periodo
+      description: Membros (ACTIVO), activos e inactivos (sem presença na ES nem contribuição há 6 meses), dízimos, ofertas (as outras entradas
+        menos o reavivamento), reavivamento, contribuintes (fidelidade = contribuintes / membros), entradas e perdas de membros.
+      parameters:
+      - name: inicio
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: fim
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
+      - name: distritoId
+        in: query
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - id
+                  - nome
+                  - membros
+                  - activos
+                  - inactivos
+                  properties:
+                    id:
+                      type: integer
+                    nome:
+                      type: string
+                    entidadeId:
+                      type: integer
+                    entidade:
+                      type: string
+                    distritoPastoralId:
+                      type: integer
+                      nullable: true
+                    distritoPastoral:
+                      type: string
+                      nullable: true
+                    veMembros:
+                      type: boolean
+                    veTesouraria:
+                      type: boolean
+                    membros:
+                      type: integer
+                    activos:
+                      type: integer
+                    inactivos:
+                      type: integer
+                    interessados:
+                      type: integer
+                    dizimos:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    ofertas:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    reavivamento:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    contribuintes:
+                      type: integer
+                    entradasMembros:
+                      type: integer
+                    perdasMembros:
+                      type: integer
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/organizacao/provincias:
     get:
       summary: 'Provincias: listar'
@@ -20019,6 +20122,7 @@ components:
       - OFERTA_ESPECIAL
       - ORCAMENTO_LOCAL
       - PROJECTO
+      - REAVIVAMENTO
     EnumTipoIdentificacao:
       type: string
       enum:

@@ -375,7 +375,7 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
            ('chk_fun_associacao', "@tipo NOT IN ('DIZIMO', 'ES_MISSOES', 'ES_13_SABADO', 'OFERTA_MISSIONARIA') OR @percentagem_remessa = 100"),
            ('chk_fun_local', "@tipo NOT IN ('ES_DESPESAS', 'ORCAMENTO_LOCAL') OR @percentagem_remessa = 0"),
            # V23: fundos próprios de uma igreja (ofertas e projectos dela): ficam 100% na igreja
-           ('chk_fun_da_igreja', "@igr_id IS NULL OR (@percentagem_remessa = 0 AND @destino_ent_id IS NULL AND @tipo IN ('OFERTA_ESPECIAL', 'PROJECTO'))")]),
+           ('chk_fun_da_igreja', "@igr_id IS NULL OR (@percentagem_remessa = 0 AND @destino_ent_id IS NULL AND @tipo::TEXT IN ('OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO'))")]),
  T('calendario_oferta', 'cof', 'Calendário de ofertas especiais definido pela Divisão/União/Associação', [
    ('ent_id', 'fk:entidade', NN), ('data', 'DATE', NN), ('fun_id', 'fk:fundo', NN),
    ('descricao', 'VARCHAR(150)', NN)], uniq=[['ent_id', 'data', 'fun_id']]),

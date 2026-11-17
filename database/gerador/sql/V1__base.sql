@@ -65,7 +65,7 @@ CREATE TYPE nucleo.tipo_transacao_t        AS ENUM ('ENTRADA', 'SAIDA', 'TRANSFE
 CREATE TYPE nucleo.metodo_pagamento_t      AS ENUM ('MPESA', 'EMOLA', 'BANCO', 'NUMERARIO');
 CREATE TYPE nucleo.estado_transacao_t      AS ENUM ('PENDENTE', 'CONFIRMADA', 'FALHADA', 'ANULADA');
 CREATE TYPE nucleo.tipo_fundo_t            AS ENUM ('DIZIMO', 'OFERTA_MISSIONARIA', 'ES_MISSOES', 'ES_13_SABADO', 'ES_DESPESAS',
-                                                    'OFERTA_COMBINADA', 'OFERTA_ESPECIAL', 'ORCAMENTO_LOCAL', 'PROJECTO');
+                                                    'OFERTA_COMBINADA', 'OFERTA_ESPECIAL', 'ORCAMENTO_LOCAL', 'PROJECTO', 'REAVIVAMENTO');
 CREATE TYPE nucleo.tipo_categoria_t        AS ENUM ('RECEITA', 'DESPESA');
 CREATE TYPE nucleo.estado_despesa_t        AS ENUM ('SUBMETIDA', 'APROVADA', 'REJEITADA', 'PAGA', 'CANCELADA');
 CREATE TYPE nucleo.estado_contagem_t       AS ENUM ('ABERTA', 'CONFERIDA', 'DEPOSITADA');

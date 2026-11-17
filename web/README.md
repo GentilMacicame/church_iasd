@@ -239,6 +239,13 @@ src/
   quem publica (esta igreja, o distrito se for o pastor, a Associação se tiver perfil lá), para que igrejas (todas ou
   escolhidas), público (todos os membros ou só a liderança), publicar em e válido até.
 
+- **Painel geral por período** (V38): este mês, este ano, o ano anterior ou um intervalo. Indicadores: total de membros
+  (com as entradas e perdas no período), membros activos e % (e os inactivos), fidelidade contributiva, dízimos (com as
+  ofertas no mesmo cartão), obra de reavivamento, saldo e depósitos em falta (hoje). Gráficos: evolução das contribuições
+  (dízimos, ofertas, reavivamento), entradas e saídas de membros e de dinheiro, comparativo de uma medida. Quadro
+  comparativo: membros, activos, inactivos, % activos, dízimos, ofertas, reavivamento, fidelidade, entradas e perdas de
+  membros, saldo e por depositar. Fundos da igreja: novo tipo "Obra de reavivamento".
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

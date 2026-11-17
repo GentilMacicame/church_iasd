@@ -17,5 +17,6 @@ public enum TipoFundo {
     OFERTA_COMBINADA,
     OFERTA_ESPECIAL,
     ORCAMENTO_LOCAL,
-    PROJECTO
+    PROJECTO,
+    REAVIVAMENTO
 }

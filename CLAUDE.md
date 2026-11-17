@@ -12,8 +12,8 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 69 tabelas, 6 schemas, migrações V1–V37 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (346 caminhos, 480 operações) |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 69 tabelas, 6 schemas, migrações V1–V38 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (347 caminhos, 481 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, mandatos com conselho e direcção, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V37 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V38 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–23 (tem de dar 24× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–24 (tem de dar 25× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V38__...sql`, `V39__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V39__...sql`, `V40__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -284,6 +284,10 @@ Nunca devolver stack traces nem SQL ao cliente.
   `nucleo.fn_comunicado_emissor` (igreja: a permissão nela; distrito: o pastor; Associação: perfil lá; rascunhos só para
   quem edita); lê `fn_comunicado_para_mim` (publicado, em vigor, liderança das igrejas destinatárias ou, se MEMBROS, o
   membro). Nas políticas, nunca usar `criado_por` para dar acesso de escrita: o trigger preenche-o antes da verificação.
+- Dashboard por período (V38, `GET /v1/organizacao/painel-periodo?inicio=&fim=`, `organizacao.fn_painel_periodo`): por igreja
+  visível, membros (ACTIVO), activos/inactivos (V36), dízimos, ofertas (as outras entradas sem dízimo nem reavivamento),
+  reavivamento (fundo do tipo `REAVIVAMENTO`, próprio da igreja), contribuintes (fidelidade = contribuintes ÷ membros; o
+  contribuinte conta na igreja do membro, o dinheiro na igreja onde foi lançado), entradas e perdas de membros.
 - Colunas de vistas: a API tira o prefixo de 3 letras (`act_id` → `id`, `igr_id` → `id`!). Numa vista com mais de um
   id, dê nomes sem prefixo (`igreja_id`, `departamento_igreja_id`), senão os campos sobrepõem-se no JSON.
 - Conselho e reuniões: os cargos do conselho (`car_conselho`) e a duração dos mandatos da igreja (`igr_mandato_anos`);
@@ -308,7 +312,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 24× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 25× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

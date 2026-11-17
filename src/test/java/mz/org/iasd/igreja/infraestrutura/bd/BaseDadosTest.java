@@ -59,6 +59,7 @@ import mz.org.iasd.igreja.repositories.base.TabelaRepository;
 import mz.org.iasd.igreja.repositories.secretaria.MembrosParecidosRepository;
 import mz.org.iasd.igreja.repositories.actividades.ConflitosRepository;
 import mz.org.iasd.igreja.repositories.secretaria.ParticipacaoRepository;
+import mz.org.iasd.igreja.repositories.organizacao.PainelRepository;
 import mz.org.iasd.igreja.repositories.tesouraria.ContribuicoesRepository;
 import mz.org.iasd.igreja.controllers.actividades.RelatoriosActividadesController;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
@@ -1096,6 +1097,26 @@ class BaseDadosTest {
         SQLException validade = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c ->
                 TabelaRepository.alterar(c, comunicado, id, Json.createObjectBuilder().add("validoAte", "2025-12-31T00:00:00+02:00").build())));
         assertEquals(422, TradutorErrosSql.traduzir(validade).estadoHttp());
+    }
+
+    // ------------------------------------------------------------------ V38: dashboard por período
+
+    @Test
+    void painelPorPeriodoSoComAsIgrejasVisiveis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v38@teste.mz", null, "SECRETARIO");
+        int semPerfil = criarUsuarioComDono("membro.v38@teste.mz", null, "MEMBRO");
+        java.time.LocalDate de = java.time.LocalDate.parse("2026-01-01"), ate = java.time.LocalDate.parse("2026-12-31");
+
+        // o secretário vê a sua igreja, com os membros (activos + inactivos = membros); o dinheiro ele não lê
+        JsonArray linhas = ExecutorTransaccao.executar(api, secretario, c -> PainelRepository.periodo(c, de, ate, null, null));
+        JsonObject central = linhas.stream().map(JsonValue::asJsonObject).filter(o -> o.getInt("id") == igrejaCentral).findFirst().orElseThrow();
+        assertTrue(central.getBoolean("veMembros"));
+        assertFalse(central.getBoolean("veTesouraria"));
+        assertEquals(central.getInt("membros"), central.getInt("activos") + central.getInt("inactivos"));
+        assertEquals("0.00", central.getString("dizimos"));
+        assertTrue(linhas.stream().map(JsonValue::asJsonObject).noneMatch(o -> o.getInt("id") == igrejaOutraAssociacao));
+        // sem perfil: nenhuma igreja
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> PainelRepository.periodo(c, de, ate, null, null)).size());
     }
 
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS

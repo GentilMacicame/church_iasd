@@ -1,18 +1,20 @@
 /**
- * Painel geral das igrejas · "Como estão as igrejas que acompanho?"
+ * Painel geral das igrejas · "Como estão as igrejas que acompanho, no período que escolho?"
  * Para a direcção: a Associação/Missão vê as suas igrejas, o pastor do distrito só as do seu distrito, o
- * super-administrador todas. Quem decide o que cada um vê é a base de dados (vistas V30 com security_invoker);
+ * super-administrador todas. Quem decide o que cada um vê é a base de dados (V30 e V38, security invoker);
  * o ecrã só soma e compara o que recebe.
  *
- *  1. Indicadores: igrejas, membros activos, transferidos no ano, dizimistas, situação financeira.
- *  2. Gráficos: entradas e saídas, dízimos e movimento de membros nos últimos 12 meses.
- *  3. Comparativo: gráfico de uma medida igreja a igreja e o quadro de todas as igrejas (ordenável).
+ *  1. Período: este mês, este ano, o ano anterior ou um intervalo de datas.
+ *  2. Indicadores do período: membros, activos e inactivos (sem participação há 6 meses), fidelidade contributiva
+ *     (contribuintes / membros), dízimos com as ofertas, obra de reavivamento; e, à data de hoje, saldo e depósitos em falta.
+ *  3. Gráficos dos últimos 12 meses: dízimos e ofertas, entradas e saídas, movimento de membros; comparativo de uma medida.
+ *  4. Quadro comparativo das igrejas (ordenável) com as colunas do período.
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Building2, ChartColumn, Church, HandCoins, Landmark, Printer, Search, Users, Wallet,
+  ArrowDown, ArrowUp, ArrowUpDown, Building2, ChartColumn, Church, Flame, HandCoins, HeartHandshake, Landmark, Printer, Search, UserCheck, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,66 +22,90 @@ import { Cartao, Indicador, Pilula, TituloPagina } from '@/components/comum/elem
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { GraficoBarras } from '@/components/comum/graficos'
 import { Seleccao } from '@/components/comum/Seleccao'
+import { CampoData } from '@/components/comum/CampoData'
 import { Exportar } from '@/components/comum/Exportar'
 import { api, dados } from '@/api/cliente'
 import { useSessao } from '@/auth/sessao'
 import { imprimirComo } from '@/lib/documentos'
+import { data as dataEcra, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { CelulaPct, Folha, textoMT, textoPct } from '@/features/escola-sabatina/componentes'
 
-/** Linha de GET /v1/organizacao/painel-igrejas (vista organizacao.vw_painel_igrejas, V30). DECIMAL chega como texto. */
-interface LinhaIgreja {
-  id: number; nome: string; tipo: string; entidadeId: number; entidade: string; distritoPastoralId: number | null; distritoPastoral: string | null
-  provincia: string | null; veMembros: boolean; veTesouraria: boolean
-  membrosActivos: number; interessados: number; mulheres: number; homens: number; transferidos: number
-  transfSaidaAno: number; transfEntradaAno: number; transfPendentes: number; admissoesAno: number; outrasSaidasAno: number
-  dizimistas: number; familiasDizimistas: number; pctDizimistas: string | null; dizimosAno: string; dizimosMes: string
-  entradasMes: string; saidasMes: string; entradasAno: string; saidasAno: string; resultadoAno: string; saldo: string; porRemeter: string
+/** Linha de GET /v1/organizacao/painel-igrejas (V30): a situação de hoje (saldo, por depositar). DECIMAL chega como texto. */
+interface LinhaHoje { id: number; saldo: string; porRemeter: string; provincia: string | null; transfPendentes: number }
+/** Linha de GET /v1/organizacao/painel-periodo (V38): o período escolhido. */
+interface LinhaPeriodo {
+  id: number; nome: string; entidadeId: number; entidade: string; distritoPastoralId: number | null; distritoPastoral: string | null
+  veMembros: boolean; veTesouraria: boolean; membros: number; activos: number; inactivos: number; interessados: number
+  dizimos: string; ofertas: string; reavivamento: string; contribuintes: number; entradasMembros: number; perdasMembros: number
 }
 /** Linha de GET /v1/organizacao/painel-igrejas-mensal (últimos 12 meses). */
 interface LinhaMes {
-  id: number; nome: string; entidadeId: number; distritoPastoralId: number | null; ano: number; mes: number
-  entradas: string; saidas: string; dizimos: string; dizimistas: number; admissoes: number; transfEntrada: number; transfSaida: number
+  id: number; ano: number; mes: number; entradas: string; saidas: string; dizimos: string; ofertas: string; reavivamento: string
+  admissoes: number; transfEntrada: number; transfSaida: number
 }
+/** Uma igreja no quadro: o período e a situação de hoje. */
+type Linha = LinhaPeriodo & { saldo: number; porRemeter: number; provincia: string | null; pctActivos: number | null; fidelidade: number | null }
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const n = (v?: string | number | null) => Number(v ?? 0) || 0
 const inteiro = (v: number) => v.toLocaleString('pt-PT').replace(/[\u00a0\u202f]/g, ' ')
 const mtCurto = (v: number) => (Math.abs(v) >= 1_000_000 ? `${(v / 1_000_000).toLocaleString('pt-PT', { maximumFractionDigits: 1 })} M MT`
   : Math.abs(v) >= 10_000 ? `${Math.round(v / 1000).toLocaleString('pt-PT')} mil MT` : textoMT(v))
+const razao = (a: number, b: number) => (b > 0 ? a / b : null)
 
-type Medida = 'membrosActivos' | 'pctDizimistas' | 'dizimistas' | 'dizimosAno' | 'entradasAno' | 'saldo' | 'transfSaidaAno' | 'porRemeter'
+type Periodo = 'mes' | 'ano' | 'anterior' | 'intervalo'
+function intervaloDe(p: Periodo, de: string, ate: string): { de: string; ate: string; rotulo: string } {
+  const hoje = hojeIso(), ano = Number(hoje.slice(0, 4))
+  if (p === 'mes') return { de: `${hoje.slice(0, 7)}-01`, ate: hoje, rotulo: 'este mês' }
+  if (p === 'ano') return { de: `${ano}-01-01`, ate: hoje, rotulo: `${ano} até hoje` }
+  if (p === 'anterior') return { de: `${ano - 1}-01-01`, ate: `${ano - 1}-12-31`, rotulo: String(ano - 1) }
+  return { de, ate, rotulo: `${dataEcra(de)} a ${dataEcra(ate)}` }
+}
+
+type Medida = 'membros' | 'activos' | 'pctActivos' | 'fidelidade' | 'dizimos' | 'ofertas' | 'reavivamento' | 'saldo' | 'porRemeter'
 const MEDIDAS: { k: Medida; rotulo: string; dinheiro?: boolean; pct?: boolean; tesouraria?: boolean }[] = [
-  { k: 'membrosActivos', rotulo: 'Membros activos' },
-  { k: 'dizimistas', rotulo: 'Dizimistas', tesouraria: true },
-  { k: 'pctDizimistas', rotulo: '% de dizimistas', pct: true, tesouraria: true },
-  { k: 'dizimosAno', rotulo: 'Dízimos do ano', dinheiro: true, tesouraria: true },
-  { k: 'entradasAno', rotulo: 'Entradas do ano', dinheiro: true, tesouraria: true },
-  { k: 'saldo', rotulo: 'Saldo nas contas', dinheiro: true, tesouraria: true },
-  { k: 'porRemeter', rotulo: 'Por depositar à Missão', dinheiro: true, tesouraria: true },
-  { k: 'transfSaidaAno', rotulo: 'Transferidos (saídas) no ano' },
+  { k: 'membros', rotulo: 'Membros' },
+  { k: 'activos', rotulo: 'Membros activos' },
+  { k: 'pctActivos', rotulo: '% de membros activos', pct: true },
+  { k: 'fidelidade', rotulo: 'Fidelidade contributiva', pct: true, tesouraria: true },
+  { k: 'dizimos', rotulo: 'Dízimos', dinheiro: true, tesouraria: true },
+  { k: 'ofertas', rotulo: 'Ofertas', dinheiro: true, tesouraria: true },
+  { k: 'reavivamento', rotulo: 'Obra de reavivamento', dinheiro: true, tesouraria: true },
+  { k: 'saldo', rotulo: 'Saldo nas contas (hoje)', dinheiro: true, tesouraria: true },
+  { k: 'porRemeter', rotulo: 'Por depositar à Missão (hoje)', dinheiro: true, tesouraria: true },
 ]
 
-type Coluna = keyof LinhaIgreja
+type Coluna = 'nome' | 'membros' | 'activos' | 'inactivos' | 'pctActivos' | 'dizimos' | 'ofertas' | 'reavivamento' | 'fidelidade'
+  | 'entradasMembros' | 'perdasMembros' | 'saldo' | 'porRemeter'
 const COLUNAS: { k: Coluna; rotulo: string; tipo: 'texto' | 'int' | 'mt' | 'pct'; area?: 'membros' | 'tesouraria' }[] = [
   { k: 'nome', rotulo: 'Igreja', tipo: 'texto' },
-  { k: 'membrosActivos', rotulo: 'Membros activos', tipo: 'int', area: 'membros' },
-  { k: 'interessados', rotulo: 'Interessados', tipo: 'int', area: 'membros' },
-  { k: 'transfSaidaAno', rotulo: 'Transf. saídas (ano)', tipo: 'int', area: 'membros' },
-  { k: 'transfEntradaAno', rotulo: 'Transf. entradas (ano)', tipo: 'int', area: 'membros' },
-  { k: 'dizimistas', rotulo: 'Dizimistas', tipo: 'int', area: 'tesouraria' },
-  { k: 'pctDizimistas', rotulo: '% dizimistas', tipo: 'pct', area: 'tesouraria' },
-  { k: 'dizimosAno', rotulo: 'Dízimos (ano)', tipo: 'mt', area: 'tesouraria' },
-  { k: 'entradasAno', rotulo: 'Entradas (ano)', tipo: 'mt', area: 'tesouraria' },
-  { k: 'saidasAno', rotulo: 'Saídas (ano)', tipo: 'mt', area: 'tesouraria' },
-  { k: 'saldo', rotulo: 'Saldo', tipo: 'mt', area: 'tesouraria' },
+  { k: 'membros', rotulo: 'Membros', tipo: 'int', area: 'membros' },
+  { k: 'activos', rotulo: 'Activos', tipo: 'int', area: 'membros' },
+  { k: 'inactivos', rotulo: 'Inactivos', tipo: 'int', area: 'membros' },
+  { k: 'pctActivos', rotulo: '% activos', tipo: 'pct', area: 'membros' },
+  { k: 'dizimos', rotulo: 'Dízimos', tipo: 'mt', area: 'tesouraria' },
+  { k: 'ofertas', rotulo: 'Ofertas', tipo: 'mt', area: 'tesouraria' },
+  { k: 'reavivamento', rotulo: 'Reavivamento', tipo: 'mt', area: 'tesouraria' },
+  { k: 'fidelidade', rotulo: 'Fidelidade', tipo: 'pct', area: 'tesouraria' },
+  { k: 'entradasMembros', rotulo: 'Entradas de membros', tipo: 'int', area: 'membros' },
+  { k: 'perdasMembros', rotulo: 'Perdas de membros', tipo: 'int', area: 'membros' },
+  { k: 'saldo', rotulo: 'Saldo (hoje)', tipo: 'mt', area: 'tesouraria' },
   { k: 'porRemeter', rotulo: 'Por depositar', tipo: 'mt', area: 'tesouraria' },
 ]
 
-function usePainel() {
+function usePainelHoje() {
   return useQuery({
     queryKey: ['painel-geral', 'igrejas'],
-    queryFn: async () => (await dados(api.GET('/v1/organizacao/painel-igrejas', {}))) as unknown as LinhaIgreja[],
+    queryFn: async () => (await dados(api.GET('/v1/organizacao/painel-igrejas', {}))) as unknown as LinhaHoje[],
+    staleTime: 2 * 60_000,
+  })
+}
+function usePainelPeriodo(de: string, ate: string) {
+  return useQuery({
+    enabled: /^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate) && de <= ate,
+    queryKey: ['painel-geral', 'periodo', de, ate],
+    queryFn: async () => (await dados(api.GET('/v1/organizacao/painel-periodo', { params: { query: { inicio: de, fim: ate } } }))) as unknown as LinhaPeriodo[],
     staleTime: 2 * 60_000,
   })
 }
@@ -94,15 +120,27 @@ function usePainelMensal() {
 export default function PaginaPainelGeral() {
   const navigate = useNavigate()
   const { igrejas, escolherIgreja } = useSessao()
-  const q = usePainel()
+  const [periodo, setPeriodo] = useState<Periodo>('ano')
+  const [de, setDe] = useState(`${hojeIso().slice(0, 4)}-01-01`)
+  const [ate, setAte] = useState(hojeIso())
+  const intervalo = intervaloDe(periodo, de, ate)
+  const qp = usePainelPeriodo(intervalo.de, intervalo.ate)
+  const qh = usePainelHoje()
   const qm = usePainelMensal()
   const [entidade, setEntidade] = useState('')
   const [distrito, setDistrito] = useState('')
   const [texto, setTexto] = useState('')
-  const [medida, setMedida] = useState<Medida>('membrosActivos')
-  const [ordem, setOrdem] = useState<{ k: Coluna; desc: boolean }>({ k: 'membrosActivos', desc: true })
+  const [medida, setMedida] = useState<Medida>('membros')
+  const [ordem, setOrdem] = useState<{ k: Coluna; desc: boolean }>({ k: 'membros', desc: true })
 
-  const todas = useMemo(() => q.data ?? [], [q.data])
+  const todas: Linha[] = useMemo(() => {
+    const hoje = new Map((qh.data ?? []).map((h) => [h.id, h]))
+    return (qp.data ?? []).map((p) => {
+      const h = hoje.get(p.id)
+      return { ...p, saldo: n(h?.saldo), porRemeter: n(h?.porRemeter), provincia: h?.provincia ?? null,
+        pctActivos: razao(p.activos, p.membros), fidelidade: razao(p.contribuintes, p.membros) }
+    })
+  }, [qp.data, qh.data])
   const entidades = useMemo(() => [...new Map(todas.map((l) => [l.entidadeId, l.entidade])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt')), [todas])
   const distritos = useMemo(() => [...new Map(todas.filter((l) => l.distritoPastoralId && (!entidade || String(l.entidadeId) === entidade))
     .map((l) => [l.distritoPastoralId!, l.distritoPastoral!])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt')), [todas, entidade])
@@ -112,19 +150,20 @@ export default function PaginaPainelGeral() {
   const ids = new Set(linhas.map((l) => l.id))
   const comTes = linhas.filter((l) => l.veTesouraria)
   const comMem = linhas.filter((l) => l.veMembros)
-  const S = (l: LinhaIgreja[], f: (x: LinhaIgreja) => number) => l.reduce((s, x) => s + f(x), 0)
-  const activos = S(comMem, (l) => l.membrosActivos)
-  const dizimistas = S(comTes, (l) => l.dizimistas)
-  const activosComTes = S(comTes.filter((l) => l.veMembros), (l) => l.membrosActivos)
+  const S = (l: Linha[], f: (x: Linha) => number) => l.reduce((s, x) => s + f(x), 0)
+  const membros = S(comMem, (l) => l.membros), activos = S(comMem, (l) => l.activos), inactivos = S(comMem, (l) => l.inactivos)
+  const ambas = comTes.filter((l) => l.veMembros)
+  const contribuintes = S(ambas, (l) => l.contribuintes), membrosComTes = S(ambas, (l) => l.membros)
+  const dizimos = S(comTes, (l) => n(l.dizimos)), ofertas = S(comTes, (l) => n(l.ofertas)), reavivamento = S(comTes, (l) => n(l.reavivamento))
 
   // séries dos últimos 12 meses (soma das igrejas filtradas)
   const meses = useMemo(() => {
-    const m = new Map<string, { ano: number; mes: number; entradas: number; saidas: number; dizimos: number; dizimistas: number; admissoes: number; te: number; ts: number }>()
+    const m = new Map<string, { ano: number; mes: number; entradas: number; saidas: number; dizimos: number; ofertas: number; reav: number; admissoes: number; te: number; ts: number }>()
     for (const r of qm.data ?? []) {
       if (!ids.has(r.id)) continue
       const k = `${r.ano}-${String(r.mes).padStart(2, '0')}`
-      const x = m.get(k) ?? { ano: r.ano, mes: r.mes, entradas: 0, saidas: 0, dizimos: 0, dizimistas: 0, admissoes: 0, te: 0, ts: 0 }
-      x.entradas += n(r.entradas); x.saidas += n(r.saidas); x.dizimos += n(r.dizimos); x.dizimistas += r.dizimistas
+      const x = m.get(k) ?? { ano: r.ano, mes: r.mes, entradas: 0, saidas: 0, dizimos: 0, ofertas: 0, reav: 0, admissoes: 0, te: 0, ts: 0 }
+      x.entradas += n(r.entradas); x.saidas += n(r.saidas); x.dizimos += n(r.dizimos); x.ofertas += n(r.ofertas); x.reav += n(r.reavivamento)
       x.admissoes += r.admissoes; x.te += r.transfEntrada; x.ts += r.transfSaida
       m.set(k, x)
     }
@@ -134,13 +173,12 @@ export default function PaginaPainelGeral() {
   const categorias = meses.map((m) => `${MESES[m.mes - 1]}${m.mes === 1 ? ` ${String(m.ano).slice(2)}` : ''}`)
 
   const ordenadas = [...linhas].sort((a, b) => {
-    const va = a[ordem.k], vb = b[ordem.k]
-    const r = ordem.k === 'nome' ? String(va).localeCompare(String(vb), 'pt') : n(va as string) - n(vb as string)
+    const r = ordem.k === 'nome' ? a.nome.localeCompare(b.nome, 'pt') : n(a[ordem.k] as number) - n(b[ordem.k] as number)
     return ordem.desc ? -r : r
   })
   const ordenar = (k: Coluna) => setOrdem((o) => ({ k, desc: o.k === k ? !o.desc : k !== 'nome' }))
   const med = MEDIDAS.find((x) => x.k === medida)!
-  const comparativo = [...linhas].filter((l) => !med.tesouraria || l.veTesouraria).map((l) => ({ l, v: n(l[medida] as string) }))
+  const comparativo = linhas.filter((l) => (!med.tesouraria || l.veTesouraria) && l.veMembros).map((l) => ({ l, v: n(l[medida] as number) }))
     .sort((a, b) => b.v - a.v)
   const maxComp = Math.max(0, ...comparativo.map((c) => c.v))
   const mediaComp = comparativo.length ? comparativo.reduce((s, c) => s + c.v, 0) / comparativo.length : 0
@@ -150,90 +188,114 @@ export default function PaginaPainelGeral() {
     escolherIgreja(id)
     navigate('/')
   }
+  const aCarregar = qp.isPending
+  const erro = qp.error ?? qh.error
 
-  if (q.isError) return <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
+  if (erro) return <EstadoErro erro={erro} aoTentar={() => { void qp.refetch(); void qh.refetch() }} />
 
   return (
     <>
       <TituloPagina
         icone={ChartColumn}
         titulo="Painel geral das igrejas"
-        descricao={q.isPending ? 'A carregar…' : `${linhas.length} igreja(s)${distrito ? ` do ${distritos.find(([id]) => String(id) === distrito)?.[1]}` : entidade ? ` da ${entidades.find(([id]) => String(id) === entidade)?.[1]}` : ' a seu cargo'} · ano de ${new Date().getFullYear()}`}
+        descricao={aCarregar ? 'A carregar…' : `${linhas.length} igreja(s)${distrito ? ` do ${distritos.find(([id]) => String(id) === distrito)?.[1]}` : entidade ? ` da ${entidades.find(([id]) => String(id) === entidade)?.[1]}` : ' a seu cargo'} · ${intervalo.rotulo}`}
         accoes={<>
           <Exportar caminho="/v1/organizacao/painel-igrejas" query={{ entidadeId: entidade || undefined, distritoId: distrito || undefined }} nome="painel-geral-igrejas" />
           <Button variant="outline" className="alvo print:hidden" onClick={() => imprimirComo('Painel geral das igrejas')}><Printer className="size-4" />Imprimir</Button>
         </>}
       />
 
-      <div className="mb-5 grid gap-3 rounded-xl border bg-card p-3 shadow-card sm:grid-cols-[1fr_1fr_1.2fr] print:hidden">
-        <Seleccao aria-label="Associação / Missão" value={entidade} onChange={(e) => { setEntidade(e.target.value); setDistrito('') }} disabled={entidades.length < 2}>
-          <option value="">{entidades.length === 1 ? entidades[0][1] : 'Todas as Associações / Missões'}</option>
-          {entidades.length > 1 && entidades.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
-        </Seleccao>
-        <Seleccao aria-label="Distrito pastoral" value={distrito} onChange={(e) => setDistrito(e.target.value)} disabled={!distritos.length}>
-          <option value="">{distritos.length ? 'Todos os distritos pastorais' : 'Sem distritos pastorais'}</option>
-          {distritos.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
-        </Seleccao>
-        <div className="relative">
-          <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Procurar igreja" aria-label="Procurar igreja" className="h-9 pl-9" />
+      <div className="mb-5 grid gap-3 rounded-xl border bg-card p-3 shadow-card print:hidden">
+        <div className="flex flex-wrap items-end gap-2">
+          <div role="radiogroup" aria-label="Período" className="flex flex-wrap gap-1 rounded-lg border bg-muted/40 p-1">
+            {([['mes', 'Este mês'], ['ano', 'Este ano'], ['anterior', 'Ano anterior'], ['intervalo', 'Intervalo']] as const).map(([k, r]) => (
+              <button key={k} type="button" role="radio" aria-checked={periodo === k} onClick={() => setPeriodo(k)}
+                className={cn('alvo rounded-md px-3 text-sm font-medium', periodo === k ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
+                {r}
+              </button>
+            ))}
+          </div>
+          {periodo === 'intervalo' && (
+            <div className="flex flex-wrap items-center gap-2">
+              <CampoData aria-label="De" value={de} onChange={setDe} className="alvo w-36" />
+              <span className="text-sm text-muted-foreground">a</span>
+              <CampoData aria-label="Até" value={ate} onChange={setAte} className="alvo w-36" />
+              {de > ate && <span className="text-xs text-destructive-text">O fim tem de ser depois do início.</span>}
+            </div>
+          )}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.2fr]">
+          <Seleccao aria-label="Associação / Missão" value={entidade} onChange={(e) => { setEntidade(e.target.value); setDistrito('') }} disabled={entidades.length < 2}>
+            <option value="">{entidades.length === 1 ? entidades[0][1] : 'Todas as Associações / Missões'}</option>
+            {entidades.length > 1 && entidades.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+          </Seleccao>
+          <Seleccao aria-label="Distrito pastoral" value={distrito} onChange={(e) => setDistrito(e.target.value)} disabled={!distritos.length}>
+            <option value="">{distritos.length ? 'Todos os distritos pastorais' : 'Sem distritos pastorais'}</option>
+            {distritos.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
+          </Seleccao>
+          <div className="relative">
+            <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Procurar igreja" aria-label="Procurar igreja" className="h-9 pl-9" />
+          </div>
         </div>
       </div>
 
-      {!q.isPending && !todas.length ? (
+      {!aCarregar && !todas.length ? (
         <Cartao><EstadoVazio icone={Church} titulo="Sem igrejas a seu cargo">O painel geral mostra as igrejas da sua Associação ou do seu distrito pastoral.</EstadoVazio></Cartao>
       ) : (
         <div className="grid gap-6">
           <section aria-label="Membros" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros</h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size} distrito(s) pastoral(is)`} icone={Building2} aCarregar={q.isPending} />
-              <Indicador rotulo="Membros activos" valor={inteiro(activos)} nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados · ${inteiro(S(comMem, (l) => l.admissoesAno))} admitidos no ano`} icone={Users} tom="success" aCarregar={q.isPending} />
-              <Indicador rotulo="Transferidos no ano" valor={inteiro(S(comMem, (l) => l.transfSaidaAno))} icone={ArrowLeftRight} tom="warning" aCarregar={q.isPending}
-                nota={`${inteiro(S(comMem, (l) => l.transfEntradaAno))} recebidos · ${inteiro(S(comMem, (l) => l.transfPendentes))} cartas pendentes`} />
-              <Indicador rotulo="Dizimistas" valor={inteiro(dizimistas)} icone={HandCoins} tom="info" aCarregar={q.isPending}
-                nota={`${textoPct(activosComTes ? dizimistas / activosComTes : null)} dos membros activos · este ano`} />
+              <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size} distrito(s) pastoral(is)`} icone={Building2} aCarregar={aCarregar} />
+              <Indicador rotulo="Total de membros" valor={inteiro(membros)} icone={Users} aCarregar={aCarregar}
+                nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados · +${inteiro(S(comMem, (l) => l.entradasMembros))} / −${inteiro(S(comMem, (l) => l.perdasMembros))} no período`} />
+              <Indicador rotulo="Membros activos" valor={inteiro(activos)} icone={UserCheck} tom="success" aCarregar={aCarregar}
+                nota={`${textoPct(razao(activos, membros))} dos membros · ${inteiro(inactivos)} inactivos`} />
+              <Indicador rotulo="Fidelidade contributiva" valor={textoPct(razao(contribuintes, membrosComTes))} icone={HeartHandshake} tom="info" aCarregar={aCarregar}
+                nota={`${inteiro(contribuintes)} de ${inteiro(membrosComTes)} membros contribuíram · ${intervalo.rotulo}`} />
             </div>
           </section>
 
           <section aria-label="Situação financeira" className="grid gap-3">
-            <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Situação financeira {comTes.length < linhas.length && <span className="font-normal normal-case">· {comTes.length} de {linhas.length} igrejas com acesso à tesouraria</span>}</h2>
+            <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Contribuições e finanças {comTes.length < linhas.length && <span className="font-normal normal-case">· {comTes.length} de {linhas.length} igrejas com acesso à tesouraria</span>}</h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Indicador rotulo="Saldo nas contas" valor={mtCurto(S(comTes, (l) => n(l.saldo)))} nota="caixa, M-Pesa e bancos das igrejas" icone={Wallet} aCarregar={q.isPending} />
-              <Indicador rotulo="Entradas do ano" valor={mtCurto(S(comTes, (l) => n(l.entradasAno)))} nota={`saídas: ${mtCurto(S(comTes, (l) => n(l.saidasAno)))}`} icone={ArrowUpDown} tom="success" aCarregar={q.isPending} />
-              <Indicador rotulo="Dízimos do ano" valor={mtCurto(S(comTes, (l) => n(l.dizimosAno)))} nota={`este mês: ${mtCurto(S(comTes, (l) => n(l.dizimosMes)))}`} icone={HandCoins} tom="info" aCarregar={q.isPending} />
-              <Indicador rotulo="Por depositar à Missão" valor={mtCurto(S(comTes, (l) => n(l.porRemeter)))} icone={Landmark} aCarregar={q.isPending}
-                tom={S(comTes, (l) => n(l.porRemeter)) > 0 ? 'destructive' : 'primary'}
-                nota={`${comTes.filter((l) => n(l.porRemeter) > 0).length} igreja(s) com depósito em falta`} />
+              <Indicador rotulo="Dízimos" valor={mtCurto(dizimos)} nota={`ofertas: ${mtCurto(ofertas)} · ${intervalo.rotulo}`} icone={HandCoins} tom="info" aCarregar={aCarregar} />
+              <Indicador rotulo="Obra de reavivamento" valor={mtCurto(reavivamento)} nota={`${comTes.filter((l) => n(l.reavivamento) > 0).length} igreja(s) contribuíram · ${intervalo.rotulo}`} icone={Flame} tom="warning" aCarregar={aCarregar} />
+              <Indicador rotulo="Saldo nas contas" valor={mtCurto(S(comTes, (l) => l.saldo))} nota="hoje: caixa, M-Pesa e bancos das igrejas" icone={Wallet} aCarregar={aCarregar || qh.isPending} />
+              <Indicador rotulo="Por depositar à Missão" valor={mtCurto(S(comTes, (l) => l.porRemeter))} icone={Landmark} aCarregar={aCarregar || qh.isPending}
+                tom={S(comTes, (l) => l.porRemeter) > 0 ? 'destructive' : 'primary'}
+                nota={`hoje: ${comTes.filter((l) => l.porRemeter > 0).length} igreja(s) com depósito em falta`} />
             </div>
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Cartao titulo="Entradas e saídas" descricao="Últimos 12 meses, todas as igrejas filtradas (contas das igrejas)">
+            <Cartao titulo="Evolução das contribuições" descricao="Dízimos, ofertas e reavivamento nos últimos 12 meses">
               {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} aoTentar={() => qm.refetch()} /> : (
-                <GraficoBarras rotulo="Entradas e saídas por mês" categorias={categorias} destaque={categorias.length - 1}
-                  series={[{ nome: 'Entradas', slot: 1, valores: meses.map((m) => m.entradas) }, { nome: 'Saídas', slot: 2, valores: meses.map((m) => m.saidas) }]}
-                  formatar={(v) => textoMT(v)} />
+                <GraficoBarras rotulo="Contribuições por mês" categorias={categorias} destaque={categorias.length - 1}
+                  series={[{ nome: 'Dízimos', slot: 3, valores: meses.map((m) => m.dizimos) }, { nome: 'Ofertas', slot: 1, valores: meses.map((m) => m.ofertas) },
+                    { nome: 'Reavivamento', slot: 2, valores: meses.map((m) => m.reav) }]} formatar={(v) => textoMT(v)} />
               )}
             </Cartao>
-            <Cartao titulo="Dízimos" descricao="Últimos 12 meses · dizimistas no mês por baixo de cada barra (na tabela)">
-              {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} /> : (
-                <GraficoBarras rotulo="Dízimos por mês" categorias={categorias} destaque={categorias.length - 1}
-                  series={[{ nome: 'Dízimos', slot: 3, valores: meses.map((m) => m.dizimos) }]} formatar={(v) => textoMT(v)} />
-              )}
-            </Cartao>
-            <Cartao titulo="Movimento de membros" descricao="Admissões (baptismo, profissão de fé) e transferências, últimos 12 meses">
+            <Cartao titulo="Entradas e saídas de membros" descricao="Admissões (baptismo, profissão de fé) e transferências, últimos 12 meses">
               {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} /> : (
                 <GraficoBarras rotulo="Movimento de membros por mês" categorias={categorias} destaque={categorias.length - 1} inteiros
                   series={[{ nome: 'Admissões', slot: 1, valores: meses.map((m) => m.admissoes) }, { nome: 'Transf. entradas', slot: 3, valores: meses.map((m) => m.te) },
                     { nome: 'Transf. saídas', slot: 2, valores: meses.map((m) => m.ts) }]} formatar={(v) => inteiro(v)} />
               )}
             </Cartao>
+            <Cartao titulo="Entradas e saídas de dinheiro" descricao="Últimos 12 meses, contas das igrejas filtradas">
+              {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} /> : (
+                <GraficoBarras rotulo="Entradas e saídas por mês" categorias={categorias} destaque={categorias.length - 1}
+                  series={[{ nome: 'Entradas', slot: 1, valores: meses.map((m) => m.entradas) }, { nome: 'Saídas', slot: 2, valores: meses.map((m) => m.saidas) }]}
+                  formatar={(v) => textoMT(v)} />
+              )}
+            </Cartao>
             <Cartao titulo="Comparativo entre igrejas" descricao={`${med.rotulo} · a linha marca a média (${formatar(mediaComp)})`}
-              accoes={<div className="w-52 print:hidden"><Seleccao aria-label="Medida a comparar" value={medida} onChange={(e) => setMedida(e.target.value as Medida)}>
+              accoes={<div className="w-56 print:hidden"><Seleccao aria-label="Medida a comparar" value={medida} onChange={(e) => setMedida(e.target.value as Medida)}>
                 {MEDIDAS.map((x) => <option key={x.k} value={x.k}>{x.rotulo}</option>)}
               </Seleccao></div>}>
-              {q.isPending ? <LinhasACarregar linhas={5} /> : !comparativo.length ? <EstadoVazio>Sem dados para comparar.</EstadoVazio> : (
+              {aCarregar ? <LinhasACarregar linhas={5} /> : !comparativo.length ? <EstadoVazio>Sem dados para comparar.</EstadoVazio> : (
                 <ol className="grid max-h-80 gap-2 overflow-y-auto pr-1">
                   {comparativo.map(({ l, v }, i) => (
                     <li key={l.id} className="grid grid-cols-[1.5rem_minmax(0,9rem)_1fr_auto] items-center gap-2 text-sm">
@@ -251,9 +313,9 @@ export default function PaginaPainelGeral() {
             </Cartao>
           </div>
 
-          <Cartao titulo="Quadro comparativo das igrejas" descricao="Clique no título de uma coluna para ordenar; numa igreja para a abrir">
-            {q.isPending ? <LinhasACarregar linhas={6} /> : !linhas.length ? <EstadoVazio>Nenhuma igreja com esse filtro.</EstadoVazio> : (
-              <Folha minimo="min-w-[78rem]">
+          <Cartao titulo="Quadro comparativo das igrejas" descricao={`${intervalo.rotulo} · clique no título de uma coluna para ordenar; numa igreja para a abrir`}>
+            {aCarregar ? <LinhasACarregar linhas={6} /> : !linhas.length ? <EstadoVazio>Nenhuma igreja com esse filtro.</EstadoVazio> : (
+              <Folha minimo="min-w-[86rem]">
                 <thead>
                   <tr>
                     {COLUNAS.map((c) => (
@@ -278,12 +340,13 @@ export default function PaginaPainelGeral() {
                             </td>
                           )
                         }
-                        const sem = (c.area === 'tesouraria' && !l.veTesouraria) || (c.area === 'membros' && !l.veMembros)
+                        const sem = (c.area === 'tesouraria' && !l.veTesouraria) || (c.area === 'membros' && !l.veMembros) || (c.k === 'fidelidade' && !l.veMembros)
                         if (sem) return <td key={c.k} className="num text-xs text-muted-foreground">sem acesso</td>
-                        if (c.tipo === 'pct') return <CelulaPct key={c.k} v={l.pctDizimistas} tipo="presenca" />
-                        const v = n(l[c.k] as string)
+                        if (c.tipo === 'pct') return <CelulaPct key={c.k} v={l[c.k] as number | null} tipo="presenca" />
+                        const v = n(l[c.k] as number | string)
                         return (
-                          <td key={c.k} className={cn('num tabular-nums', c.k === 'porRemeter' && v > 0 && 'font-semibold text-destructive-text', c.k === 'saldo' && v < 0 && 'text-destructive-text')}>
+                          <td key={c.k} className={cn('num tabular-nums', c.k === 'porRemeter' && v > 0 && 'font-semibold text-destructive-text',
+                            c.k === 'saldo' && v < 0 && 'text-destructive-text', c.k === 'inactivos' && v > 0 && 'text-warning-text')}>
                             {c.tipo === 'mt' ? textoMT(v) : inteiro(v)}
                           </td>
                         )
@@ -295,9 +358,10 @@ export default function PaginaPainelGeral() {
                   <tr>
                     <td>Total ({linhas.length} igrejas)</td>
                     {COLUNAS.slice(1).map((c) => {
+                      if (c.k === 'pctActivos') return <CelulaPct key={c.k} v={razao(activos, membros)} />
+                      if (c.k === 'fidelidade') return <CelulaPct key={c.k} v={razao(contribuintes, membrosComTes)} />
                       const base = c.area === 'tesouraria' ? comTes : comMem
-                      if (c.tipo === 'pct') return <CelulaPct key={c.k} v={activosComTes ? dizimistas / activosComTes : null} />
-                      const v = S(base, (l) => n(l[c.k] as string))
+                      const v = S(base, (l) => n(l[c.k] as number | string))
                       return <td key={c.k} className="num tabular-nums">{c.tipo === 'mt' ? textoMT(v) : inteiro(v)}</td>
                     })}
                   </tr>
@@ -305,9 +369,10 @@ export default function PaginaPainelGeral() {
               </Folha>
             )}
             <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Pilula variante="outline">ano de {new Date().getFullYear()}</Pilula>
-              Dizimistas = membros com dízimo confirmado este ano (também os pagos directamente na Missão). Saldo = contas da igreja, sem a conta da Missão.
-              Por depositar = parte da Missão dos meses já terminados que ainda não foi depositada.
+              <Pilula variante="outline">{intervalo.rotulo}</Pilula>
+              Membros = estado activo no livro; inactivos = sem presença na Escola Sabatina nem contribuição há 6 meses. Fidelidade = membros que
+              contribuíram (eles ou a família) no período ÷ membros. Ofertas = as outras entradas, sem o dízimo nem o reavivamento. Saldo e
+              depósitos em falta são de hoje.
             </p>
           </Cartao>
         </div>

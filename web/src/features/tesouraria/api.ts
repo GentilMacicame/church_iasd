@@ -103,7 +103,7 @@ export function useFundosMut() {
   const qc = useQueryClient()
   const depois = () => qc.invalidateQueries({ queryKey: ['tesouraria', 'fundos'] })
   const criar = useMutation({
-    mutationFn: (v: { nome: string; tipo: 'OFERTA_ESPECIAL' | 'PROJECTO'; restrito: boolean }) => {
+    mutationFn: (v: { nome: string; tipo: 'OFERTA_ESPECIAL' | 'PROJECTO' | 'REAVIVAMENTO'; restrito: boolean }) => {
       // código único (o índice é de todas as igrejas): I<igreja>-<nome abreviado>-<sufixo>
       const base = v.nome.normalize('NFD').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'OFERTA'
       const codigo = `I${igreja.id}-${base}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`.slice(0, 20)

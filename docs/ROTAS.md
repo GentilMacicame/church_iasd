@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 480 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 481 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -250,6 +250,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/organizacao/igrejas/{id}/terminar` | IgrejasController · terminar | `organizacao.igreja.terminar` |
 | GET | `/v1/organizacao/painel-igrejas` | RelatoriosOrganizacaoController · painelIgrejas | `'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)'` |
 | GET | `/v1/organizacao/painel-igrejas-mensal` | RelatoriosOrganizacaoController · painelIgrejasMensal | `'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)'` |
+| GET | `/v1/organizacao/painel-periodo` | RelatoriosOrganizacaoController · painelPeriodo | `'qualquer utilizador com sessão: só as igrejas e as áreas que pode ver'` |
 | GET | `/v1/organizacao/provincias` | ProvinciasController · listar | — |
 | POST | `/v1/organizacao/provincias` | ProvinciasController · criar | `organizacao.provincia.criar` |
 | GET | `/v1/organizacao/provincias/{id}` | ProvinciasController · obter | — |

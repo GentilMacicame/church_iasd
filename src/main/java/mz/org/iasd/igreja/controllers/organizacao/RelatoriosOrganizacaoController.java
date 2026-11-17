@@ -1,15 +1,22 @@
 package mz.org.iasd.igreja.controllers.organizacao;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import mz.org.iasd.igreja.Rotas;
 import mz.org.iasd.igreja.controllers.base.BaseRelatoriosController;
+import mz.org.iasd.igreja.controllers.base.Parametros;
+import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.repositories.base.Relatorio;
+import mz.org.iasd.igreja.repositories.organizacao.PainelRepository;
 
 /**
  * Relatórios da organização.
@@ -49,6 +56,27 @@ public class RelatoriosOrganizacaoController extends BaseRelatoriosController {
     @Path(Rotas.Organizacao.PAINEL_IGREJAS_MENSAL)
     public Response painelIgrejasMensal() throws SQLException {
         return responder(PAINEL_IGREJAS_MENSAL);
+    }
+
+    /**
+     * V38: o dashboard no período escolhido, igreja a igreja (membros activos e inactivos, dízimos, ofertas,
+     * reavivamento, contribuintes, entradas e perdas de membros). Cada um só recebe as igrejas que pode ver.
+     */
+    @GET
+    @Path(Rotas.Organizacao.PAINEL_PERIODO)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response painelPeriodo(@QueryParam("inicio") String inicio, @QueryParam("fim") String fim,
+                                  @QueryParam("entidadeId") String entidadeId, @QueryParam("distritoId") String distritoId) throws SQLException {
+        LocalDate de = Parametros.data(inicio, "inicio", true);
+        LocalDate ate = Parametros.data(fim, "fim", true);
+        if (ate.isBefore(de)) {
+            throw ApiException.pedidoInvalido("O fim não pode ser antes do início", "fim");
+        }
+        if (de.plusYears(5).isBefore(ate)) {
+            throw ApiException.pedidoInvalido("Escolha um período até 5 anos", "fim");
+        }
+        return Response.ok(PainelRepository.periodo(unidade.ligacao(), de, ate, Parametros.inteiro(entidadeId, "entidadeId", false),
+                Parametros.inteiro(distritoId, "distritoId", false))).build();
     }
 
     @GET

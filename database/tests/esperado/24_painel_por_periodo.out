@@ -1,0 +1,34 @@
+1. tesoureiro da igreja 1: cria o fundo da obra de reavivamento (fundo próprio da igreja)
+ fun_codigo |   fun_tipo   | fun_percentagem_remessa 
+------------+--------------+-------------------------
+ I1-REAV    | REAVIVAMENTO |                    0.00
+(1 row)
+
+   um fundo da igreja não pode ser dízimo (o dízimo é da Missão)
+psql:database/tests/24_painel_por_periodo.sql:16: ERROR:  new row for relation "fundo" violates check constraint "chk_fun_associacao"
+2. painel do 4.º trimestre de 2026 visto pelo tesoureiro da igreja 1: só a sua igreja (o dinheiro conta onde foi lançado)
+              nome               | ve_membros | ve_tesouraria | dizimos | ofertas | reavivamento | contribuintes 
+---------------------------------+------------+---------------+---------+---------+--------------+---------------
+ Igreja Adventista do Sétimo Dia | t          | t             | 4200.00 | 1950.00 |         0.00 |             1
+(1 row)
+
+3. pastor do distrito: as duas igrejas do distrito, com membros, inactivos, dinheiro e movimento do livro
+ igr_id | membros | soma_certa | dizimos | ofertas | contribuintes | fidelidade | entradas_membros | perdas_membros 
+--------+---------+------------+---------+---------+---------------+------------+------------------+----------------
+      1 |      13 | t          | 4200.00 | 1950.00 |             1 |       0.08 |                1 |              1
+      2 |       2 | t          |    0.00 |    0.00 |             1 |       0.50 |                1 |              0
+(2 rows)
+
+   só Dezembro: menos dízimos
+ igr_id | dizimos 
+--------+---------
+      1 | 3000.00
+      2 |    0.00
+(2 rows)
+
+4. sem perfil: nenhuma igreja
+ igrejas 
+---------
+       0
+(1 row)
+

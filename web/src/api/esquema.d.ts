@@ -3218,6 +3218,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/organizacao/painel-periodo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard por período (igreja a igreja)
+         * @description Membros (ACTIVO), activos e inactivos (sem presença na ES nem contribuição há 6 meses), dízimos, ofertas (as outras entradas menos o reavivamento), reavivamento, contribuintes (fidelidade = contribuintes / membros), entradas e perdas de membros.
+         */
+        get: operations["painelPeriodo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/organizacao/provincias": {
         parameters: {
             query?: never;
@@ -7961,7 +7981,7 @@ export interface components {
         /** @enum {string} */
         EnumTipoEntidade: "CONFERENCIA_GERAL" | "DIVISAO" | "UNIAO" | "ASSOCIACAO" | "MISSAO" | "CAMPO";
         /** @enum {string} */
-        EnumTipoFundo: "DIZIMO" | "OFERTA_MISSIONARIA" | "ES_MISSOES" | "ES_13_SABADO" | "ES_DESPESAS" | "OFERTA_COMBINADA" | "OFERTA_ESPECIAL" | "ORCAMENTO_LOCAL" | "PROJECTO";
+        EnumTipoFundo: "DIZIMO" | "OFERTA_MISSIONARIA" | "ES_MISSOES" | "ES_13_SABADO" | "ES_DESPESAS" | "OFERTA_COMBINADA" | "OFERTA_ESPECIAL" | "ORCAMENTO_LOCAL" | "PROJECTO" | "REAVIVAMENTO";
         /** @enum {string} */
         EnumTipoIdentificacao: "BI" | "PASSAPORTE" | "DIRE" | "CEDULA" | "CARTA_CONDUCAO" | "OUTRO";
         /** @enum {string} */
@@ -16449,6 +16469,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    painelPeriodo: {
+        parameters: {
+            query: {
+                inicio: string;
+                fim: string;
+                entidadeId?: number;
+                distritoId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        nome: string;
+                        entidadeId?: number;
+                        entidade?: string;
+                        distritoPastoralId?: number | null;
+                        distritoPastoral?: string | null;
+                        veMembros?: boolean;
+                        veTesouraria?: boolean;
+                        membros: number;
+                        activos: number;
+                        inactivos: number;
+                        interessados?: number;
+                        /** @example 650.00 */
+                        dizimos?: string;
+                        /** @example 650.00 */
+                        ofertas?: string;
+                        /** @example 650.00 */
+                        reavivamento?: string;
+                        contribuintes?: number;
+                        entradasMembros?: number;
+                        perdasMembros?: number;
+                    }[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

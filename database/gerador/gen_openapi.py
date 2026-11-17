@@ -361,6 +361,21 @@ paths['/v1/tesouraria/alvo-sugerido'] = {'get': op(
     responses=resp('200', obj(['valor'], valor={**MONEY, 'nullable': True})))}
 rel('/v1/tesouraria/fundo-mensal', 'tesouraria.vw_fundo_mensal', TES, 'tesouraria.saldo_diario_fundo.ler',
     ANO + [{'name': 'fundoId', 'in': 'query', 'schema': I}])
+# V38: dashboard por período, igreja a igreja
+PAINEL_LINHA = obj(['id', 'nome', 'membros', 'activos', 'inactivos'], id=I, nome=STR, entidadeId=I, entidade=STR,
+                   distritoPastoralId={**I, 'nullable': True}, distritoPastoral={**STR, 'nullable': True},
+                   veMembros={'type': 'boolean'}, veTesouraria={'type': 'boolean'},
+                   membros=I, activos=I, inactivos=I, interessados=I, dizimos=MONEY, ofertas=MONEY, reavivamento=MONEY,
+                   contribuintes=I, entradasMembros=I, perdasMembros=I)
+paths['/v1/organizacao/painel-periodo'] = {'get': op(
+    'Dashboard por período (igreja a igreja)', TITULO['organizacao'],
+    'qualquer utilizador com sessão: só as igrejas e as áreas que pode ver', operationId='painelPeriodo',
+    **{'x-funcao-bd': 'organizacao.fn_painel_periodo'},
+    description='Membros (ACTIVO), activos e inactivos (sem presença na ES nem contribuição há 6 meses), dízimos, ofertas (as outras '
+                'entradas menos o reavivamento), reavivamento, contribuintes (fidelidade = contribuintes / membros), entradas e perdas de membros.',
+    parameters=[{'name': 'inicio', 'in': 'query', 'required': True, 'schema': D}, {'name': 'fim', 'in': 'query', 'required': True, 'schema': D},
+                {'name': 'entidadeId', 'in': 'query', 'schema': I}, {'name': 'distritoId', 'in': 'query', 'schema': I}],
+    responses=resp('200', {'type': 'array', 'items': PAINEL_LINHA}))}
 # V34: programa anual com a execução financeira e conflitos de calendário
 rel('/v1/actividades/programa', 'actividades.vw_actividades_execucao', TITULO['actividades'], 'actividades.actividade.ler', ANO)
 DT_N = {**DT, 'nullable': True}

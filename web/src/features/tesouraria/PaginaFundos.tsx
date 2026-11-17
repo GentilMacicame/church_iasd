@@ -64,7 +64,7 @@ export default function PaginaFundos() {
                         <td className="sm:pl-6">
                           <p className="font-medium">{f.nome}</p>
                           <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                            <Pilula variante={f.tipo === 'PROJECTO' ? 'info' : 'secondary'}>{f.tipo === 'PROJECTO' ? 'Projecto' : 'Oferta especial'}</Pilula>
+                            <Pilula variante={f.tipo === 'PROJECTO' ? 'info' : f.tipo === 'REAVIVAMENTO' ? 'success' : 'secondary'}>{f.tipo === 'PROJECTO' ? 'Projecto' : f.tipo === 'REAVIVAMENTO' ? 'Reavivamento' : 'Oferta especial'}</Pilula>
                             {f.restrito && 'só se gasta neste fim'}
                           </p>
                         </td>
@@ -121,7 +121,7 @@ export default function PaginaFundos() {
 function DialogoOferta({ aoFechar }: { aoFechar: () => void }) {
   const { criar } = useFundosMut()
   const [nome, setNome] = useState('')
-  const [tipo, setTipo] = useState<'OFERTA_ESPECIAL' | 'PROJECTO'>('OFERTA_ESPECIAL')
+  const [tipo, setTipo] = useState<'OFERTA_ESPECIAL' | 'PROJECTO' | 'REAVIVAMENTO'>('OFERTA_ESPECIAL')
   const [erro, setErro] = useState<string | null>(null)
   const submeter = async () => {
     setErro(null)
@@ -149,7 +149,8 @@ function DialogoOferta({ aoFechar }: { aoFechar: () => void }) {
           </div>
           <div role="radiogroup" aria-label="Tipo de oferta" className="grid gap-2">
             {[{ v: 'OFERTA_ESPECIAL' as const, r: 'Oferta especial', d: 'Gratidão, Dorcas, assistência: gasta-se nas despesas da igreja' },
-              { v: 'PROJECTO' as const, r: 'Projecto', d: 'Construção, viatura, instrumentos: só se gasta nesse fim' }].map((o) => (
+              { v: 'PROJECTO' as const, r: 'Projecto', d: 'Construção, viatura, instrumentos: só se gasta nesse fim' },
+              { v: 'REAVIVAMENTO' as const, r: 'Obra de reavivamento', d: 'Contribuições mensais para o reavivamento; meta anual com +5% (Alvos)' }].map((o) => (
               <button key={o.v} type="button" role="radio" aria-checked={tipo === o.v} onClick={() => setTipo(o.v)}
                 className={cn('alvo rounded-lg border px-3 py-2.5 text-left', tipo === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
                 <span className="block text-sm font-medium">{o.r}</span>
