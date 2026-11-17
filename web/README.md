@@ -233,6 +233,12 @@ src/
   **dízimo do mês já foi lançado** em nome da família do membro (ou de um membro da família) e pede "Conferi: não é o
   mesmo dízimo". Novo alvo sugere a **meta do ano anterior + 5%** (ex.: obra de reavivamento, um fundo da igreja), ajustável.
 
+- **Comunicados** (V37, menu Comunicados, `features/comunicados/`): mural com os comunicados em vigor para o utilizador
+  (da igreja, do distrito pastoral e da Missão; os 3 mais recentes também no Início); Gerir (quem publica): rascunhos,
+  publicados, agendados, expirados e arquivados em tabela, com editar, publicar, arquivar e retirar. Novo comunicado:
+  quem publica (esta igreja, o distrito se for o pastor, a Associação se tiver perfil lá), para que igrejas (todas ou
+  escolhidas), público (todos os membros ou só a liderança), publicar em e válido até.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

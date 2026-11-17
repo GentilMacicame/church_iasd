@@ -16,7 +16,7 @@ RES = {  # nome do recurso na API (plural, com hífen)
  'transacao':'transacoes','transacao_linha':'linhas-transacao','saldo_diario_conta':'saldos-diarios-conta',
  'saldo_diario_fundo':'saldos-diarios-fundo','recibo':'recibos','documento':'documentos','remessa':'remessas',
  'remessa_linha':'linhas-remessa','fecho_periodo':'fechos','extrato_linha':'extractos',
- 'pagamento_mpesa':'mpesa','mpesa_callback_log':'mpesa-callbacks','pagamento_bancario':'bancarios','notificacao':'notificacoes',
+ 'pagamento_mpesa':'mpesa','mpesa_callback_log':'mpesa-callbacks','pagamento_bancario':'bancarios','notificacao':'notificacoes','comunicado':'comunicados','comunicado_igreja':'comunicados-igrejas',
 }
 def modpath(schema): return schema.replace('_','-')
 if __name__=='__main__':

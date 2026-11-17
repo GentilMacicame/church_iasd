@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 468 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 480 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -144,6 +144,18 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | --- | --- | --- | --- |
 | GET | `/v1/nucleo/auditoria` | AuditoriaController · listar | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/auditoria/{id}` | AuditoriaController · obter | `nucleo.log_auditoria.ler` |
+| GET | `/v1/nucleo/comunicados` | ComunicadosController · listar | `nucleo.comunicado.ler` |
+| POST | `/v1/nucleo/comunicados` | ComunicadosController · criar | `nucleo.comunicado.criar` |
+| GET | `/v1/nucleo/comunicados-igrejas` | ComunicadosIgrejasController · listar | `nucleo.comunicado_igreja.ler` |
+| POST | `/v1/nucleo/comunicados-igrejas` | ComunicadosIgrejasController · criar | `nucleo.comunicado_igreja.criar` |
+| GET | `/v1/nucleo/comunicados-igrejas/{id}` | ComunicadosIgrejasController · obter | `nucleo.comunicado_igreja.ler` |
+| PATCH | `/v1/nucleo/comunicados-igrejas/{id}` | ComunicadosIgrejasController · alterar | `nucleo.comunicado_igreja.alterar` |
+| POST | `/v1/nucleo/comunicados-igrejas/{id}/reactivar` | ComunicadosIgrejasController · reactivar | `nucleo.comunicado_igreja.terminar` |
+| POST | `/v1/nucleo/comunicados-igrejas/{id}/terminar` | ComunicadosIgrejasController · terminar | `nucleo.comunicado_igreja.terminar` |
+| GET | `/v1/nucleo/comunicados/{id}` | ComunicadosController · obter | `nucleo.comunicado.ler` |
+| PATCH | `/v1/nucleo/comunicados/{id}` | ComunicadosController · alterar | `nucleo.comunicado.alterar` |
+| POST | `/v1/nucleo/comunicados/{id}/reactivar` | ComunicadosController · reactivar | `nucleo.comunicado.terminar` |
+| POST | `/v1/nucleo/comunicados/{id}/terminar` | ComunicadosController · terminar | `nucleo.comunicado.terminar` |
 | GET | `/v1/nucleo/notificacoes` | NotificacoesController · listar | `nucleo.notificacao.ler` |
 | POST | `/v1/nucleo/notificacoes` | NotificacoesController · criar | `nucleo.notificacao.criar` |
 | GET | `/v1/nucleo/notificacoes-a-enviar` | RelatoriosNucleoController · notificacoesAEnviar | `nucleo.notificacao.ler` |

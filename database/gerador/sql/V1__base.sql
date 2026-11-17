@@ -74,6 +74,7 @@ CREATE TYPE nucleo.estado_orcamento_t      AS ENUM ('RASCUNHO', 'APROVADO', 'ENC
 CREATE TYPE nucleo.tipo_documento_t        AS ENUM ('FACTURA', 'RECIBO', 'COMPROVATIVO', 'EXTRACTO', 'OUTRO');
 CREATE TYPE nucleo.canal_notificacao_t     AS ENUM ('SMS', 'WHATSAPP', 'EMAIL');
 CREATE TYPE nucleo.estado_notificacao_t    AS ENUM ('PENDENTE', 'ENVIADA', 'FALHADA', 'CANCELADA');
+CREATE TYPE nucleo.estado_comunicado_t     AS ENUM ('RASCUNHO', 'PUBLICADO', 'ARQUIVADO');
 
 -- ---------------------------------------------------------------- funções comuns
 CREATE FUNCTION nucleo.fn_usuario_sessao() RETURNS INT AS $$

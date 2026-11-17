@@ -87,6 +87,12 @@ public final class Rotas {
         /** NotificacoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String NOTIFICACOES = "/v1/nucleo/notificacoes";
 
+        /** ComunicadosController · rotas-padrão (V37): comunicados da igreja, do distrito ou da Associação */
+        public static final String COMUNICADOS = "/v1/nucleo/comunicados";
+
+        /** ComunicadosIgrejasController · rotas-padrão (V37): igrejas destinatárias de um comunicado */
+        public static final String COMUNICADOS_IGREJAS = "/v1/nucleo/comunicados-igrejas";
+
         /** PerfisPermissoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String PERFIS_PERMISSOES = "/v1/nucleo/perfis-permissoes";
 

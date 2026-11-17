@@ -1,0 +1,80 @@
+1. secretário (autorizado): publica para os membros da igreja 1 e guarda um rascunho
+      cmc_titulo      | cmc_publico | cmc_estado 
+----------------------+-------------+------------
+ Santa Ceia no sábado | MEMBROS     | PUBLICADO
+(1 row)
+
+                                           secretario_ve                                           
+---------------------------------------------------------------------------------------------------
+ Ainda não começou | Já expirou | Rascunho da igreja | Reunião da liderança | Santa Ceia no sábado
+(1 row)
+
+   validade antes da publicação, emissor duplo, igrejas escolhidas num comunicado da igreja: recusados
+psql:database/tests/23_comunicados.sql:28: ERROR:  new row for relation "comunicado" violates check constraint "chk_cmc_validade"
+psql:database/tests/23_comunicados.sql:29: ERROR:  new row for relation "comunicado" violates check constraint "chk_cmc_emissor"
+psql:database/tests/23_comunicados.sql:31: ERROR:  O comunicado de uma igreja é para os membros dessa igreja: não se escolhem outras igrejas
+   o secretário de uma igreja não publica pelo distrito
+psql:database/tests/23_comunicados.sql:33: ERROR:  new row violates row-level security policy for table "comunicado"
+2. tesoureiro da igreja 1 (só lê): vê os publicados em vigor (também os da liderança), não os rascunhos; não publica
+                tesoureiro_ve                
+---------------------------------------------
+ Reunião da liderança | Santa Ceia no sábado
+(1 row)
+
+psql:database/tests/23_comunicados.sql:38: ERROR:  new row violates row-level security policy for table "comunicado"
+3. membro com sessão (Tito, igreja 1): vê só os publicados para MEMBROS
+      membro_ve       
+----------------------
+ Santa Ceia no sábado
+(1 row)
+
+4. pastor do distrito: publica para o distrito; depois restringe à igreja 2; a igreja de outro distrito é recusada
+     cmc_titulo     
+--------------------
+ Campanha distrital
+(1 row)
+
+                 membro_ve                 
+-------------------------------------------
+ Campanha distrital | Santa Ceia no sábado
+(1 row)
+
+ cmi_igr_id 
+------------
+          2
+(1 row)
+
+psql:database/tests/23_comunicados.sql:54: ERROR:  Esta igreja não é do distrito que publica o comunicado
+   agora só para a igreja 2: o Tito (igreja 1) deixa de o ver; o tesoureiro da igreja 2 vê-o
+      membro_ve       
+----------------------
+ Santa Ceia no sábado
+(1 row)
+
+ tesoureiro_igreja_2_ve 
+------------------------
+ Campanha distrital
+(1 row)
+
+5. Associação: publica para a liderança de todas as suas igrejas
+     cmc_titulo     
+--------------------
+ Circular da Missão
+(1 row)
+
+                          tesoureiro_ve                           
+------------------------------------------------------------------
+ Circular da Missão | Reunião da liderança | Santa Ceia no sábado
+(1 row)
+
+      membro_ve       
+----------------------
+ Santa Ceia no sábado
+(1 row)
+
+6. sem perfil nem membro: não vê nada
+ sem_perfil_ve 
+---------------
+ (nada)
+(1 row)
+

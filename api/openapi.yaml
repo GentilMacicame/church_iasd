@@ -4546,6 +4546,434 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados:
+    get:
+      summary: 'Comunicados: listar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.ler
+      operationId: listarComunicado
+      description: 'Comunicados e anúncios: de uma igreja, do distrito pastoral ou da Associação/Missão (V37)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: distritoId
+        in: query
+        schema:
+          type: integer
+      - name: entidadeId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoComunicado'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comunicado'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Comunicados: criar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.criar
+      operationId: criarComunicado
+      description: 'Comunicados e anúncios: de uma igreja, do distrito pastoral ou da Associação/Missão (V37)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/Comunicado'
+              required:
+              - titulo
+              - conteudo
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados-igrejas:
+    get:
+      summary: 'Comunicados igrejas: listar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.ler
+      operationId: listarComunicadoIgreja
+      description: Igrejas a que se dirige um comunicado do distrito ou da Associação (sem linhas = todas) (V37)
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: comunicadoId
+        in: query
+        schema:
+          type: integer
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ComunicadoIgreja'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Comunicados igrejas: criar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.criar
+      operationId: criarComunicadoIgreja
+      description: Igrejas a que se dirige um comunicado do distrito ou da Associação (sem linhas = todas) (V37)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ComunicadoIgreja'
+              required:
+              - comunicadoId
+              - igrejaId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunicadoIgreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados-igrejas/{id}:
+    get:
+      summary: 'Comunicados igrejas: ler um'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.ler
+      operationId: lerComunicadoIgreja
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunicadoIgreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Comunicados igrejas: alterar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.alterar
+      operationId: alterarComunicadoIgreja
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComunicadoIgreja'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunicadoIgreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados-igrejas/{id}/reactivar:
+    post:
+      summary: 'Comunicados igrejas: reactivar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.terminar
+      operationId: reactivarComunicadoIgreja
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunicadoIgreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados-igrejas/{id}/terminar:
+    post:
+      summary: 'Comunicados igrejas: terminar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado_igreja.terminar
+      operationId: terminarComunicadoIgreja
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunicadoIgreja'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados/{id}:
+    get:
+      summary: 'Comunicados: ler um'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.ler
+      operationId: lerComunicado
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Comunicados: alterar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.alterar
+      operationId: alterarComunicado
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comunicado'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados/{id}/reactivar:
+    post:
+      summary: 'Comunicados: reactivar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.terminar
+      operationId: reactivarComunicado
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/comunicados/{id}/terminar:
+    post:
+      summary: 'Comunicados: terminar'
+      tags:
+      - Comunicação
+      x-permissao: nucleo.comunicado.terminar
+      operationId: terminarComunicado
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/nucleo/notificacoes:
     get:
       summary: 'Notificacoes: listar'
@@ -18544,6 +18972,115 @@ components:
       x-obrigatorios-ao-criar:
       - classeId
       - trimestreId
+    Comunicado:
+      type: object
+      description: 'Comunicados e anúncios: de uma igreja, do distrito pastoral ou da Associação/Missão (V37)'
+      x-tabela: nucleo.comunicado
+      x-prefixo: cmc
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Publicado por esta igreja (para os seus membros)
+        distritoId:
+          type: integer
+          format: int32
+          description: → organizacao.distrito · Publicado pelo distrito pastoral (para as igrejas do distrito)
+        entidadeId:
+          type: integer
+          format: int32
+          description: → organizacao.entidade · Publicado pela Associação/Missão (para as suas igrejas)
+        titulo:
+          type: string
+          maxLength: 200
+        conteudo:
+          type: string
+        publico:
+          type: string
+          maxLength: 10
+          description: MEMBROS (todos os membros) ou LIDERANCA (só quem tem perfil nas igrejas)
+        publicarEm:
+          type: string
+          format: date-time
+          description: A partir de quando aparece
+        validoAte:
+          type: string
+          format: date-time
+          description: Deixa de aparecer depois desta data (vazio = sem fim)
+        estado:
+          $ref: '#/components/schemas/EnumEstadoComunicado'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - titulo
+      - conteudo
+    ComunicadoIgreja:
+      type: object
+      description: Igrejas a que se dirige um comunicado do distrito ou da Associação (sem linhas = todas) (V37)
+      x-tabela: nucleo.comunicado_igreja
+      x-prefixo: cmi
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        comunicadoId:
+          type: integer
+          format: int32
+          description: → nucleo.comunicado
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - comunicadoId
+      - igrejaId
     Consentimento:
       type: object
       description: 'Consentimentos para tratamento de dados (menores: dado pelo encarregado)'
@@ -19287,6 +19824,12 @@ components:
       - VIUVO
       - UNIAO_FACTO
       - NOIVO
+    EnumEstadoComunicado:
+      type: string
+      enum:
+      - RASCUNHO
+      - PUBLICADO
+      - ARQUIVADO
     EnumEstadoContagem:
       type: string
       enum:

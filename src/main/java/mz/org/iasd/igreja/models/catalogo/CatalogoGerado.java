@@ -18,6 +18,8 @@ import mz.org.iasd.igreja.models.escolasabatina.RelatorioSabado;
 import mz.org.iasd.igreja.models.escolasabatina.Sabado;
 import mz.org.iasd.igreja.models.escolasabatina.Trimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Visitante;
+import mz.org.iasd.igreja.models.nucleo.Comunicado;
+import mz.org.iasd.igreja.models.nucleo.ComunicadoIgreja;
 import mz.org.iasd.igreja.models.nucleo.LogAuditoria;
 import mz.org.iasd.igreja.models.nucleo.Notificacao;
 import mz.org.iasd.igreja.models.nucleo.Perfil;
@@ -75,6 +77,7 @@ import mz.org.iasd.igreja.models.tipos.EsDivisao;
 import mz.org.iasd.igreja.models.tipos.Escolaridade;
 import mz.org.iasd.igreja.models.tipos.EstadoActividade;
 import mz.org.iasd.igreja.models.tipos.EstadoCivil;
+import mz.org.iasd.igreja.models.tipos.EstadoComunicado;
 import mz.org.iasd.igreja.models.tipos.EstadoContagem;
 import mz.org.iasd.igreja.models.tipos.EstadoDespesa;
 import mz.org.iasd.igreja.models.tipos.EstadoEscala;
@@ -124,6 +127,7 @@ public final class CatalogoGerado {
             Escolaridade.class,
             EstadoActividade.class,
             EstadoCivil.class,
+            EstadoComunicado.class,
             EstadoContagem.class,
             EstadoDespesa.class,
             EstadoEscala.class,
@@ -223,7 +227,9 @@ public final class CatalogoGerado {
             PagamentoMpesa.class,
             MpesaCallbackLog.class,
             PagamentoBancario.class,
-            Notificacao.class);
+            Notificacao.class,
+            Comunicado.class,
+            ComunicadoIgreja.class);
 
     /** Valores de cada tipo enumerado do schema nucleo. */
     public static final Map<String, List<String>> ENUMS = LeitorModelos.enums(TIPOS);

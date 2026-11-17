@@ -1067,6 +1067,37 @@ class BaseDadosTest {
                 c -> ContribuicoesRepository.sobrepostas(c, inactivo, null, java.time.LocalDate.parse("2026-12-15"))).size());
     }
 
+    // ------------------------------------------------------------------ V37: comunicados
+
+    @Test
+    void comunicadoDaIgrejaPublicadoPeloSecretarioELidoPelosOutros() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v37@teste.mz", null, "SECRETARIO");
+        int semPerfil = criarUsuarioComDono("membro.v37@teste.mz", null, "MEMBRO");
+        var comunicado = Catalogo.de(mz.org.iasd.igreja.models.nucleo.Comunicado.class);
+        JsonObject corpo = Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("titulo", "Culto de acção de graças")
+                .add("conteudo", "Domingo às 9h.").add("estado", "PUBLICADO").add("publicarEm", "2026-01-01T08:00:00+02:00").build();
+
+        // o tesoureiro (só lê comunicados) não publica → 403
+        SQLException naoPublica = assertThrows(SQLException.class,
+                () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, comunicado, corpo)));
+        assertEquals(403, TradutorErrosSql.traduzir(naoPublica).estadoHttp());
+
+        // o secretário publica; o tesoureiro da mesma igreja lê-o; quem não tem perfil não o vê (404)
+        JsonObject criado = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, comunicado, corpo));
+        long id = criado.getJsonNumber("id").longValue();
+        assertEquals("MEMBROS", criado.getString("publico"));
+        assertEquals("Culto de acção de graças", ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.obterOu404(c, comunicado, id)).getString("titulo"));
+        ApiException naoVe = assertThrows(ApiException.class,
+                () -> ExecutorTransaccao.executar(api, semPerfil, c -> TabelaRepository.obterOu404(c, comunicado, id)));
+        assertEquals(404, naoVe.estadoHttp());
+
+        // a validade antes da publicação é recusada com a frase da base (422)
+        SQLException validade = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c ->
+                TabelaRepository.alterar(c, comunicado, id, Json.createObjectBuilder().add("validoAte", "2025-12-31T00:00:00+02:00").build())));
+        assertEquals(422, TradutorErrosSql.traduzir(validade).estadoHttp());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

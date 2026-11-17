@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, HandCoins,
-  LayoutDashboard, Mic, Plus, Sprout, UserPlus, Users, Wallet,
+  LayoutDashboard, Megaphone, Mic, Plus, Sprout, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -24,6 +24,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos, useParticipacao } from '@/features/membros/api'
+import { emVigor as comunicadoEmVigor, useComunicados } from '@/features/comunicados/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
 import { useResumoMensal } from '@/features/tesouraria/api'
 import { useAlertas, type Alerta } from '@/features/alertas/loja'
@@ -402,6 +403,26 @@ function Composicao({ className }: { className?: string }) {
   )
 }
 
+/** V37: os comunicados em vigor para mim (os 3 mais recentes), com a ligação para o mural. Sem nenhum, nada aparece. */
+function ComunicadosEmVigor() {
+  const q = useComunicados()
+  const lista = (q.data ?? []).filter((c) => comunicadoEmVigor(c)).slice(0, 3)
+  if (!lista.length) return null
+  return (
+    <Cartao titulo="Comunicados" descricao="Da igreja, do distrito e da Missão" icone={Megaphone}
+      accoes={<Button asChild variant="ghost" size="sm"><Link to="/comunicados">{t.comum.verTodos}</Link></Button>}>
+      <ul className="grid gap-3">
+        {lista.map((c) => (
+          <li key={c.id} className="border-l-2 border-primary/40 pl-3">
+            <p className="text-sm font-semibold">{c.titulo}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{c.conteudo}</p>
+          </li>
+        ))}
+      </ul>
+    </Cartao>
+  )
+}
+
 /* ===================================================================== página */
 function Indicadores({ comTesouraria }: { comTesouraria: boolean }) {
   const { pode } = useSessao()
@@ -461,6 +482,7 @@ export default function PaginaInicio() {
       />
       <div className="grid gap-6">
         <Indicadores comTesouraria={comTesouraria} />
+        <ComunicadosEmVigor />
 
         <div className="grid items-stretch gap-6 lg:grid-cols-12">
           <ListaAtencao />
