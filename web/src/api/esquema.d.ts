@@ -6785,6 +6785,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/participantes-contagem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Participantes contagem: listar
+         * @description Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)
+         */
+        get: operations["listarContagemParticipante"];
+        put?: never;
+        /**
+         * Participantes contagem: criar
+         * @description Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)
+         */
+        post: operations["criarContagemParticipante"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/participantes-contagem/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Participantes contagem: ler um */
+        get: operations["lerContagemParticipante"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Participantes contagem: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarContagemParticipante"];
+        trace?: never;
+    };
+    "/v1/tesouraria/participantes-contagem/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Participantes contagem: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarContagemParticipante"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/participantes-contagem/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Participantes contagem: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarContagemParticipante"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/progresso-alvos": {
         parameters: {
             query?: never;
@@ -7878,6 +7963,32 @@ export interface components {
             readonly criadoPor?: number | null;
             readonly modificadoPor?: number | null;
         };
+        /** @description Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42) */
+        ContagemParticipante: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → tesouraria.contagem_numerario
+             */
+            contagemId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro
+             */
+            membroId?: number;
+            /** @description TESOUREIRO, ESCOLA_SABATINA, DIACONO, ANCIAO ou OUTRO */
+            funcao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Departamentos e ministérios (Manual da Igreja) */
         Departamento: {
             /** Format: int32 */
@@ -8166,7 +8277,7 @@ export interface components {
         /** @enum {string} */
         EnumTipoConsentimento: "DADOS_PESSOAIS" | "FOTOGRAFIAS" | "CONTACTO_SMS" | "CONTACTO_WHATSAPP" | "CONTACTO_EMAIL";
         /** @enum {string} */
-        EnumTipoConta: "MPESA" | "EMOLA" | "BANCO" | "CAIXA";
+        EnumTipoConta: "MPESA" | "EMOLA" | "BANCO" | "CAIXA" | "FUNDO_MANEIO";
         /** @enum {string} */
         EnumTipoContacto: "TELEFONE" | "EMAIL" | "WHATSAPP" | "OUTRO" | "TELEFONE_FIXO";
         /** @enum {string} */
@@ -24256,6 +24367,194 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Orcamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarContagemParticipante: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                contagemId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ContagemParticipante"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarContagemParticipante: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ContagemParticipante"], "contagemId" | "membroId" | "funcao">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContagemParticipante"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerContagemParticipante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContagemParticipante"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarContagemParticipante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContagemParticipante"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContagemParticipante"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarContagemParticipante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContagemParticipante"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarContagemParticipante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContagemParticipante"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

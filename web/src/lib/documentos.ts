@@ -8,7 +8,7 @@ import { ErroApi } from '@/api/erros'
 /** O nome que o navegador propõe ao guardar o PDF é o título da página: muda-o só durante a impressão. */
 export function imprimirComo(nomeFicheiro: string) {
   const antes = document.title
-  document.title = nomeFicheiro.replace(/[\/:*?"<>|]/g, '-')
+  document.title = nomeFicheiro.replace(/[/:*?"<>|]/g, '-')
   const repor = () => { document.title = antes; window.removeEventListener('afterprint', repor) }
   window.addEventListener('afterprint', repor)
   window.print()

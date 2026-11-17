@@ -5,7 +5,7 @@
 (1 row)
 
    um caixa não pode ser conta da Missão; nem uma entidade que não recebe fundos
-psql:database/tests/08_conta_da_missao.sql:16: ERROR:  Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa
+psql:database/tests/08_conta_da_missao.sql:16: ERROR:  Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa nem um fundo de maneio
 psql:database/tests/08_conta_da_missao.sql:17: ERROR:  A entidade 2 não recebe nenhum fundo: não pode ter uma conta da Missão
 2. sábado: dízimos e ofertas no caixa da igreja (dízimo 2000, oferta combinada 600)
 3. o Tito pagou dízimo 1000 e oferta 400 na conta da Missão e mandou o comprovativo

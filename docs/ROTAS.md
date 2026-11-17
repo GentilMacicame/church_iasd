@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 491 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 497 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -499,6 +499,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/orcamentos/{id}/aprovar` | OrcamentosController · aprovar | `tesouraria.orcamento.aprovar` |
 | POST | `/v1/tesouraria/orcamentos/{id}/reactivar` | OrcamentosController · reactivar | `tesouraria.orcamento.terminar` |
 | POST | `/v1/tesouraria/orcamentos/{id}/terminar` | OrcamentosController · terminar | `tesouraria.orcamento.terminar` |
+| GET | `/v1/tesouraria/participantes-contagem` | ParticipantesContagemController · listar | `tesouraria.contagem_participante.ler` |
+| POST | `/v1/tesouraria/participantes-contagem` | ParticipantesContagemController · criar | `tesouraria.contagem_participante.criar` |
+| GET | `/v1/tesouraria/participantes-contagem/{id}` | ParticipantesContagemController · obter | `tesouraria.contagem_participante.ler` |
+| PATCH | `/v1/tesouraria/participantes-contagem/{id}` | ParticipantesContagemController · alterar | `tesouraria.contagem_participante.alterar` |
+| POST | `/v1/tesouraria/participantes-contagem/{id}/reactivar` | ParticipantesContagemController · reactivar | `tesouraria.contagem_participante.terminar` |
+| POST | `/v1/tesouraria/participantes-contagem/{id}/terminar` | ParticipantesContagemController · terminar | `tesouraria.contagem_participante.terminar` |
 | GET | `/v1/tesouraria/progresso-alvos` | RelatoriosTesourariaController · progressoAlvos | `tesouraria.alvo.ler` |
 | POST | `/v1/tesouraria/recalcular-saldos` | SaldosController · recalcular | `tesouraria.fecho_periodo.criar` |
 | GET | `/v1/tesouraria/recibos` | RecibosController · listar | `tesouraria.recibo.ler` |

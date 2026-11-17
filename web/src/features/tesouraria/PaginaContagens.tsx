@@ -3,11 +3,12 @@
  * 1. Contar: depois do culto, duas pessoas contam o dinheiro (dízimos, ofertas, Escola Sabatina, outras).
  * 2. Lançar: cada envelope e a salva lançam-se em "Lançar entrada", ligados a esta contagem.
  * 3. Conferir: quando o lançado é igual ao contado, a contagem confere-se.
- * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar.
+ * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar, e quem participou (V42: tesoureiro,
+ * Escola Sabatina, diácono, ancião…), além dos dois contadores.
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calculator, CircleCheck, HandCoins, Landmark, Plus, Scale } from 'lucide-react'
+import { Calculator, CircleCheck, HandCoins, Landmark, Plus, Scale, UserPlus, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,7 +27,7 @@ import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoTransferencia } from './DialogoTransferencia'
-import { PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, type Conferencia } from './api'
+import { FUNCOES_CONTAGEM, PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, useParticipantesContagem, useParticipantesContagemMut, type Conferencia } from './api'
 import { Paginada } from '@/components/comum/Paginacao'
 
 const ESTADO = {
@@ -87,7 +88,7 @@ export default function PaginaContagens() {
             <div className="grid gap-4">
               {vis.map((c) => {
                 const cont = porId.get(c.id)
-                return <CartaoContagem key={c.id} c={c} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
+                return <CartaoContagem key={c.id} c={c} nomeDe={(id) => nomes.get(id)} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
               })}
             </div>
             )}</Paginada>
@@ -99,7 +100,7 @@ export default function PaginaContagens() {
 }
 
 /** Uma contagem: o contado, o lançado e o que falta, parte a parte, e as acções (lançar, conferir). */
-function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string }) {
+function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores: string; nomeDe: (id: number) => string | undefined }) {
   const { pode } = useSessao()
   const { mudarEstado } = useContagensMut()
   const contagens = useContagens()
@@ -170,6 +171,8 @@ function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string 
         </table>
       </div>
 
+      <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} />
+
       {aberta && (
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
           <p className="text-xs text-muted-foreground">
@@ -197,6 +200,60 @@ function CartaoContagem({ c, contadores }: { c: Conferencia; contadores: string 
       )}
       {depositar && <DialogoTransferencia origem={caixaId} valor={c.totalContado} contagem={{ id: c.id, data: c.data, ocasiao: c.ocasiao }} aoFechar={() => setDepositar(false)} />}
     </section>
+  )
+}
+
+/** Quem participou na contagem (com a função); enquanto está aberta, junta-se ou tira-se alguém. */
+function Participantes({ contagemId, aberta, nomeDe }: { contagemId: number; aberta: boolean; nomeDe: (id: number) => string | undefined }) {
+  const { pode } = useSessao()
+  const q = useParticipantesContagem(contagemId)
+  const { juntar, tirar } = useParticipantesContagemMut()
+  const [aJuntar, setAJuntar] = useState(false)
+  const [membro, setMembro] = useState<number | null>(null)
+  const [funcao, setFuncao] = useState('DIACONO')
+  const lista = (q.data ?? []).filter((x) => !x.endDate)
+  const podeJuntar = aberta && pode('tesouraria.contagem_participante.criar')
+  const podeTirar = aberta && pode('tesouraria.contagem_participante.terminar')
+  if (!lista.length && !podeJuntar) return null
+
+  const gravar = () => {
+    if (!membro) return toast.error('Escolha o membro.')
+    juntar.mutate({ contagemId, membroId: membro, funcao }, {
+      onSuccess: () => { setMembro(null); setAJuntar(false); toast.success('Participante registado.') },
+      onError: (e) => toast.error(mensagemDe(e)),
+    })
+  }
+
+  return (
+    <div className="border-t px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="flex items-center gap-1.5 text-muted-foreground"><Users className="size-4" />Participantes:</span>
+        {q.isPending ? <Barra className="h-5 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">ninguém registado</span> : lista.map((x) => (
+          <span key={x.id} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5">
+            {nomeDe(x.membroId) ?? `Membro ${x.membroId}`} <span className="text-xs text-muted-foreground">· {FUNCOES_CONTAGEM[x.funcao] ?? x.funcao}</span>
+            {podeTirar && (
+              <button type="button" className="-mr-1 rounded-full p-0.5 hover:bg-muted" aria-label={`Tirar ${nomeDe(x.membroId) ?? 'participante'}`} disabled={tirar.isPending}
+                onClick={() => tirar.mutate(x.id, { onError: (e) => toast.error(mensagemDe(e)) })}>
+                <X className="size-3" />
+              </button>
+            )}
+          </span>
+        ))}
+        {podeJuntar && !aJuntar && <Button type="button" size="sm" variant="ghost" className="alvo" onClick={() => setAJuntar(true)}><UserPlus className="size-4" />Juntar</Button>}
+      </div>
+      {aJuntar && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_180px_auto]">
+          <CampoMembro id={`cpa-${contagemId}`} valor={membro} aoMudar={setMembro} nomeDe={nomeDe} vazio="Procurar o membro…" />
+          <Seleccao aria-label="Função na contagem" value={funcao} onChange={(e) => setFuncao(e.target.value)}>
+            {Object.entries(FUNCOES_CONTAGEM).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+          </Seleccao>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" className="alvo" disabled={juntar.isPending} onClick={gravar}>{juntar.isPending ? t.comum.aGravar : 'Juntar'}</Button>
+            <Button type="button" size="sm" variant="ghost" className="alvo" onClick={() => setAJuntar(false)}>{t.comum.cancelar}</Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

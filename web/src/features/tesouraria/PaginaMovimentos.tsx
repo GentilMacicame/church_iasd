@@ -1,7 +1,7 @@
 /** Movimentos · "O que entrou e saiu neste mês, e o que falta confirmar ou aprovar?" */
 import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Banknote, ChevronLeft, ChevronRight, HandCoins, ListOrdered, ShieldAlert } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Banknote, ChevronLeft, ChevronRight, HandCoins, ListOrdered, ShieldAlert, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dinheiro, Indicador, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
@@ -43,7 +43,10 @@ export default function PaginaMovimentos() {
   const nomes = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, `${m.nome} ${m.apelido}`])), [basicos.data])
   const contaDe = useMemo(() => new Map((contas.data ?? []).map((c) => [c.id, c.nome])), [contas.data])
 
-  const validos = (q.data ?? []).filter((tr) => !tr.endDate)
+  // ?conta= (ex.: o histórico do fundo de maneio): só os movimentos que saem ou entram nessa conta
+  const contaFiltro = Number(params.get('conta')) || null
+  const doMes = (q.data ?? []).filter((tr) => contaFiltro == null || tr.contaId === contaFiltro || tr.destinoContaId === contaFiltro)
+  const validos = doMes.filter((tr) => !tr.endDate)
   // o pago directamente na conta da Missão não entrou na igreja: não soma nas entradas da igreja
   const naMissao = new Set((contas.data ?? []).filter((c) => c.entidadeId != null).map((c) => c.id))
   const confirmados = validos.filter((tr) => tr.estado === 'CONFIRMADA' && !naMissao.has(tr.contaId ?? 0))
@@ -52,18 +55,18 @@ export default function PaginaMovimentos() {
   const entradas = confirmados.filter((tr) => tr.tipo === 'ENTRADA')
   const saidas = confirmados.filter((tr) => tr.tipo === 'SAIDA')
   const pendentes = validos.filter((tr) => tr.estado === 'PENDENTE')
-  const lista = (q.data ?? []).filter((tr) =>
+  const lista = doMes.filter((tr) =>
     filtro === 'entradas' ? tr.tipo === 'ENTRADA' : filtro === 'saidas' ? tr.tipo === 'SAIDA' : filtro === 'pendentes' ? tr.estado === 'PENDENTE' && !tr.endDate : true)
 
   const definir = (k: string, v?: string) => setParams((p) => { const n = new URLSearchParams(p); if (v) n.set(k, v); else n.delete(k); return n })
   const abas: { k: Filtro; rotulo: string; n: number }[] = [
-    { k: 'todos', rotulo: 'Todos', n: (q.data ?? []).length }, { k: 'entradas', rotulo: 'Entradas', n: (q.data ?? []).filter((x) => x.tipo === 'ENTRADA').length },
-    { k: 'saidas', rotulo: 'Saídas', n: (q.data ?? []).filter((x) => x.tipo === 'SAIDA').length }, { k: 'pendentes', rotulo: 'Por confirmar', n: pendentes.length },
+    { k: 'todos', rotulo: 'Todos', n: doMes.length }, { k: 'entradas', rotulo: 'Entradas', n: doMes.filter((x) => x.tipo === 'ENTRADA').length },
+    { k: 'saidas', rotulo: 'Saídas', n: doMes.filter((x) => x.tipo === 'SAIDA').length }, { k: 'pendentes', rotulo: 'Por confirmar', n: pendentes.length },
   ]
 
   return (
     <>
-      <TituloPagina icone={ListOrdered} titulo={t.tesouraria.movimentos} descricao={`Entradas e saídas de ${nome}`}
+      <TituloPagina icone={ListOrdered} titulo={t.tesouraria.movimentos} descricao={`Entradas e saídas de ${nome}${contaFiltro ? ` · ${contaDe.get(contaFiltro) ?? 'conta'}` : ''}`}
         accoes={pode('tesouraria.transacao.criar') && (
           <>
             <Button asChild variant="outline" className="alvo"><Link to="/tesouraria/saida"><Banknote className="size-4" />{t.tesouraria.saida}</Link></Button>
@@ -86,6 +89,11 @@ export default function PaginaMovimentos() {
               <span className="min-w-36 text-center text-sm font-medium first-letter:uppercase">{nome}</span>
               <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês seguinte" disabled={mes >= hojeIso().slice(0, 7)} onClick={() => definir('mes', mudarMes(mes, 1))}><ChevronRight className="size-4" /></Button>
             </div>
+            {contaFiltro != null && (
+              <button type="button" onClick={() => definir('conta')} className="alvo inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium" aria-label="Ver todas as contas">
+                Só {contaDe.get(contaFiltro) ?? 'esta conta'} <X className="size-3" />
+              </button>
+            )}
             <div role="tablist" aria-label="Filtrar" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
               {abas.map((a) => (
                 <button key={a.k} role="tab" aria-selected={filtro === a.k} type="button" onClick={() => definir('ver', a.k === 'todos' ? undefined : a.k)}

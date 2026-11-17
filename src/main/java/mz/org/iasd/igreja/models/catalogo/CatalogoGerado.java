@@ -57,6 +57,7 @@ import mz.org.iasd.igreja.models.tesouraria.CalendarioOferta;
 import mz.org.iasd.igreja.models.tesouraria.Categoria;
 import mz.org.iasd.igreja.models.tesouraria.ContaFinanceira;
 import mz.org.iasd.igreja.models.tesouraria.ContagemNumerario;
+import mz.org.iasd.igreja.models.tesouraria.ContagemParticipante;
 import mz.org.iasd.igreja.models.tesouraria.Despesa;
 import mz.org.iasd.igreja.models.tesouraria.Documento;
 import mz.org.iasd.igreja.models.tesouraria.ExtratoLinha;
@@ -220,6 +221,7 @@ public final class CatalogoGerado {
             OrcamentoLinha.class,
             Despesa.class,
             ContagemNumerario.class,
+            ContagemParticipante.class,
             Transacao.class,
             TransacaoLinha.class,
             SaldoDiarioConta.class,

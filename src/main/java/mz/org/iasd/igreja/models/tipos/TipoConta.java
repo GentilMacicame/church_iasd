@@ -12,5 +12,6 @@ public enum TipoConta {
     MPESA,
     EMOLA,
     BANCO,
-    CAIXA
+    CAIXA,
+    FUNDO_MANEIO
 }

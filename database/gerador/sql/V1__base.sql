@@ -61,7 +61,7 @@ CREATE TYPE nucleo.estado_escala_t         AS ENUM ('PREVISTA', 'CONFIRMADA', 'S
 CREATE TYPE nucleo.es_divisao_t            AS ENUM ('ROL_DO_BERCO', 'JARDIM_DE_INFANCIA', 'PRIMARIOS', 'JUVENIS',
                                                     'ADOLESCENTES', 'JOVENS', 'ADULTOS');
 CREATE TYPE nucleo.estado_relatorio_t      AS ENUM ('ABERTO', 'FECHADO');
-CREATE TYPE nucleo.tipo_conta_t            AS ENUM ('MPESA', 'EMOLA', 'BANCO', 'CAIXA');
+CREATE TYPE nucleo.tipo_conta_t            AS ENUM ('MPESA', 'EMOLA', 'BANCO', 'CAIXA', 'FUNDO_MANEIO');
 CREATE TYPE nucleo.tipo_transacao_t        AS ENUM ('ENTRADA', 'SAIDA', 'TRANSFERENCIA');
 CREATE TYPE nucleo.metodo_pagamento_t      AS ENUM ('MPESA', 'EMOLA', 'BANCO', 'NUMERARIO');
 CREATE TYPE nucleo.estado_transacao_t      AS ENUM ('PENDENTE', 'CONFIRMADA', 'FALHADA', 'ANULADA');

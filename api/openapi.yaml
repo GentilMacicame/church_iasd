@@ -17447,6 +17447,220 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/participantes-contagem:
+    get:
+      summary: 'Participantes contagem: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.ler
+      operationId: listarContagemParticipante
+      description: Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: contagemId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContagemParticipante'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Participantes contagem: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.criar
+      operationId: criarContagemParticipante
+      description: Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ContagemParticipante'
+              required:
+              - contagemId
+              - membroId
+              - funcao
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContagemParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/participantes-contagem/{id}:
+    get:
+      summary: 'Participantes contagem: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.ler
+      operationId: lerContagemParticipante
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContagemParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Participantes contagem: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.alterar
+      operationId: alterarContagemParticipante
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContagemParticipante'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContagemParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/participantes-contagem/{id}/reactivar:
+    post:
+      summary: 'Participantes contagem: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.terminar
+      operationId: reactivarContagemParticipante
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContagemParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/participantes-contagem/{id}/terminar:
+    post:
+      summary: 'Participantes contagem: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.contagem_participante.terminar
+      operationId: terminarContagemParticipante
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContagemParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/progresso-alvos:
     get:
       summary: 'Relatório: Progresso alvos'
@@ -19899,6 +20113,55 @@ components:
       - contador1MembroId
       - contador2MembroId
       - totalContado
+    ContagemParticipante:
+      type: object
+      description: Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)
+      x-tabela: tesouraria.contagem_participante
+      x-prefixo: cpa
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        contagemId:
+          type: integer
+          format: int32
+          description: → tesouraria.contagem_numerario
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        funcao:
+          type: string
+          maxLength: 20
+          description: TESOUREIRO, ESCOLA_SABATINA, DIACONO, ANCIAO ou OUTRO
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - contagemId
+      - membroId
+      - funcao
     Departamento:
       type: object
       description: Departamentos e ministérios (Manual da Igreja)
@@ -20539,6 +20802,7 @@ components:
       - EMOLA
       - BANCO
       - CAIXA
+      - FUNDO_MANEIO
     EnumTipoContacto:
       type: string
       enum:

@@ -1,0 +1,40 @@
+1. tesoureiro (autorizado): abre o fundo de maneio com 5 000,00
+   cfi_tipo   |    cfi_nome     | cfi_saldo_inicial 
+--------------+-----------------+-------------------
+ FUNDO_MANEIO | Fundo de maneio |           5000.00
+(1 row)
+
+    cfi_nome     |  saldo  
+-----------------+---------
+ Fundo de maneio | 5000.00
+(1 row)
+
+   um fundo de maneio não pode ser conta da Missão
+psql:database/tests/28_tesouraria_maneio_contagem_sms.sql:22: ERROR:  Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa nem um fundo de maneio
+2. participantes da contagem: tesoureiro e diácono; de outra igreja e função desconhecida recusados
+ cpa_mem_id | cpa_funcao 
+------------+------------
+        960 | TESOUREIRO
+        103 | DIACONO
+(2 rows)
+
+psql:database/tests/28_tesouraria_maneio_contagem_sms.sql:27: ERROR:  O participante tem de ser membro da igreja da contagem
+psql:database/tests/28_tesouraria_maneio_contagem_sms.sql:28: ERROR:  new row for relation "contagem_participante" violates check constraint "chk_cpa_funcao"
+3. recibo do movimento do Tito: o SMS leva o resumo por fundo e a chave do recibo
+ rec_ano 
+---------
+    2026
+(1 row)
+
+ ntf_canal |  ntf_destino  |                                                                                    mensagem                                                                                    | tem_chave | ntf_estado 
+-----------+---------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------+------------
+ SMS       | +258841112233 | Igreja Adventista do Sétimo Dia: recebemos a sua contribuição de 1 400,00 MT (Dízimo 1 000,00; Oferta combinada / plano de ofertas 400,00). Recibo n.º N/2026. Deus o abençoe. | t         | PENDENTE
+(1 row)
+
+4. tesoureiro de outra igreja: não vê a contagem nem os participantes
+ participantes 
+---------------
+             0
+(1 row)
+
+psql:database/tests/28_tesouraria_maneio_contagem_sms.sql:42: ERROR:  new row violates row-level security policy for table "contagem_participante"

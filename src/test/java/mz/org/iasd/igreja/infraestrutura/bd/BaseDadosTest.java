@@ -1213,6 +1213,38 @@ class BaseDadosTest {
         assertEquals(404, TradutorErrosSql.traduzir(semAcesso).estadoHttp());
     }
 
+    // ------------------------------------------------------------------ V42: fundo de maneio e participantes da contagem
+
+    @Test
+    void fundoDeManeioEParticipantesDaContagemComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v42@teste.mz", null, "SECRETARIO");
+        var conta = Catalogo.de(mz.org.iasd.igreja.models.tesouraria.ContaFinanceira.class);
+        JsonObject maneio = ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, conta, Json.createObjectBuilder()
+                .add("igrejaId", igrejaCentral).add("tipo", "FUNDO_MANEIO").add("nome", "Fundo de maneio V42")
+                .add("saldoInicial", "3000.00").add("dataSaldoInicial", "2026-11-01").build()));
+        assertEquals("FUNDO_MANEIO", maneio.getString("tipo"));
+
+        int contagem;
+        int a;
+        int b;
+        try (Connection dono = ligarComoDono()) {
+            a = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Lucas', 'Contador') RETURNING mem_id");
+            b = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Rita', 'Diaconisa') RETURNING mem_id");
+            int caixa = inserir(dono, "INSERT INTO tesouraria.conta_financeira (cfi_igr_id, cfi_tipo, cfi_nome, cfi_data_saldo_inicial) VALUES ("
+                    + igrejaCentral + ", 'CAIXA', 'Caixa V42', '2026-01-01') RETURNING cfi_id");
+            contagem = inserir(dono, "INSERT INTO tesouraria.contagem_numerario (cnu_igr_id, cnu_cfi_id, cnu_data, cnu_contador1_mem_id, cnu_contador2_mem_id, cnu_total_contado) VALUES ("
+                    + igrejaCentral + ", " + caixa + ", '2026-11-14', " + a + ", " + b + ", 1500) RETURNING cnu_id");
+        }
+        var participante = Catalogo.de(mz.org.iasd.igreja.models.tesouraria.ContagemParticipante.class);
+        JsonObject p = ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, participante, Json.createObjectBuilder()
+                .add("contagemId", contagem).add("membroId", b).add("funcao", "DIACONO").build()));
+        assertEquals("DIACONO", p.getString("funcao"));
+        // o secretário não mexe nas contagens → 403
+        SQLException naoPode = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c,
+                participante, Json.createObjectBuilder().add("contagemId", contagem).add("membroId", a).add("funcao", "TESOUREIRO").build())));
+        assertEquals(403, TradutorErrosSql.traduzir(naoPode).estadoHttp());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

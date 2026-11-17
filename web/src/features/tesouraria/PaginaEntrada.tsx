@@ -6,7 +6,9 @@
  * 2. Como entregou: uma escolha por conta real (envelope em numerário no caixa; M-Pesa ou depósito na conta da igreja;
  *    depósito ou M-Pesa directamente na Missão). A forma de pagamento sai da conta, não se escolhe à parte.
  *    O que não é numerário pede o comprovativo: referência e a descrição que o membro mandou.
- * 3. Valores: dízimo e oferta em destaque; os outros fundos recolhidos.
+ * 3. Valores: dízimo e oferta em destaque; os outros fundos recolhidos; até três ofertas especiais (V42), cada uma com o
+ *    fundo (oferta especial, projecto, reavivamento) e a designação que o membro escreveu no envelope. O 13.º sábado e a
+ *    oferta missionária não se lançam aqui (vêm do relatório da Escola Sabatina); só na conta da Missão.
  *
  * O que foi pago na Missão (V21) só aceita fundos da Missão e a referência; conta como contribuição do membro e como já
  * remetido, e não entra no saldo da igreja. A soma das linhas = total, e o resto das regras, são da base de dados.
@@ -35,7 +37,7 @@ import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso } from '@/lib
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
 import { cn } from '@/lib/utils'
-import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, type Conta } from './api'
+import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, fundosDaIgreja, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, type Conta } from './api'
 import { CampoComprovativo } from './Comprovativos'
 import { parteDoFundo } from './comum'
 
@@ -51,12 +53,18 @@ const esquema = z.object({
   descricao: z.string().trim().max(255),
   recibo: z.boolean(),
   linhas: z.array(z.object({ fundoId: z.number(), categoriaId: z.string(), valor: z.string().refine((v) => v === '' || valorApi.test(v), 'Valor inválido') })),
-}).refine((v) => v.linhas.some((l) => l.valor && centimos(l.valor) > 0), { path: ['linhas'], message: 'Escreva o valor de pelo menos um fundo' })
+})
 type Valores = z.infer<typeof esquema>
 
-export const METODO_DA_CONTA: Record<string, string> = { CAIXA: 'NUMERARIO', MPESA: 'MPESA', EMOLA: 'EMOLA', BANCO: 'BANCO' }
+export const METODO_DA_CONTA: Record<string, string> = { CAIXA: 'NUMERARIO', FUNDO_MANEIO: 'NUMERARIO', MPESA: 'MPESA', EMOLA: 'EMOLA', BANCO: 'BANCO' }
 /** Os fundos de quase todos os envelopes: ficam em destaque; os outros abrem-se em "Outros fundos". */
 const PRINCIPAIS = ['DIZIMO', 'OFERTA_COMBINADA']
+/** Não se lançam no envelope da igreja local (vêm do relatório da Escola Sabatina); só na conta da Missão. */
+const SO_NA_MISSAO = ['ES_13_SABADO', 'OFERTA_MISSIONARIA']
+/** Os fundos das ofertas especiais: escolhem-se em cada linha de oferta especial, com a designação. */
+const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO']
+interface Especial { fundoId: string; designacao: string; valor: string }
+const especiaisVazias = (): Especial[] => [0, 1, 2].map(() => ({ fundoId: '', designacao: '', valor: '' }))
 
 /** Como o membro entregou, dito pela conta onde o dinheiro está. */
 function comoEntregou(c: Conta) {
@@ -96,10 +104,13 @@ export default function PaginaEntrada() {
   const familias = useFamiliasResumo()
   const [comprovativo, setComprovativo] = useState<File | null>(null)   // fotografia/PDF: enviado depois de gravar
   const [conferiuSobreposta, setConferiuSobreposta] = useState(false)
+  const [especiais, setEspeciais] = useState<Especial[]>(especiaisVazias)
+  const [erroEspeciais, setErroEspeciais] = useState<string | null>(null)
 
   const todas = (contas.data ?? []).filter((c) => !c.endDate)
   // o envelope em numerário primeiro: é o mais comum
-  const daIgreja = todas.filter((c) => !daMissao(c)).sort((a, b) => Number(b.tipo === 'CAIXA') - Number(a.tipo === 'CAIXA'))
+  // o fundo de maneio não recebe contribuições (repõe-se por transferência)
+  const daIgreja = todas.filter((c) => !daMissao(c) && c.tipo !== 'FUNDO_MANEIO').sort((a, b) => Number(b.tipo === 'CAIXA') - Number(a.tipo === 'CAIXA'))
   const naMissaoContas = todas.filter((c) => daMissao(c))
   // por defeito: o caixa (envelopes do sábado); com ?onde=missao, a primeira conta da Missão
   // ?conta= (vindo da ficha de um movimento: "lançar outra entrada" do mesmo membro, da mesma forma)
@@ -140,17 +151,27 @@ export default function PaginaEntrada() {
   const anonimo = salva && !naMissao
   /** Na conta da Missão só entram os fundos dessa entidade (a base de dados recusa os outros). */
   const fundoVisivel = (id: number) => {
-    if (!naMissao) return true
     const f = fundoPorId.get(id)
+    if (!naMissao) return !!f && !SO_NA_MISSAO.includes(f.tipo) && !ESPECIAIS.includes(f.tipo)
     return !!f && f.destinoEntidadeId === conta?.entidadeId && Number(f.percentagemRemessa ?? 0) > 0
   }
   const valido = (v: string) => valorApi.test(v)
+  // as ofertas especiais (só na igreja local): as linhas com valor
+  const fundosEspeciais = fundosDaIgreja(fundos.data).filter((f) => ESPECIAIS.includes(f.tipo))
+  const especiaisComValor = naMissao ? [] : especiais.filter((x) => valido(x.valor) && centimos(x.valor) > 0)
+  const parteMissao = (fundoId: number, valor: string) => {
+    const f = fundoPorId.get(fundoId)
+    return f?.destinoEntidadeId ? Math.round(centimos(valor) * Number(f.percentagemRemessa ?? 0) / 100) : 0
+  }
   const total = linhas.reduce((s, l) => s + (valido(l.valor) && fundoVisivel(l.fundoId) ? centimos(l.valor) : 0), 0)
+    + especiaisComValor.reduce((s, x) => s + centimos(x.valor), 0)
   // quanto vai para a Missão (percentagem de cada fundo) e quanto fica na igreja
-  const paraMissao = linhas.reduce((s, l) => {
-    const f = fundoPorId.get(l.fundoId)
-    return s + (valido(l.valor) && fundoVisivel(l.fundoId) && f?.destinoEntidadeId ? Math.round(centimos(l.valor) * Number(f.percentagemRemessa ?? 0) / 100) : 0)
-  }, 0)
+  const paraMissao = linhas.reduce((s, l) => s + (valido(l.valor) && fundoVisivel(l.fundoId) ? parteMissao(l.fundoId, l.valor) : 0), 0)
+    + especiaisComValor.reduce((s, x) => s + (x.fundoId ? parteMissao(Number(x.fundoId), x.valor) : 0), 0)
+  const mudarEspecial = (i: number, campo: keyof Especial, v: string) => {
+    setEspeciais((l) => l.map((x, j) => (j === i ? { ...x, [campo]: v } : x)))
+    setErroEspeciais(null)
+  }
   const indices = fields.map((f, i) => ({ f, i, fundo: fundoPorId.get(f.fundoId) })).filter((x) => fundoVisivel(x.f.fundoId))
   const principais = indices.filter((x) => PRINCIPAIS.includes(x.fundo?.tipo ?? ''))
   const outros = indices.filter((x) => !PRINCIPAIS.includes(x.fundo?.tipo ?? ''))
@@ -192,6 +213,10 @@ export default function PaginaEntrada() {
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     const preenchidas = v.linhas.filter((l) => l.valor && centimos(l.valor) > 0 && fundoVisivel(l.fundoId))
+    if (!naMissao && especiais.some((x) => x.valor && !valido(x.valor))) { setErroEspeciais('Valor inválido numa oferta especial'); return }
+    if (especiaisComValor.some((x) => !x.fundoId)) { setErroEspeciais('Escolha o fundo de cada oferta especial'); return }
+    if (especiaisComValor.some((x) => !x.designacao.trim())) { setErroEspeciais('Escreva a designação de cada oferta especial (ex.: Construção do templo)'); return }
+    if (!preenchidas.length && !especiaisComValor.length) { form.setError('linhas', { message: 'Escreva o valor de pelo menos um fundo' }); return }
     if (porFamilia && familiaId == null) {
       setErroFamilia('Escolha a família (ex.: Família Macicame)')
       return
@@ -217,7 +242,13 @@ export default function PaginaEntrada() {
           membroId: membroId ?? undefined, familiaId: familiaId ?? undefined, anonimo: membroId == null && familiaId == null, contagemId: numerario && v.contagemId ? Number(v.contagemId) : undefined, dataHora: `${v.data}T${v.hora}:00+02:00`,
           referencia: v.referencia || undefined,
           descricao: v.descricao || (naMissao ? 'Pago directamente na Missão' : anonimo ? 'Ofertas da salva' : numerario ? 'Envelope' : undefined),
-          linhas: preenchidas.map((l) => ({ fundoId: l.fundoId, categoriaId: Number(l.categoriaId), valor: l.valor })),
+          linhas: [
+            ...preenchidas.map((l) => ({ fundoId: l.fundoId, categoriaId: Number(l.categoriaId), valor: l.valor })),
+            ...especiaisComValor.map((x) => ({
+              fundoId: Number(x.fundoId), valor: x.valor, descricao: x.designacao.trim(),
+              categoriaId: catPorCodigo.get(CATEGORIA_POR_FUNDO[fundoPorId.get(Number(x.fundoId))?.tipo ?? ''] ?? 'R9') ?? receitas[0]?.id,
+            })),
+          ],
         } as never,
       })
       const numero = recibo ? `${recibo.numero}/${recibo.ano}` : undefined
@@ -241,6 +272,7 @@ export default function PaginaEntrada() {
       setComprovativo(null)
       setVerOutros(false)
       setConferiuSobreposta(false)
+      setEspeciais(especiaisVazias())
     } catch (err) {
       setErro(aplicarErroApi(form, err))
     }
@@ -432,6 +464,32 @@ export default function PaginaEntrada() {
                     ))}
                   </ul>
                 )}
+              </div>
+            )}
+            {!naMissao && (
+              <div className="mt-4 rounded-lg border">
+                <p className="border-b px-4 py-2.5 text-sm font-medium">Ofertas especiais <span className="font-normal text-muted-foreground">(até três, com a designação do envelope)</span></p>
+                {fundosEspeciais.length === 0 ? (
+                  <p className="px-4 py-3 text-sm text-muted-foreground">
+                    Não há fundos de oferta especial, projecto ou reavivamento.{' '}
+                    {pode('tesouraria.fundo.criar') && <Link to="/tesouraria/fundos" className="font-medium text-primary hover:underline">Criar o fundo</Link>}
+                  </p>
+                ) : (
+                  <ul className="divide-y">
+                    {especiais.map((x, i) => (
+                      <li key={i} className="grid gap-2 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_160px]">
+                        <Seleccao aria-label={`Fundo da oferta especial ${i + 1}`} value={x.fundoId} onChange={(ev) => mudarEspecial(i, 'fundoId', ev.target.value)}>
+                          <option value="">Fundo…</option>
+                          {fundosEspeciais.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                        </Seleccao>
+                        <Input aria-label={`Designação da oferta especial ${i + 1}`} value={x.designacao} onChange={(ev) => mudarEspecial(i, 'designacao', ev.target.value)}
+                          placeholder="Designação (ex.: Construção do templo)" maxLength={255} className="alvo" />
+                        <CampoDinheiro aria-label={`Valor da oferta especial ${i + 1}`} value={x.valor} onChange={(v) => mudarEspecial(i, 'valor', v)} className="alvo" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {erroEspeciais && <p className="border-t px-4 py-2 text-sm font-medium text-destructive-text">{erroEspeciais}</p>}
               </div>
             )}
             {e.linhas?.root?.message || e.linhas?.message ? <p className="mt-3 text-sm font-medium text-destructive-text">{e.linhas?.root?.message ?? e.linhas?.message}</p> : null}

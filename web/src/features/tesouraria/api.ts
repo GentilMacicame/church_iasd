@@ -38,7 +38,7 @@ export interface SaldoFundo {
 
 /** Categoria sugerida para cada tipo de fundo (o tesoureiro pode mudar). */
 export const CATEGORIA_POR_FUNDO: Record<string, string> = {
-  DIZIMO: 'R1', OFERTA_MISSIONARIA: 'R2', OFERTA_COMBINADA: 'R2', OFERTA_ESPECIAL: 'R2', ORCAMENTO_LOCAL: 'R2',
+  DIZIMO: 'R1', OFERTA_MISSIONARIA: 'R2', OFERTA_COMBINADA: 'R2', OFERTA_ESPECIAL: 'R2', ORCAMENTO_LOCAL: 'R2', REAVIVAMENTO: 'R2',
   ES_MISSOES: 'R3', ES_13_SABADO: 'R3', ES_DESPESAS: 'R3', PROJECTO: 'R4',
 }
 
@@ -464,6 +464,35 @@ export function useContagensMut() {
     onSuccess: () => invalidar(),
   })
   return { criar, mudarEstado }
+}
+
+/* ===================================================================== participantes da contagem (V42) */
+export const FUNCOES_CONTAGEM: Record<string, string> = {
+  TESOUREIRO: 'Tesoureiro', ESCOLA_SABATINA: 'Escola Sabatina', DIACONO: 'Diácono', ANCIAO: 'Ancião', OUTRO: 'Outro',
+}
+export type ParticipanteContagem = Esquema<'ContagemParticipante'> & { id: number; contagemId: number; membroId: number; funcao: string }
+
+/** Quem participou numa contagem, além dos dois contadores. */
+export function useParticipantesContagem(contagemId: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'participantes-contagem', contagemId],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/participantes-contagem', { params: { query: { contagemId, limite: 50 } } }))).dados as ParticipanteContagem[],
+  })
+}
+
+export function useParticipantesContagemMut() {
+  const invalidar = useInvalidar()
+  const juntar = useMutation({
+    mutationFn: (corpo: { contagemId: number; membroId: number; funcao: string }) =>
+      dados(api.POST('/v1/tesouraria/participantes-contagem', { body: corpo as never, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })),
+    onSuccess: () => invalidar(),
+  })
+  const tirar = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/participantes-contagem/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: () => invalidar(),
+  })
+  return { juntar, tirar }
 }
 
 /* ===================================================================== estorno (P-12) */

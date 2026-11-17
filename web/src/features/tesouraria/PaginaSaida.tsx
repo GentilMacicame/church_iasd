@@ -2,9 +2,12 @@
  * Registar saída (P-08): um pagamento da igreja. Fica PENDENTE até outra pessoa a aprovar (quem regista não
  * aprova) e depois confirma-se. Só a parte da igreja: os fundos 100% da Missão saem só como remessa, e nos
  * repartidos (oferta combinada) só o que não é da Missão (a base de dados recusa o resto, com a mensagem no topo).
+ *
+ * ?conta= escolhe a conta (ex.: "Despesa urgente" do fundo de maneio, V42: pede quem fez a despesa; o comprovativo junta-se
+ * na ficha do movimento, que abre a seguir).
  */
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -49,11 +52,13 @@ export default function PaginaSaida() {
   const saldos = useSaldosFundos()
   const locais = fundosDaIgreja(fundos.data)
   const despesas = (categorias.data ?? []).filter((c) => c.tipo === 'DESPESA' && !c.eRemessa)
+  const [params] = useSearchParams()
+  const contaInicial = (contas.data ?? []).find((c) => String(c.id) === params.get('conta')) ?? contas.data?.[0]
 
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
     values: {
-      contaId: contas.data?.[0] ? String(contas.data[0].id) : '', metodo: METODO_DA_CONTA[contas.data?.[0]?.tipo ?? 'CAIXA'],
+      contaId: contaInicial ? String(contaInicial.id) : '', metodo: METODO_DA_CONTA[contaInicial?.tipo ?? 'CAIXA'],
       data: hojeIso(), hora: new Date().toTimeString().slice(0, 5), valor: '',
       fundoId: String(locais.find((f) => f.tipo === 'ORCAMENTO_LOCAL')?.id ?? locais[0]?.id ?? ''), categoriaId: String(despesas[0]?.id ?? ''),
       beneficiario: '', descricao: '', referencia: '',
@@ -61,6 +66,7 @@ export default function PaginaSaida() {
     resetOptions: { keepDirtyValues: true },
   })
   const e = form.formState.errors
+  const doManeio = contas.data?.find((c) => String(c.id) === form.watch('contaId'))?.tipo === 'FUNDO_MANEIO'
   const ajudaFundo = (id: string) => {
     const f = locais.find((x) => String(x.id) === id)
     const s = saldos.data?.find((x) => String(x.fundoId) === id)
@@ -79,7 +85,7 @@ export default function PaginaSaida() {
           linhas: [{ fundoId: Number(v.fundoId), categoriaId: Number(v.categoriaId), valor: v.valor }],
         } as never,
       })
-      toast.success('Saída registada. Fica à espera da aprovação de outra pessoa.')
+      toast.success(doManeio ? 'Despesa registada. Junte o comprovativo aqui; fica à espera da aprovação de outra pessoa.' : 'Saída registada. Fica à espera da aprovação de outra pessoa.')
       navigate(`/tesouraria/movimentos/${transacao.id}`)
     } catch (err) {
       setErro(aplicarErroApi(form, err))
@@ -101,8 +107,9 @@ export default function PaginaSaida() {
           <ErroFormulario mensagem={erro} />
           <Cartao titulo="Pagamento" descricao="A quem se paga, quanto e para quê" icone={Banknote}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <CampoFormulario rotulo="Pago a" erro={e.beneficiario?.message} obrigatorio>
-                {(p) => <Input {...p} {...form.register('beneficiario')} placeholder="ex.: EDM, Carpintaria Langa" className="alvo" />}
+              <CampoFormulario rotulo={doManeio ? 'Quem fez a despesa' : 'Pago a'} erro={e.beneficiario?.message} obrigatorio
+                ajuda={doManeio ? 'O responsável que gastou o dinheiro do fundo de maneio (e a quem pagou)' : undefined}>
+                {(p) => <Input {...p} {...form.register('beneficiario')} placeholder={doManeio ? 'ex.: Diácono João Langa (ferragem Chaúque)' : 'ex.: EDM, Carpintaria Langa'} className="alvo" />}
               </CampoFormulario>
               <CampoFormulario rotulo="Valor" erro={e.valor?.message} obrigatorio>
                 {(p) => <Controller control={form.control} name="valor" render={({ field }) => <CampoDinheiro {...p} {...field} className="alvo" />} />}

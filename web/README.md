@@ -260,6 +260,14 @@ src/
   acessos (pastor e Associação: quem consultou que motivo e quando). O motivo não aparece nas listas: "Motivo" abre um aviso e
   só depois de "Ver o motivo" é lido (a base de dados regista a consulta).
 
+- **Tesouraria** (V42): **fundo de maneio** em Contas (novo tipo de conta; valor inicial, saldo, Repor = transferência de
+  outra conta, Despesa urgente = saída com quem a fez e o comprovativo na ficha, Histórico = movimentos dessa conta com
+  `?conta=`). **Contagens**: participantes com a função (tesoureiro, Escola Sabatina, diácono, ancião, outro), juntar e tirar
+  enquanto está aberta. **Lançar entrada**: o 13.º sábado e a oferta missionária saem do envelope da igreja local (ficam na
+  conta da Missão); três linhas de oferta especial (fundo de oferta especial, projecto ou reavivamento + designação + valor).
+  **Notificações** (Administração, `features/notificacoes/`): histórico dos SMS/WhatsApp/e-mail com estado, tentativas e
+  erro, filtros por estado e canal, e Reenviar das que falharam.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

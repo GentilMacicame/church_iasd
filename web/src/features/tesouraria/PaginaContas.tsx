@@ -2,10 +2,14 @@
  * Contas · "Onde está o dinheiro da igreja?" — caixa, M-Pesa e banco da igreja, e a conta da Missão (V21), onde
  * se registam os pagamentos que os membros fazem directamente lá (esse dinheiro não é da igreja nem entra no
  * saldo). A base de dados recusa uma conta da Missão do tipo caixa ou de uma entidade que não recebe fundos.
+ *
+ * Fundo de maneio (V42): o dinheiro à mão para despesas urgentes. O valor inicial é o saldo inicial; repõe-se com uma
+ * transferência de outra conta; cada despesa é uma saída (quem a fez, o comprovativo na ficha do movimento, aprovação
+ * por outra pessoa); o histórico são os movimentos dessa conta.
  */
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowLeftRight, Church, FileCheck2, Landmark, Plus, Wallet } from 'lucide-react'
+import { ArrowLeftRight, Banknote, Church, FileCheck2, History, Landmark, PiggyBank, Plus, RotateCcw, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -25,7 +29,7 @@ import { cn } from '@/lib/utils'
 import { DialogoTransferencia } from './DialogoTransferencia'
 import { useContas, useContasMut, useEntidades, useFundos, useSaldosContas, type Conta } from './api'
 
-const TIPOS: Record<string, string> = { CAIXA: 'Caixa (numerário)', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' }
+const TIPOS: Record<string, string> = { CAIXA: 'Caixa (numerário)', FUNDO_MANEIO: 'Fundo de maneio', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' }
 
 export default function PaginaContas() {
   const { pode } = useSessao()
@@ -35,10 +39,13 @@ export default function PaginaContas() {
   const [params, setParams] = useSearchParams()
   const nova = params.get('nova')
   const transferir = params.get('transferir')
+  const repor = Number(params.get('repor')) || null
   const abrir = (tipo: 'igreja' | 'missao' | null) => setParams((p) => { const n = new URLSearchParams(p); if (tipo) n.set('nova', tipo); else { n.delete('nova'); n.delete('tipo') } return n })
   const abrirTransferencia = (de: number | null) => setParams((p) => { const n = new URLSearchParams(p); if (de != null) n.set('transferir', String(de)); else n.delete('transferir'); return n })
   const saldoDe = (id: number) => saldos.data?.find((s) => s.id === id)?.saldo
   const daIgreja = (contas.data ?? []).filter((c) => c.entidadeId == null)
+  const maneio = daIgreja.filter((c) => c.tipo === 'FUNDO_MANEIO' && !c.endDate)
+  const abrirReposicao = (id: number | null) => setParams((p) => { const n = new URLSearchParams(p); if (id != null) n.set('repor', String(id)); else n.delete('repor'); return n })
   const daMissao = (contas.data ?? []).filter((c) => c.entidadeId != null)
   const totalIgreja = deCentimos(daIgreja.reduce((s, c) => s + centimos(saldoDe(c.id) ?? '0'), 0))
   const nomeEntidade = (id: number) => entidades.data?.find((e) => e.id === id)?.nome ?? 'Missão'
@@ -87,6 +94,26 @@ export default function PaginaContas() {
             <Cartao titulo="Contas da igreja" descricao="O caixa, o M-Pesa e o banco onde o dinheiro da igreja está" icone={Church} semMargem className="lg:col-span-7">
               {daIgreja.length ? linhas(daIgreja, false) : <EstadoVazio icone={Wallet}>Ainda não há contas da igreja.</EstadoVazio>}
             </Cartao>
+            {maneio.length > 0 && (
+              <Cartao titulo="Fundo de maneio" descricao="Dinheiro à mão para despesas urgentes: cada despesa fica com quem a fez e o comprovativo" icone={PiggyBank} className="lg:col-span-7">
+                <ul className="grid gap-4">
+                  {maneio.map((c) => (
+                    <li key={c.id} className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">{c.nome}</p>
+                        <p className="num text-2xl font-bold tracking-tight"><Dinheiro valor={saldoDe(c.id) ?? '0.00'} /></p>
+                        <p className="text-xs text-muted-foreground">Valor inicial <Dinheiro valor={c.saldoInicial ?? '0.00'} /></p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {podeTransferir && <Button size="sm" variant="outline" className="alvo" onClick={() => abrirReposicao(c.id)}><RotateCcw className="size-4" />Repor</Button>}
+                        {pode('tesouraria.transacao.criar') && <Button asChild size="sm" variant="outline" className="alvo"><Link to={`/tesouraria/saida?conta=${c.id}`}><Banknote className="size-4" />Despesa urgente</Link></Button>}
+                        <Button asChild size="sm" variant="ghost" className="alvo"><Link to={`/tesouraria/movimentos?conta=${c.id}`}><History className="size-4" />Histórico</Link></Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Cartao>
+            )}
             <Cartao titulo="Conta da Missão" descricao="Para registar os dízimos e ofertas que os membros pagam directamente na Missão" icone={Landmark} semMargem className="lg:col-span-5">
               {daMissao.length ? linhas(daMissao, true) : (
                 <EstadoVazio icone={Landmark} titulo="Ainda não está registada"
@@ -99,6 +126,7 @@ export default function PaginaContas() {
           </div>
         )}
       {transferir != null && <DialogoTransferencia origem={Number(transferir) || undefined} aoFechar={() => abrirTransferencia(null)} />}
+      {repor != null && <DialogoTransferencia destino={repor} aoFechar={() => abrirReposicao(null)} />}
       {nova && <DialogoConta missao={nova === 'missao'} tipoInicial={params.get('tipo') ?? undefined} aoFechar={() => abrir(null)} />}
     </>
   )
@@ -148,7 +176,7 @@ function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: bool
           <DialogTitle>{missao ? 'Conta da Missão' : 'Nova conta da igreja'}</DialogTitle>
           <DialogDescription>
             {missao ? `A conta${nomeEntidade ? ` de ${nomeEntidade}` : ''} onde alguns membros depositam o dízimo e as ofertas. Serve só para registar esses pagamentos: a igreja não paga nada a partir dela.`
-              : 'Um caixa, M-Pesa ou conta bancária onde está o dinheiro da igreja.'}
+              : 'Um caixa, M-Pesa ou conta bancária onde está o dinheiro da igreja, ou o fundo de maneio para despesas urgentes.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
@@ -156,7 +184,7 @@ function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: bool
           <div role="radiogroup" aria-label="De quem é a conta" className="grid grid-cols-2 gap-2">
             {[{ v: false, r: 'Da igreja' }, { v: true, r: 'Da Missão' }].map((o) => (
               <button key={o.r} type="button" role="radio" aria-checked={missao === o.v}
-                onClick={() => { setMissao(o.v); if (o.v && tipo === 'CAIXA') setTipo('BANCO') }}
+                onClick={() => { setMissao(o.v); if (o.v && (tipo === 'CAIXA' || tipo === 'FUNDO_MANEIO')) setTipo('BANCO') }}
                 className={cn('alvo rounded-lg border px-3 py-2 text-sm font-medium', missao === o.v ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground')}>
                 {o.r}
               </button>
@@ -166,14 +194,14 @@ function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: bool
             <div className="grid gap-1.5">
               <label htmlFor="cta-tipo" className="text-sm font-medium">Tipo</label>
               <Seleccao id="cta-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                {Object.entries(TIPOS).filter(([k]) => !missao || k !== 'CAIXA').map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+                {Object.entries(TIPOS).filter(([k]) => !missao || (k !== 'CAIXA' && k !== 'FUNDO_MANEIO')).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
             </div>
             <div className="grid gap-1.5">
               <label htmlFor="cta-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
               <Input id="cta-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder={missao ? 'Conta da Missão (BIM)' : 'ex.: BCI da igreja'} className="alvo" maxLength={100} />
             </div>
-            {tipo !== 'CAIXA' && (
+            {tipo !== 'CAIXA' && tipo !== 'FUNDO_MANEIO' && (
               <>
                 <div className="grid gap-1.5">
                   <label htmlFor="cta-banco" className="text-sm font-medium">{tipo === 'BANCO' ? 'Banco' : 'Operador'}</label>
@@ -195,7 +223,7 @@ function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: bool
             </div>
             {!missao && (
               <div className="grid gap-1.5">
-                <label htmlFor="cta-saldo" className="text-sm font-medium">Saldo inicial</label>
+                <label htmlFor="cta-saldo" className="text-sm font-medium">{tipo === 'FUNDO_MANEIO' ? 'Valor inicial do fundo' : 'Saldo inicial'}</label>
                 <CampoDinheiro id="cta-saldo" value={saldo} onChange={setSaldo} className="alvo" />
               </div>
             )}

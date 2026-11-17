@@ -182,7 +182,7 @@ function DialogoImportar({ contas, aoFechar }: { contas: { id: number; nome: str
     if (!f) return
     if (f.size > 2_000_000) return setErro('O ficheiro é grande demais (máximo 2 MB). Divida o extracto por meses.')
     setFicheiro(f.name)
-    setCsv((await f.text()).replace(/^﻿/, ''))
+    setCsv((await f.text()).replace(/^\uFEFF/, ''))
   }
   const submeter = () => {
     setErro(null)

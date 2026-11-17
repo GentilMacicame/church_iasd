@@ -73,12 +73,12 @@ export function dinheiro(valor?: string | null, moeda = 'MT'): string {
   const negativo = valor.startsWith('-')
   const [inteiro, dec = ''] = valor.replace('-', '').split('.')
   const grupos = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-  return `${negativo ? '−' : ''}${grupos},${(dec + '00').slice(0, 2)} ${moeda}`
+  return `${negativo ? '−' : ''}${grupos},${(dec + '00').slice(0, 2)}\u00a0${moeda}`
 }
 
 /** "1 500,50" ou "1500.5" escrito pelo utilizador → "1500.50" para a API; null se inválido. */
 export function dinheiroParaApi(texto: string): string | null {
-  const limpo = texto.replace(/[\s ]/g, '').replace(/MT$/i, '')
+  const limpo = texto.replace(/[\s\u00a0]/g, '').replace(/MT$/i, '')
   const m = /^(-?)(\d{1,14})(?:[.,](\d{1,2}))?$/.exec(limpo)
   if (!m) return null
   return `${m[1]}${m[2]}.${(m[3] ?? '').padEnd(2, '0')}`

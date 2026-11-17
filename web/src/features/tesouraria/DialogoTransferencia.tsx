@@ -3,7 +3,8 @@
  * caixa, passar do M-Pesa para o banco. Não tem linhas de fundo — o dinheiro continua nos mesmos fundos, só muda
  * de conta. A base de dados recusa contas de outra igreja, moedas diferentes, a conta da Missão e meses fechados.
  *
- * Também serve para "Depositar no banco" a contagem conferida: no fim marca a contagem como DEPOSITADA.
+ * Também serve para "Depositar no banco" a contagem conferida: no fim marca a contagem como DEPOSITADA, e para repor o
+ * fundo de maneio (V42): o destino já vem escolhido.
  */
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
@@ -21,13 +22,15 @@ import { t } from '@/i18n/pt-MZ'
 import { centimos, data, hojeIso } from '@/lib/formatos'
 import { useContagensMut, useContasIgreja, useCriarMovimento, useSaldosContas } from './api'
 
-const TIPO: Record<string, string> = { CAIXA: 'Caixa', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' }
-const METODO: Record<string, 'NUMERARIO' | 'MPESA' | 'EMOLA' | 'BANCO'> = { CAIXA: 'NUMERARIO', MPESA: 'MPESA', EMOLA: 'EMOLA', BANCO: 'BANCO' }
+const TIPO: Record<string, string> = { CAIXA: 'Caixa', FUNDO_MANEIO: 'Fundo de maneio', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' }
+const METODO: Record<string, 'NUMERARIO' | 'MPESA' | 'EMOLA' | 'BANCO'> = { CAIXA: 'NUMERARIO', FUNDO_MANEIO: 'NUMERARIO', MPESA: 'MPESA', EMOLA: 'EMOLA', BANCO: 'BANCO' }
 
-export function DialogoTransferencia({ aoFechar, origem, valor: valorInicial, contagem }: {
+export function DialogoTransferencia({ aoFechar, origem, destino, valor: valorInicial, contagem }: {
   aoFechar: () => void
   /** conta de onde sai (por defeito, a primeira) */
   origem?: number
+  /** conta para onde vai (ex.: repor o fundo de maneio) */
+  destino?: number
   valor?: string
   /** depósito de uma contagem conferida: no fim, a contagem passa a DEPOSITADA */
   contagem?: { id: number; data: string; ocasiao: string | null }
@@ -38,15 +41,16 @@ export function DialogoTransferencia({ aoFechar, origem, valor: valorInicial, co
   const { mudarEstado } = useContagensMut()
   const lista = contas.data ?? []
   const [de, setDe] = useState(origem ? String(origem) : '')
-  const [para, setPara] = useState('')
+  const [para, setPara] = useState(destino ? String(destino) : '')
+  const repor = destino != null && lista.find((c) => c.id === destino)?.tipo === 'FUNDO_MANEIO'
   const [valor, setValor] = useState(valorInicial ?? '')
   const [dia, setDia] = useState(hojeIso())
   const [referencia, setReferencia] = useState('')
-  const [descricao, setDescricao] = useState(contagem ? `Depósito da contagem de ${data(contagem.data)}${contagem.ocasiao ? ` (${contagem.ocasiao})` : ''}` : '')
+  const [descricao, setDescricao] = useState(contagem ? `Depósito da contagem de ${data(contagem.data)}${contagem.ocasiao ? ` (${contagem.ocasiao})` : ''}` : destino ? 'Reposição do fundo de maneio' : '')
   const [erro, setErro] = useState<string | null>(null)
   // a chave fica a mesma enquanto o diálogo está aberto: carregar duas vezes (rede lenta) não duplica
   const [chave] = useState(() => crypto.randomUUID())
-  const deId = de || (lista[0] ? String(lista[0].id) : '')
+  const deId = de || (lista.find((c) => c.id !== destino) ? String(lista.find((c) => c.id !== destino)!.id) : '')
   // num depósito, o destino por defeito é o banco
   const paraId = para || (contagem ? String(lista.find((c) => c.tipo === 'BANCO')?.id ?? '') : '')
   const contaDe = lista.find((c) => String(c.id) === deId)
@@ -92,9 +96,10 @@ export function DialogoTransferencia({ aoFechar, origem, valor: valorInicial, co
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{contagem ? 'Depositar no banco' : 'Transferir entre contas'}</DialogTitle>
+          <DialogTitle>{contagem ? 'Depositar no banco' : repor ? 'Repor o fundo de maneio' : 'Transferir entre contas'}</DialogTitle>
           <DialogDescription>
             {contagem ? 'O numerário desta contagem sai do caixa e entra na conta bancária. Os fundos (dízimos, ofertas) não mudam.'
+              : repor ? 'O dinheiro sai do caixa ou do banco e volta ao fundo de maneio, para as próximas despesas urgentes.'
               : 'O dinheiro muda de conta mas continua nos mesmos fundos: não é entrada nem saída.'}
           </DialogDescription>
         </DialogHeader>
@@ -134,7 +139,7 @@ export function DialogoTransferencia({ aoFechar, origem, valor: valorInicial, co
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
           <Button type="button" className="alvo" disabled={criar.isPending || mudarEstado.isPending || contas.isPending} onClick={submeter}>
-            {criar.isPending || mudarEstado.isPending ? t.comum.aGravar : contagem ? 'Registar o depósito' : 'Transferir'}
+            {criar.isPending || mudarEstado.isPending ? t.comum.aGravar : contagem ? 'Registar o depósito' : repor ? 'Repor' : 'Transferir'}
           </Button>
         </DialogFooter>
       </DialogContent>

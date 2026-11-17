@@ -372,6 +372,9 @@ public final class Rotas {
         /** ContagensController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String CONTAGENS = "/v1/tesouraria/contagens";
 
+        /** ParticipantesContagemController · rotas-padrão (V42): quem participou na contagem e com que função */
+        public static final String PARTICIPANTES_CONTAGEM = "/v1/tesouraria/participantes-contagem";
+
         /** ContasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String CONTAS = "/v1/tesouraria/contas";
 

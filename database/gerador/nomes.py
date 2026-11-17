@@ -12,7 +12,7 @@ RES = {  # nome do recurso na API (plural, com hífen)
  'trimestre':'trimestres','sabado':'sabados','classe':'classes','classe_trimestre':'classes-trimestre','matricula':'matriculas',
  'relatorio_sabado':'relatorios-sabado','presenca':'presencas','visitante':'visitantes','pontuacao_config':'pesos-pontuacao',
  'conta_financeira':'contas','fundo':'fundos','calendario_oferta':'calendario-ofertas','categoria':'categorias','alvo':'alvos',
- 'orcamento':'orcamentos','orcamento_linha':'linhas-orcamento','despesa':'despesas','contagem_numerario':'contagens',
+ 'orcamento':'orcamentos','orcamento_linha':'linhas-orcamento','despesa':'despesas','contagem_numerario':'contagens','contagem_participante':'participantes-contagem',
  'transacao':'transacoes','transacao_linha':'linhas-transacao','saldo_diario_conta':'saldos-diarios-conta',
  'saldo_diario_fundo':'saldos-diarios-fundo','recibo':'recibos','documento':'documentos','remessa':'remessas',
  'remessa_linha':'linhas-remessa','fecho_periodo':'fechos','extrato_linha':'extractos',

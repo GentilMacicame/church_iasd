@@ -448,6 +448,11 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
                               '(@dizimos >= 0 AND @ofertas >= 0 AND @escola_sabatina >= 0 AND @outras >= 0 AND '
                               '@dizimos + @ofertas + @escola_sabatina + @outras = @total_contado)')],
    estado=('estado_contagem_t', "'ABERTA'")),
+ T('contagem_participante', 'cpa', 'Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)', [
+   ('cnu_id', 'fk:contagem_numerario', NN), ('mem_id', 'fk:membro', NN),
+   ('funcao', 'VARCHAR(20)', NN, 'TESOUREIRO, ESCOLA_SABATINA, DIACONO, ANCIAO ou OUTRO')],
+   uniq=[['cnu_id', 'mem_id']],
+   checks=[('chk_cpa_funcao', "@funcao IN ('TESOUREIRO', 'ESCOLA_SABATINA', 'DIACONO', 'ANCIAO', 'OUTRO')")]),
  T('transacao', 'tra', 'Movimentos: entradas, saídas e transferências (cabeçalho)', [
    ('igr_id', 'fk:igreja', NN, 'Preenchido automaticamente a partir da conta'),
    ('tipo', 'tipo_transacao_t', NN), ('metodo', 'metodo_pagamento_t', NN),
@@ -599,7 +604,7 @@ SCOPE = {
  'escala_plano': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
  'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'),
- 'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'),
+ 'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'), 'contagem_participante': ('parent', 'cnu_id', 'contagem_numerario'),
  'transacao': ('direct', 'igr_id'), 'transacao_linha': ('direct', 'igr_id'),
  'saldo_diario_conta': ('direct', 'igr_id'), 'saldo_diario_fundo': ('direct', 'igr_id'),
  'recibo': ('direct', 'igr_id'), 'remessa': ('direct', 'igr_id'), 'fecho_periodo': ('direct', 'igr_id'),
