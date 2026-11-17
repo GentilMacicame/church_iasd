@@ -4738,6 +4738,90 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/acessos-confidenciais:
+    get:
+      summary: 'Acessos confidenciais: listar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.acesso_confidencial.ler
+      operationId: listarAcessoConfidencial
+      description: 'Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: usuarioId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AcessoConfidencial'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/acessos-confidenciais/{id}:
+    get:
+      summary: 'Acessos confidenciais: ler um'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.acesso_confidencial.ler
+      operationId: lerAcessoConfidencial
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcessoConfidencial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/nucleo/auditoria:
     get:
       summary: 'Auditoria: listar'
@@ -9700,6 +9784,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Disciplina'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/disciplinas/{id}/motivo:
+    get:
+      summary: Motivo da censura (confidencial)
+      tags:
+      - Secretaria
+      x-permissao: secretaria.disciplina.ler
+      operationId: motivoDisciplina
+      x-funcao-bd: secretaria.fn_disciplina_motivo
+      description: O motivo não vem nas outras respostas. Cada consulta fica registada (quem, quando, que registo); sem acesso → 404.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - motivo
+                properties:
+                  motivo:
+                    type: string
+                    nullable: true
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -18823,6 +18943,62 @@ components:
           schema:
             $ref: '#/components/schemas/Erro'
   schemas:
+    AcessoConfidencial:
+      type: object
+      description: 'Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41)'
+      x-tabela: nucleo.acesso_confidencial
+      x-prefixo: aco
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        usuarioId:
+          type: integer
+          format: int32
+          description: → nucleo.usuario
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        tabela:
+          type: string
+          maxLength: 80
+        registoId:
+          type: integer
+          format: int64
+        accao:
+          type: string
+          maxLength: 20
+          description: 'Ex.: LER_MOTIVO'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - tabela
+      - registoId
+      - accao
     Actividade:
       type: object
       description: Actividades e eventos dos departamentos
@@ -19935,7 +20111,8 @@ components:
           description: Obrigatório para menores
         motivo:
           type: string
-          description: 'Dado sensível: só secretário, pastor e anciãos'
+          description: 'Dado sensível: só secretário, pastor e anciãos · só de escrita: lê-se em /{id}/motivo (o acesso fica registado)'
+          writeOnly: true
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:

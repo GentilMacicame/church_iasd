@@ -107,7 +107,7 @@ public final class TabelaRepository {
         JsonArrayBuilder dados = Json.createArrayBuilder();
         int n = 0;
         String proximo = null;
-        int extra = t.colunas().size();
+        int extra = t.colunasLegiveis().size();
         try (PreparedStatement ps = sql.preparar(c); ResultSet rs = ps.executeQuery()) {
             String ultimoValor = null;
             long ultimoId = 0;

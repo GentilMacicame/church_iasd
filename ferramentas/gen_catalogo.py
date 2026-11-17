@@ -20,7 +20,7 @@ import sys
 AQUI = os.path.dirname(os.path.abspath(__file__))
 GERADOR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(AQUI, '..', 'database', 'gerador')
 sys.path.insert(0, os.path.abspath(GERADOR))
-from defs import MODULES, SCOPE, SYSTEM_WRITE  # noqa: E402
+from defs import MODULES, SCOPE, SO_ESCRITA, SYSTEM_WRITE  # noqa: E402
 from nomes import RES  # noqa: E402
 
 PKG = 'mz.org.iasd.igreja'
@@ -198,6 +198,8 @@ for _f, schema, _ti, _de, tables in MODULES:
                 attrs.append('escrita = false')
             if obrig:
                 attrs.append('obrigatoria = true')
+            if col in SO_ESCRITA:
+                attrs.append('leitura = false')
             if nn:
                 attrs.append('naoNula = true')
             extra = ''

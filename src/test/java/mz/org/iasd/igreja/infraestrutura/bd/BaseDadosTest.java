@@ -60,6 +60,7 @@ import mz.org.iasd.igreja.repositories.secretaria.MembrosParecidosRepository;
 import mz.org.iasd.igreja.repositories.actividades.ConflitosRepository;
 import mz.org.iasd.igreja.repositories.secretaria.ParticipacaoRepository;
 import mz.org.iasd.igreja.repositories.organizacao.PainelRepository;
+import mz.org.iasd.igreja.repositories.secretaria.DisciplinaRepository;
 import mz.org.iasd.igreja.repositories.tesouraria.ContribuicoesRepository;
 import mz.org.iasd.igreja.controllers.actividades.RelatoriosActividadesController;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
@@ -1174,6 +1175,42 @@ class BaseDadosTest {
         JsonObject saiu = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, tabela, membro,
                 Json.createObjectBuilder().addNull("familiaId").build()));
         assertTrue(saiu.isNull("parentesco"));
+    }
+
+    // ------------------------------------------------------------------ V41: motivo da censura confidencial
+
+    @Test
+    void motivoDaCensuraSoPelaFuncaoQueRegistaOAcesso() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v41@teste.mz", null, "SECRETARIO");
+        int membro;
+        int voto;
+        try (Connection dono = ligarComoDono()) {
+            membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_data_nascimento) VALUES ("
+                    + igrejaCentral + ", 'Hugo', 'Censurado', '1980-01-01') RETURNING mem_id");
+            int reuniao = inserir(dono, "INSERT INTO secretaria.reuniao (reu_igr_id, reu_tipo, reu_data) VALUES (" + igrejaCentral
+                    + ", 'REUNIAO_REGULAR', '2026-06-06 10:00+02') RETURNING reu_id");
+            voto = inserir(dono, "INSERT INTO secretaria.voto (vot_reu_id, vot_numero, vot_tipo, vot_assunto) VALUES (" + reuniao
+                    + ", 'V41-1', 'DISCIPLINA', 'Censura') RETURNING vot_id");
+        }
+        var disciplina = Catalogo.de(mz.org.iasd.igreja.models.secretaria.Disciplina.class);
+        // o secretário grava a censura com o motivo; a resposta não traz o motivo
+        JsonObject criada = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, disciplina, Json.createObjectBuilder()
+                .add("membroId", membro).add("votoId", voto).add("dataInicio", "2026-06-07").add("dataFim", "2026-09-07")
+                .add("motivo", "Motivo de teste V41").build()));
+        long id = criada.getJsonNumber("id").longValue();
+        assertFalse(criada.containsKey("motivo"));
+        // a lista também não o traz (e não falha por falta de permissão na coluna)
+        JsonObject lista = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.listar(c, disciplina, Map.of("membroId", Integer.toString(membro))));
+        assertFalse(lista.getJsonArray("dados").getJsonObject(0).containsKey("motivo"));
+        // lê-se pela função, que regista a consulta
+        assertEquals("Motivo de teste V41", ExecutorTransaccao.executar(api, secretario, c -> DisciplinaRepository.motivo(c, id)));
+        try (Connection dono = ligarComoDono()) {
+            assertEquals(1, contar(dono, "SELECT count(*) FROM nucleo.acesso_confidencial WHERE aco_registo_id = " + id
+                    + " AND aco_usu_id = " + secretario + " AND aco_accao = 'LER_MOTIVO'"));
+        }
+        // o tesoureiro não tem acesso à disciplina → 404 (não revela que existe), sem registo
+        SQLException semAcesso = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> DisciplinaRepository.motivo(c, id)));
+        assertEquals(404, TradutorErrosSql.traduzir(semAcesso).estadoHttp());
     }
 
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS

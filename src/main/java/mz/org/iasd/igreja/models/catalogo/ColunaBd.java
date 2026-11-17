@@ -27,4 +27,8 @@ public @interface ColunaBd {
 
     /** NOT NULL (pode ser usada para ordenar com paginação por cursor). */
     boolean naoNula() default false;
+
+    /** Pode ser lida pela API (falso nos dados confidenciais só de escrita, ex.: o motivo da censura: lê-se por uma função
+     *  que regista o acesso). Fica fora dos SELECT e do JSON das respostas. */
+    boolean leitura() default true;
 }

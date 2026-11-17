@@ -255,6 +255,11 @@ src/
   cônjuge, filho, pai/mãe, irmão, neto, outro), idade, estado civil e estado, e as relações conhecidas: casais (cônjuges ligados)
   e menores. A ficha do membro mostra a família e o parentesco.
 
+- **Disciplina** (V41): indicadores (em censura, terminam em 30 dias, censuras e removidos no ano); separadores Censuras
+  (tempo cumprido em barra, dias que faltam, anular), Removidos (por disciplina e a pedido, do livro de membros) e Registo de
+  acessos (pastor e Associação: quem consultou que motivo e quando). O motivo não aparece nas listas: "Motivo" abre um aviso e
+  só depois de "Ver o motivo" é lido (a base de dados regista a consulta).
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

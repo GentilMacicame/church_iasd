@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 488 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 491 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -149,6 +149,8 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 
 | Método | Caminho | Classe · método | Permissão |
 | --- | --- | --- | --- |
+| GET | `/v1/nucleo/acessos-confidenciais` | AcessosConfidenciaisController · listar | `nucleo.acesso_confidencial.ler` |
+| GET | `/v1/nucleo/acessos-confidenciais/{id}` | AcessosConfidenciaisController · obter | `nucleo.acesso_confidencial.ler` |
 | GET | `/v1/nucleo/auditoria` | AuditoriaController · listar | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/auditoria/{id}` | AuditoriaController · obter | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/comunicados` | ComunicadosController · listar | `nucleo.comunicado.ler` |
@@ -294,6 +296,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/secretaria/disciplinas` | DisciplinasController · criar | `secretaria.disciplina.criar` |
 | GET | `/v1/secretaria/disciplinas/{id}` | DisciplinasController · obter | `secretaria.disciplina.ler` |
 | PATCH | `/v1/secretaria/disciplinas/{id}` | DisciplinasController · alterar | `secretaria.disciplina.alterar` |
+| GET | `/v1/secretaria/disciplinas/{id}/motivo` | DisciplinasController · motivo | `secretaria.disciplina.ler` |
 | POST | `/v1/secretaria/disciplinas/{id}/reactivar` | DisciplinasController · reactivar | `secretaria.disciplina.terminar` |
 | POST | `/v1/secretaria/disciplinas/{id}/terminar` | DisciplinasController · terminar | `secretaria.disciplina.terminar` |
 | GET | `/v1/secretaria/familias` | FamiliasController · listar | `secretaria.familia.ler` |

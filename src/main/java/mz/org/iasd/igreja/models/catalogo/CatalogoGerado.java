@@ -19,6 +19,7 @@ import mz.org.iasd.igreja.models.escolasabatina.RelatorioSabado;
 import mz.org.iasd.igreja.models.escolasabatina.Sabado;
 import mz.org.iasd.igreja.models.escolasabatina.Trimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Visitante;
+import mz.org.iasd.igreja.models.nucleo.AcessoConfidencial;
 import mz.org.iasd.igreja.models.nucleo.Comunicado;
 import mz.org.iasd.igreja.models.nucleo.ComunicadoIgreja;
 import mz.org.iasd.igreja.models.nucleo.LogAuditoria;
@@ -171,6 +172,7 @@ public final class CatalogoGerado {
             UsuarioIgreja.class,
             UsuarioEntidade.class,
             LogAuditoria.class,
+            AcessoConfidencial.class,
             Entidade.class,
             Distrito.class,
             Provincia.class,

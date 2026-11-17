@@ -1829,6 +1829,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/nucleo/acessos-confidenciais": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Acessos confidenciais: listar
+         * @description Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41)
+         */
+        get: operations["listarAcessoConfidencial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/acessos-confidenciais/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Acessos confidenciais: ler um */
+        get: operations["lerAcessoConfidencial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/nucleo/auditoria": {
         parameters: {
             query?: never;
@@ -3786,6 +3823,26 @@ export interface paths {
          * @description Só os campos enviados mudam.
          */
         patch: operations["alterarDisciplina"];
+        trace?: never;
+    };
+    "/v1/secretaria/disciplinas/{id}/motivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Motivo da censura (confidencial)
+         * @description O motivo não vem nas outras respostas. Cada consulta fica registada (quem, quando, que registo); sem acesso → 404.
+         */
+        get: operations["motivoDisciplina"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/secretaria/disciplinas/{id}/reactivar": {
@@ -7277,6 +7334,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41) */
+        AcessoConfidencial: {
+            /** Format: int64 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.usuario
+             */
+            usuarioId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            tabela?: string;
+            /** Format: int64 */
+            registoId?: number;
+            /** @description Ex.: LER_MOTIVO */
+            accao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Actividades e eventos dos departamentos */
         Actividade: {
             /** Format: int32 */
@@ -7917,7 +8003,7 @@ export interface components {
             dataFim?: string;
             /** @description Obrigatório para menores */
             encarregadoNotificado?: boolean;
-            /** @description Dado sensível: só secretário, pastor e anciãos */
+            /** @description Dado sensível: só secretário, pastor e anciãos · só de escrita: lê-se em /{id}/motivo (o acesso fica registado) */
             motivo?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
@@ -13653,6 +13739,73 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarAcessoConfidencial: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                usuarioId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["AcessoConfidencial"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerAcessoConfidencial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcessoConfidencial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarLog: {
         parameters: {
             query?: {
@@ -17848,6 +18001,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Disciplina"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    motivoDisciplina: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        motivo: string | null;
+                    };
                 };
             };
             400: components["responses"]["PedidoInvalido"];

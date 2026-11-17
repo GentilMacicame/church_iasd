@@ -2,7 +2,7 @@ import sys; import os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file
 from defs import MODULES
 RES = {  # nome do recurso na API (plural, com hífen)
  'perfil':'perfis','permissao':'permissoes','perfil_permissao':'perfis-permissoes','usuario':'usuarios',
- 'usuario_igreja':'usuarios-igreja','usuario_entidade':'usuarios-entidade','log_auditoria':'auditoria',
+ 'usuario_igreja':'usuarios-igreja','usuario_entidade':'usuarios-entidade','log_auditoria':'auditoria','acesso_confidencial':'acessos-confidenciais',
  'entidade':'entidades','distrito':'distritos','igreja':'igrejas','provincia':'provincias','distrito_administrativo':'distritos-administrativos','departamento':'departamentos',
  'igreja_departamento':'departamentos-igreja','cargo':'cargos',
  'familia':'familias','membro':'membros','contacto':'contactos','consentimento':'consentimentos','reuniao':'reunioes',

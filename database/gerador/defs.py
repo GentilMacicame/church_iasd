@@ -51,6 +51,10 @@ M('V2__nucleo', 'nucleo', 'Núcleo: acesso e auditoria',
    partition='@criado_em',
    extra=['CREATE INDEX idx_lau_registo ON {t} (@tabela, @registo_id)',
           'CREATE INDEX idx_lau_data ON {t} USING BRIN (@criado_em)']),
+ T('acesso_confidencial', 'aco', 'Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41)', [
+   ('usu_id', 'fk:usuario'), ('igr_id', 'fk:igreja', NN), ('tabela', 'VARCHAR(80)', NN), ('registo_id', 'BIGINT', NN),
+   ('accao', 'VARCHAR(20)', NN, 'Ex.: LER_MOTIVO')],
+   big=True, extra=['CREATE INDEX idx_aco_igr_data ON {t} (@igr_id, @criado_em DESC)']),
 ])
 
 # ======================================================================= organizacao
@@ -599,7 +603,7 @@ SCOPE = {
  'transacao': ('direct', 'igr_id'), 'transacao_linha': ('direct', 'igr_id'),
  'saldo_diario_conta': ('direct', 'igr_id'), 'saldo_diario_fundo': ('direct', 'igr_id'),
  'recibo': ('direct', 'igr_id'), 'remessa': ('direct', 'igr_id'), 'fecho_periodo': ('direct', 'igr_id'),
- 'notificacao': ('direct', 'igr_id'),
+ 'notificacao': ('direct', 'igr_id'), 'acesso_confidencial': ('direct', 'igr_id'),
  'consentimento': ('parent', 'mem_id', 'membro'), 'baptismo': ('parent', 'mem_id', 'membro'),
  'disciplina': ('parent', 'mem_id', 'membro'), 'voto': ('parent', 'reu_id', 'reuniao'),
  'reuniao_presenca': ('parent', 'reu_id', 'reuniao'), 'reuniao_ponto': ('parent', 'reu_id', 'reuniao'),
@@ -625,8 +629,11 @@ GLOBAL_READ = {'perfil', 'permissao', 'perfil_permissao', 'entidade', 'distrito'
 # comuns só se criam, alteram e terminam com a permissão ao nível da Associação (perfil em usuario_entidade) ou como
 # super-administrador; ter a permissão numa igreja não chega (antes chegava: um tesoureiro mudava o plano de todos).
 COMUNS_ASSOCIACAO = {'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config', 'provincia', 'distrito_administrativo'}
+# Colunas confidenciais só de escrita (V41): a API grava-as mas não as lê nas listas; lêem-se por uma função que regista
+# o acesso (ex.: secretaria.fn_disciplina_motivo). A base de dados não dá SELECT nelas a app_igreja.
+SO_ESCRITA = {'dsc_motivo'}
 # Tabelas que só os triggers do sistema escrevem (os utilizadores só lêem)
-SYSTEM_WRITE = {'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria'}
+SYSTEM_WRITE = {'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria', 'acesso_confidencial'}
 
 # O próprio membro vê sempre os seus dados (direito de acesso), mesmo sem perfil
 OWNER_READ = {   # (SELECT ...) = calculado uma vez por consulta

@@ -1,0 +1,35 @@
+1. secretário (autorizado): grava o motivo como antes
+   mas não o lê directamente (nem numa lista); o resto da censura sim
+psql:database/tests/27_disciplina_confidencial.sql:14: ERROR:  permission denied for table disciplina
+ dsc_id | dsc_data_inicio | dsc_data_fim 
+--------+-----------------+--------------
+      1 | 2027-02-01      | 2027-06-01
+(1 row)
+
+   lê-o pela função, que regista a consulta
+            motivo            
+------------------------------
+ Motivo confidencial de teste
+(1 row)
+
+2. tesoureiro (sem acesso à disciplina): a função responde que não existe e não fica registo dele
+psql:database/tests/27_disciplina_confidencial.sql:21: ERROR:  Registo de disciplina não encontrado
+ ve_acessos 
+------------
+          0
+(1 row)
+
+3. pastor: vê quem consultou o motivo, quando e que registo
+ aco_usu_id | aco_igr_id |      aco_tabela       | aco_registo_id | aco_accao  
+------------+------------+-----------------------+----------------+------------
+        950 |          1 | secretaria.disciplina |              1 | LER_MOTIVO
+(1 row)
+
+   ninguém escreve no registo de acessos à mão
+psql:database/tests/27_disciplina_confidencial.sql:28: ERROR:  permission denied for table acesso_confidencial
+4. o histórico de alterações não guarda o texto do motivo
+ lau_accao |      motivo_no_log       | antes_tem_motivo 
+-----------+--------------------------+------------------
+ UPDATE    | (confidencial: alterado) | f
+(1 row)
+

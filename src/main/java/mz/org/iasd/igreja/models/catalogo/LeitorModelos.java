@@ -36,7 +36,7 @@ public final class LeitorModelos {
                 }
                 tipoEnum = tb.value();
             }
-            colunas.add(new Coluna(c.value(), rc.getName(), c.tipo(), tipoEnum, c.escrita(), c.obrigatoria(), c.naoNula()));
+            colunas.add(new Coluna(c.value(), rc.getName(), c.tipo(), tipoEnum, c.escrita(), c.obrigatoria(), c.naoNula(), c.leitura()));
         }
         return new Tabela(t.modulo(), t.recurso(), t.schema(), t.nome(), t.prefixo(), t.soLeitura(),
                 t.colunaIgreja().isEmpty() ? null : t.colunaIgreja(), List.copyOf(colunas));

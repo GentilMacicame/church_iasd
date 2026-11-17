@@ -128,7 +128,7 @@ public final class Conversao {
     public static JsonObject linha(Tabela t, ResultSet rs) throws SQLException {
         JsonObjectBuilder o = Json.createObjectBuilder();
         int i = 1;
-        for (Coluna c : t.colunas()) {
+        for (Coluna c : t.colunasLegiveis()) {
             o.add(c.campo(), valor(c.tipo(), rs, i++));
         }
         return o.build();

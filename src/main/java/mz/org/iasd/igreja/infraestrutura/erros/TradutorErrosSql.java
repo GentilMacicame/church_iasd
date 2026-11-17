@@ -57,6 +57,7 @@ public final class TradutorErrosSql {
         return switch (estado) {
             case "42501" -> new Traducao(403, "sem_permissao", mensagemPermissao(mensagemBd), null);
             case "P0001" -> new Traducao(422, "regra_negocio", mensagemBd, null);
+            case "P0002" -> new Traducao(404, "nao_encontrado", mensagemBd, null);   // no_data_found: não existe ou não é visível (V41)
             case "23514" -> comFrase(restricao, new Traducao(422, "validacao",
                     "Valor não permitido" + (restricao != null ? " (" + restricao + ")" : ""), campoDaRestricao(restricao)));
             case "23505" -> comFrase(restricao, new Traducao(409, "duplicado", "Já existe um registo com estes dados",

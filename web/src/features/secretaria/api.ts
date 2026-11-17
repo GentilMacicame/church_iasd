@@ -107,6 +107,39 @@ export function useDisciplinas() {
   })
 }
 
+/** Membros removidos do livro (por disciplina ou a pedido), para o painel da disciplina. */
+export function useRemovidos(activo: boolean) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: activo,
+    queryKey: k(igreja.id, 'removidos'),
+    queryFn: async () => {
+      const ler = (tipo: 'REMOCAO_DISCIPLINA' | 'REMOCAO_PEDIDO') => dados(api.GET('/v1/secretaria/movimentos-membro', {
+        params: { query: { igrejaId: igreja.id, tipo, limite: 200, ordem: '-data' } as never },
+      }))
+      const [a, b] = await Promise.all([ler('REMOCAO_DISCIPLINA'), ler('REMOCAO_PEDIDO')])
+      return [...a.dados, ...b.dados] as (Esquema<'Movimento'> & { id: number; membroId: number; data: string; tipo: string })[]
+    },
+  })
+}
+
+/** V41: o motivo de uma censura (confidencial): a base de dados regista quem o consultou e quando. */
+export async function lerMotivoCensura(id: number): Promise<string | null> {
+  return (await dados(api.GET('/v1/secretaria/disciplinas/{id}/motivo', { params: { path: { id } } }))).motivo ?? null
+}
+
+/** V41: quem consultou dados confidenciais desta igreja (pastor e Associação). */
+export function useAcessosConfidenciais(activo: boolean) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: activo,
+    queryKey: k(igreja.id, 'acessos-confidenciais'),
+    queryFn: async () => (await dados(api.GET('/v1/nucleo/acessos-confidenciais', {
+      params: { query: { igrejaId: igreja.id, limite: 200, ordem: '-id' } as never },
+    }))).dados as (Esquema<'AcessoConfidencial'> & { id: number; registoId: number; criadoEm: string })[],
+  })
+}
+
 export function useCensurasActivas() {
   const igreja = useIgreja()
   return useQuery({

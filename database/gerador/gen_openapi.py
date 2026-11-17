@@ -1,7 +1,7 @@
 """Gera openapi.yaml a partir da definição do esquema (v5/defs.py) e das enumerações de V1__base.sql."""
 import os, re, sys, json, yaml
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from defs import MODULES, SCOPE, SYSTEM_WRITE, GLOBAL_READ
+from defs import MODULES, SCOPE, SYSTEM_WRITE, GLOBAL_READ, SO_ESCRITA
 from nomes import RES
 
 ALL = [t for m in MODULES for t in m[4]]
@@ -101,6 +101,7 @@ for fname, schema, title, desc, tables in MODULES:
                 if '$ref' in s: s = {'allOf': [s], 'description': d}
                 else: s['description'] = (s.get('description', '') + ' · ' + d).strip(' ·')
             if full in AUTO: s = {**s, 'readOnly': True} if '$ref' not in s else {'allOf': [s], 'readOnly': True}
+            if full in SO_ESCRITA: s = {**s, 'writeOnly': True, 'description': (s.get('description', '') + ' · só de escrita: lê-se em /{id}/motivo (o acesso fica registado)').strip(' ·')}
             props[campo(col)] = s
             if 'NOT NULL' in opt and 'DEFAULT' not in opt and full not in AUTO and full not in CALCULADOS:
                 req_create.append(campo(col))
@@ -361,6 +362,13 @@ paths['/v1/tesouraria/alvo-sugerido'] = {'get': op(
     responses=resp('200', obj(['valor'], valor={**MONEY, 'nullable': True})))}
 rel('/v1/tesouraria/fundo-mensal', 'tesouraria.vw_fundo_mensal', TES, 'tesouraria.saldo_diario_fundo.ler',
     ANO + [{'name': 'fundoId', 'in': 'query', 'schema': I}])
+# V41: o motivo confidencial da censura (a consulta fica registada em nucleo.acesso_confidencial)
+paths['/v1/secretaria/disciplinas/{id}/motivo'] = {'get': op(
+    'Motivo da censura (confidencial)', SEC, 'secretaria.disciplina.ler', operationId='motivoDisciplina',
+    **{'x-funcao-bd': 'secretaria.fn_disciplina_motivo'},
+    description='O motivo não vem nas outras respostas. Cada consulta fica registada (quem, quando, que registo); sem acesso → 404.',
+    parameters=[{'$ref': '#/components/parameters/Id'}],
+    responses=resp('200', obj(['motivo'], motivo={**STR, 'nullable': True})))}
 # V39: histórico da Santa Ceia (participantes) por igreja e ano
 rel('/v1/actividades/santa-ceia-historico', 'actividades.vw_santa_ceia', TITULO['actividades'], 'actividades.santa_ceia.ler',
     [{'name': 'ano', 'in': 'query', 'schema': I}])

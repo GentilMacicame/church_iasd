@@ -87,6 +87,9 @@ public final class Rotas {
         /** NotificacoesController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String NOTIFICACOES = "/v1/nucleo/notificacoes";
 
+        /** AcessosConfidenciaisController · só leitura (V41): quem consultou dados confidenciais */
+        public static final String ACESSOS_CONFIDENCIAIS = "/v1/nucleo/acessos-confidenciais";
+
         /** ComunicadosController · rotas-padrão (V37): comunicados da igreja, do distrito ou da Associação */
         public static final String COMUNICADOS = "/v1/nucleo/comunicados";
 
@@ -178,6 +181,9 @@ public final class Rotas {
 
         /** DisciplinasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String DISCIPLINAS = "/v1/secretaria/disciplinas";
+
+        /** GET /v1/secretaria/disciplinas/{id}/motivo  (DisciplinasController.motivo, V41: o acesso fica registado) */
+        public static final String DISCIPLINAS_MOTIVO = "{id: \\d+}/motivo";
 
         /** FamiliasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String FAMILIAS = "/v1/secretaria/familias";

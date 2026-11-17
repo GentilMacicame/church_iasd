@@ -36,7 +36,12 @@ public record Tabela(String modulo, String recurso, String schema, String nome, 
     }
 
     public String listaSelect() {
-        return colunas.stream().map(Coluna::expressaoLeitura).collect(Collectors.joining(", "));
+        return colunasLegiveis().stream().map(Coluna::expressaoLeitura).collect(Collectors.joining(", "));
+    }
+
+    /** As colunas que a API lê e devolve (sem as confidenciais só de escrita). */
+    public List<Coluna> colunasLegiveis() {
+        return colunas.stream().filter(Coluna::leitura).toList();
     }
 
     /** Coluna usada nos filtros {@code desde}/{@code ate} (como no gerador do contrato). */

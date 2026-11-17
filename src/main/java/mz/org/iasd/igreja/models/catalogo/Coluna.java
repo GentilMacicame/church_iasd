@@ -8,9 +8,14 @@ package mz.org.iasd.igreja.models.catalogo;
  * @param escrita     pode vir no corpo de criar/alterar (falso para id, campos-padrão e campos automáticos)
  * @param obrigatoria NOT NULL sem DEFAULT: tem de vir ao criar
  * @param naoNula     NOT NULL (pode ser usada para ordenar com paginação por cursor)
+ * @param leitura     a API pode lê-la (falso nas colunas confidenciais só de escrita; ficam fora dos SELECT e do JSON)
  */
 public record Coluna(String coluna, String campo, Tipo tipo, String tipoEnum, boolean escrita, boolean obrigatoria,
-                     boolean naoNula) {
+                     boolean naoNula, boolean leitura) {
+
+    public Coluna(String coluna, String campo, Tipo tipo, String tipoEnum, boolean escrita, boolean obrigatoria, boolean naoNula) {
+        this(coluna, campo, tipo, tipoEnum, escrita, obrigatoria, naoNula, true);
+    }
 
     /** Expressão para o SELECT: enumerados e JSON lidos como texto. */
     public String expressaoLeitura() {

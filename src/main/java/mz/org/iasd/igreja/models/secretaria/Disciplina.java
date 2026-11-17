@@ -45,7 +45,7 @@ public record Disciplina(
         LocalDate dataFim,
         @ColunaBd(value = "dsc_encarregado_notificado", tipo = Tipo.BOOLEANO, naoNula = true)
         Boolean encarregadoNotificado,
-        @ColunaBd(value = "dsc_motivo", tipo = Tipo.TEXTO)
+        @ColunaBd(value = "dsc_motivo", tipo = Tipo.TEXTO, leitura = false)
         String motivo,
         @ColunaBd(value = "dsc_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
