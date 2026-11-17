@@ -1150,6 +1150,32 @@ class BaseDadosTest {
                 .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral)))).size());
     }
 
+    // ------------------------------------------------------------------ V40: parentesco na família
+
+    @Test
+    void parentescoNaFamiliaComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v40@teste.mz", null, "SECRETARIO");
+        int familia;
+        int membro;
+        try (Connection dono = ligarComoDono()) {
+            familia = inserir(dono, "INSERT INTO secretaria.familia (fam_igr_id, fam_nome) VALUES (" + igrejaCentral + ", 'Família V40') RETURNING fam_id");
+            membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_fam_id) VALUES (" + igrejaCentral
+                    + ", 'Eva', 'Chirindza', " + familia + ") RETURNING mem_id");
+        }
+        var tabela = Catalogo.de(Membro.class);
+        JsonObject alterado = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, tabela, membro,
+                Json.createObjectBuilder().add("parentesco", "CHEFE").build()));
+        assertEquals("CHEFE", alterado.getString("parentesco"));
+        // o tesoureiro lê o membro mas não o altera → 403
+        ApiException naoAltera = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, tabela, membro, Json.createObjectBuilder().add("parentesco", "FILHO").build())));
+        assertEquals(403, naoAltera.estadoHttp());
+        // sair da família limpa o parentesco
+        JsonObject saiu = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, tabela, membro,
+                Json.createObjectBuilder().addNull("familiaId").build()));
+        assertTrue(saiu.isNull("parentesco"));
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

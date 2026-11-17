@@ -27,6 +27,7 @@ import {
   type Membro,
 } from './api'
 import { useCargos } from '@/features/conselho/api'
+import { useFamilias } from '@/features/secretaria/api'
 import { useClasses } from '@/features/escola-sabatina/api'
 
 const ICONE_CONTACTO = { TELEFONE: Smartphone, TELEFONE_FIXO: Phone, WHATSAPP: MessageCircle, EMAIL: Mail, OUTRO: Phone } as const
@@ -113,6 +114,7 @@ function Ficha({ m }: { m: Membro }) {
   const basicos = useMembrosBasicos()
   const doc = m.tipoIdentificacao ? `${rotulos.tipoIdentificacao[m.tipoIdentificacao]}${m.numeroIdentificacao ? ` · ${m.numeroIdentificacao}` : ''}` : m.numeroIdentificacao
   const conjuge = m.conjugeMembroId ? basicos.data?.find((b) => b.id === m.conjugeMembroId) : undefined
+  const familias = useFamilias()
   return (
     <div className="grid gap-6 lg:col-span-8">
       <Cartao titulo="Dados pessoais" descricao="Identificação e documentos" icone={IdCard}>
@@ -135,6 +137,10 @@ function Ficha({ m }: { m: Membro }) {
                 : m.conjugeMembroId ? 'Membro de outra igreja' : m.nomeConjuge}
             </Campo>
             <Campo rotulo={t.ficha.dependentes}>{m.dependentes != null ? String(m.dependentes) : null}</Campo>
+            <Campo rotulo="Família">
+              {m.familiaId ? <Link to={`/familias?familia=${m.familiaId}`} className="font-medium text-primary hover:underline">{familias.data?.find((x) => x.id === m.familiaId)?.nome ?? 'Ver a família'}</Link> : null}
+              {m.parentesco ? <span className="text-muted-foreground"> · {rotulos.parentesco[m.parentesco]}</span> : null}
+            </Campo>
           </Grelha>
           <Grelha titulo={t.ficha.filiacao}>
             <Campo rotulo={t.ficha.nomePai}>{m.nomePai}</Campo>

@@ -251,6 +251,10 @@ src/
   (homens, mulheres, visitantes) e o histórico em tabela; agendar (data, hora, local, responsável, observações), registar
   os participantes, editar e cancelar. No Início, a próxima e a última; no painel geral, celebrações e participantes no período.
 
+- **Relações familiares** (V40): a família mostra os membros em tabela com o parentesco com o chefe (alterável ali: chefe,
+  cônjuge, filho, pai/mãe, irmão, neto, outro), idade, estado civil e estado, e as relações conhecidas: casais (cônjuges ligados)
+  e menores. A ficha do membro mostra a família e o parentesco.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

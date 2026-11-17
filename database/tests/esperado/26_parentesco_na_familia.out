@@ -1,0 +1,24 @@
+1. secretário (autorizado): o Paulo e a Joana entram na Família Langa, com o parentesco
+ mem_id | mem_parentesco 
+--------+----------------
+    103 | CHEFE
+    960 | FILHO
+    961 | OUTRO
+(3 rows)
+
+2. regras: dois chefes, valor desconhecido, parentesco sem família
+psql:database/tests/26_parentesco_na_familia.sql:18: ERROR:  duplicate key value violates unique constraint "uq_mem_chefe_familia"
+psql:database/tests/26_parentesco_na_familia.sql:19: ERROR:  new row for relation "membro" violates check constraint "chk_mem_parentesco"
+psql:database/tests/26_parentesco_na_familia.sql:20: ERROR:  new row for relation "membro" violates check constraint "chk_mem_parentesco"
+3. a Joana sai da família: o parentesco é limpo (era em relação ao chefe desta família)
+ mem_fam_id | mem_parentesco 
+------------+----------------
+            | 
+(1 row)
+
+4. tesoureiro (não autorizado a alterar membros): não muda o parentesco
+ continua 
+----------
+ FILHO
+(1 row)
+

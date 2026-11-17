@@ -28,6 +28,8 @@ export interface MembroBasico {
   estadoCivil: NonNullable<Membro['estadoCivil']> | null
   dataNascimento: string | null
   conjugeMembroId: number | null
+  /** V40: relação com o chefe da família */
+  parentesco: string | null
 }
 
 /** Linha de GET /v1/secretaria/membros-parecidos (V33): possível duplicado, com os motivos. */

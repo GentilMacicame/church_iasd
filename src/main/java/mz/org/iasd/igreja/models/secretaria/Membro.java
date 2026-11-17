@@ -62,6 +62,7 @@ import mz.org.iasd.igreja.models.tipos.TipoMovimento;
  * @param dependentes Número de dependentes a cargo
  * @param religiaoAnterior coluna {@code mem_religiao_anterior}
  * @param metodoConversao Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...)
+ * @param parentesco Relação com o chefe da família: CHEFE, CONJUGE, FILHO, PAI_MAE, IRMAO, NETO, OUTRO (V40)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -149,6 +150,8 @@ public record Membro(
         String religiaoAnterior,
         @ColunaBd(value = "mem_metodo_conversao", tipo = Tipo.TEXTO)
         String metodoConversao,
+        @ColunaBd(value = "mem_parentesco", tipo = Tipo.TEXTO)
+        String parentesco,
         @ColunaBd(value = "mem_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoMembro estado,
         @ColunaBd(value = "mem_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

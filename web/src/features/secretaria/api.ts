@@ -167,7 +167,13 @@ export function useFamiliasMut() {
     mutationFn: (id: number) => dados(api.POST('/v1/secretaria/familias/{id}/terminar', { params: { path: { id } } })),
     onSuccess: invalidar,
   })
-  return { criar, alterar, ligarMembro, terminar }
+  /** V40: o parentesco com o chefe da família (a base de dados garante um só chefe). */
+  const parentesco = useMutation({
+    mutationFn: ({ membroId, parentesco }: { membroId: number; parentesco: string | null }) =>
+      dados(api.PATCH('/v1/secretaria/membros/{id}', { params: { path: { id: membroId } }, body: { parentesco } as never })),
+    onSuccess: invalidar,
+  })
+  return { criar, alterar, ligarMembro, terminar, parentesco }
 }
 
 /* ===================================================================== consentimentos */

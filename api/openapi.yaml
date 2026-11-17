@@ -21325,6 +21325,10 @@ components:
           type: string
           maxLength: 100
           description: Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...)
+        parentesco:
+          type: string
+          maxLength: 10
+          description: 'Relação com o chefe da família: CHEFE, CONJUGE, FILHO, PAI_MAE, IRMAO, NETO, OUTRO (V40)'
         estado:
           $ref: '#/components/schemas/EnumEstadoMembro'
         criadoEm:

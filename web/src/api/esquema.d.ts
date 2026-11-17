@@ -8575,6 +8575,8 @@ export interface components {
             religiaoAnterior?: string;
             /** @description Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...) */
             metodoConversao?: string;
+            /** @description Relação com o chefe da família: CHEFE, CONJUGE, FILHO, PAI_MAE, IRMAO, NETO, OUTRO (V40) */
+            parentesco?: string;
             estado?: components["schemas"]["EnumEstadoMembro"];
             /** Format: date-time */
             readonly criadoEm?: string;

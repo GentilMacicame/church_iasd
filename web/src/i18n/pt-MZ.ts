@@ -272,6 +272,7 @@ export const rotulos = {
   metodo: { NUMERARIO: 'Numerário', MPESA: 'M-Pesa', EMOLA: 'e-Mola', BANCO: 'Banco' } as Record<string, string>,
   tipoTransacao: { ENTRADA: 'Entrada', SAIDA: 'Saída', TRANSFERENCIA: 'Transferência' } as Record<string, string>,
   estadoTransacao: { PENDENTE: 'Pendente', CONFIRMADA: 'Confirmada', FALHADA: 'Falhada', ANULADA: 'Anulada' } as Record<string, string>,
+  parentesco: { CHEFE: 'Chefe da família', CONJUGE: 'Cônjuge', FILHO: 'Filho(a)', PAI_MAE: 'Pai / mãe', IRMAO: 'Irmão(ã)', NETO: 'Neto(a)', OUTRO: 'Outro' } as Record<string, string>,
   tipoContacto: { TELEFONE: 'Telemóvel (celular)', TELEFONE_FIXO: 'Telefone fixo', EMAIL: 'E-mail', WHATSAPP: 'WhatsApp', OUTRO: 'Outro' },
   divisao: {
     ROL_DO_BERCO: 'Rol do berço', JARDIM_DE_INFANCIA: 'Jardim de infância', PRIMARIOS: 'Primários', JUVENIS: 'Juvenis',

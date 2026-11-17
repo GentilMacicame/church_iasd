@@ -9,7 +9,9 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Avatar, Cartao, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { Avatar, Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Seleccao } from '@/components/comum/Seleccao'
+import { idade } from '@/lib/formatos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { ListaMembros } from '@/components/comum/EscolherMembro'
@@ -96,19 +98,33 @@ export default function PaginaFamilias() {
   )
 }
 
+const ORDEM_PARENTESCO = ['CHEFE', 'CONJUGE', 'FILHO', 'PAI_MAE', 'IRMAO', 'NETO', 'OUTRO']
+
+/** A família: os membros em tabela (parentesco, idade, sexo, estado civil, estado) e as relações que o sistema conhece. */
 function DetalheFamilia({ f, aoEditar }: { f: Familia; aoEditar: () => void }) {
   const { pode } = useSessao()
   const membros = useMembrosBasicos()
-  const { ligarMembro } = useFamiliasMut()
+  const { ligarMembro, parentesco } = useFamiliasMut()
   const [juntar, setJuntar] = useState(false)
-  const daFamilia = (membros.data ?? []).filter((m) => m.familiaId === f.id)
+  const todos = membros.data ?? []
+  const daFamilia = todos.filter((m) => m.familiaId === f.id).sort((a, b) =>
+    (ORDEM_PARENTESCO.indexOf(a.parentesco ?? '') + 1 || 99) - (ORDEM_PARENTESCO.indexOf(b.parentesco ?? '') + 1 || 99)
+    || (a.dataNascimento ?? '9').localeCompare(b.dataNascimento ?? '9'))
   const podeMudar = pode('secretaria.membro.alterar')
   const mudar = (membroId: number, familiaId: number | null, nome: string) => ligarMembro.mutate({ membroId, familiaId }, {
     onSuccess: () => toast.success(familiaId ? `${nome} juntou-se à ${f.nome}.` : `${nome} saiu da ${f.nome}.`),
     onError: (e) => toast.error(mensagemDe(e)),
   })
+  const mudarParentesco = (membroId: number, valor: string) => parentesco.mutate({ membroId, parentesco: valor || null }, {
+    onError: (e) => toast.error(mensagemDe(e)),
+  })
+  const nome = (id: number) => { const m = todos.find((x) => x.id === id); return m ? `${m.nome} ${m.apelido}` : 'Membro' }
+  // relações que o sistema conhece: casais (cônjuges ligados na ficha) e menores
+  const casais = daFamilia.filter((m) => m.conjugeMembroId && (m.id < m.conjugeMembroId || !daFamilia.some((x) => x.id === m.conjugeMembroId)))
+  const menores = daFamilia.filter((m) => { const a = idade(m.dataNascimento); return a != null && a < 18 })
+  const chefe = daFamilia.find((m) => m.parentesco === 'CHEFE')
   return (
-    <Cartao titulo={f.nome} descricao={f.morada || 'Sem morada'} icone={Home} semMargem
+    <Cartao titulo={f.nome} descricao={[f.morada || 'Sem morada', chefe && `chefe: ${chefe.nome} ${chefe.apelido}`].filter(Boolean).join(' · ')} icone={Home} semMargem
       accoes={(
         <div className="flex gap-2">
           {pode('secretaria.familia.alterar') && <Button size="sm" variant="ghost" className="alvo" onClick={aoEditar}><Pencil className="size-4" />Editar</Button>}
@@ -118,24 +134,72 @@ function DetalheFamilia({ f, aoEditar }: { f: Familia; aoEditar: () => void }) {
       {membros.isPending ? <Barra className="m-4 h-24" /> : !daFamilia.length ? (
         <EstadoVazio icone={Users} titulo="Família sem membros">Junte os membros que vivem nesta casa.</EstadoVazio>
       ) : (
-        <ul className="divide-y">
-          {daFamilia.map((m) => (
-            <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-              <Link to={`/membros/${m.id}`} className="flex min-w-0 items-center gap-3 hover:underline">
-                <Avatar id={m.id} nome={m.nome} apelido={m.apelido} />
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{m.nome} {m.apelido}</span>
-                  <span className="text-xs text-muted-foreground">{rotulos.estadoMembro[m.estado] ?? m.estado}</span>
-                </span>
-              </Link>
-              {podeMudar && (
-                <Button size="sm" variant="ghost" className="alvo text-muted-foreground" disabled={ligarMembro.isPending} onClick={() => mudar(m.id, null, `${m.nome} ${m.apelido}`)} aria-label={`Tirar ${m.nome} da família`}>
-                  <UserMinus className="size-4" /><span className="hidden sm:inline">Tirar</span>
-                </Button>
+        <>
+          <Tabela porPagina={false}>
+            <thead>
+              <tr>
+                <th className="sm:pl-6">Membro</th>
+                <th>Parentesco</th>
+                <th className="num hidden sm:table-cell">Idade</th>
+                <th className="hidden md:table-cell">Estado civil</th>
+                <th className="hidden sm:table-cell">Estado</th>
+                <th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {daFamilia.map((m) => (
+                <tr key={m.id}>
+                  <td className="sm:pl-6">
+                    <Link to={`/membros/${m.id}`} className="flex min-w-0 items-center gap-3 hover:underline">
+                      <Avatar id={m.id} nome={m.nome} apelido={m.apelido} />
+                      <span className="min-w-0"><span className="block truncate font-medium">{m.nome} {m.apelido}</span>
+                        <span className="text-xs text-muted-foreground sm:hidden">{rotulos.estadoMembro[m.estado] ?? m.estado}</span></span>
+                    </Link>
+                  </td>
+                  <td>
+                    {podeMudar ? (
+                      <Seleccao aria-label={`Parentesco de ${m.nome}`} value={m.parentesco ?? ''} onChange={(e) => mudarParentesco(m.id, e.target.value)} className="h-9 w-44">
+                        <option value="">—</option>
+                        {ORDEM_PARENTESCO.map((k) => <option key={k} value={k}>{rotulos.parentesco[k]}</option>)}
+                      </Seleccao>
+                    ) : (m.parentesco ? rotulos.parentesco[m.parentesco] : '—')}
+                  </td>
+                  <td className="num hidden sm:table-cell">{idade(m.dataNascimento) ?? '—'}</td>
+                  <td className="hidden md:table-cell">{m.estadoCivil ? rotulos.estadoCivil[m.estadoCivil] : '—'}</td>
+                  <td className="hidden sm:table-cell"><Pilula variante={m.estado === 'ACTIVO' ? 'success' : m.estado === 'INTERESSADO' ? 'info' : 'secondary'}>{rotulos.estadoMembro[m.estado] ?? m.estado}</Pilula></td>
+                  <td className="sm:pr-6">
+                    {podeMudar && (
+                      <Button size="icon" variant="ghost" className="alvo size-9 text-muted-foreground" disabled={ligarMembro.isPending}
+                        onClick={() => mudar(m.id, null, `${m.nome} ${m.apelido}`)} aria-label={`Tirar ${m.nome} da família`} title="Tirar da família">
+                        <UserMinus className="size-4" />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Tabela>
+          {(casais.length > 0 || menores.length > 0) && (
+            <div className="grid gap-3 border-t px-4 py-4 text-sm sm:grid-cols-2 sm:px-6">
+              {casais.length > 0 && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Casais</p>
+                  <ul className="grid gap-1">
+                    {casais.map((m) => <li key={m.id}>{m.nome} {m.apelido} <span className="text-muted-foreground">e</span> {nome(m.conjugeMembroId!)}</li>)}
+                  </ul>
+                </div>
               )}
-            </li>
-          ))}
-        </ul>
+              {menores.length > 0 && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Menores ({menores.length})</p>
+                  <ul className="grid gap-1">
+                    {menores.map((m) => <li key={m.id}>{m.nome} {m.apelido} <span className="text-muted-foreground">· {idade(m.dataNascimento)} anos</span></li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
       {juntar && (
         <Dialog open onOpenChange={(v) => !v && setJuntar(false)}>
