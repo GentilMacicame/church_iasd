@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, HandCoins,
-  LayoutDashboard, Mic, Plus, Sprout, Users, Wallet,
+  LayoutDashboard, Mic, Plus, Sprout, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -315,6 +315,15 @@ function Composicao({ className }: { className?: string }) {
   const activos = conta((m) => m.estado === 'ACTIVO'), interessados = conta((m) => m.estado === 'INTERESSADO')
   const outros = l.length - activos - interessados
   const mulheres = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'F'), homens = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'M')
+  const semFamilia = conta((m) => m.estado === 'ACTIVO' && !m.familiaId)
+  // situação civil dos activos (V33: a vista básica traz o estado civil); viúvos e viúvas pelo sexo
+  const civil = (e: string, s?: 'M' | 'F') => conta((m) => m.estado === 'ACTIVO' && m.estadoCivil === e && (!s || m.sexo === s))
+  const situacao = [
+    { rotulo: 'Casados', v: civil('CASADO'), para: 'CASADO' }, { rotulo: 'União de facto', v: civil('UNIAO_FACTO'), para: 'UNIAO_FACTO' },
+    { rotulo: 'Solteiros', v: civil('SOLTEIRO'), para: 'SOLTEIRO' }, { rotulo: 'Viúvos', v: civil('VIUVO', 'M'), para: 'VIUVO' },
+    { rotulo: 'Viúvas', v: civil('VIUVO', 'F'), para: 'VIUVO' }, { rotulo: 'Divorciados', v: civil('DIVORCIADO'), para: 'DIVORCIADO' },
+    { rotulo: 'Sem estado civil', v: conta((m) => m.estado === 'ACTIVO' && !m.estadoCivil), para: '' },
+  ].filter((x) => x.v > 0)
   const pct = (v: number, de: number) => (de ? `${Math.round((v / de) * 100)}%` : '0%')
   const Linha = ({ cor, rotulo, v, de }: { cor: string; rotulo: string; v: number; de: number }) => (
     <li className="flex items-center justify-between gap-3 text-sm">
@@ -351,6 +360,26 @@ function Composicao({ className }: { className?: string }) {
                 <Linha cor="var(--serie-5, var(--serie-1))" rotulo="Homens" v={homens} de={activos} />
               </ul>
             </div>
+            {situacao.length > 0 && (
+              <div className="border-t pt-4">
+                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Activos por estado civil</p>
+                <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  {situacao.map((x) => (
+                    <li key={x.rotulo}>
+                      <Link to={`/membros?estado=ACTIVO${x.para ? `&estadoCivil=${x.para}` : ''}`} className="flex items-center justify-between gap-2 hover:text-primary">
+                        <span>{x.rotulo}</span><strong className="font-semibold tabular-nums">{x.v}</strong>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {semFamilia > 0 && (
+              <Link to="/familias" className="alvo flex items-center justify-between gap-3 rounded-lg border border-warning/50 bg-tint-warning px-3 py-2.5 text-sm text-warning-text hover:border-warning">
+                <span className="flex items-center gap-2"><UserPlus className="size-4" aria-hidden />Activos sem família</span>
+                <strong className="text-base font-semibold tabular-nums">{semFamilia}</strong>
+              </Link>
+            )}
           </div>
         )}
     </Cartao>

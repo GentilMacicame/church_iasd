@@ -47,7 +47,7 @@ export default function PaginaFamilias() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Indicador rotulo="Famílias" valor={String((familias.data ?? []).filter((f) => !f.endDate).length)} icone={Home} />
             <Indicador rotulo="Membros activos em famílias" valor={String((resumo.data ?? []).reduce((s, r) => s + Number(r.membrosActivos), 0))} icone={Users} tom="success" />
-            <Indicador rotulo="Membros activos sem família" valor={String(semFamilia)} icone={UserPlus} tom="warning" />
+            <Indicador rotulo="Membros activos sem família" valor={String(semFamilia)} icone={UserPlus} tom="warning" destaque={semFamilia > 0} />
           </div>
           <div className="grid items-start gap-6 lg:grid-cols-12">
             <Cartao semMargem className="lg:col-span-5">

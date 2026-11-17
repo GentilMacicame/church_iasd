@@ -8,17 +8,18 @@
  * O mandato define o início e o fim dos oficiais (a base de dados copia-os e acompanha mudanças de datas);
  * o órgão vem do cargo e pode mudar-se. O conselho é a fonte das reuniões (presenças, presidente, secretário).
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
-  ArrowRightLeft, Briefcase, CalendarPlus, CalendarRange, Link2, MoreHorizontal, Pencil, Phone, Plus, ShieldCheck, Trash2,
+  ArrowRightLeft, Briefcase, CalendarPlus, Eye, CalendarRange, Link2, MoreHorizontal, Pencil, Phone, Plus, ShieldCheck, Trash2,
   UserMinus, UserPlus, Users, Vote,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Avatar, IconeTom, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { Avatar, IconeTom, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoData } from '@/components/comum/CampoData'
@@ -237,124 +238,145 @@ function PainelMandato({ mandato, oficiais, aoEditar }: { mandato: Mandato; ofic
         </div>
       </section>
 
-      {/* ramos: tronco e divisão em dois órgãos (só em ecrã largo) */}
-      <div aria-hidden className="hidden md:block">
-        <div className="mx-auto h-6 w-px bg-border" />
-        <div className="mx-auto h-px w-1/2 bg-border" />
-        <div className="grid grid-cols-2"><div className="mx-auto h-6 w-px bg-border" /><div className="mx-auto h-6 w-px bg-border" /></div>
-      </div>
-
-      <div className="mt-6 grid gap-6 md:mt-0 md:grid-cols-2">
-        {ORGAOS.map((g) => (
-          <CartaoOrgao key={g.orgao} {...g} mandato={mandato} terminado={v === 'TERMINADO'}
-            oficiais={visiveis.filter((o) => o.orgao === g.orgao)} aoAcrescentar={() => setNovo(g.orgao)} />
-        ))}
-      </div>
-
-      {saidos > 0 && (
-        <button type="button" onClick={() => setVerSaidos((x) => !x)} className="alvo mt-3 justify-self-center text-sm font-medium text-muted-foreground hover:text-foreground">
-          {verSaidos ? 'Esconder' : 'Mostrar'} {saidos} {saidos === 1 ? 'oficial que saiu' : 'oficiais que saíram'} antes do fim do mandato
-        </button>
-      )}
+      <SeparadoresOficiais mandato={mandato} oficiais={visiveis} terminado={v === 'TERMINADO'} aoAcrescentar={setNovo}
+        rodape={saidos > 0 && (
+          <button type="button" onClick={() => setVerSaidos((x) => !x)} className="alvo text-sm font-medium text-muted-foreground hover:text-foreground">
+            {verSaidos ? 'Esconder' : 'Mostrar'} {saidos} {saidos === 1 ? 'oficial que saiu' : 'oficiais que saíram'} antes do fim do mandato
+          </button>
+        )} />
 
       {novo && <DialogoOficial mandato={mandato} orgaoInicial={novo} aoFechar={() => setNovo(null)} />}
     </div>
   )
 }
 
-/** Um órgão do mandato: os oficiais agrupados por cargo (vários anciãos ficam juntos). */
-function CartaoOrgao({ orgao, icone, descricao, mandato, oficiais, terminado, aoAcrescentar }: {
-  orgao: Orgao; icone: typeof Users; descricao: string; mandato: Mandato | null; oficiais: Oficial[]; terminado: boolean; aoAcrescentar?: () => void
+type Separador = Orgao | 'TODOS'
+
+/**
+ * Os oficiais do mandato em separadores: Conselho da igreja, Direcção e Todos os oficiais; cada um é uma tabela
+ * (nome, cargo, início, término, estado e acções).
+ */
+function SeparadoresOficiais({ mandato, oficiais, terminado, aoAcrescentar, rodape }: {
+  mandato: Mandato; oficiais: Oficial[]; terminado: boolean; aoAcrescentar: (o: Orgao) => void; rodape?: ReactNode
 }) {
   const { pode } = useSessao()
-  const grupos = useMemo(() => {
-    const m = new Map<string, Oficial[]>()
-    for (const o of [...oficiais].sort((a, b) => a.cargo.localeCompare(b.cargo, 'pt') || a.membro.localeCompare(b.membro, 'pt'))) {
-      m.set(o.cargo, [...(m.get(o.cargo) ?? []), o])
-    }
-    return [...m.entries()]
-  }, [oficiais])
-  const pessoas = new Set(oficiais.map((o) => o.membroId)).size
+  const [aba, setAba] = useState<Separador>('CONSELHO')
+  const conta = (s: Separador) => (s === 'TODOS' ? oficiais : oficiais.filter((o) => o.orgao === s)).length
+  const podeAcrescentar = !terminado && pode('secretaria.oficial.criar')
   return (
-    <section className={cn('flex min-w-0 flex-col rounded-xl border bg-card shadow-card', orgao === 'CONSELHO' ? 'border-t-4 border-t-primary' : 'border-t-4 border-t-info')}>
-      <header className="flex items-start justify-between gap-3 px-5 pt-5 sm:px-6">
-        <div className="flex min-w-0 items-start gap-3">
-          <IconeTom icone={icone} tom={orgao === 'CONSELHO' ? 'primary' : 'info'} />
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold tracking-tight">{ROTULO_ORGAO[orgao]}</h3>
-            <p className="text-sm text-muted-foreground">{descricao}</p>
-          </div>
-        </div>
-        <span className="flex-none rounded-full bg-muted px-2.5 py-1 text-xs font-semibold tabular-nums">{pessoas} {pessoas === 1 ? 'pessoa' : 'pessoas'}</span>
-      </header>
-      <div className="mt-4 flex-1">
-        {!grupos.length ? (
-          <p className="mx-5 mb-5 rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground sm:mx-6">
-            Ainda ninguém {orgao === 'CONSELHO' ? 'no conselho' : 'na direcção'} deste mandato.
-          </p>
-        ) : (
-          <ul className="divide-y border-t">
-            {grupos.map(([cargo, os]) => (
-              <li key={cargo} className="px-5 py-3 sm:px-6">
-                <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{cargo}{os.length > 1 && ` · ${os.length}`}</p>
-                <ul className="mt-2 grid gap-2">
-                  {os.map((o) => <LinhaOficial key={o.id} o={o} mandato={mandato} />)}
-                </ul>
-              </li>
+    <section className="mt-6 rounded-xl border bg-card shadow-card">
+      <Tabs value={aba} onValueChange={(x) => setAba(x as Separador)}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
+          <TabsList className="max-w-full overflow-x-auto">
+            {ORGAOS.map((g) => (
+              <TabsTrigger key={g.orgao} value={g.orgao} className="alvo gap-1.5">
+                <g.icone className="size-4" />{ROTULO_ORGAO[g.orgao]} <span className="tabular-nums text-muted-foreground">({conta(g.orgao)})</span>
+              </TabsTrigger>
             ))}
-          </ul>
-        )}
-      </div>
-      {aoAcrescentar && !terminado && pode('secretaria.oficial.criar') && (
-        <footer className="border-t px-5 py-3 sm:px-6">
-          <Button variant="ghost" size="sm" className="alvo -ml-2 text-primary" onClick={aoAcrescentar}>
-            <Plus className="size-4" />Acrescentar {orgao === 'CONSELHO' ? 'ao conselho' : 'à direcção'}
-          </Button>
-        </footer>
-      )}
+            <TabsTrigger value="TODOS" className="alvo gap-1.5">
+              <ShieldCheck className="size-4" />Todos os oficiais <span className="tabular-nums text-muted-foreground">({conta('TODOS')})</span>
+            </TabsTrigger>
+          </TabsList>
+          {podeAcrescentar && aba !== 'TODOS' && (
+            <Button variant="outline" size="sm" className="alvo" onClick={() => aoAcrescentar(aba)}>
+              <Plus className="size-4" />Acrescentar {aba === 'CONSELHO' ? 'ao conselho' : 'à direcção'}
+            </Button>
+          )}
+        </div>
+        {ORGAOS.map((g) => (
+          <TabsContent key={g.orgao} value={g.orgao} className="mt-0">
+            <p className="px-4 pt-3 text-sm text-muted-foreground sm:px-6">{g.descricao}</p>
+            <TabelaOficiais oficiais={oficiais.filter((o) => o.orgao === g.orgao)} mandato={mandato}
+              vazio={`Ainda ninguém ${g.orgao === 'CONSELHO' ? 'no conselho' : 'na direcção'} deste mandato.`} />
+          </TabsContent>
+        ))}
+        <TabsContent value="TODOS" className="mt-0">
+          <TabelaOficiais oficiais={oficiais} mandato={mandato} comOrgao vazio="Ainda não há oficiais neste mandato." />
+        </TabsContent>
+      </Tabs>
+      {rodape && <div className="border-t px-4 py-3 text-center sm:px-6">{rodape}</div>}
     </section>
   )
 }
 
-function LinhaOficial({ o, mandato, mandatos }: { o: Oficial; mandato: Mandato | null; mandatos?: Mandato[] }) {
+/** Tabela de oficiais: ordenada por cargo e nome; no telemóvel as datas passam para debaixo do nome. */
+function TabelaOficiais({ oficiais, mandato, mandatos, comOrgao, vazio }: {
+  oficiais: Oficial[]; mandato: Mandato | null; mandatos?: Mandato[]; comOrgao?: boolean; vazio: string
+}) {
+  const ordenados = useMemo(
+    () => [...oficiais].sort((a, b) => Number(b.doConselho) - Number(a.doConselho) || a.cargo.localeCompare(b.cargo, 'pt') || a.membro.localeCompare(b.membro, 'pt')),
+    [oficiais],
+  )
+  if (!ordenados.length) return <p className="mx-4 my-5 rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground sm:mx-6">{vazio}</p>
+  return (
+    <Tabela className="mt-3">
+      <thead>
+        <tr>
+          <th className="sm:pl-6">Membro</th>
+          <th>Cargo</th>
+          {comOrgao && <th className="hidden md:table-cell">Órgão</th>}
+          <th className="hidden sm:table-cell">Início</th>
+          <th className="hidden sm:table-cell">Término</th>
+          <th>Estado</th>
+          <th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {ordenados.map((o) => <LinhaOficial key={o.id} o={o} mandato={mandato} mandatos={mandatos} comOrgao={comOrgao} />)}
+      </tbody>
+    </Tabela>
+  )
+}
+
+function LinhaOficial({ o, mandato, mandatos, comOrgao }: { o: Oficial; mandato: Mandato | null; mandatos?: Mandato[]; comOrgao?: boolean }) {
   const { pode } = useSessao()
   const { corrigir } = useConselhoMut()
   const [dialogo, setDialogo] = useState<'datas' | 'terminar' | 'associar' | null>(null)
   const fim = o.dataFim ?? o.fimPrevisto
-  // datas próprias só se diferirem das do mandato (substituição a meio, saída antecipada)
-  const datasProprias = !mandato || o.dataInicio !== mandato.dataInicio || (fim && fim !== mandato.dataFim)
   const outro: Orgao = o.orgao === 'CONSELHO' ? 'DIRECCAO' : 'CONSELHO'
   const podeAlterar = pode('secretaria.oficial.alterar') && o.estadoMandato !== 'TERMINADO'
   const mover = () => corrigir.mutate({ id: o.id, orgao: outro }, { onSuccess: () => toast.success(`${o.membro} passou para ${outro === 'CONSELHO' ? 'o conselho' : 'a direcção'}.`) })
+  const saiu = o.estadoMandato === 'TERMINADO' && mandato != null && vigencia(mandato) !== 'TERMINADO'
   return (
-    <li className={cn('flex items-center gap-3', o.estadoMandato === 'TERMINADO' && 'opacity-60')}>
-      <Avatar id={o.membroId} nome={o.membro.split(' ')[0]} apelido={o.membro.split(' ').slice(-1)[0]} tamanho={36} />
-      <div className="min-w-0 flex-1">
-        <Link to={`/membros/${o.membroId}`} className="block truncate font-medium hover:text-primary">{o.membro}</Link>
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-          {o.contacto && <a href={`tel:${o.contacto.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 hover:text-primary"><Phone className="size-3" /><span className="num">{o.contacto}</span></a>}
-          {datasProprias && <span className="tabular-nums">{data(o.dataInicio)} → {data(fim)}</span>}
-        </p>
-      </div>
-      {(mandato ? o.estadoMandato !== vigencia(mandato) : o.estadoMandato !== 'ACTIVO') && <Pilula variante={VARIANTE_MANDATO[o.estadoMandato]}>{o.estadoMandato === 'TERMINADO' ? 'Saiu' : ROTULO_MANDATO[o.estadoMandato]}</Pilula>}
-      {podeAlterar && (
+    <tr className={cn(saiu && 'text-muted-foreground')}>
+      <td className="sm:pl-6">
+        <div className="flex items-center gap-3">
+          <Avatar id={o.membroId} nome={o.membro.split(' ')[0]} apelido={o.membro.split(' ').slice(-1)[0]} tamanho={32} />
+          <div className="min-w-0">
+            <Link to={`/membros/${o.membroId}`} className="block truncate font-medium hover:text-primary" title="Abrir a ficha do membro">{o.membro}</Link>
+            {o.contacto && <a href={`tel:${o.contacto.replace(/\s/g, '')}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"><Phone className="size-3" /><span className="num">{o.contacto}</span></a>}
+            <span className="block text-xs text-muted-foreground tabular-nums sm:hidden">{data(o.dataInicio)} → {data(fim)}</span>
+          </div>
+        </div>
+      </td>
+      <td>{o.cargo}</td>
+      {comOrgao && <td className="hidden md:table-cell">{ROTULO_ORGAO[o.orgao]}</td>}
+      <td className="hidden tabular-nums sm:table-cell">{data(o.dataInicio)}</td>
+      <td className="hidden tabular-nums sm:table-cell">{data(fim)}{o.dataFim && o.fimPrevisto && o.dataFim < o.fimPrevisto ? <span className="block text-xs text-muted-foreground">antes do fim</span> : null}</td>
+      <td><Pilula variante={VARIANTE_MANDATO[o.estadoMandato]}>{saiu ? 'Saiu' : ROTULO_MANDATO[o.estadoMandato]}</Pilula></td>
+      <td className="sm:pr-6">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="alvo size-9 flex-none text-muted-foreground" aria-label={`Acções de ${o.membro}`}><MoreHorizontal className="size-4" /></Button>
+            <Button variant="ghost" size="icon" className="alvo size-9 text-muted-foreground" aria-label={`Acções de ${o.membro}`}><MoreHorizontal className="size-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {mandatos && <DropdownMenuItem onSelect={() => setDialogo('associar')}><Link2 className="size-4" />Associar a um mandato</DropdownMenuItem>}
-            <DropdownMenuItem onSelect={mover}><ArrowRightLeft className="size-4" />Passar para {outro === 'CONSELHO' ? 'o conselho' : 'a direcção'}</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setDialogo('datas')}><Pencil className="size-4" />Corrigir datas</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive-text" onSelect={() => setDialogo('terminar')}><UserMinus className="size-4" />Terminar antes do fim</DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to={`/membros/${o.membroId}`}><Eye className="size-4" />Ver a ficha do membro</Link></DropdownMenuItem>
+            {podeAlterar && (
+              <>
+                {mandatos && <DropdownMenuItem onSelect={() => setDialogo('associar')}><Link2 className="size-4" />Associar a um mandato</DropdownMenuItem>}
+                <DropdownMenuItem onSelect={mover}><ArrowRightLeft className="size-4" />Passar para {outro === 'CONSELHO' ? 'o conselho' : 'a direcção'}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDialogo('datas')}><Pencil className="size-4" />Corrigir datas</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive-text" onSelect={() => setDialogo('terminar')}><UserMinus className="size-4" />Terminar antes do fim</DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
-      {dialogo === 'datas' && <DialogoCorrigir o={o} aoFechar={() => setDialogo(null)} />}
-      {dialogo === 'terminar' && <DialogoTerminar o={o} aoFechar={() => setDialogo(null)} />}
-      {dialogo === 'associar' && mandatos && <DialogoAssociar o={o} mandatos={mandatos} aoFechar={() => setDialogo(null)} />}
-    </li>
+        {dialogo === 'datas' && <DialogoCorrigir o={o} aoFechar={() => setDialogo(null)} />}
+        {dialogo === 'terminar' && <DialogoTerminar o={o} aoFechar={() => setDialogo(null)} />}
+        {dialogo === 'associar' && mandatos && <DialogoAssociar o={o} mandatos={mandatos} aoFechar={() => setDialogo(null)} />}
+      </td>
+    </tr>
   )
 }
 
@@ -365,22 +387,9 @@ function PainelSemMandato({ oficiais, mandatos }: { oficiais: Oficial[]; mandato
       <p className="rounded-xl border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
         Estes oficiais não pertencem a nenhum mandato. Use <strong>Associar a um mandato</strong> em cada um: passam a seguir as datas desse mandato.
       </p>
-      <div className="grid gap-6 md:grid-cols-2">
-        {ORGAOS.map((g) => (
-          <section key={g.orgao} className="rounded-xl border bg-card shadow-card">
-            <header className="flex items-center gap-3 px-5 pt-5 sm:px-6"><IconeTom icone={g.icone} tom={g.orgao === 'CONSELHO' ? 'primary' : 'info'} /><h3 className="font-semibold">{ROTULO_ORGAO[g.orgao]}</h3></header>
-            <ul className="mt-4 grid gap-2 border-t px-5 py-3 sm:px-6">
-              {oficiais.filter((o) => o.orgao === g.orgao).map((o) => (
-                <li key={o.id} className="grid gap-0.5">
-                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{o.cargo}</p>
-                  <ul><LinhaOficial o={o} mandato={null} mandatos={mandatos} /></ul>
-                </li>
-              ))}
-              {!oficiais.some((o) => o.orgao === g.orgao) && <li className="py-4 text-center text-sm text-muted-foreground">Nenhum.</li>}
-            </ul>
-          </section>
-        ))}
-      </div>
+      <section className="rounded-xl border bg-card shadow-card">
+        <TabelaOficiais oficiais={oficiais} mandato={null} mandatos={mandatos} comOrgao vazio="Nenhum." />
+      </section>
     </div>
   )
 }

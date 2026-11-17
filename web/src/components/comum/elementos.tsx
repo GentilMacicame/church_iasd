@@ -52,12 +52,19 @@ export function TituloPagina({ titulo, descricao, icone, accoes, antes }: {
 }
 
 /** Indicador: rótulo, ícone de tom, valor grande e uma nota. Com `para`, é uma ligação. */
-export function Indicador({ rotulo, valor, nota, icone, tom = 'primary', para, activo, aoClicar, aCarregar }: {
+/** Cartão inteiro na cor do tom (fundo e borda), para um indicador que pede atenção (ex.: membros sem família). */
+const DESTAQUE: Record<Tom, string> = {
+  primary: 'border-primary/40 bg-accent', success: 'border-success/40 bg-tint-success', warning: 'border-warning/50 bg-tint-warning',
+  destructive: 'border-destructive/40 bg-tint-destructive', info: 'border-info/40 bg-tint-info',
+}
+
+export function Indicador({ rotulo, valor, nota, icone, tom = 'primary', para, activo, aoClicar, aCarregar, destaque }: {
   rotulo: string; valor: ReactNode; nota?: ReactNode; icone?: Icone; tom?: Tom; para?: string
-  activo?: boolean; aoClicar?: () => void; aCarregar?: boolean
+  activo?: boolean; aoClicar?: () => void; aCarregar?: boolean; destaque?: boolean
 }) {
   const classes = cn(
     'group flex min-w-0 flex-col rounded-xl border bg-card p-4 text-left text-card-foreground shadow-card transition sm:p-5',
+    destaque && DESTAQUE[tom],
     (para || aoClicar) && 'hover:border-primary/40 hover:shadow-md',
     activo && 'border-primary ring-1 ring-primary',
   )
