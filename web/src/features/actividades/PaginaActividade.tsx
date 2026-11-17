@@ -25,7 +25,7 @@ import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoPedir } from '@/features/tesouraria/PaginaDespesas'
 import { DialogoActividade } from './DialogoActividade'
 import {
-  ROTULO_ESTADO, VARIANTE_ESTADO, useActividade, useActividadesMut, useDepartamentosIgreja, useDespesasActividade, useMateriais,
+  ROTULO_ESTADO, VARIANTE_ESTADO, useActividade, useActividadesMut, useDepartamentosIgreja, useDespesasActividade, useDistritoDaIgreja, useMateriais,
   usePrograma, useResponsaveis, type Actividade, type EstadoActividade,
 } from './api'
 
@@ -64,7 +64,9 @@ function Ficha({ a }: { a: Actividade }) {
   const [editar, setEditar] = useState(false)
   const [confirmar, setConfirmar] = useState<EstadoActividade | null>(null)
   const estado = a.estado ?? 'PLANEADA'
-  const departamento = deps.data?.daIgreja.find((d) => d.id === a.departamentoIgrejaId)?.nome
+  const distrito = useDistritoDaIgreja()
+  const departamento = a.distritoId ? `Área pastoral · ${distrito.data?.id === a.distritoId ? distrito.data.nome : 'distrito'}`
+    : deps.data?.daIgreja.find((d) => d.id === a.departamentoIgrejaId)?.nome
   const responsavel = a.responsavelMembroId ? basicos.data?.find((m) => m.id === a.responsavelMembroId) : undefined
   const podeAlterar = pode('actividades.actividade.alterar')
   const mudarEstado = (e: EstadoActividade) => alterar.mutate({ id: a.id, estado: e } as never, {
@@ -82,6 +84,7 @@ function Ficha({ a }: { a: Actividade }) {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-semibold tracking-tight">{a.nome}</h1>
               <Pilula variante={VARIANTE_ESTADO[estado]}>{ROTULO_ESTADO[estado]}</Pilula>
+              {a.distritoId && <Pilula variante="info">Área pastoral</Pilula>}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5"><CalendarRange className="size-4" /><span className="capitalize">{dataPorExtenso(a.dataInicio)}</span>{!mesmoDia && a.dataFim && ` a ${data(a.dataFim)}`}</span>
@@ -290,7 +293,7 @@ function Orcamento({ a }: { a: Actividade }) {
             ) : <p className="px-5 py-3 text-sm text-muted-foreground sm:px-6">Ainda não há despesas pedidas para esta actividade.</p>}
         </>
       )}
-      {pedir && <DialogoPedir aberto={pedir} actividade={{ id: a.id, departamentoIgrejaId: a.departamentoIgrejaId, nome: a.nome }}
+      {pedir && <DialogoPedir aberto={pedir} actividade={{ id: a.id, departamentoIgrejaId: a.departamentoIgrejaId ?? undefined, nome: a.nome }}
         aoMudar={(v) => { setPedir(v); if (!v) void qc.invalidateQueries({ queryKey: ['actividade', a.id] }) }} />}
     </Cartao>
   )

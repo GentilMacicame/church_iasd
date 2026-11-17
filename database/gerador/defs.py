@@ -236,12 +236,15 @@ M('V4__secretaria', 'secretaria', 'Secretaria',
 M('V5__actividades', 'actividades', 'Actividades e escalas',
   'Programas dos departamentos, material necessário e escalas de serviço.', [
  T('actividade', 'act', 'Actividades e eventos dos departamentos', [
-   ('ide_id', 'fk:igreja_departamento', NN), ('responsavel_mem_id', 'fk:membro'),
+   ('ide_id', 'fk:igreja_departamento', '', 'Departamento da igreja (actividade local); vazio nas da área pastoral (V35)'),
+   ('responsavel_mem_id', 'fk:membro'),
    ('nome', 'VARCHAR(150)', NN), ('descricao', 'TEXT'), ('local', 'VARCHAR(255)'),
    ('data_inicio', 'TIMESTAMPTZ', NN), ('data_fim', 'TIMESTAMPTZ'),
    ('data_hora_lembrete', 'TIMESTAMPTZ'), ('valor_previsto', 'DECIMAL(12,2)', 'NOT NULL DEFAULT 0'),
-   ('objectivos', 'TEXT', '', 'O que a actividade pretende alcançar (V34)')],
-   checks=[('chk_act_datas', '@data_fim IS NULL OR @data_fim >= @data_inicio')],
+   ('objectivos', 'TEXT', '', 'O que a actividade pretende alcançar (V34)'),
+   ('dst_id', 'fk:distrito', '', 'Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)')],
+   checks=[('chk_act_datas', '@data_fim IS NULL OR @data_fim >= @data_inicio'),
+           ('chk_act_origem', '(@ide_id IS NULL) <> (@dst_id IS NULL)')],
    estado=('estado_actividade_t', "'PLANEADA'")),
  T('material', 'mat', 'Material necessário para uma actividade', [
    ('act_id', 'fk:actividade', NN), ('descricao', 'VARCHAR(255)', NN),
@@ -544,6 +547,10 @@ REGRAS = {'V8__pagamentos': 'pagamentos_regras.sql', 'V9__comunicacao': 'comunic
 # ('parent', fk, tabela_mae)    a igreja vem da tabela-mãe (que tem coluna de igreja)
 # ('custom', expressão com {A}) regra própria; {A} = array das igrejas onde o utilizador tem a permissão
 # Tabelas que não estão aqui são comuns a todas as igrejas (ver GLOBAL_READ).
+# V35: actividades locais (pelo departamento da igreja) ou da área pastoral (pelo distrito: ver actividades.fn_acesso_distrito)
+ACT_LOCAL = '(@x IS NOT NULL AND EXISTS (SELECT 1 FROM organizacao.igreja_departamento d WHERE d.ide_id = @x AND d.ide_igr_id = ANY ({A})))'
+ACT_FILHA = ('EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id '
+             'WHERE a.act_id = @act_id AND (d.ide_igr_id = ANY ({A}) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, {C}))))')
 SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
@@ -559,12 +566,13 @@ SCOPE = {
  'consentimento': ('parent', 'mem_id', 'membro'), 'baptismo': ('parent', 'mem_id', 'membro'),
  'disciplina': ('parent', 'mem_id', 'membro'), 'voto': ('parent', 'reu_id', 'reuniao'),
  'reuniao_presenca': ('parent', 'reu_id', 'reuniao'), 'reuniao_ponto': ('parent', 'reu_id', 'reuniao'),
- 'actividade': ('parent', 'ide_id', 'igreja_departamento'), 'matricula': ('parent', 'ecl_id', 'classe'),
+ 'matricula': ('parent', 'ecl_id', 'classe'),
+ 'actividade': ('custom', ACT_LOCAL.replace('@x', '@ide_id') + ' OR (@dst_id IS NOT NULL AND actividades.fn_acesso_distrito(@dst_id, {C}))'),
  'visitante': ('parent', 'ers_id', 'relatorio_sabado'), 'orcamento_linha': ('parent', 'orc_id', 'orcamento'),
  'remessa_linha': ('parent', 'rem_id', 'remessa'), 'extrato_linha': ('parent', 'cfi_id', 'conta_financeira'),
  'pagamento_mpesa': ('parent', 'tra_id', 'transacao'), 'pagamento_bancario': ('parent', 'tra_id', 'transacao'),
- 'material': ('custom', 'EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = @act_id AND d.ide_igr_id = ANY ({A}))'),
- 'actividade_responsavel': ('custom', 'EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = @act_id AND d.ide_igr_id = ANY ({A}))'),
+ 'material': ('custom', ACT_FILHA),
+ 'actividade_responsavel': ('custom', ACT_FILHA),
  'fundo': ('custom', '@igr_id = ANY ({A}) OR (@igr_id IS NULL AND {G})'),
  'contacto': ('custom', '@igr_id = ANY ({A}) OR EXISTS (SELECT 1 FROM secretaria.membro m WHERE m.mem_id = @mem_id AND m.mem_igr_id = ANY ({A}))'),
  'transferencia_membro': ('custom', '@origem_igr_id = ANY ({A}) OR @destino_igr_id = ANY ({A})'),

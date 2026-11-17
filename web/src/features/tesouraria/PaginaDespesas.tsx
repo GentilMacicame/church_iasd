@@ -190,7 +190,7 @@ const esquemaPedir = z.object({
 
 /** Pedir uma despesa; vinda da ficha de uma actividade, fica ligada a ela e ao departamento (execução da actividade). */
 export function DialogoPedir({ aberto, aoMudar, actividade }: {
-  aberto: boolean; aoMudar: (v: boolean) => void; actividade?: { id: number; departamentoIgrejaId: number; nome: string }
+  aberto: boolean; aoMudar: (v: boolean) => void; actividade?: { id: number; departamentoIgrejaId?: number; nome: string }
 }) {
   const igreja = useIgreja()
   const { usuario } = useSessao()

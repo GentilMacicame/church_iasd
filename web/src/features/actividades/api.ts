@@ -8,7 +8,8 @@ import { api, dados, type Esquema } from '@/api/cliente'
 import type { paths } from '@/api/esquema'
 import { useIgreja } from '@/auth/sessao'
 
-export type Actividade = Esquema<'Actividade'> & { id: number; departamentoIgrejaId: number; nome: string; dataInicio: string }
+/** Local (departamentoIgrejaId) ou da área pastoral (distritoId), nunca as duas (V35). */
+export type Actividade = Esquema<'Actividade'> & { id: number; departamentoIgrejaId: number | null; distritoId?: number | null; nome: string; dataInicio: string }
 export type EstadoActividade = NonNullable<Actividade['estado']>
 export type Responsavel = Esquema<'ActividadeResponsavel'> & { id: number; actividadeId: number; membroId: number }
 export type Material = Esquema<'Material'> & { id: number; actividadeId: number; descricao: string }
@@ -18,10 +19,12 @@ export type Conflitos = paths['/v1/actividades/conflitos']['get']['responses'][2
 
 /** Linha de GET /v1/actividades/programa (vista vw_actividades_execucao). */
 export interface LinhaPrograma {
-  id: number; igrejaId: number; departamentoIgrejaId: number; departamento: string; nome: string; descricao: string | null
+  id: number; igrejaId: number; departamentoIgrejaId: number | null; departamento: string; nome: string; descricao: string | null
   objectivos: string | null; local: string | null; dataInicio: string; dataFim: string | null; estado: EstadoActividade
   ano: number; mes: number; responsavelMembroId: number | null; responsavel: string | null; outrosResponsaveis: number
   valorPrevisto: string; materialPrevisto: string; despesasPedidas: string; despesasAprovadas: string; executado: string
+  /** V35: IGREJA (de um departamento) ou AREA_PASTORAL (do distrito, em todas as igrejas dele) */
+  origem: 'IGREJA' | 'AREA_PASTORAL'; distritoId: number | null; distrito: string | null
 }
 
 export const ROTULO_ESTADO: Record<EstadoActividade, string> = { PLANEADA: 'Planeada', EM_CURSO: 'Em curso', CONCLUIDA: 'Concluída', CANCELADA: 'Cancelada' }
@@ -60,6 +63,21 @@ export function useDepartamentosIgreja() {
       }
     },
     staleTime: 5 * 60_000,
+  })
+}
+
+/** O distrito pastoral da igreja escolhida (para as actividades da área pastoral) e se o utilizador é o pastor dele. */
+export function useDistritoDaIgreja() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'distrito'],
+    queryFn: async () => {
+      const i = (await dados(api.GET('/v1/organizacao/igrejas/{id}', { params: { path: { id: igreja.id } } }))) as Esquema<'Igreja'>
+      if (!i.distritoId) return null
+      const d = (await dados(api.GET('/v1/organizacao/distritos/{id}', { params: { path: { id: i.distritoId } } }))) as Esquema<'Distrito'>
+      return { id: i.distritoId, nome: d.nome ?? 'Distrito', pastorUsuarioId: d.pastorUsuarioId ?? null }
+    },
+    staleTime: 10 * 60_000,
   })
 }
 

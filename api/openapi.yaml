@@ -51,6 +51,10 @@ paths:
         in: query
         schema:
           type: integer
+      - name: distritoId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -111,7 +115,6 @@ paths:
               allOf:
               - $ref: '#/components/schemas/Actividade'
               required:
-              - departamentoIgrejaId
               - nome
               - dataInicio
       responses:
@@ -17802,7 +17805,7 @@ components:
         departamentoIgrejaId:
           type: integer
           format: int32
-          description: → organizacao.igreja_departamento
+          description: → organizacao.igreja_departamento · Departamento da igreja (actividade local); vazio nas da área pastoral (V35)
         responsavelMembroId:
           type: integer
           format: int32
@@ -17831,6 +17834,11 @@ components:
         objectivos:
           type: string
           description: O que a actividade pretende alcançar (V34)
+        distritoId:
+          type: integer
+          format: int32
+          description: '→ organizacao.distrito · Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito
+            (V35)'
         estado:
           $ref: '#/components/schemas/EnumEstadoActividade'
         criadoEm:
@@ -17855,7 +17863,6 @@ components:
           readOnly: true
           nullable: true
       x-obrigatorios-ao-criar:
-      - departamentoIgrejaId
       - nome
       - dataInicio
     ActividadeResponsavel:

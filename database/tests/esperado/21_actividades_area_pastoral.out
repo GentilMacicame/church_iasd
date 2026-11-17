@@ -1,0 +1,53 @@
+1. pastor do distrito (autorizado): cria uma actividade da área pastoral
+      act_nome      | act_dst_id | act_ide_id 
+--------------------+------------+------------
+ Campanha distrital |          1 |           
+(1 row)
+
+2. origem: de um departamento OU do distrito, não das duas nem de nenhuma
+psql:database/tests/21_actividades_area_pastoral.sql:21: ERROR:  new row for relation "actividade" violates check constraint "chk_act_origem"
+psql:database/tests/21_actividades_area_pastoral.sql:22: ERROR:  new row violates row-level security policy for table "actividade"
+3. responsável: membro de uma igreja do distrito entra; de outro distrito não
+ acr_mem_id | acr_funcao 
+------------+------------
+        100 | Música
+(1 row)
+
+psql:database/tests/21_actividades_area_pastoral.sql:28: ERROR:  O responsável tem de ser membro de uma igreja do distrito
+4. director de um departamento da igreja 1 (não autorizado): vê a actividade do distrito, mas não a cria nem altera
+        nome        | departamento  |    origem     |    distrito     
+--------------------+---------------+---------------+-----------------
+ Campanha distrital | Área pastoral | AREA_PASTORAL | Distrito Centro
+(1 row)
+
+psql:database/tests/21_actividades_area_pastoral.sql:34: ERROR:  new row violates row-level security policy for table "actividade"
+      continua      
+--------------------
+ Campanha distrital
+(1 row)
+
+   conta nos conflitos da igreja 1
+        nome        |          departamento           
+--------------------+---------------------------------
+ Campanha distrital | Área pastoral (Distrito Centro)
+(1 row)
+
+5. tesoureiro da igreja 2 (mesmo distrito): a actividade aparece no programa e nos conflitos da igreja 2
+        nome        |    origem     
+--------------------+---------------
+ Campanha distrital | AREA_PASTORAL
+(1 row)
+
+        nome        |          departamento           
+--------------------+---------------------------------
+ Campanha distrital | Área pastoral (Distrito Centro)
+(1 row)
+
+6. administração da Associação sem a permissão de criar actividades: não cria
+psql:database/tests/21_actividades_area_pastoral.sql:47: ERROR:  new row violates row-level security policy for table "actividade"
+7. as actividades locais continuam como antes: a da igreja 1 não aparece à igreja 2
+ locais_da_igreja_1 
+--------------------
+                  0
+(1 row)
+

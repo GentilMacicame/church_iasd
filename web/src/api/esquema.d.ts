@@ -6908,7 +6908,7 @@ export interface components {
             readonly id?: number;
             /**
              * Format: int32
-             * @description → organizacao.igreja_departamento
+             * @description → organizacao.igreja_departamento · Departamento da igreja (actividade local); vazio nas da área pastoral (V35)
              */
             departamentoIgrejaId?: number;
             /**
@@ -6929,6 +6929,11 @@ export interface components {
             valorPrevisto?: string;
             /** @description O que a actividade pretende alcançar (V34) */
             objectivos?: string;
+            /**
+             * Format: int32
+             * @description → organizacao.distrito · Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)
+             */
+            distritoId?: number;
             estado?: components["schemas"]["EnumEstadoActividade"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -9337,6 +9342,7 @@ export interface operations {
                 incluirTerminados?: components["parameters"]["IncluirTerminados"];
                 departamentoIgrejaId?: number;
                 responsavelMembroId?: number;
+                distritoId?: number;
                 estado?: components["schemas"]["EnumEstadoActividade"];
                 desde?: string;
                 ate?: string;
@@ -9376,7 +9382,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": WithRequired<components["schemas"]["Actividade"], "departamentoIgrejaId" | "nome" | "dataInicio">;
+                "application/json": WithRequired<components["schemas"]["Actividade"], "nome" | "dataInicio">;
             };
         };
         responses: {

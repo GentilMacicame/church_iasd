@@ -224,6 +224,10 @@ src/
   função; material (orçamento detalhado); despesas pedidas para a actividade ("Pedir despesa" liga-a à actividade e ao
   departamento; decide-se na tesouraria) e a execução (saídas confirmadas, barra e aviso se passar o previsto).
 
+- **Área pastoral** (V35): o pastor do distrito (ou a Associação) regista actividades do distrito ("Origem: Área
+  pastoral" em Nova actividade); aparecem no programa e nos conflitos de todas as igrejas do distrito, com a etiqueta
+  "Área pastoral", o filtro próprio e uma linha no resumo por departamento. Os directores das igrejas vêem-nas mas não as alteram.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

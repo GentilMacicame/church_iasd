@@ -19,15 +19,17 @@ import { CampoData } from '@/components/comum/CampoData'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { mensagemDe } from '@/api/erros'
-import { useIgreja } from '@/auth/sessao'
+import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, hora, isoMaputo, partesMaputo } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { ROTULO_ESTADO, procurarConflitos, useActividadesMut, useDepartamentosIgreja, type Actividade, type Conflitos } from './api'
+import { cn } from '@/lib/utils'
+import { ROTULO_ESTADO, procurarConflitos, useActividadesMut, useDepartamentosIgreja, useDistritoDaIgreja, type Actividade, type Conflitos } from './api'
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
 const esquema = z.object({
-  departamentoIgrejaId: z.string().min(1, 'Escolha o departamento'),
+  origem: z.enum(['IGREJA', 'AREA_PASTORAL']),
+  departamentoIgrejaId: z.string(),
   nome: z.string().trim().min(1, t.comum.obrigatorio).max(150, 'No máximo 150 caracteres'),
   dataInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Escreva a data como dd/mm/aaaa'),
   horaInicio: z.string().regex(HORA, 'Hora como hh:mm'),
@@ -40,6 +42,7 @@ const esquema = z.object({
   objectivos: z.string().trim(),
   estado: z.string(),
 }).superRefine((v, ctx) => {
+  if (v.origem === 'IGREJA' && !v.departamentoIgrejaId) ctx.addIssue({ code: 'custom', path: ['departamentoIgrejaId'], message: 'Escolha o departamento' })
   if (v.horaFim && v.dataInicio) {
     const ini = `${v.dataInicio}T${v.horaInicio}`, fim = `${v.dataFim || v.dataInicio}T${v.horaFim}`
     if (fim < ini) ctx.addIssue({ code: 'custom', path: ['horaFim'], message: 'O fim tem de ser depois do início' })
@@ -60,6 +63,10 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
 }) {
   const igreja = useIgreja()
   const deps = useDepartamentosIgreja()
+  const { usuario, pode } = useSessao()
+  const distrito = useDistritoDaIgreja()
+  // área pastoral: o pastor do distrito ou quem gere os distritos (Associação, super-administrador); a base de dados decide
+  const podeDistrito = !!distrito.data && (distrito.data.pastorUsuarioId === usuario?.id || pode('organizacao.distrito.alterar'))
   const basicos = useMembrosBasicos()
   const { criar, alterar } = useActividadesMut()
   const [erro, setErro] = useState<string | null>(null)
@@ -69,6 +76,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
     defaultValues: {
+      origem: actividade?.distritoId ? 'AREA_PASTORAL' : 'IGREJA',
       departamentoIgrejaId: String(actividade?.departamentoIgrejaId ?? departamentoInicial ?? ''),
       nome: actividade?.nome ?? '', dataInicio: ini.data || dataInicial || '', horaInicio: ini.hora || '09:00',
       dataFim: fim.data && fim.data !== ini.data ? fim.data : '', horaFim: fim.hora,
@@ -87,7 +95,9 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
   const gravar = async (v: Valores) => {
     const { inicio, fim: fimIso } = intervalo(v)
     const corpo = {
-      departamentoIgrejaId: Number(v.departamentoIgrejaId), nome: v.nome, dataInicio: inicio, dataFim: fimIso,
+      departamentoIgrejaId: v.origem === 'IGREJA' ? Number(v.departamentoIgrejaId) : null,
+      distritoId: v.origem === 'AREA_PASTORAL' ? actividade?.distritoId ?? distrito.data?.id ?? null : null,
+      nome: v.nome, dataInicio: inicio, dataFim: fimIso,
       local: v.local || null, responsavelMembroId: v.responsavelMembroId ? Number(v.responsavelMembroId) : null,
       valorPrevisto: v.valorPrevisto || '0.00', descricao: v.descricao || null, objectivos: v.objectivos || null,
     }
@@ -131,6 +141,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
   }
 
   const listaDeps = deps.data?.daIgreja.filter((d) => !d.endDate) ?? []
+  const origem = form.watch('origem')
   const aGravar = form.formState.isSubmitting || criar.isPending || alterar.isPending
 
   return (
@@ -142,7 +153,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          {!deps.isPending && !listaDeps.length && (
+          {!deps.isPending && !listaDeps.length && origem === 'IGREJA' && (
             <p className="rounded-lg border border-warning/40 bg-tint-warning px-3 py-2 text-sm text-warning-text">
               Esta igreja ainda não tem departamentos activos. Active um no separador Departamentos.
             </p>
@@ -151,14 +162,32 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
             <CampoFormulario rotulo="Nome" erro={e.nome?.message} obrigatorio className="sm:col-span-2">
               {(p) => <Input {...p} {...form.register('nome')} placeholder="ex.: Semana de oração jovem" className="alvo" autoFocus />}
             </CampoFormulario>
-            <CampoFormulario rotulo="Departamento" erro={e.departamentoIgrejaId?.message} obrigatorio>
-              {(p) => (
-                <Seleccao {...p} {...form.register('departamentoIgrejaId')}>
-                  <option value="">Escolher…</option>
-                  {listaDeps.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
-                </Seleccao>
-              )}
-            </CampoFormulario>
+            {(podeDistrito || actividade?.distritoId) && (
+              <fieldset className="grid gap-1.5 sm:col-span-2">
+                <legend className="mb-1.5 text-sm font-medium">Origem</legend>
+                <div role="radiogroup" aria-label="Origem" className="grid grid-cols-2 gap-2">
+                  {(['IGREJA', 'AREA_PASTORAL'] as const).map((o) => (
+                    <button key={o} type="button" role="radio" aria-checked={origem === o} disabled={!!actividade}
+                      onClick={() => form.setValue('origem', o, { shouldDirty: true })}
+                      className={cn('alvo rounded-lg border px-3 py-2 text-left text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-70',
+                        origem === o ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground hover:border-primary/40')}>
+                      {o === 'IGREJA' ? `Igreja local · ${igreja.nome}` : `Área pastoral · ${distrito.data?.nome ?? 'distrito'}`}
+                    </button>
+                  ))}
+                </div>
+                {origem === 'AREA_PASTORAL' && <p className="text-xs text-muted-foreground">Aparece no calendário de todas as igrejas do distrito.</p>}
+              </fieldset>
+            )}
+            {origem === 'IGREJA' && (
+              <CampoFormulario rotulo="Departamento" erro={e.departamentoIgrejaId?.message} obrigatorio>
+                {(p) => (
+                  <Seleccao {...p} {...form.register('departamentoIgrejaId')}>
+                    <option value="">Escolher…</option>
+                    {listaDeps.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                  </Seleccao>
+                )}
+              </CampoFormulario>
+            )}
             <CampoFormulario rotulo="Responsável principal" erro={e.responsavelMembroId?.message}>
               {(p) => (
                 <Controller control={form.control} name="responsavelMembroId" render={({ field }) => (

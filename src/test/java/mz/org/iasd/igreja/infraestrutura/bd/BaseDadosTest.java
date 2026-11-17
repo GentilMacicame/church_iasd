@@ -985,6 +985,48 @@ class BaseDadosTest {
                 .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral)))).size());
     }
 
+    // ------------------------------------------------------------------ V35: actividades da área pastoral
+
+    @Test
+    void actividadeDaAreaPastoralSoPeloPastorEVistaPelasIgrejasDoDistrito() throws Exception {
+        int pastor = criarUsuarioComDono("pastor.v35@teste.mz", null, "MEMBRO");
+        int director = criarUsuarioComDono("director.v35@teste.mz", null, "DIRECTOR_DEPARTAMENTO");
+        int distrito;
+        int igrejaDoDistrito;
+        try (Connection dono = ligarComoDono()) {
+            // numa Missão própria: as outras igrejas de teste (e a paginação, que as conta) não mudam
+            int missao = inserir(dono, "INSERT INTO organizacao.entidade (ent_tipo, ent_nome) VALUES ('MISSAO', 'Missão V35') RETURNING ent_id");
+            distrito = inserir(dono, "INSERT INTO organizacao.distrito (dst_ent_id, dst_nome, dst_pastor_usu_id) VALUES (" + missao
+                    + ", 'Distrito V35', " + pastor + ") RETURNING dst_id");
+            igrejaDoDistrito = inserir(dono, "INSERT INTO organizacao.igreja (igr_ent_id, igr_dst_id, igr_nome) VALUES (" + missao
+                    + ", " + distrito + ", 'Igreja do Distrito V35') RETURNING igr_id");
+        }
+        var actividade = Catalogo.de(mz.org.iasd.igreja.models.actividades.Actividade.class);
+        JsonObject corpo = Json.createObjectBuilder().add("distritoId", distrito).add("nome", "Congresso distrital de jovens")
+                .add("dataInicio", "2027-04-10T09:00:00+02:00").add("valorPrevisto", "15000.00").build();
+
+        // o director de um departamento (noutra igreja) não cria actividades do distrito → 403
+        SQLException naoCria = assertThrows(SQLException.class,
+                () -> ExecutorTransaccao.executar(api, director, c -> TabelaRepository.criar(c, actividade, corpo)));
+        assertEquals(403, TradutorErrosSql.traduzir(naoCria).estadoHttp());
+
+        // o pastor do distrito cria-a e vê-a no programa da igreja do distrito, com a origem
+        JsonObject criada = ExecutorTransaccao.executar(api, pastor, c -> TabelaRepository.criar(c, actividade, corpo));
+        assertEquals(distrito, criada.getInt("distritoId"));
+        assertTrue(criada.isNull("departamentoIgrejaId"));
+        JsonArray programa = ExecutorTransaccao.executar(api, pastor, c -> RelatoriosActividadesController.PROGRAMA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaDoDistrito), "ano", "2027")));
+        assertEquals(1, programa.size());
+        assertEquals("AREA_PASTORAL", programa.getJsonObject(0).getString("origem"));
+        assertEquals("Distrito V35", programa.getJsonObject(0).getString("distrito"));
+
+        // o tesoureiro da Igreja Central (fora do distrito) não a vê → 404 ao lê-la
+        long id = criada.getJsonNumber("id").longValue();
+        ApiException naoVe = assertThrows(ApiException.class,
+                () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.obterOu404(c, actividade, id)));
+        assertEquals(404, naoVe.estadoHttp());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

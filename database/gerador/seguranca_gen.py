@@ -18,7 +18,8 @@ def cond(t, accao):
         pt = BY[kind[2]]; pk = SCOPE[pt.name]
         assert pk[0] == 'direct'
         return f'EXISTS (SELECT 1 FROM {q(pt)} x WHERE x.{pt.p}_id = {t.p}_{kind[1]} AND x.{pt.p}_{pk[1]} = ANY {arr(code)})'
-    return sub(t, kind[1]).replace('{A}', arr(code)).replace('{G}', global_ou_comum(t, accao, code))
+    # {C} = o código da permissão em texto (V35: regras que chamam uma função, ex. actividades do distrito)
+    return sub(t, kind[1]).replace('{A}', arr(code)).replace('{G}', global_ou_comum(t, accao, code)).replace('{C}', f"'{code}'")
 
 s = ['-- =====================================================================',
      f'-- V{n} · Permissões e segurança por igreja (Row Level Security)',

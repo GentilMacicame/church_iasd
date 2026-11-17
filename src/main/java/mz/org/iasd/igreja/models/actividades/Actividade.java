@@ -20,7 +20,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoActividade;
  * defs.py (e criar a migração nova) e voltar a gerar.
  *
  * @param id Identificador
- * @param departamentoIgrejaId Referência a organizacao.igreja_departamento — obrigatório ao criar
+ * @param departamentoIgrejaId Departamento da igreja (actividade local); vazio nas da área pastoral (V35)
  * @param responsavelMembroId Referência a secretaria.membro
  * @param nome coluna {@code act_nome} — obrigatório ao criar
  * @param descricao coluna {@code act_descricao}
@@ -30,6 +30,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoActividade;
  * @param dataHoraLembrete coluna {@code act_data_hora_lembrete}
  * @param valorPrevisto coluna {@code act_valor_previsto} — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param objectivos O que a actividade pretende alcançar (V34)
+ * @param distritoId Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -41,7 +42,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoActividade;
 public record Actividade(
         @ColunaBd(value = "act_id", tipo = Tipo.INT, escrita = false, naoNula = true)
         Integer id,
-        @ColunaBd(value = "act_ide_id", tipo = Tipo.INT, obrigatoria = true, naoNula = true)
+        @ColunaBd(value = "act_ide_id", tipo = Tipo.INT)
         Integer departamentoIgrejaId,
         @ColunaBd(value = "act_responsavel_mem_id", tipo = Tipo.INT)
         Integer responsavelMembroId,
@@ -61,6 +62,8 @@ public record Actividade(
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal valorPrevisto,
         @ColunaBd(value = "act_objectivos", tipo = Tipo.TEXTO)
         String objectivos,
+        @ColunaBd(value = "act_dst_id", tipo = Tipo.INT)
+        Integer distritoId,
         @ColunaBd(value = "act_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoActividade estado,
         @ColunaBd(value = "act_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

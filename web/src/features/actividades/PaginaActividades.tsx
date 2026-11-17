@@ -41,7 +41,7 @@ export default function PaginaActividades() {
   const q = usePrograma(ano)
   const deps = useDepartamentosIgreja()
   const linhas = useMemo(
-    () => (q.data ?? []).filter((x) => (!dep || String(x.departamentoIgrejaId) === dep) && (!estado || x.estado === estado)),
+    () => (q.data ?? []).filter((x) => (!dep || (dep === 'pastoral' ? x.origem === 'AREA_PASTORAL' : String(x.departamentoIgrejaId) === dep)) && (!estado || x.estado === estado)),
     [q.data, dep, estado],
   )
   const contam = linhas.filter((x) => x.estado !== 'CANCELADA')
@@ -73,6 +73,7 @@ export default function PaginaActividades() {
             <div className="grid w-full grid-cols-2 gap-2 sm:w-auto">
               <Seleccao aria-label="Filtrar por departamento" value={dep} onChange={(e) => mudar('departamento', e.target.value)} className="h-9 sm:w-52">
                 <option value="">Todos os departamentos</option>
+                <option value="pastoral">Área pastoral (distrito)</option>
                 {(deps.data?.daIgreja ?? []).map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
               </Seleccao>
               <Seleccao aria-label="Filtrar por estado" value={estado} onChange={(e) => mudar('estado', e.target.value)} className="h-9 sm:w-40">
@@ -128,10 +129,11 @@ export default function PaginaActividades() {
                                   <td className="whitespace-nowrap sm:pl-6"><span className="font-medium capitalize">{DIA.format(new Date(x.dataInicio))}</span><span className="block text-xs text-muted-foreground tabular-nums">{hora(x.dataInicio)}{x.dataFim ? `–${hora(x.dataFim)}` : ''}</span></td>
                                   <td>
                                     <Link to={`/actividades/${x.id}`} onClick={(ev) => ev.stopPropagation()} className={cn('font-medium hover:text-primary', x.estado === 'CANCELADA' && 'line-through')}>{x.nome}</Link>
+                                    {x.origem === 'AREA_PASTORAL' && <Pilula variante="info" className="ml-2 align-middle">Área pastoral</Pilula>}
                                     <span className="block text-xs text-muted-foreground md:hidden">{x.departamento}</span>
                                     {x.local && <span className="hidden text-xs text-muted-foreground md:block">{x.local}</span>}
                                   </td>
-                                  <td className="hidden md:table-cell">{x.departamento}</td>
+                                  <td className="hidden md:table-cell">{x.origem === 'AREA_PASTORAL' ? `Distrito · ${x.distrito ?? ''}` : x.departamento}</td>
                                   <td className="hidden lg:table-cell">{x.responsavel ?? '—'}{x.outrosResponsaveis > 0 && <span className="text-xs text-muted-foreground"> +{x.outrosResponsaveis}</span>}</td>
                                   <td><Pilula variante={VARIANTE_ESTADO[x.estado]}>{ROTULO_ESTADO[x.estado]}</Pilula></td>
                                   <td className="num hidden sm:table-cell">{dinheiro(x.valorPrevisto)}</td>
@@ -153,7 +155,7 @@ export default function PaginaActividades() {
           )}
       </Tabs>
 
-      {nova && <DialogoActividade departamentoInicial={dep ? Number(dep) : undefined} aoFechar={() => setNova(false)} aoGravar={(id) => navigate(`/actividades/${id}`)} />}
+      {nova && <DialogoActividade departamentoInicial={dep && dep !== 'pastoral' ? Number(dep) : undefined} aoFechar={() => setNova(false)} aoGravar={(id) => navigate(`/actividades/${id}`)} />}
     </>
   )
 }
@@ -210,6 +212,21 @@ function PorDepartamento({ linhas, aoVer }: { linhas: LinhaPrograma[]; aoVer: (d
                 </tr>
               )
             })}
+            {(() => {
+              const l = linhas.filter((x) => x.origem === 'AREA_PASTORAL' && x.estado !== 'CANCELADA')
+              if (!l.length) return null
+              const p = soma(l, (x) => x.valorPrevisto), e = soma(l, (x) => x.executado)
+              return (
+                <tr className="bg-tint-info/40">
+                  <td className="font-medium sm:pl-6">Área pastoral <span className="text-xs font-normal text-muted-foreground">· {l[0].distrito}</span></td>
+                  <td className="num">{l.length}</td>
+                  <td className="num hidden sm:table-cell">{l.filter((x) => x.estado === 'CONCLUIDA').length}</td>
+                  <td className="num">{dinheiro(deCentimos(p))}</td>
+                  <td className="num">{dinheiro(deCentimos(e))}</td>
+                  <td className="num sm:pr-6">{pct(e, p)}</td>
+                </tr>
+              )
+            })()}
           </tbody>
         </Tabela>
       )}
