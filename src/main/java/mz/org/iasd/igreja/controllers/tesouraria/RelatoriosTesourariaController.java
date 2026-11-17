@@ -5,10 +5,16 @@ import java.sql.SQLException;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import mz.org.iasd.igreja.controllers.base.BaseRelatoriosController;
+import mz.org.iasd.igreja.controllers.base.Parametros;
+import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.repositories.base.Relatorio;
+import mz.org.iasd.igreja.repositories.tesouraria.ContribuicoesRepository;
 import mz.org.iasd.igreja.Rotas;
 
 /**
@@ -44,6 +50,8 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     public static final Relatorio EXTRACTO_ANUAL = Relatorio.porIgreja("tesouraria.vw_extracto_anual",
             "tra_igr_id = ?", "ano DESC, fundo").comAnoMes("ano", null);
     public static final Relatorio PROGRESSO_ALVOS = Relatorio.porIgreja("tesouraria.vw_progresso_alvo", "alv_igr_id = ?", "alv_id");
+    public static final Relatorio FUNDO_MENSAL = Relatorio.porIgreja("tesouraria.vw_fundo_mensal", "igreja_id = ?", "fundo, ano, mes")
+            .comAnoMes("ano", "mes").comFiltro("fundoId", "fundo_id");
     public static final Relatorio CONFERENCIA_CONTAGENS = Relatorio.porIgreja("tesouraria.vw_contagem_conferencia",
             "cnu_igr_id = ?", "cnu_data DESC");
     public static final Relatorio DESPESAS_POR_PAGAR = Relatorio.porIgreja("tesouraria.vw_despesas_por_pagar",
@@ -121,5 +129,37 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     @Path(Rotas.Tesouraria.MPESA_PENDENTES)
     public Response mpesaPendentes() throws SQLException {
         return responder(MPESA_PENDENTES);
+    }
+
+    /** V36: o arrecadado por fundo, mês a mês (ex.: obra de reavivamento: registo mensal e acumulado no ano). */
+    @GET
+    @Path(Rotas.Tesouraria.FUNDO_MENSAL)
+    public Response fundoMensal() throws SQLException {
+        return responder(FUNDO_MENSAL);
+    }
+
+    /** V36: a meta sugerida para o ano (alvo do ano anterior + 5%); quem tem a permissão pode ajustar ao gravar o alvo. */
+    @GET
+    @Path(Rotas.Tesouraria.ALVO_SUGERIDO)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response alvoSugerido(@QueryParam("igrejaId") String igrejaId, @QueryParam("fundoId") String fundoId,
+                                 @QueryParam("ano") String ano) throws SQLException {
+        return Response.ok(ContribuicoesRepository.alvoSugerido(unidade.ligacao(), Parametros.inteiro(igrejaId, "igrejaId", true),
+                Parametros.inteiro(fundoId, "fundoId", true), Parametros.inteiro(ano, "ano", true))).build();
+    }
+
+    /** V36: dízimos do mesmo mês já lançados em nome da família do membro (ou dos membros da família). Só aviso. */
+    @GET
+    @Path(Rotas.Tesouraria.CONTRIBUICOES_SOBREPOSTAS)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response contribuicoesSobrepostas(@QueryParam("membroId") String membroId, @QueryParam("familiaId") String familiaId,
+                                             @QueryParam("data") String data) throws SQLException {
+        Integer membro = Parametros.inteiro(membroId, "membroId", false);
+        Integer familia = Parametros.inteiro(familiaId, "familiaId", false);
+        if ((membro == null) == (familia == null)) {
+            throw ApiException.pedidoInvalido("Indique o membro ou a família", "membroId");
+        }
+        return Response.ok(ContribuicoesRepository.sobrepostas(unidade.ligacao(), membro, familia,
+                Parametros.data(data, "data", true))).build();
     }
 }

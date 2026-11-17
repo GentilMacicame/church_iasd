@@ -13,5 +13,6 @@ public enum EstadoCivil {
     CASADO,
     DIVORCIADO,
     VIUVO,
-    UNIAO_FACTO
+    UNIAO_FACTO,
+    NOIVO
 }

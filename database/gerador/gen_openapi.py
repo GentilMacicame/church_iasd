@@ -335,6 +335,32 @@ acao('/v1/actividades/planos-escala/{id}/gerar-dias', 'Elaborar a escala: um dia
      obj([], diaSemana={'type': 'integer', 'minimum': 1, 'maximum': 7, 'description': '1 = segunda … 7 = domingo; por defeito 6 (sábado)'}),
      obj(['criados'], criados=I), 'actividades.fn_gerar_dias_escala', code='201')
 rel('/v1/actividades/escalas-proximas', 'actividades.vw_escala_proximas', 'Actividades e escalas', 'actividades.escala.ler')
+# V36: participação (inactivos), dízimos sobrepostos (membro/família), metas +5% e arrecadado por mês
+paths['/v1/secretaria/participacao'] = {'get': op(
+    'Participação dos membros (inactivos)', SEC, 'secretaria.membro.ler', operationId='participacaoMembros',
+    **{'x-funcao-bd': 'secretaria.fn_participacao_membros'},
+    description='Última presença na Escola Sabatina ou contribuição (do membro ou da família) e se é inactivo: ACTIVO no livro sem '
+                'participação nos últimos meses (por defeito 6). O estado no livro não muda. Não devolve valores.',
+    parameters=[{'name': 'igrejaId', 'in': 'query', 'required': True, 'schema': I},
+                {'name': 'meses', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 60, 'default': 6}}],
+    responses=resp('200', {'type': 'array', 'items': obj(['membroId', 'inactivo'], membroId=I,
+                                                             ultimaParticipacao={**D, 'nullable': True}, inactivo={'type': 'boolean'})}))}
+paths['/v1/tesouraria/contribuicoes-sobrepostas'] = {'get': op(
+    'Dízimos do mesmo mês já lançados (membro/família)', TES, 'tesouraria.transacao.ler', operationId='contribuicoesSobrepostas',
+    **{'x-funcao-bd': 'tesouraria.fn_contribuicoes_sobrepostas'},
+    description='Para um membro: dízimos do mês já lançados em nome da família dele; para uma família: em nome dos seus membros. Só aviso.',
+    parameters=[{'name': 'membroId', 'in': 'query', 'schema': I}, {'name': 'familiaId', 'in': 'query', 'schema': I},
+                {'name': 'data', 'in': 'query', 'required': True, 'schema': D}],
+    responses=resp('200', {'type': 'array', 'items': obj(['transacaoId', 'dataHora', 'quem', 'dizimo'], transacaoId=I, dataHora=DT,
+                                                             quem=STR, dizimo=MONEY, recibo={**STR, 'nullable': True})}))}
+paths['/v1/tesouraria/alvo-sugerido'] = {'get': op(
+    'Meta sugerida para o ano (+5%)', TES, 'tesouraria.alvo.ler', operationId='alvoSugerido', **{'x-funcao-bd': 'tesouraria.fn_alvo_sugerido'},
+    description='O alvo do ano anterior do mesmo fundo + 5%; null se não houver. Quem tem a permissão pode ajustar ao gravar o alvo.',
+    parameters=[{'name': 'igrejaId', 'in': 'query', 'required': True, 'schema': I}, {'name': 'fundoId', 'in': 'query', 'required': True, 'schema': I},
+                {'name': 'ano', 'in': 'query', 'required': True, 'schema': I}],
+    responses=resp('200', obj(['valor'], valor={**MONEY, 'nullable': True})))}
+rel('/v1/tesouraria/fundo-mensal', 'tesouraria.vw_fundo_mensal', TES, 'tesouraria.saldo_diario_fundo.ler',
+    ANO + [{'name': 'fundoId', 'in': 'query', 'schema': I}])
 # V34: programa anual com a execução financeira e conflitos de calendário
 rel('/v1/actividades/programa', 'actividades.vw_actividades_execucao', TITULO['actividades'], 'actividades.actividade.ler', ANO)
 DT_N = {**DT, 'nullable': True}

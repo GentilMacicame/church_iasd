@@ -501,6 +501,25 @@ export function useContribuicoesDoMes(ano: number, mes: number) {
   })
 }
 
+/**
+ * V36: dízimos do mesmo mês já lançados em nome da família do membro (ou, para uma família, em nome dos seus membros).
+ * Só aviso: quem lança confirma que não é o mesmo dízimo.
+ */
+export function useContribuicoesSobrepostas(p: { membroId?: number | null; familiaId?: number | null; data: string; activo: boolean }) {
+  const membroId = p.membroId ?? undefined, familiaId = p.familiaId ?? undefined
+  return useQuery({
+    enabled: p.activo && /^\d{4}-\d{2}-\d{2}$/.test(p.data) && (membroId != null) !== (familiaId != null),
+    queryKey: ['tesouraria', 'sobrepostas', membroId, familiaId, p.data.slice(0, 7)],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/contribuicoes-sobrepostas', { params: { query: { membroId, familiaId, data: p.data } } }))),
+    staleTime: 30_000,
+  })
+}
+
+/** V36: a meta sugerida para o ano (alvo do ano anterior do mesmo fundo + 5%); null se não houver. */
+export async function alvoSugerido(igrejaId: number, fundoId: number, ano: number) {
+  return (await dados(api.GET('/v1/tesouraria/alvo-sugerido', { params: { query: { igrejaId, fundoId, ano } } }))).valor ?? null
+}
+
 /* ===================================================================== contas */
 export function useContasMut() {
   const invalidar = useInvalidar()

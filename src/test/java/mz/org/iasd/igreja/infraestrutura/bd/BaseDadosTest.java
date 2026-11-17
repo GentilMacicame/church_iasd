@@ -58,6 +58,8 @@ import mz.org.iasd.igreja.models.catalogo.Catalogo;
 import mz.org.iasd.igreja.repositories.base.TabelaRepository;
 import mz.org.iasd.igreja.repositories.secretaria.MembrosParecidosRepository;
 import mz.org.iasd.igreja.repositories.actividades.ConflitosRepository;
+import mz.org.iasd.igreja.repositories.secretaria.ParticipacaoRepository;
+import mz.org.iasd.igreja.repositories.tesouraria.ContribuicoesRepository;
 import mz.org.iasd.igreja.controllers.actividades.RelatoriosActividadesController;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Senhas;
@@ -1025,6 +1027,44 @@ class BaseDadosTest {
         ApiException naoVe = assertThrows(ApiException.class,
                 () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.obterOu404(c, actividade, id)));
         assertEquals(404, naoVe.estadoHttp());
+    }
+
+    // ------------------------------------------------------------------ V36: participação, sobrepostas, metas
+
+    @Test
+    void participacaoSobrepostasEMetaComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v36@teste.mz", null, "SECRETARIO");
+        int directorEs = criarUsuarioComDono("director.es.v36@teste.mz", null, "DIRECTOR_ES");
+        int inactivo;
+        int fundo;
+        try (Connection dono = ligarComoDono()) {
+            inactivo = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_estado, mem_estado_civil) VALUES ("
+                    + igrejaCentral + ", 'Rui', 'Ausente', 'ACTIVO', 'NOIVO') RETURNING mem_id");
+            fundo = inserir(dono, "INSERT INTO tesouraria.fundo (fun_igr_id, fun_codigo, fun_nome, fun_tipo) VALUES (" + igrejaCentral
+                    + ", 'V36-REAV', 'Obra de reavivamento', 'PROJECTO') RETURNING fun_id");
+            inserir(dono, "INSERT INTO tesouraria.alvo (alv_igr_id, alv_fun_id, alv_valor_alvo, alv_data_inicio, alv_data_fim) VALUES ("
+                    + igrejaCentral + ", " + fundo + ", 20000, '2026-01-01', '2026-12-31') RETURNING alv_id");
+        }
+        // participação: o secretário vê o membro activo sem participação como inactivo; quem não lê os membros, nada
+        JsonArray p = ExecutorTransaccao.executar(api, secretario, c -> ParticipacaoRepository.procurar(c, igrejaCentral, 6));
+        assertTrue(p.stream().map(JsonValue::asJsonObject).anyMatch(o -> o.getInt("membroId") == inactivo && o.getBoolean("inactivo")));
+        int semPerfil = criarUsuarioComDono("membro.v36@teste.mz", null, "MEMBRO");
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> ParticipacaoRepository.procurar(c, igrejaCentral, 6)).size());
+
+        // meta: o tesoureiro recebe a sugestão do ano seguinte (+5%); sem alvo no ano anterior, nada
+        assertEquals("21000.00", ExecutorTransaccao.executar(api, tesoureiro,
+                c -> ContribuicoesRepository.alvoSugerido(c, igrejaCentral, fundo, 2027)).getString("valor"));
+        assertTrue(ExecutorTransaccao.executar(api, tesoureiro,
+                c -> ContribuicoesRepository.alvoSugerido(c, igrejaCentral, fundo, 2029)).isNull("valor"));
+        // o director da ES não lê os alvos: sem sugestão
+        assertTrue(ExecutorTransaccao.executar(api, directorEs,
+                c -> ContribuicoesRepository.alvoSugerido(c, igrejaCentral, fundo, 2027)).isNull("valor"));
+
+        // sobrepostas: sem movimentos da família neste mês, nada (e quem não lê movimentos também nada)
+        assertEquals(0, ExecutorTransaccao.executar(api, tesoureiro,
+                c -> ContribuicoesRepository.sobrepostas(c, inactivo, null, java.time.LocalDate.parse("2026-12-15"))).size());
+        assertEquals(0, ExecutorTransaccao.executar(api, directorEs,
+                c -> ContribuicoesRepository.sobrepostas(c, inactivo, null, java.time.LocalDate.parse("2026-12-15"))).size());
     }
 
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS

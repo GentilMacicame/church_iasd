@@ -271,6 +271,20 @@ export function useInvalidarFicha() {
   }
 }
 
+/**
+ * V36: participação dos membros da igreja escolhida: a última presença na ES ou contribuição (dele ou da família) e se é
+ * inactivo (ACTIVO no livro, sem participação nos últimos 6 meses). Só para quem lê os membros; sem valores.
+ */
+export function useParticipacao(activo = true) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: activo,
+    queryKey: ['membros', igreja.id, 'participacao'],
+    queryFn: async () => (await dados(api.GET('/v1/secretaria/participacao', { params: { query: { igrejaId: igreja.id } } }))),
+    staleTime: 5 * 60_000,
+  })
+}
+
 /** Cargos do membro (oficiais), para mostrar os actuais na ficha. */
 export function useCargosDoMembro(membroId: number, igrejaId: number, activo: boolean) {
   return useQuery({

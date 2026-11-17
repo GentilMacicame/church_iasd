@@ -226,6 +226,9 @@ public final class Rotas {
         /** GET /v1/secretaria/membros-parecidos  (RelatoriosSecretariaController.membrosParecidos, V33) */
         public static final String MEMBROS_PARECIDOS = "membros-parecidos";
 
+        /** GET /v1/secretaria/participacao?igrejaId=&amp;meses=  (RelatoriosSecretariaController.participacao, V36) */
+        public static final String PARTICIPACAO = "participacao";
+
         /** GET /v1/secretaria/conselho  (RelatoriosSecretariaController.conselho) */
         public static final String CONSELHO = "conselho";
 
@@ -447,6 +450,15 @@ public final class Rotas {
 
         /** GET /v1/tesouraria/progresso-alvos  (RelatoriosTesourariaController.progressoAlvos) */
         public static final String PROGRESSO_ALVOS = "progresso-alvos";
+
+        /** GET /v1/tesouraria/fundo-mensal?ano=&amp;fundoId=  (V36: arrecadado por fundo e mês) */
+        public static final String FUNDO_MENSAL = "fundo-mensal";
+
+        /** GET /v1/tesouraria/alvo-sugerido?igrejaId=&amp;fundoId=&amp;ano=  (V36: alvo do ano anterior + 5%) */
+        public static final String ALVO_SUGERIDO = "alvo-sugerido";
+
+        /** GET /v1/tesouraria/contribuicoes-sobrepostas?membroId=|familiaId=&amp;data=  (V36: só aviso) */
+        public static final String CONTRIBUICOES_SOBREPOSTAS = "contribuicoes-sobrepostas";
 
         /** GET /v1/tesouraria/conferencia-contagens  (RelatoriosTesourariaController.conferenciaContagens) */
         public static final String CONFERENCIA_CONTAGENS = "conferencia-contagens";

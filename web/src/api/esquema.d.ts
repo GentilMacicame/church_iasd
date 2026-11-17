@@ -4095,6 +4095,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/secretaria/participacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Participação dos membros (inactivos)
+         * @description Última presença na Escola Sabatina ou contribuição (do membro ou da família) e se é inactivo: ACTIVO no livro sem participação nos últimos meses (por defeito 6). O estado no livro não muda. Não devolve valores.
+         */
+        get: operations["participacaoMembros"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/secretaria/pontos-agenda": {
         parameters: {
             query?: never;
@@ -4623,6 +4643,26 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarVoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/alvo-sugerido": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Meta sugerida para o ano (+5%)
+         * @description O alvo do ano anterior do mesmo fundo + 5%; null se não houver. Quem tem a permissão pode ajustar ao gravar o alvo.
+         */
+        get: operations["alvoSugerido"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5179,6 +5219,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/contribuicoes-sobrepostas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dízimos do mesmo mês já lançados (membro/família)
+         * @description Para um membro: dízimos do mês já lançados em nome da família dele; para uma família: em nome dos seus membros. Só aviso.
+         */
+        get: operations["contribuicoesSobrepostas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/despesas": {
         parameters: {
             query?: never;
@@ -5701,6 +5761,26 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarFechoPeriodo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/fundo-mensal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Fundo mensal
+         * @description Lido da vista tesouraria.vw_fundo_mensal.
+         */
+        get: operations["relVTesourariaFundoMensal"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7592,7 +7672,7 @@ export interface components {
         /** @enum {string} */
         EnumEstadoActividade: "PLANEADA" | "EM_CURSO" | "CONCLUIDA" | "CANCELADA";
         /** @enum {string} */
-        EnumEstadoCivil: "SOLTEIRO" | "CASADO" | "DIVORCIADO" | "VIUVO" | "UNIAO_FACTO";
+        EnumEstadoCivil: "SOLTEIRO" | "CASADO" | "DIVORCIADO" | "VIUVO" | "UNIAO_FACTO" | "NOIVO";
         /** @enum {string} */
         EnumEstadoContagem: "ABERTA" | "CONFERIDA" | "DEPOSITADA";
         /** @enum {string} */
@@ -17955,6 +18035,40 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    participacaoMembros: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                meses?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        membroId: number;
+                        /** Format: date */
+                        ultimaParticipacao?: string | null;
+                        inactivo: boolean;
+                    }[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarReuniaoPonto: {
         parameters: {
             query?: {
@@ -19106,6 +19220,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Voto"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alvoSugerido: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                fundoId: number;
+                ano: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example 650.00 */
+                        valor: string | null;
+                    };
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -20313,6 +20460,44 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    contribuicoesSobrepostas: {
+        parameters: {
+            query: {
+                membroId?: number;
+                familiaId?: number;
+                data: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        transacaoId: number;
+                        /** Format: date-time */
+                        dataHora: string;
+                        quem: string;
+                        /** @example 650.00 */
+                        dizimo: string;
+                        recibo?: string | null;
+                    }[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarDespesa: {
         parameters: {
             query: {
@@ -21387,6 +21572,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FechoPeriodo"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVTesourariaFundoMensal: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                ano?: number;
+                mes?: number;
+                fundoId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

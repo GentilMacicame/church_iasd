@@ -2,7 +2,7 @@
  * Alvos de arrecadação (F-TES-12): "este ano queremos juntar 300 000 MT para o telhado" ou "o alvo de 13.º sábado é
  * 15 000 MT". O arrecadado vem dos saldos diários do fundo no período (vista vw_progresso_alvo).
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Target, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -18,9 +18,9 @@ import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { centimos, data, diasAte, hojeIso } from '@/lib/formatos'
+import { centimos, data, dinheiro, diasAte, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
-import { useAlvos, useAlvosMut, useFundos, useProgressoAlvos, type Alvo } from './api'
+import { alvoSugerido, useAlvos, useAlvosMut, useFundos, useProgressoAlvos, type Alvo } from './api'
 import { Paginada } from '@/components/comum/Paginacao'
 
 export function CartaoAlvos() {
@@ -97,6 +97,20 @@ function DialogoAlvo({ aoFechar }: { aoFechar: () => void }) {
   const [inicio, setInicio] = useState(hojeIso())
   const [fim, setFim] = useState(`${ano}-12-31`)
   const [erro, setErro] = useState<string | null>(null)
+  const [sugerido, setSugerido] = useState<string | null>(null)
+  // V36: meta do ano = alvo do ano anterior do mesmo fundo + 5% (sugestão; pode ajustar-se)
+  const anoDoAlvo = Number(inicio.slice(0, 4)) || ano
+  useEffect(() => {
+    let vivo = true
+    setSugerido(null)
+    if (!fundo) return
+    alvoSugerido(igreja.id, Number(fundo), anoDoAlvo).then((v) => {
+      if (!vivo) return
+      setSugerido(v)
+      if (v) setValor((actual) => actual || v)
+    }).catch(() => undefined)
+    return () => { vivo = false }
+  }, [fundo, anoDoAlvo, igreja.id])
   const submeter = () => {
     setErro(null)
     if (!fundo) return setErro('Escolha o fundo.')
@@ -127,7 +141,12 @@ function DialogoAlvo({ aoFechar }: { aoFechar: () => void }) {
             <label htmlFor="alv-valor" className="text-sm font-medium">Valor do alvo <span className="text-destructive-text">*</span></label>
             <CampoDinheiro id="alv-valor" value={valor} onChange={setValor} className="alvo" />
           </div>
-          <div />
+          <div className="self-end text-xs text-muted-foreground">
+            {sugerido ? (
+              <>Meta de {anoDoAlvo - 1} + 5% = <strong className="text-foreground">{dinheiro(sugerido)}</strong>
+                {valor !== sugerido && <button type="button" className="ml-1 font-medium text-primary hover:underline" onClick={() => setValor(sugerido)}>usar</button>}</>
+            ) : fundo ? `Sem meta em ${anoDoAlvo - 1} para este fundo.` : null}
+          </div>
           <div className="grid gap-1.5">
             <label htmlFor="alv-ini" className="text-sm font-medium">De</label>
             <CampoData id="alv-ini" value={inicio} onChange={setInicio} className="alvo" />

@@ -1,0 +1,61 @@
+1. secretário: estado civil NOIVO
+ mem_estado_civil 
+------------------
+ NOIVO
+(1 row)
+
+2. participação: o Tito participou (dízimo); o Rui nunca participou = inactivo (janela larga, para não depender da data)
+ mem_id | ultima_participacao | inactivo 
+--------+---------------------+----------
+    103 | 2026-12-08          | f
+   2202 |                     | t
+(2 rows)
+
+   quem não lê os membros da igreja 1 não recebe nada
+ linhas 
+--------
+      0
+(1 row)
+
+3. dízimo da Família Langa em Dezembro: o Tito já deu em nome próprio (aviso, não bloqueia)
+ tra_id |    quem    | dizimo  
+--------+------------+---------
+    501 | Tito Langa | 1000.00
+(1 row)
+
+   noutro mês não há sobreposição; a Joana (sem família) também não
+ janeiro 
+---------
+       0
+(1 row)
+
+ joana 
+-------
+     0
+(1 row)
+
+   tesoureiro de outra igreja: não vê os movimentos da igreja 1
+ outra_igreja 
+--------------
+            0
+(1 row)
+
+4. meta anual: alvo de 2026 da oferta de gratidão (fundo da igreja) e sugestão para 2027 = +5%
+ alv_valor_alvo 
+----------------
+       10000.00
+(1 row)
+
+ sugerido_2027 | sugerido_2028 
+---------------+---------------
+      10500.00 |              
+(1 row)
+
+   o arrecadado do dízimo mês a mês (registo mensal e acumulado)
+ ano  | mes | arrecadado 
+------+-----+------------
+ 2026 |  10 |     700.00
+ 2026 |  11 |     500.00
+ 2026 |  12 |    3000.00
+(3 rows)
+

@@ -17,6 +17,8 @@ import mz.org.iasd.igreja.controllers.base.BaseRelatoriosController;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.repositories.base.Relatorio;
 import mz.org.iasd.igreja.repositories.secretaria.MembrosParecidosRepository;
+import mz.org.iasd.igreja.repositories.secretaria.ParticipacaoRepository;
+import mz.org.iasd.igreja.controllers.base.Parametros;
 import mz.org.iasd.igreja.Rotas;
 
 /**
@@ -167,6 +169,19 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
         return Response.ok(MembrosParecidosRepository.procurar(unidade.ligacao(), new MembrosParecidosRepository.Pedido(
                 nome.trim(), apelido.trim(), nascimento, vazioNulo(naturalidade), vazioNulo(numeroIdentificacao), excluir)))
                 .build();
+    }
+
+    /** V36: última participação de cada membro e se é inactivo (ACTIVO sem presença na ES nem contribuição há ?meses=, 6). */
+    @GET
+    @Path(Rotas.Secretaria.PARTICIPACAO)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response participacao(@QueryParam("igrejaId") String igrejaId, @QueryParam("meses") String meses) throws SQLException {
+        Integer m = Parametros.inteiro(meses, "meses", false);
+        if (m != null && (m < 1 || m > 60)) {
+            throw ApiException.pedidoInvalido("Entre 1 e 60 meses", "meses");
+        }
+        return Response.ok(ParticipacaoRepository.procurar(unidade.ligacao(), Parametros.inteiro(igrejaId, "igrejaId", true),
+                m == null ? 6 : m)).build();
     }
 
     private static String vazioNulo(String s) {

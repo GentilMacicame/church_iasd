@@ -10470,6 +10470,62 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/participacao:
+    get:
+      summary: Participação dos membros (inactivos)
+      tags:
+      - Secretaria
+      x-permissao: secretaria.membro.ler
+      operationId: participacaoMembros
+      x-funcao-bd: secretaria.fn_participacao_membros
+      description: 'Última presença na Escola Sabatina ou contribuição (do membro ou da família) e se é inactivo: ACTIVO no livro sem participação
+        nos últimos meses (por defeito 6). O estado no livro não muda. Não devolve valores.'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: meses
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 6
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - membroId
+                  - inactivo
+                  properties:
+                    membroId:
+                      type: integer
+                    ultimaParticipacao:
+                      type: string
+                      format: date
+                      nullable: true
+                    inactivo:
+                      type: boolean
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/secretaria/pontos-agenda:
     get:
       summary: 'Pontos agenda: listar'
@@ -11848,6 +11904,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Voto'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/alvo-sugerido:
+    get:
+      summary: Meta sugerida para o ano (+5%)
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.alvo.ler
+      operationId: alvoSugerido
+      x-funcao-bd: tesouraria.fn_alvo_sugerido
+      description: O alvo do ano anterior do mesmo fundo + 5%; null se não houver. Quem tem a permissão pode ajustar ao gravar o alvo.
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: fundoId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: ano
+        in: query
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - valor
+                properties:
+                  valor:
+                    type: string
+                    pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                    example: '650.00'
+                    nullable: true
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -13288,6 +13396,71 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/contribuicoes-sobrepostas:
+    get:
+      summary: Dízimos do mesmo mês já lançados (membro/família)
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transacao.ler
+      operationId: contribuicoesSobrepostas
+      x-funcao-bd: tesouraria.fn_contribuicoes_sobrepostas
+      description: 'Para um membro: dízimos do mês já lançados em nome da família dele; para uma família: em nome dos seus membros. Só aviso.'
+      parameters:
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: familiaId
+        in: query
+        schema:
+          type: integer
+      - name: data
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - transacaoId
+                  - dataHora
+                  - quem
+                  - dizimo
+                  properties:
+                    transacaoId:
+                      type: integer
+                    dataHora:
+                      type: string
+                      format: date-time
+                    quem:
+                      type: string
+                    dizimo:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    recibo:
+                      type: string
+                      nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/despesas:
     get:
       summary: 'Despesas: listar'
@@ -14625,6 +14798,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FechoPeriodo'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/fundo-mensal:
+    get:
+      summary: 'Relatório: Fundo mensal'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.saldo_diario_fundo.ler
+      operationId: relVTesourariaFundoMensal
+      description: Lido da vista tesouraria.vw_fundo_mensal.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: ano
+        in: query
+        schema:
+          type: integer
+      - name: mes
+        in: query
+        schema:
+          type: integer
+      - name: fundoId
+        in: query
+        schema:
+          type: integer
+      x-vista: tesouraria.vw_fundo_mensal
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -19057,6 +19286,7 @@ components:
       - DIVORCIADO
       - VIUVO
       - UNIAO_FACTO
+      - NOIVO
     EnumEstadoContagem:
       type: string
       enum:

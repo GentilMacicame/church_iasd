@@ -23,7 +23,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
-import { useContagemPorAprovar, useMembrosBasicos } from '@/features/membros/api'
+import { useContagemPorAprovar, useMembrosBasicos, useParticipacao } from '@/features/membros/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
 import { useResumoMensal } from '@/features/tesouraria/api'
 import { useAlertas, type Alerta } from '@/features/alertas/loja'
@@ -316,12 +316,16 @@ function Composicao({ className }: { className?: string }) {
   const outros = l.length - activos - interessados
   const mulheres = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'F'), homens = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'M')
   const semFamilia = conta((m) => m.estado === 'ACTIVO' && !m.familiaId)
+  // V36: activos no livro sem presença na ES nem contribuição há 6 meses
+  const participacao = useParticipacao()
+  const inactivos = (participacao.data ?? []).filter((p) => p.inactivo).length
   // situação civil dos activos (V33: a vista básica traz o estado civil); viúvos e viúvas pelo sexo
   const civil = (e: string, s?: 'M' | 'F') => conta((m) => m.estado === 'ACTIVO' && m.estadoCivil === e && (!s || m.sexo === s))
   const situacao = [
     { rotulo: 'Casados', v: civil('CASADO'), para: 'CASADO' }, { rotulo: 'União de facto', v: civil('UNIAO_FACTO'), para: 'UNIAO_FACTO' },
     { rotulo: 'Solteiros', v: civil('SOLTEIRO'), para: 'SOLTEIRO' }, { rotulo: 'Viúvos', v: civil('VIUVO', 'M'), para: 'VIUVO' },
     { rotulo: 'Viúvas', v: civil('VIUVO', 'F'), para: 'VIUVO' }, { rotulo: 'Divorciados', v: civil('DIVORCIADO'), para: 'DIVORCIADO' },
+    { rotulo: 'Noivos', v: civil('NOIVO'), para: 'NOIVO' },
     { rotulo: 'Sem estado civil', v: conta((m) => m.estado === 'ACTIVO' && !m.estadoCivil), para: '' },
   ].filter((x) => x.v > 0)
   const pct = (v: number, de: number) => (de ? `${Math.round((v / de) * 100)}%` : '0%')
@@ -372,6 +376,18 @@ function Composicao({ className }: { className?: string }) {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+            {participacao.data && activos > 0 && (
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span>Activos que participam <span className="text-xs text-muted-foreground">(ES ou contribuição, 6 meses)</span></span>
+                  <strong className="font-semibold tabular-nums">{activos - inactivos} <span className="text-xs font-normal text-muted-foreground">{pct(activos - inactivos, activos)}</span></strong>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-3 text-sm">
+                  <span>Inactivos</span>
+                  <strong className="font-semibold tabular-nums">{inactivos} <span className="text-xs font-normal text-muted-foreground">{pct(inactivos, activos)}</span></strong>
+                </div>
               </div>
             )}
             {semFamilia > 0 && (

@@ -228,6 +228,11 @@ src/
   pastoral" em Nova actividade); aparecem no programa e nos conflitos de todas as igrejas do distrito, com a etiqueta
   "Área pastoral", o filtro próprio e uma linha no resumo por departamento. Os directores das igrejas vêem-nas mas não as alteram.
 
+- **Decisões do plano** (V36): Início com os activos que participam e os **inactivos** (sem presença na ES nem
+  contribuição há 6 meses) e os **noivos**; a ficha do membro mostra a última participação. Lançar entrada avisa quando o
+  **dízimo do mês já foi lançado** em nome da família do membro (ou de um membro da família) e pede "Conferi: não é o
+  mesmo dízimo". Novo alvo sugere a **meta do ano anterior + 5%** (ex.: obra de reavivamento, um fundo da igreja), ajustável.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

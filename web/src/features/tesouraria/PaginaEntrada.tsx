@@ -35,7 +35,7 @@ import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso } from '@/lib
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
 import { cn } from '@/lib/utils'
-import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useCriarMovimento, useFundos, type Conta } from './api'
+import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, type Conta } from './api'
 import { CampoComprovativo } from './Comprovativos'
 import { parteDoFundo } from './comum'
 
@@ -95,6 +95,7 @@ export default function PaginaEntrada() {
   const [erroFamilia, setErroFamilia] = useState<string | null>(null)
   const familias = useFamiliasResumo()
   const [comprovativo, setComprovativo] = useState<File | null>(null)   // fotografia/PDF: enviado depois de gravar
+  const [conferiuSobreposta, setConferiuSobreposta] = useState(false)
 
   const todas = (contas.data ?? []).filter((c) => !c.endDate)
   // o envelope em numerário primeiro: é o mais comum
@@ -162,6 +163,12 @@ export default function PaginaEntrada() {
   const anoMembro = doMembro.reduce((s, c) => s + centimos(c.valor), 0)
   const ultima = [...doMembro].sort((a, b) => b.dataHora.localeCompare(a.dataHora))[0]
   const totalSessao = sessao.reduce((s, x) => s + centimos(x.valor), 0)
+  // V36: o mesmo dízimo do mês já lançado em nome da família (ou de um membro dela)? Só aviso, com confirmação.
+  const comDizimo = linhas.some((l) => fundoPorId.get(l.fundoId)?.tipo === 'DIZIMO' && valido(l.valor) && centimos(l.valor) > 0)
+  const sobrepostas = useContribuicoesSobrepostas({
+    membroId: !porFamilia && !anonimo ? membro : null, familiaId, data: form.watch('data'), activo: comDizimo && !anonimo,
+  })
+  const avisoSobreposto = comDizimo && !anonimo ? sobrepostas.data ?? [] : []
 
   const escolherConta = (c: Conta) => {
     form.setValue('contaId', String(c.id), { shouldDirty: true })
@@ -194,6 +201,11 @@ export default function PaginaEntrada() {
       return
     }
     if (naMissao && !v.referencia) { form.setError('referencia', { message: 'Escreva a referência do comprovativo' }); return }
+    if (avisoSobreposto.length && !conferiuSobreposta) {
+      setErro(porFamilia ? 'Um membro desta família já deu o dízimo em nome próprio neste mês. Confira o aviso e confirme antes de gravar.'
+        : 'A família deste membro já entregou o dízimo neste mês. Confira o aviso e confirme antes de gravar.')
+      return
+    }
     try {
       const membroId = anonimo || porFamilia ? null : v.membro
       const { transacao: tr, recibo, erroRecibo } = await criar.mutateAsync({
@@ -228,6 +240,7 @@ export default function PaginaEntrada() {
       setFamilia('')
       setComprovativo(null)
       setVerOutros(false)
+      setConferiuSobreposta(false)
     } catch (err) {
       setErro(aplicarErroApi(form, err))
     }
@@ -275,6 +288,25 @@ export default function PaginaEntrada() {
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid min-w-0 gap-6 lg:col-span-8">
           <ErroFormulario mensagem={erro} />
+          {avisoSobreposto.length > 0 && (
+            <section role="alert" className="rounded-xl border border-warning/50 bg-tint-warning p-4 text-sm">
+              <p className="font-semibold text-warning-text">
+                {porFamilia ? 'Já há dízimo deste mês em nome de um membro desta família' : 'Já há dízimo deste mês em nome da família deste membro'}
+              </p>
+              <ul className="mt-2 grid gap-1">
+                {avisoSobreposto.map((x) => (
+                  <li key={x.transacaoId}>
+                    <Link to={`/tesouraria/movimentos/${x.transacaoId}`} target="_blank" className="font-medium hover:underline">{x.quem}</Link>
+                    {' · '}{dataEcra(x.dataHora)} · dízimo {dinheiro(x.dizimo)}{x.recibo ? ` · recibo ${x.recibo}` : ''}
+                  </li>
+                ))}
+              </ul>
+              <label className="alvo mt-2 flex items-center gap-2 font-medium">
+                <input type="checkbox" checked={conferiuSobreposta} onChange={(ev) => setConferiuSobreposta(ev.target.checked)} className="size-4 accent-[var(--primary)]" />
+                Conferi: não é o mesmo dízimo (não se conta duas vezes)
+              </label>
+            </section>
+          )}
 
           {/* 1 · quem contribui */}
           <Cartao titulo="1. Quem contribui" icone={UserRound}>

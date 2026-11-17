@@ -23,7 +23,7 @@ import { DialogoBaptismo, DialogoContacto } from './Dialogos'
 import { CartaoLivro } from '@/features/livro/MovimentosMembro'
 import { CartaoConsentimentos } from '@/features/secretaria/Consentimentos'
 import {
-  useBaptismos, useCargosDoMembro, useContactos, useMatriculasDoMembro, useMembro, useMembrosBasicos, useTerminarMembro, useValidarMembro,
+  useBaptismos, useCargosDoMembro, useContactos, useMatriculasDoMembro, useMembro, useMembrosBasicos, useParticipacao, useTerminarMembro, useValidarMembro,
   type Membro,
 } from './api'
 import { useCargos } from '@/features/conselho/api'
@@ -181,6 +181,8 @@ function Participacao({ m }: { m: Membro }) {
   const nomeCargo = (id?: number | null) => cargos.data?.find((c) => c.id === id)?.nome ?? 'Cargo'
   const matricula = (matriculas.data ?? []).find((x) => !x.dataSaida)
   const classe = matricula ? classes.data?.find((c) => c.id === matricula.classeId) : undefined
+  const participacao = useParticipacao(pode('secretaria.membro.ler'))
+  const minha = participacao.data?.find((p) => p.membroId === m.id)
   return (
     <Cartao titulo="Participação na igreja" descricao="Entrada no livro de membros, cargos e Escola Sabatina" icone={Church}>
       <Grelha>
@@ -188,6 +190,12 @@ function Participacao({ m }: { m: Membro }) {
         <Campo rotulo={t.ficha.dataEntrada}>{m.dataEntrada && data(m.dataEntrada)}</Campo>
         <Campo rotulo={t.ficha.modoEntrada}>{m.modoEntrada && rotulos.modoEntrada[m.modoEntrada]}</Campo>
         <Campo rotulo={t.ficha.validacao}>{m.validacao && rotulos.validacao[m.validacao]}</Campo>
+        {minha && (
+          <Campo rotulo="Última participação">
+            {minha.ultimaParticipacao ? data(minha.ultimaParticipacao) : 'Sem registo'}
+            {minha.inactivo && <Pilula variante="warning" className="ml-2">Inactivo</Pilula>}
+          </Campo>
+        )}
         {veCargos && (
           <Campo rotulo="Cargos actuais">
             {actuais.length ? actuais.map((o) => `${nomeCargo(o.cargoId)}${o.fimPrevisto ? ` (até ${data(o.fimPrevisto)})` : ''}`).join(' · ') : null}

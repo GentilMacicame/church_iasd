@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 464 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 468 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -313,6 +313,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/secretaria/oficiais/{id}` | OficiaisController · alterar | `secretaria.oficial.alterar` |
 | POST | `/v1/secretaria/oficiais/{id}/reactivar` | OficiaisController · reactivar | `secretaria.oficial.terminar` |
 | POST | `/v1/secretaria/oficiais/{id}/terminar` | OficiaisController · terminar | `secretaria.oficial.terminar` |
+| GET | `/v1/secretaria/participacao` | RelatoriosSecretariaController · participacao | `secretaria.membro.ler` |
 | GET | `/v1/secretaria/pontos-agenda` | PontosAgendaController · listar | `secretaria.reuniao_ponto.ler` |
 | POST | `/v1/secretaria/pontos-agenda` | PontosAgendaController · criar | `secretaria.reuniao_ponto.criar` |
 | GET | `/v1/secretaria/pontos-agenda/{id}` | PontosAgendaController · obter | `secretaria.reuniao_ponto.ler` |
@@ -355,6 +356,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 
 | Método | Caminho | Classe · método | Permissão |
 | --- | --- | --- | --- |
+| GET | `/v1/tesouraria/alvo-sugerido` | RelatoriosTesourariaController · alvoSugerido | `tesouraria.alvo.ler` |
 | GET | `/v1/tesouraria/alvos` | AlvosController · listar | `tesouraria.alvo.ler` |
 | POST | `/v1/tesouraria/alvos` | AlvosController · criar | `tesouraria.alvo.criar` |
 | GET | `/v1/tesouraria/alvos/{id}` | AlvosController · obter | `tesouraria.alvo.ler` |
@@ -393,6 +395,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/contas/{id}/reactivar` | ContasController · reactivar | `tesouraria.conta_financeira.terminar` |
 | POST | `/v1/tesouraria/contas/{id}/terminar` | ContasController · terminar | `tesouraria.conta_financeira.terminar` |
 | GET | `/v1/tesouraria/contribuicoes` | RelatoriosTesourariaController · contribuicoes | `tesouraria.transacao.ler (ou o próprio membro)` |
+| GET | `/v1/tesouraria/contribuicoes-sobrepostas` | RelatoriosTesourariaController · contribuicoesSobrepostas | `tesouraria.transacao.ler` |
 | GET | `/v1/tesouraria/despesas` | DespesasController · listar | `tesouraria.despesa.ler` |
 | POST | `/v1/tesouraria/despesas` | DespesasController · criar | `tesouraria.despesa.criar` |
 | GET | `/v1/tesouraria/despesas-por-pagar` | RelatoriosTesourariaController · despesasPorPagar | `tesouraria.despesa.ler` |
@@ -427,6 +430,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/fechos/{id}/reabrir` | FechosController · reabrir | `tesouraria.fecho_periodo.terminar` |
 | POST | `/v1/tesouraria/fechos/{id}/reactivar` | FechosController · reactivar | `tesouraria.fecho_periodo.terminar` |
 | POST | `/v1/tesouraria/fechos/{id}/terminar` | FechosController · terminar | `tesouraria.fecho_periodo.terminar` |
+| GET | `/v1/tesouraria/fundo-mensal` | RelatoriosTesourariaController · fundoMensal | `tesouraria.saldo_diario_fundo.ler` |
 | GET | `/v1/tesouraria/fundos` | FundosController · listar | `tesouraria.fundo.ler` |
 | POST | `/v1/tesouraria/fundos` | FundosController · criar | `tesouraria.fundo.criar` |
 | GET | `/v1/tesouraria/fundos/{id}` | FundosController · obter | `tesouraria.fundo.ler` |

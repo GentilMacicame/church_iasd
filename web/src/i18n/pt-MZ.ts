@@ -245,7 +245,7 @@ export const rotulos = {
   validacao: { PENDENTE: 'Por aprovar', APROVADO: 'Aprovado', REJEITADO: 'Rejeitado' },
   sexo: { M: 'Masculino', F: 'Feminino' },
   estadoCivil: {
-    SOLTEIRO: 'Solteiro(a)', CASADO: 'Casado(a)', DIVORCIADO: 'Divorciado(a)', VIUVO: 'Viúvo(a)', UNIAO_FACTO: 'União de facto',
+    SOLTEIRO: 'Solteiro(a)', CASADO: 'Casado(a)', DIVORCIADO: 'Divorciado(a)', VIUVO: 'Viúvo(a)', UNIAO_FACTO: 'União de facto', NOIVO: 'Noivo(a)',
   },
   tipoIdentificacao: {
     BI: 'Bilhete de identidade', PASSAPORTE: 'Passaporte', DIRE: 'DIRE', CEDULA: 'Cédula pessoal',

@@ -31,7 +31,7 @@ SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina
 -- ---------------------------------------------------------------- tipos (no núcleo)
 CREATE TYPE nucleo.estado_registo_t        AS ENUM ('ACTIVO', 'INACTIVO');
 CREATE TYPE nucleo.sexo_t                  AS ENUM ('M', 'F');
-CREATE TYPE nucleo.estado_civil_t          AS ENUM ('SOLTEIRO', 'CASADO', 'DIVORCIADO', 'VIUVO', 'UNIAO_FACTO');
+CREATE TYPE nucleo.estado_civil_t          AS ENUM ('SOLTEIRO', 'CASADO', 'DIVORCIADO', 'VIUVO', 'UNIAO_FACTO', 'NOIVO');
 CREATE TYPE nucleo.tipo_identificacao_t    AS ENUM ('BI', 'PASSAPORTE', 'DIRE', 'CEDULA', 'CARTA_CONDUCAO', 'OUTRO');
 CREATE TYPE nucleo.escolaridade_t          AS ENUM ('NENHUMA', 'PRIMARIO', 'SECUNDARIO', 'TECNICO_PROFISSIONAL', 'SUPERIOR');
 CREATE TYPE nucleo.estado_validacao_t      AS ENUM ('PENDENTE', 'APROVADO', 'REJEITADO');
