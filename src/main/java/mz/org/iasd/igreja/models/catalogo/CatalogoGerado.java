@@ -9,6 +9,7 @@ import mz.org.iasd.igreja.models.actividades.Escala;
 import mz.org.iasd.igreja.models.actividades.EscalaDia;
 import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.actividades.Material;
+import mz.org.iasd.igreja.models.actividades.SantaCeia;
 import mz.org.iasd.igreja.models.escolasabatina.Classe;
 import mz.org.iasd.igreja.models.escolasabatina.ClasseTrimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Matricula;
@@ -89,6 +90,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
 import mz.org.iasd.igreja.models.tipos.EstadoRelatorio;
 import mz.org.iasd.igreja.models.tipos.EstadoRemessa;
 import mz.org.iasd.igreja.models.tipos.EstadoReuniao;
+import mz.org.iasd.igreja.models.tipos.EstadoSantaCeia;
 import mz.org.iasd.igreja.models.tipos.EstadoTransacao;
 import mz.org.iasd.igreja.models.tipos.EstadoTransferencia;
 import mz.org.iasd.igreja.models.tipos.EstadoValidacao;
@@ -139,6 +141,7 @@ public final class CatalogoGerado {
             EstadoRelatorio.class,
             EstadoRemessa.class,
             EstadoReuniao.class,
+            EstadoSantaCeia.class,
             EstadoTransacao.class,
             EstadoTransferencia.class,
             EstadoValidacao.class,
@@ -196,6 +199,7 @@ public final class CatalogoGerado {
             Escala.class,
             EscalaPlano.class,
             EscalaDia.class,
+            SantaCeia.class,
             Trimestre.class,
             Sabado.class,
             Classe.class,

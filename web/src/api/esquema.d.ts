@@ -611,6 +611,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/actividades/santa-ceia-historico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Santa ceia historico
+         * @description Lido da vista actividades.vw_santa_ceia.
+         */
+        get: operations["relVActividadesSantaCeiaHistorico"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/santas-ceias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Santas ceias: listar
+         * @description Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39)
+         */
+        get: operations["listarSantaCeia"];
+        put?: never;
+        /**
+         * Santas ceias: criar
+         * @description Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39)
+         */
+        post: operations["criarSantaCeia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/santas-ceias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Santas ceias: ler um */
+        get: operations["lerSantaCeia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Santas ceias: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarSantaCeia"];
+        trace?: never;
+    };
+    "/v1/actividades/santas-ceias/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Santas ceias: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarSantaCeia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/santas-ceias/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Santas ceias: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarSantaCeia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/login": {
         parameters: {
             query?: never;
@@ -7955,6 +8060,8 @@ export interface components {
         /** @enum {string} */
         EnumEstadoReuniao: "CONVOCADA" | "REALIZADA" | "ACTA_APROVADA" | "CANCELADA";
         /** @enum {string} */
+        EnumEstadoSantaCeia: "AGENDADA" | "REALIZADA" | "CANCELADA";
+        /** @enum {string} */
         EnumEstadoTransacao: "PENDENTE" | "CONFIRMADA" | "FALHADA" | "ANULADA";
         /** @enum {string} */
         EnumEstadoTransferencia: "PEDIDA" | "CARTA_EMITIDA" | "CONCLUIDA" | "RECUSADA" | "EXPIRADA";
@@ -9242,6 +9349,42 @@ export interface components {
              */
             estornosSaidas?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39) */
+        SantaCeia: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /** Format: date */
+            data?: string;
+            /** @description Hora (hh:mm) */
+            hora?: string;
+            local?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Quem oficia (pastor ou ancião)
+             */
+            responsavelMembroId?: number;
+            observacoes?: string;
+            /** @description Participantes: homens (depois de realizada) */
+            homens?: number;
+            /** @description Participantes: mulheres */
+            mulheres?: number;
+            /** @description Participantes: visitantes */
+            visitantes?: number;
+            estado?: components["schemas"]["EnumEstadoSantaCeia"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -10961,6 +11104,223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActividadeResponsavel"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVActividadesSantaCeiaHistorico: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                ano?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarSantaCeia: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                responsavelMembroId?: number;
+                estado?: components["schemas"]["EnumEstadoSantaCeia"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["SantaCeia"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarSantaCeia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["SantaCeia"], "igrejaId" | "data">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SantaCeia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerSantaCeia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SantaCeia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarSantaCeia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SantaCeia"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SantaCeia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarSantaCeia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SantaCeia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarSantaCeia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SantaCeia"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

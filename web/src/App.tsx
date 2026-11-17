@@ -45,6 +45,7 @@ const PaginaRelatorioMensal = pagina(() => import('@/features/tesouraria/PaginaR
 const PaginaEscalas = pagina(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaActividades = pagina(() => import('@/features/actividades/PaginaActividades'))
 const PaginaComunicados = pagina(() => import('@/features/comunicados/PaginaComunicados'))
+const PaginaSantaCeia = pagina(() => import('@/features/santa-ceia/PaginaSantaCeia'))
 const PaginaActividade = pagina(() => import('@/features/actividades/PaginaActividade'))
 const PaginaNovaEscala = pagina(() => import('@/features/escalas/PaginaNovaEscala'))
 const PaginaEscala = pagina(() => import('@/features/escalas/PaginaEscala'))
@@ -177,6 +178,7 @@ export default function App() {
                   <Route path="acessos/utilizadores/novo" element={<Exige permissao="nucleo.usuario.criar"><PaginaUtilizador /></Exige>} />
                   <Route path="acessos/utilizadores/:id" element={<Exige permissao="nucleo.usuario.ler"><PaginaUtilizador /></Exige>} />
                   <Route path="comunicados" element={<PaginaComunicados />} />
+                  <Route path="santa-ceia" element={<Exige permissao="actividades.santa_ceia.ler"><PaginaSantaCeia /></Exige>} />
                   <Route path="actividades" element={<Exige permissao="actividades.actividade.ler"><PaginaActividades /></Exige>} />
                   <Route path="actividades/:id" element={<Exige permissao="actividades.actividade.ler"><PaginaActividade /></Exige>} />
                   <Route path="escalas" element={<Exige permissao="actividades.escala_plano.ler"><PaginaEscalas /></Exige>} />

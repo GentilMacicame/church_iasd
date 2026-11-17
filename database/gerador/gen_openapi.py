@@ -361,6 +361,9 @@ paths['/v1/tesouraria/alvo-sugerido'] = {'get': op(
     responses=resp('200', obj(['valor'], valor={**MONEY, 'nullable': True})))}
 rel('/v1/tesouraria/fundo-mensal', 'tesouraria.vw_fundo_mensal', TES, 'tesouraria.saldo_diario_fundo.ler',
     ANO + [{'name': 'fundoId', 'in': 'query', 'schema': I}])
+# V39: histórico da Santa Ceia (participantes) por igreja e ano
+rel('/v1/actividades/santa-ceia-historico', 'actividades.vw_santa_ceia', TITULO['actividades'], 'actividades.santa_ceia.ler',
+    [{'name': 'ano', 'in': 'query', 'schema': I}])
 # V38: dashboard por período, igreja a igreja
 PAINEL_LINHA = obj(['id', 'nome', 'membros', 'activos', 'inactivos'], id=I, nome=STR, entidadeId=I, entidade=STR,
                    distritoPastoralId={**I, 'nullable': True}, distritoPastoral={**STR, 'nullable': True},

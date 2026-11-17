@@ -1119,6 +1119,37 @@ class BaseDadosTest {
         assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> PainelRepository.periodo(c, de, ate, null, null)).size());
     }
 
+    // ------------------------------------------------------------------ V39: Santa Ceia
+
+    @Test
+    void santaCeiaAgendadaERealizadaComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v39@teste.mz", null, "SECRETARIO");
+        var santaCeia = Catalogo.de(mz.org.iasd.igreja.models.actividades.SantaCeia.class);
+        JsonObject corpo = Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("data", "2026-07-04").add("hora", "09:30")
+                .add("local", "Templo").build();
+
+        // o tesoureiro não gere a Santa Ceia → 403
+        SQLException naoAgenda = assertThrows(SQLException.class,
+                () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, santaCeia, corpo)));
+        assertEquals(403, TradutorErrosSql.traduzir(naoAgenda).estadoHttp());
+
+        // o secretário agenda; marcar realizada sem números → 422; com os números fica no histórico com o total
+        JsonObject criada = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, santaCeia, corpo));
+        long id = criada.getJsonNumber("id").longValue();
+        assertEquals("AGENDADA", criada.getString("estado"));
+        SQLException semNumeros = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                c -> TabelaRepository.alterar(c, santaCeia, id, Json.createObjectBuilder().add("estado", "REALIZADA").build())));
+        assertEquals(422, TradutorErrosSql.traduzir(semNumeros).estadoHttp());
+        ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, santaCeia, id, Json.createObjectBuilder()
+                .add("estado", "REALIZADA").add("homens", 20).add("mulheres", 31).add("visitantes", 4).build()));
+        JsonArray historico = ExecutorTransaccao.executar(api, secretario, c -> RelatoriosActividadesController.SANTA_CEIA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral), "ano", "2026")));
+        assertEquals(55, historico.getJsonObject(0).getInt("total"));
+        // o tesoureiro não a vê
+        assertEquals(0, ExecutorTransaccao.executar(api, tesoureiro, c -> RelatoriosActividadesController.SANTA_CEIA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral)))).size());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

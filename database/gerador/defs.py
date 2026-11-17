@@ -275,6 +275,19 @@ M('V5__actividades', 'actividades', 'Actividades e escalas',
    ('grupo_coral', 'VARCHAR(100)'), ('ide_id', 'fk:igreja_departamento', '', 'Departamento responsável'),
    ('observacoes', 'VARCHAR(255)')],
    uniq=[['epl_id', 'data']]),
+ # V39: Santa Ceia (agendamento e participantes)
+ T('santa_ceia', 'stc', 'Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39)', [
+   ('igr_id', 'fk:igreja', NN), ('data', 'DATE', NN), ('hora', 'VARCHAR(5)', '', 'Hora (hh:mm)'), ('local', 'VARCHAR(150)'),
+   ('responsavel_mem_id', 'fk:membro', '', 'Quem oficia (pastor ou ancião)'),
+   ('observacoes', 'VARCHAR(500)'),
+   ('homens', 'SMALLINT', '', 'Participantes: homens (depois de realizada)'),
+   ('mulheres', 'SMALLINT', '', 'Participantes: mulheres'),
+   ('visitantes', 'SMALLINT', '', 'Participantes: visitantes')],
+   uniq=[['igr_id', 'data']],
+   checks=[('chk_stc_numeros', 'coalesce(@homens, 0) >= 0 AND coalesce(@mulheres, 0) >= 0 AND coalesce(@visitantes, 0) >= 0'),
+           ('chk_stc_hora', "@hora IS NULL OR @hora ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'"),
+           ('chk_stc_realizada', "@estado <> 'REALIZADA' OR (@homens IS NOT NULL AND @mulheres IS NOT NULL AND @visitantes IS NOT NULL)")],
+   estado=('estado_santa_ceia_t', "'AGENDADA'")),
 ])
 
 # ======================================================================= escola_sabatina
@@ -576,7 +589,7 @@ SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
  'oficial': ('direct', 'igr_id'), 'mandato': ('direct', 'igr_id'), 'igreja_departamento': ('direct', 'igr_id'), 'escala': ('direct', 'igr_id'),
- 'escala_plano': ('direct', 'igr_id'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
+ 'escala_plano': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
  'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'),
  'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'),
@@ -667,7 +680,7 @@ PERFIS = [
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'nucleo.usuario_igreja.ler'),
    ('+', 'nucleo.comunicado*')]),
  ('SECRETARIO', 'IGREJA', 'Secretário(a) da igreja: livro de membros, reuniões, votos, transferências, disciplina', [
-   ('+', 'secretaria.*'), ('+', 'actividades.escala*'), ('+', 'escola_sabatina.*.ler'),
+   ('+', 'secretaria.*'), ('+', 'actividades.escala*'), ('+', 'actividades.santa_ceia*'), ('+', 'escola_sabatina.*.ler'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'nucleo.comunicado*')]),
  ('TESOUREIRO', 'IGREJA', 'Tesoureiro(a): movimentos, recibos, contagens, despesas, remessas (não aprova o que regista)', [
    ('+', 'tesouraria.*'), ('-', '*.aprovar'), ('-', 'tesouraria.remessa.confirmar'), ('-', 'tesouraria.fecho_periodo.terminar'),
@@ -685,7 +698,8 @@ PERFIS = [
    ('+', 'escola_sabatina.presenca.*'), ('+', 'escola_sabatina.visitante.*'), ('+', 'escola_sabatina.matricula.*'),
    ('+', 'secretaria.membro.ler'), ('+', 'organizacao.igreja.ler'), ('+', 'nucleo.comunicado*.ler')]),
  ('DIRECTOR_DEPARTAMENTO', 'IGREJA', 'Director(a) de departamento: actividades, material, escalas, pedir despesas', [
-   ('+', 'actividades.*'), ('-', 'actividades.*.terminar'), ('+', 'tesouraria.despesa.ler'), ('+', 'tesouraria.despesa.criar'),
+   ('+', 'actividades.*'), ('-', 'actividades.*.terminar'), ('-', 'actividades.santa_ceia*'), ('+', 'actividades.santa_ceia.ler'),
+   ('+', 'tesouraria.despesa.ler'), ('+', 'tesouraria.despesa.criar'),
    ('+', 'tesouraria.documento.criar'), ('+', 'tesouraria.documento.ler'),
    ('+', 'secretaria.membro.ler'), ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'),
    ('+', 'nucleo.comunicado*.ler')]),

@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowDown, ArrowUp, ArrowUpDown, Building2, ChartColumn, Church, Flame, HandCoins, HeartHandshake, Landmark, Printer, Search, UserCheck, Users, Wallet,
+  ArrowDown, ArrowUp, ArrowUpDown, Building2, ChartColumn, Church, Flame, Wine, HandCoins, HeartHandshake, Landmark, Printer, Search, UserCheck, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +30,7 @@ import { imprimirComo } from '@/lib/documentos'
 import { data as dataEcra, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { CelulaPct, Folha, textoMT, textoPct } from '@/features/escola-sabatina/componentes'
+import { useHistoricoSantaCeia } from '@/features/santa-ceia/api'
 
 /** Linha de GET /v1/organizacao/painel-igrejas (V30): a situação de hoje (saldo, por depositar). DECIMAL chega como texto. */
 interface LinhaHoje { id: number; saldo: string; porRemeter: string; provincia: string | null; transfPendentes: number }
@@ -127,6 +128,7 @@ export default function PaginaPainelGeral() {
   const qp = usePainelPeriodo(intervalo.de, intervalo.ate)
   const qh = usePainelHoje()
   const qm = usePainelMensal()
+  const qs = useHistoricoSantaCeia(true)
   const [entidade, setEntidade] = useState('')
   const [distrito, setDistrito] = useState('')
   const [texto, setTexto] = useState('')
@@ -155,6 +157,9 @@ export default function PaginaPainelGeral() {
   const ambas = comTes.filter((l) => l.veMembros)
   const contribuintes = S(ambas, (l) => l.contribuintes), membrosComTes = S(ambas, (l) => l.membros)
   const dizimos = S(comTes, (l) => n(l.dizimos)), ofertas = S(comTes, (l) => n(l.ofertas)), reavivamento = S(comTes, (l) => n(l.reavivamento))
+  // V39: Santa Ceia realizada no período, nas igrejas filtradas
+  const ceias = (qs.data ?? []).filter((s) => s.estado === 'REALIZADA' && ids.has(s.igrejaId) && s.data >= intervalo.de && s.data <= intervalo.ate)
+  const participantesCeia = ceias.reduce((s, x) => s + x.total, 0)
 
   // séries dos últimos 12 meses (soma das igrejas filtradas)
   const meses = useMemo(() => {
@@ -246,12 +251,14 @@ export default function PaginaPainelGeral() {
         <div className="grid gap-6">
           <section aria-label="Membros" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros</h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
               <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size} distrito(s) pastoral(is)`} icone={Building2} aCarregar={aCarregar} />
               <Indicador rotulo="Total de membros" valor={inteiro(membros)} icone={Users} aCarregar={aCarregar}
                 nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados · +${inteiro(S(comMem, (l) => l.entradasMembros))} / −${inteiro(S(comMem, (l) => l.perdasMembros))} no período`} />
               <Indicador rotulo="Membros activos" valor={inteiro(activos)} icone={UserCheck} tom="success" aCarregar={aCarregar}
                 nota={`${textoPct(razao(activos, membros))} dos membros · ${inteiro(inactivos)} inactivos`} />
+              <Indicador rotulo="Santa Ceia" valor={ceias.length} icone={Wine} aCarregar={aCarregar || qs.isPending}
+                nota={ceias.length ? `${inteiro(participantesCeia)} participantes · média ${inteiro(Math.round(participantesCeia / ceias.length))}` : `nenhuma registada · ${intervalo.rotulo}`} />
               <Indicador rotulo="Fidelidade contributiva" valor={textoPct(razao(contribuintes, membrosComTes))} icone={HeartHandshake} tom="info" aCarregar={aCarregar}
                 nota={`${inteiro(contribuintes)} de ${inteiro(membrosComTes)} membros contribuíram · ${intervalo.rotulo}`} />
             </div>

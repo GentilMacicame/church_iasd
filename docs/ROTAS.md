@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 481 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 488 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -48,6 +48,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/responsaveis-actividade/{id}` | ResponsaveisActividadeController · alterar | `actividades.actividade_responsavel.alterar` |
 | POST | `/v1/actividades/responsaveis-actividade/{id}/reactivar` | ResponsaveisActividadeController · reactivar | `actividades.actividade_responsavel.terminar` |
 | POST | `/v1/actividades/responsaveis-actividade/{id}/terminar` | ResponsaveisActividadeController · terminar | `actividades.actividade_responsavel.terminar` |
+| GET | `/v1/actividades/santa-ceia-historico` | RelatoriosActividadesController · santaCeiaHistorico | `actividades.santa_ceia.ler` |
+| GET | `/v1/actividades/santas-ceias` | SantasCeiasController · listar | `actividades.santa_ceia.ler` |
+| POST | `/v1/actividades/santas-ceias` | SantasCeiasController · criar | `actividades.santa_ceia.criar` |
+| GET | `/v1/actividades/santas-ceias/{id}` | SantasCeiasController · obter | `actividades.santa_ceia.ler` |
+| PATCH | `/v1/actividades/santas-ceias/{id}` | SantasCeiasController · alterar | `actividades.santa_ceia.alterar` |
+| POST | `/v1/actividades/santas-ceias/{id}/reactivar` | SantasCeiasController · reactivar | `actividades.santa_ceia.terminar` |
+| POST | `/v1/actividades/santas-ceias/{id}/terminar` | SantasCeiasController · terminar | `actividades.santa_ceia.terminar` |
 
 ## auth
 

@@ -11,7 +11,7 @@ import {
   Bell, Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, SignOut as PhSignOut, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -93,6 +93,7 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/actividades', rotulo: 'Programa anual', icone: PhCalendarStar, permissao: 'actividades.actividade.ler', fim: false },
       { para: '/escalas', rotulo: t.nav.escalas, icone: PhCalendarDots, permissao: 'actividades.escala_plano.ler', fim: false },
+      { para: '/santa-ceia', rotulo: 'Santa Ceia', icone: PhWine, permissao: 'actividades.santa_ceia.ler', fim: true },
     ],
   },
   {
@@ -267,6 +268,7 @@ function Caminho() {
     if (pathname === '/escola-sabatina/visitantes') partes.push({ rotulo: t.es.visitantes })
   }
   if (pathname.startsWith('/comunicados')) partes.push({ rotulo: 'Comunicados' })
+  if (pathname.startsWith('/santa-ceia')) partes.push({ rotulo: t.nav.actividades }, { rotulo: 'Santa Ceia' })
   if (pathname.startsWith('/actividades')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: 'Programa anual', para: '/actividades' })
     if (/^\/actividades\/\d+/.test(pathname)) partes.push({ rotulo: 'Actividade' })

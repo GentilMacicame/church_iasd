@@ -37,6 +37,8 @@ public class RelatoriosActividadesController extends BaseRelatoriosController {
             "esc_igr_id = ?", "esc_data, esc_funcao");
     public static final Relatorio ESCALA_GRELHA = Relatorio.porIgreja("actividades.vw_escala_grelha",
             "igreja_id = ?", "plano_id, data").comFiltro("planoId", "plano_id");
+    public static final Relatorio SANTA_CEIA = Relatorio.porIgreja("actividades.vw_santa_ceia", "igreja_id = ?", "data DESC, igreja")
+            .comAnoMes("ano", null);
     public static final Relatorio PROGRAMA = Relatorio.porIgreja("actividades.vw_actividades_execucao",
             "igreja_id = ?", "data_inicio, nome").comAnoMes("ano", "mes");
 
@@ -51,6 +53,13 @@ public class RelatoriosActividadesController extends BaseRelatoriosController {
     @Path(Rotas.Actividades.ESCALA_GRELHA)
     public Response escalaGrelha() throws SQLException {
         return responder(ESCALA_GRELHA);
+    }
+
+    /** V39: as celebrações da Santa Ceia (?igrejaId=, ?ano=) com os participantes. */
+    @GET
+    @Path(Rotas.Actividades.SANTA_CEIA_HISTORICO)
+    public Response santaCeiaHistorico() throws SQLException {
+        return responder(SANTA_CEIA);
     }
 
     /** V34: o programa anual (?ano=, ?mes=) com o previsto e o executado de cada actividade. */

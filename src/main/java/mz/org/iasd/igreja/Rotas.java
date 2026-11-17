@@ -529,6 +529,12 @@ public final class Rotas {
         /** MateriaisController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String MATERIAIS = "/v1/actividades/materiais";
 
+        /** SantasCeiasController · rotas-padrão (V39): Santa Ceia, agendamento e participantes */
+        public static final String SANTAS_CEIAS = "/v1/actividades/santas-ceias";
+
+        /** GET /v1/actividades/santa-ceia-historico?igrejaId=&amp;ano=  (RelatoriosActividadesController, V39) */
+        public static final String SANTA_CEIA_HISTORICO = "santa-ceia-historico";
+
         /** ResponsaveisActividadeController · rotas-padrão (V34): outros responsáveis de uma actividade */
         public static final String RESPONSAVEIS_ACTIVIDADE = "/v1/actividades/responsaveis-actividade";
 

@@ -246,6 +246,11 @@ src/
   comparativo: membros, activos, inactivos, % activos, dízimos, ofertas, reavivamento, fidelidade, entradas e perdas de
   membros, saldo e por depositar. Fundos da igreja: novo tipo "Obra de reavivamento".
 
+- **Santa Ceia** (V39, menu Actividades › Santa Ceia, `features/santa-ceia/`): a próxima celebração, celebrações e média
+  de participantes no ano, a última comparada com a anterior, aviso das que falta registar, gráfico dos participantes
+  (homens, mulheres, visitantes) e o histórico em tabela; agendar (data, hora, local, responsável, observações), registar
+  os participantes, editar e cancelar. No Início, a próxima e a última; no painel geral, celebrações e participantes no período.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

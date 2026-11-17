@@ -1,0 +1,42 @@
+1. secretário (autorizado): agenda a Santa Ceia e regista uma já realizada
+  stc_data  | stc_estado 
+------------+------------
+ 2099-01-03 | AGENDADA
+(1 row)
+
+  stc_data  | stc_estado 
+------------+------------
+ 2026-10-03 | REALIZADA
+(1 row)
+
+2. regras: realizada sem números, data futura como realizada, números negativos, duas no mesmo dia, responsável de outra igreja
+psql:database/tests/25_santa_ceia.sql:18: ERROR:  new row for relation "santa_ceia" violates check constraint "chk_stc_realizada"
+psql:database/tests/25_santa_ceia.sql:19: ERROR:  Só se marca como realizada depois do dia da Santa Ceia
+psql:database/tests/25_santa_ceia.sql:20: ERROR:  new row for relation "santa_ceia" violates check constraint "chk_stc_numeros"
+psql:database/tests/25_santa_ceia.sql:21: ERROR:  duplicate key value violates unique constraint "uq_stc_igr_id_data"
+psql:database/tests/25_santa_ceia.sql:22: ERROR:  O responsável tem de ser membro desta igreja
+3. histórico com o total de participantes
+             igreja              |    data    |  estado   |  responsavel  | homens | mulheres | visitantes | total 
+---------------------------------+------------+-----------+---------------+--------+----------+------------+-------
+ Igreja Adventista do Sétimo Dia | 2026-10-03 | REALIZADA |               |     30 |       45 |          6 |    81
+ Igreja Adventista do Sétimo Dia | 2099-01-03 | AGENDADA  | Paulo Mabjaia |        |          |            |     0
+(2 rows)
+
+4. director de departamento: lê, mas não agenda
+ ve 
+----
+  2
+(1 row)
+
+psql:database/tests/25_santa_ceia.sql:31: ERROR:  new row violates row-level security policy for table "santa_ceia"
+5. tesoureiro da igreja 1 e da igreja 2: não vêem
+ tesoureiro_1 
+--------------
+            0
+(1 row)
+
+ tesoureiro_2 
+--------------
+            0
+(1 row)
+

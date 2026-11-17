@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, HandCoins,
-  LayoutDashboard, Megaphone, Mic, Plus, Sprout, UserPlus, Users, Wallet,
+  LayoutDashboard, Megaphone, Mic, Plus, Wine, Sprout, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -25,6 +25,7 @@ import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso 
 import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos, useParticipacao } from '@/features/membros/api'
 import { emVigor as comunicadoEmVigor, useComunicados } from '@/features/comunicados/api'
+import { useHistoricoSantaCeia } from '@/features/santa-ceia/api'
 import { emVigor, usePlanos } from '@/features/escalas/api'
 import { useResumoMensal } from '@/features/tesouraria/api'
 import { useAlertas, type Alerta } from '@/features/alertas/loja'
@@ -423,6 +424,30 @@ function ComunicadosEmVigor() {
   )
 }
 
+/** V39: a próxima Santa Ceia agendada e os participantes da última (só para quem a pode ler). */
+function SantaCeiaResumo() {
+  const { pode } = useSessao()
+  const ve = pode('actividades.santa_ceia.ler')
+  const q = useHistoricoSantaCeia(false, ve)
+  if (!ve || !q.data?.length) return null
+  const hoje = hojeIso()
+  const proxima = [...q.data].filter((s) => s.estado === 'AGENDADA' && s.data >= hoje).sort((a, b) => a.data.localeCompare(b.data))[0]
+  const ultima = [...q.data].filter((s) => s.estado === 'REALIZADA').sort((a, b) => b.data.localeCompare(a.data))[0]
+  return (
+    <Cartao titulo="Santa Ceia" descricao="A próxima celebração e a participação na última" icone={Wine}
+      accoes={<Button asChild variant="ghost" size="sm"><Link to="/santa-ceia">{t.comum.verTodos}</Link></Button>}>
+      <dl className="grid grid-cols-2 gap-4 text-sm">
+        <div><dt className="text-muted-foreground">Próxima</dt>
+          <dd className="font-semibold capitalize">{proxima ? dataPorExtenso(proxima.data) : 'Nenhuma agendada'}</dd>
+          {proxima && <dd className="text-xs text-muted-foreground">{[proxima.hora, proxima.local].filter(Boolean).join(' · ')}</dd>}</div>
+        <div><dt className="text-muted-foreground">Última</dt>
+          <dd className="font-semibold">{ultima ? `${ultima.total} participantes` : 'Sem registo'}</dd>
+          {ultima && <dd className="text-xs text-muted-foreground">{ultima.homens} homens · {ultima.mulheres} mulheres · {ultima.visitantes} visitantes</dd>}</div>
+      </dl>
+    </Cartao>
+  )
+}
+
 /* ===================================================================== página */
 function Indicadores({ comTesouraria }: { comTesouraria: boolean }) {
   const { pode } = useSessao()
@@ -482,7 +507,10 @@ export default function PaginaInicio() {
       />
       <div className="grid gap-6">
         <Indicadores comTesouraria={comTesouraria} />
-        <ComunicadosEmVigor />
+        <div className="grid gap-6 lg:grid-cols-2 empty:hidden">
+          <ComunicadosEmVigor />
+          <SantaCeiaResumo />
+        </div>
 
         <div className="grid items-stretch gap-6 lg:grid-cols-12">
           <ListaAtencao />
