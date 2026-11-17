@@ -51,6 +51,17 @@ import mz.org.iasd.igreja.models.tipos.TipoMovimento;
  * @param bairro coluna {@code mem_bairro}
  * @param quarteirao coluna {@code mem_quarteirao}
  * @param numeroCasa Número da casa ou do talhão
+ * @param outroDocumento Outro documento além do principal (tipo e número, ex.: NUIT 400123456)
+ * @param exMembro Já foi membro da IASD (o baptismo anterior fica em baptismo, sem rebaptismo) (V33)
+ * @param enderecoPostal Endereço para correspondência (caixa postal, rua)
+ * @param codigoPostal coluna {@code mem_codigo_postal}
+ * @param localTrabalho Onde trabalha (empresa ou instituição)
+ * @param dataCasamento coluna {@code mem_data_casamento}
+ * @param conjugeMembroId Cônjuge que é membro (no sistema): liga os dois registos, sem criar outro (V33)
+ * @param nomeConjuge Nome do cônjuge que não está no sistema
+ * @param dependentes Número de dependentes a cargo
+ * @param religiaoAnterior coluna {@code mem_religiao_anterior}
+ * @param metodoConversao Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -116,6 +127,28 @@ public record Membro(
         String quarteirao,
         @ColunaBd(value = "mem_numero_casa", tipo = Tipo.TEXTO)
         String numeroCasa,
+        @ColunaBd(value = "mem_outro_documento", tipo = Tipo.TEXTO)
+        String outroDocumento,
+        @ColunaBd(value = "mem_ex_membro", tipo = Tipo.BOOLEANO, naoNula = true)
+        Boolean exMembro,
+        @ColunaBd(value = "mem_endereco_postal", tipo = Tipo.TEXTO)
+        String enderecoPostal,
+        @ColunaBd(value = "mem_codigo_postal", tipo = Tipo.TEXTO)
+        String codigoPostal,
+        @ColunaBd(value = "mem_local_trabalho", tipo = Tipo.TEXTO)
+        String localTrabalho,
+        @ColunaBd(value = "mem_data_casamento", tipo = Tipo.DATA)
+        LocalDate dataCasamento,
+        @ColunaBd(value = "mem_conjuge_mem_id", tipo = Tipo.INT)
+        Integer conjugeMembroId,
+        @ColunaBd(value = "mem_nome_conjuge", tipo = Tipo.TEXTO)
+        String nomeConjuge,
+        @ColunaBd(value = "mem_dependentes", tipo = Tipo.INT)
+        Integer dependentes,
+        @ColunaBd(value = "mem_religiao_anterior", tipo = Tipo.TEXTO)
+        String religiaoAnterior,
+        @ColunaBd(value = "mem_metodo_conversao", tipo = Tipo.TEXTO)
+        String metodoConversao,
         @ColunaBd(value = "mem_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoMembro estado,
         @ColunaBd(value = "mem_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

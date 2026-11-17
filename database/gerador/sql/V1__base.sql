@@ -48,7 +48,7 @@ CREATE TYPE nucleo.tipo_voto_t             AS ENUM ('ADMISSAO', 'TRANSFERENCIA',
                                                     'FINANCEIRO', 'OUTRO');
 CREATE TYPE nucleo.resultado_voto_t        AS ENUM ('APROVADO', 'REJEITADO', 'ADIADO');
 CREATE TYPE nucleo.estado_ponto_t          AS ENUM ('PENDENTE', 'APROVADO', 'REJEITADO', 'ADIADO', 'INFORMATIVO');
-CREATE TYPE nucleo.tipo_contacto_t         AS ENUM ('TELEFONE', 'EMAIL', 'WHATSAPP', 'OUTRO');
+CREATE TYPE nucleo.tipo_contacto_t         AS ENUM ('TELEFONE', 'EMAIL', 'WHATSAPP', 'OUTRO', 'TELEFONE_FIXO');
 CREATE TYPE nucleo.tipo_consentimento_t    AS ENUM ('DADOS_PESSOAIS', 'FOTOGRAFIAS', 'CONTACTO_SMS', 'CONTACTO_WHATSAPP', 'CONTACTO_EMAIL');
 CREATE TYPE nucleo.estado_transferencia_t  AS ENUM ('PEDIDA', 'CARTA_EMITIDA', 'CONCLUIDA', 'RECUSADA', 'EXPIRADA');
 CREATE TYPE nucleo.estado_actividade_t     AS ENUM ('PLANEADA', 'EM_CURSO', 'CONCLUIDA', 'CANCELADA');

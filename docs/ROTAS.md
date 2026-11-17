@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 454 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 464 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -13,6 +13,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/actividades/{id}` | ActividadesController · alterar | `actividades.actividade.alterar` |
 | POST | `/v1/actividades/actividades/{id}/reactivar` | ActividadesController · reactivar | `actividades.actividade.terminar` |
 | POST | `/v1/actividades/actividades/{id}/terminar` | ActividadesController · terminar | `actividades.actividade.terminar` |
+| GET | `/v1/actividades/conflitos` | RelatoriosActividadesController · conflitos | `actividades.actividade.ler` |
 | GET | `/v1/actividades/dias-escala` | DiasEscalaController · listar | `actividades.escala_dia.ler` |
 | POST | `/v1/actividades/dias-escala` | DiasEscalaController · criar | `actividades.escala_dia.criar` |
 | GET | `/v1/actividades/dias-escala/{id}` | DiasEscalaController · obter | `actividades.escala_dia.ler` |
@@ -40,6 +41,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/actividades/planos-escala/{id}/gerar-dias` | PlanosEscalaController · gerarDias | `actividades.escala_dia.criar` |
 | POST | `/v1/actividades/planos-escala/{id}/reactivar` | PlanosEscalaController · reactivar | `actividades.escala_plano.terminar` |
 | POST | `/v1/actividades/planos-escala/{id}/terminar` | PlanosEscalaController · terminar | `actividades.escala_plano.terminar` |
+| GET | `/v1/actividades/programa` | RelatoriosActividadesController · programa | `actividades.actividade.ler` |
+| GET | `/v1/actividades/responsaveis-actividade` | ResponsaveisActividadeController · listar | `actividades.actividade_responsavel.ler` |
+| POST | `/v1/actividades/responsaveis-actividade` | ResponsaveisActividadeController · criar | `actividades.actividade_responsavel.criar` |
+| GET | `/v1/actividades/responsaveis-actividade/{id}` | ResponsaveisActividadeController · obter | `actividades.actividade_responsavel.ler` |
+| PATCH | `/v1/actividades/responsaveis-actividade/{id}` | ResponsaveisActividadeController · alterar | `actividades.actividade_responsavel.alterar` |
+| POST | `/v1/actividades/responsaveis-actividade/{id}/reactivar` | ResponsaveisActividadeController · reactivar | `actividades.actividade_responsavel.terminar` |
+| POST | `/v1/actividades/responsaveis-actividade/{id}/terminar` | ResponsaveisActividadeController · terminar | `actividades.actividade_responsavel.terminar` |
 
 ## auth
 
@@ -285,6 +293,8 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | GET | `/v1/secretaria/membros` | MembrosController · listar | `secretaria.membro.ler` |
 | POST | `/v1/secretaria/membros` | MembrosController · criar | `secretaria.membro.criar` |
 | GET | `/v1/secretaria/membros-basico` | RelatoriosSecretariaController · membrosBasico | `secretaria.membro.ler` |
+| GET | `/v1/secretaria/membros-lista` | RelatoriosSecretariaController · membrosLista | `secretaria.membro.ler` |
+| GET | `/v1/secretaria/membros-parecidos` | RelatoriosSecretariaController · membrosParecidos | `secretaria.membro.ler (só compara com os membros que o utilizador vê)` |
 | GET | `/v1/secretaria/membros/{id}` | MembrosController · obter | `secretaria.membro.ler` |
 | PATCH | `/v1/secretaria/membros/{id}` | MembrosController · alterar | `secretaria.membro.alterar` |
 | POST | `/v1/secretaria/membros/{id}/reactivar` | MembrosController · reactivar | `secretaria.membro.terminar` |

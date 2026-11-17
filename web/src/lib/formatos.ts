@@ -26,6 +26,27 @@ export function dataCompleta(iso: string): string {
   return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric', timeZone: FUSO }).format(paraData(iso))
 }
 
+/** 09:30 (hora de Maputo) */
+export function hora(iso?: string | null): string {
+  if (!iso) return '—'
+  return new Intl.DateTimeFormat(LOCALE, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: FUSO }).format(new Date(iso))
+}
+
+/** Data-hora da API → data (aaaa-mm-dd) e hora (hh:mm) em Maputo, para os campos de formulário. */
+export function partesMaputo(iso?: string | null): { data: string; hora: string } {
+  if (!iso) return { data: '', hora: '' }
+  const d = new Date(iso)
+  return {
+    data: new Intl.DateTimeFormat('en-CA', { timeZone: FUSO }).format(d),
+    hora: new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: FUSO }).format(d),
+  }
+}
+
+/** Data (aaaa-mm-dd) e hora (hh:mm) de Maputo → ISO 8601 com fuso (Moçambique: +02:00, sem hora de Verão). */
+export function isoMaputo(dataIso: string, horaHm: string): string {
+  return `${dataIso}T${horaHm || '00:00'}:00+02:00`
+}
+
 /** Hoje em Maputo, em ISO (2026-11-10). */
 export function hojeIso(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO }).format(new Date())

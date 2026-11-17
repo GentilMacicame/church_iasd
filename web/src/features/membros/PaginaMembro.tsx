@@ -5,8 +5,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Cake, CalendarCheck, Check, Church, Droplets, IdCard, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil, Phone, Plus,
-  Star, UserX,
+  ArrowLeft, Briefcase, Cake, CalendarCheck, Check, Church, Droplets, Heart, IdCard, Mail, MapPin, MessageCircle, MoreHorizontal, Pencil,
+  Phone, Plus, Smartphone, Star, UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -22,9 +22,14 @@ import { PilulasMembro } from './PaginaMembros'
 import { DialogoBaptismo, DialogoContacto } from './Dialogos'
 import { CartaoLivro } from '@/features/livro/MovimentosMembro'
 import { CartaoConsentimentos } from '@/features/secretaria/Consentimentos'
-import { useBaptismos, useContactos, useMembro, useTerminarMembro, useValidarMembro, type Membro } from './api'
+import {
+  useBaptismos, useCargosDoMembro, useContactos, useMatriculasDoMembro, useMembro, useMembrosBasicos, useTerminarMembro, useValidarMembro,
+  type Membro,
+} from './api'
+import { useCargos } from '@/features/conselho/api'
+import { useClasses } from '@/features/escola-sabatina/api'
 
-const ICONE_CONTACTO = { TELEFONE: Phone, WHATSAPP: MessageCircle, EMAIL: Mail, OUTRO: Phone } as const
+const ICONE_CONTACTO = { TELEFONE: Smartphone, TELEFONE_FIXO: Phone, WHATSAPP: MessageCircle, EMAIL: Mail, OUTRO: Phone } as const
 
 function Voltar() {
   return (
@@ -105,18 +110,31 @@ function Grelha({ titulo, children }: { titulo?: string; children: React.ReactNo
 }
 
 function Ficha({ m }: { m: Membro }) {
+  const basicos = useMembrosBasicos()
   const doc = m.tipoIdentificacao ? `${rotulos.tipoIdentificacao[m.tipoIdentificacao]}${m.numeroIdentificacao ? ` · ${m.numeroIdentificacao}` : ''}` : m.numeroIdentificacao
+  const conjuge = m.conjugeMembroId ? basicos.data?.find((b) => b.id === m.conjugeMembroId) : undefined
   return (
     <div className="grid gap-6 lg:col-span-8">
-      <Cartao titulo="Dados pessoais" descricao="Identificação, documento e filiação" icone={IdCard}>
+      <Cartao titulo="Dados pessoais" descricao="Identificação e documentos" icone={IdCard}>
+        <Grelha>
+          <Campo rotulo={t.ficha.dataNascimento}>{m.dataNascimento && data(m.dataNascimento)}</Campo>
+          <Campo rotulo={t.ficha.sexo}>{m.sexo && rotulos.sexo[m.sexo]}</Campo>
+          <Campo rotulo="Local de nascimento">{m.naturalidade}</Campo>
+          <Campo rotulo={t.ficha.nacionalidade}>{m.nacionalidade}</Campo>
+          <Campo rotulo={t.ficha.tipoIdentificacao}>{doc}</Campo>
+          <Campo rotulo={t.ficha.outroDocumento}>{m.outroDocumento}</Campo>
+        </Grelha>
+      </Cartao>
+      <Cartao titulo="Dados familiares" descricao="Estado civil, cônjuge e filiação" icone={Heart}>
         <div className="grid gap-5">
           <Grelha>
-            <Campo rotulo={t.ficha.dataNascimento}>{m.dataNascimento && data(m.dataNascimento)}</Campo>
-            <Campo rotulo={t.ficha.sexo}>{m.sexo && rotulos.sexo[m.sexo]}</Campo>
             <Campo rotulo={t.ficha.estadoCivil}>{m.estadoCivil && rotulos.estadoCivil[m.estadoCivil]}</Campo>
-            <Campo rotulo={t.ficha.tipoIdentificacao}>{doc}</Campo>
-            <Campo rotulo={t.ficha.nacionalidade}>{m.nacionalidade}</Campo>
-            <Campo rotulo={t.ficha.naturalidade}>{m.naturalidade}</Campo>
+            <Campo rotulo={t.ficha.dataCasamento}>{m.dataCasamento && data(m.dataCasamento)}</Campo>
+            <Campo rotulo="Cônjuge">
+              {conjuge ? <Link to={`/membros/${conjuge.id}`} className="font-medium text-primary hover:underline">{conjuge.nome} {conjuge.apelido}</Link>
+                : m.conjugeMembroId ? 'Membro de outra igreja' : m.nomeConjuge}
+            </Campo>
+            <Campo rotulo={t.ficha.dependentes}>{m.dependentes != null ? String(m.dependentes) : null}</Campo>
           </Grelha>
           <Grelha titulo={t.ficha.filiacao}>
             <Campo rotulo={t.ficha.nomePai}>{m.nomePai}</Campo>
@@ -124,29 +142,64 @@ function Ficha({ m }: { m: Membro }) {
           </Grelha>
         </div>
       </Cartao>
-      <Cartao titulo="Morada e família" descricao="Onde vive, profissão e escolaridade" icone={MapPin}>
-        <div className="grid gap-5">
-          <Grelha>
-            <Campo rotulo={t.ficha.provincia}>{m.provincia}</Campo>
-            <Campo rotulo={t.ficha.cidadeDistrito}>{m.cidadeDistrito}</Campo>
-            <Campo rotulo={t.ficha.bairro}>{m.bairro}</Campo>
-            <Campo rotulo={`${t.ficha.quarteirao} · ${t.ficha.numeroCasa}`}>{[m.quarteirao, m.numeroCasa].filter(Boolean).join(' · ')}</Campo>
-            <Campo rotulo={t.ficha.morada}>{m.morada}</Campo>
-          </Grelha>
-          <Grelha titulo={t.ficha.vida}>
-            <Campo rotulo={t.ficha.profissao}>{m.profissao}</Campo>
-            <Campo rotulo={t.ficha.escolaridade}>{m.escolaridade && rotulos.escolaridade[m.escolaridade]}</Campo>
-          </Grelha>
-        </div>
-      </Cartao>
-      <Cartao titulo={t.ficha.igreja} descricao="Entrada no livro de membros e aprovação do registo" icone={Church}>
+      <Cartao titulo="Residência" descricao="Onde vive e endereço postal" icone={MapPin}>
         <Grelha>
-          <Campo rotulo={t.ficha.dataEntrada}>{m.dataEntrada && data(m.dataEntrada)}</Campo>
-          <Campo rotulo={t.ficha.modoEntrada}>{m.modoEntrada && rotulos.modoEntrada[m.modoEntrada]}</Campo>
-          <Campo rotulo={t.ficha.validacao}>{m.validacao && rotulos.validacao[m.validacao]}</Campo>
+          <Campo rotulo={t.ficha.provincia}>{m.provincia}</Campo>
+          <Campo rotulo={t.ficha.cidadeDistrito}>{m.cidadeDistrito}</Campo>
+          <Campo rotulo={t.ficha.bairro}>{m.bairro}</Campo>
+          <Campo rotulo={`${t.ficha.quarteirao} · ${t.ficha.numeroCasa}`}>{[m.quarteirao, m.numeroCasa].filter(Boolean).join(' · ')}</Campo>
+          <Campo rotulo={t.ficha.morada}>{m.morada}</Campo>
+          <Campo rotulo={t.ficha.enderecoPostal}>{[m.enderecoPostal, m.codigoPostal].filter(Boolean).join(' · ')}</Campo>
         </Grelha>
       </Cartao>
+      <Cartao titulo="Profissão, estudos e conversão" icone={Briefcase}>
+        <Grelha>
+          <Campo rotulo={t.ficha.profissao}>{m.profissao}</Campo>
+          <Campo rotulo={t.ficha.localTrabalho}>{m.localTrabalho}</Campo>
+          <Campo rotulo="Nível académico">{m.escolaridade && rotulos.escolaridade[m.escolaridade]}</Campo>
+          <Campo rotulo={t.ficha.religiaoAnterior}>{m.religiaoAnterior}</Campo>
+          <Campo rotulo={t.ficha.metodoConversao}>{m.metodoConversao}</Campo>
+          <Campo rotulo="Ex-membro">{m.exMembro ? 'Sim (rebaptizado)' : null}</Campo>
+        </Grelha>
+      </Cartao>
+      <Participacao m={m} />
     </div>
+  )
+}
+
+/** Participação na igreja: entrada no livro, cargos (mandatos) e classe da Escola Sabatina, lidos dos respectivos módulos. */
+function Participacao({ m }: { m: Membro }) {
+  const { pode, igreja } = useSessao()
+  const veCargos = pode('secretaria.oficial.ler')
+  const veClasse = pode('escola_sabatina.matricula.ler')
+  const oficiais = useCargosDoMembro(m.id, m.igrejaId, veCargos)
+  const cargos = useCargos()
+  const matriculas = useMatriculasDoMembro(m.id, veClasse)
+  const classes = useClasses()
+  const hoje = new Date().toISOString().slice(0, 10)
+  const actuais = (oficiais.data ?? []).filter((o) => !o.dataFim || o.dataFim >= hoje)
+  const nomeCargo = (id?: number | null) => cargos.data?.find((c) => c.id === id)?.nome ?? 'Cargo'
+  const matricula = (matriculas.data ?? []).find((x) => !x.dataSaida)
+  const classe = matricula ? classes.data?.find((c) => c.id === matricula.classeId) : undefined
+  return (
+    <Cartao titulo="Participação na igreja" descricao="Entrada no livro de membros, cargos e Escola Sabatina" icone={Church}>
+      <Grelha>
+        <Campo rotulo="Igreja ou grupo">{igreja?.nome}</Campo>
+        <Campo rotulo={t.ficha.dataEntrada}>{m.dataEntrada && data(m.dataEntrada)}</Campo>
+        <Campo rotulo={t.ficha.modoEntrada}>{m.modoEntrada && rotulos.modoEntrada[m.modoEntrada]}</Campo>
+        <Campo rotulo={t.ficha.validacao}>{m.validacao && rotulos.validacao[m.validacao]}</Campo>
+        {veCargos && (
+          <Campo rotulo="Cargos actuais">
+            {actuais.length ? actuais.map((o) => `${nomeCargo(o.cargoId)}${o.fimPrevisto ? ` (até ${data(o.fimPrevisto)})` : ''}`).join(' · ') : null}
+          </Campo>
+        )}
+        {veClasse && (
+          <Campo rotulo="Classe da Escola Sabatina">
+            {classe ? `${classe.nome}${matricula?.dataEntrada ? ` · desde ${data(matricula.dataEntrada)}` : ''}` : null}
+          </Campo>
+        )}
+      </Grelha>
+    </Cartao>
   )
 }
 

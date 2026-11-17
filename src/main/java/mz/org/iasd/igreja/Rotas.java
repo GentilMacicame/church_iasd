@@ -220,6 +220,12 @@ public final class Rotas {
         /** GET /v1/secretaria/membros-basico  (RelatoriosSecretariaController.membrosBasico) */
         public static final String MEMBROS_BASICO = "membros-basico";
 
+        /** GET /v1/secretaria/membros-lista  (RelatoriosSecretariaController.membrosLista, V33: exportar) */
+        public static final String MEMBROS_LISTA = "membros-lista";
+
+        /** GET /v1/secretaria/membros-parecidos  (RelatoriosSecretariaController.membrosParecidos, V33) */
+        public static final String MEMBROS_PARECIDOS = "membros-parecidos";
+
         /** GET /v1/secretaria/conselho  (RelatoriosSecretariaController.conselho) */
         public static final String CONSELHO = "conselho";
 
@@ -503,6 +509,9 @@ public final class Rotas {
         /** MateriaisController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String MATERIAIS = "/v1/actividades/materiais";
 
+        /** ResponsaveisActividadeController · rotas-padrão (V34): outros responsáveis de uma actividade */
+        public static final String RESPONSAVEIS_ACTIVIDADE = "/v1/actividades/responsaveis-actividade";
+
         /** PlanosEscalaController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String PLANOS_ESCALA = "/v1/actividades/planos-escala";
 
@@ -520,5 +529,11 @@ public final class Rotas {
 
         /** GET /v1/actividades/escala-grelha?planoId=  (RelatoriosActividadesController.escalaGrelha) */
         public static final String ESCALA_GRELHA = "escala-grelha";
+
+        /** GET /v1/actividades/programa?igrejaId=&amp;ano=  (RelatoriosActividadesController.programa, V34) */
+        public static final String PROGRAMA = "programa";
+
+        /** GET /v1/actividades/conflitos?igrejaId=&amp;inicio=&amp;fim=  (RelatoriosActividadesController.conflitos, V34) */
+        public static final String CONFLITOS = "conflitos";
     }
 }

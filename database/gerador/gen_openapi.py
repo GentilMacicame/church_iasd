@@ -305,6 +305,24 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
                      ('extractos-por-reconciliar', 'vw_extrato_por_reconciliar', 'tesouraria.extrato_linha.ler')]:
     rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual', 'contribuicoes') else ())
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
+rel('/v1/secretaria/membros-lista', 'secretaria.vw_membros_lista', SEC, 'secretaria.membro.ler')   # V33: exportar
+# V33: registos parecidos (possíveis duplicados) antes de registar ou ao editar; só avisa, não bloqueia
+PARECIDO = obj(['membroId', 'igrejaId', 'nome', 'pontos', 'motivos'], membroId=I, igrejaId=I, nome=STR,
+               dataNascimento={**D, 'nullable': True}, naturalidade={**STR, 'nullable': True},
+               numeroIdentificacao={**STR, 'nullable': True}, estado=ref('EnumEstadoMembro'),
+               pontos={'type': 'integer', 'description': 'Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável'},
+               motivos={'type': 'array', 'items': STR})
+paths['/v1/secretaria/membros-parecidos'] = {'get': op(
+    'Membros parecidos (possíveis duplicados)', SEC, 'secretaria.membro.ler (só compara com os membros que o utilizador vê)',
+    operationId='membrosParecidos', **{'x-funcao-bd': 'nucleo.fn_membros_parecidos'},
+    description='Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.',
+    parameters=[{'name': 'nome', 'in': 'query', 'required': True, 'schema': STR},
+                {'name': 'apelido', 'in': 'query', 'required': True, 'schema': STR},
+                {'name': 'dataNascimento', 'in': 'query', 'schema': D},
+                {'name': 'naturalidade', 'in': 'query', 'schema': STR},
+                {'name': 'numeroIdentificacao', 'in': 'query', 'schema': STR},
+                {'name': 'excluirId', 'in': 'query', 'description': 'O próprio membro, ao editar', 'schema': I}],
+    responses=resp('200', {'type': 'array', 'items': PARECIDO}))}
 rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
 rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')
 rel('/v1/tesouraria/mpesa-pendentes', 'tesouraria.vw_mpesa_pendentes', PAG, 'tesouraria.pagamento_mpesa.ler')
@@ -317,6 +335,22 @@ acao('/v1/actividades/planos-escala/{id}/gerar-dias', 'Elaborar a escala: um dia
      obj([], diaSemana={'type': 'integer', 'minimum': 1, 'maximum': 7, 'description': '1 = segunda … 7 = domingo; por defeito 6 (sábado)'}),
      obj(['criados'], criados=I), 'actividades.fn_gerar_dias_escala', code='201')
 rel('/v1/actividades/escalas-proximas', 'actividades.vw_escala_proximas', 'Actividades e escalas', 'actividades.escala.ler')
+# V34: programa anual com a execução financeira e conflitos de calendário
+rel('/v1/actividades/programa', 'actividades.vw_actividades_execucao', TITULO['actividades'], 'actividades.actividade.ler', ANO)
+DT_N = {**DT, 'nullable': True}
+CONFLITO = obj(['actividadeId', 'nome', 'departamento', 'dataInicio'], actividadeId=I, nome=STR, departamento=STR,
+               dataInicio=DT, dataFim=DT_N, local={**STR, 'nullable': True})
+paths['/v1/actividades/conflitos'] = {'get': op(
+    'Conflitos de calendário de uma actividade', TITULO['actividades'], 'actividades.actividade.ler',
+    operationId='conflitosActividade', **{'x-funcao-bd': 'actividades.fn_conflitos_actividade, actividades.fn_datas_alternativas'},
+    description='Actividades da igreja (não canceladas) que se sobrepõem ao horário e os dias seguintes livres, à mesma hora. '
+                'Só informa: a actividade pode gravar-se com conflito, se quem a regista confirmar. Sem fim, conta 2 horas.',
+    parameters=[{'name': 'igrejaId', 'in': 'query', 'required': True, 'schema': I},
+                {'name': 'inicio', 'in': 'query', 'required': True, 'schema': DT},
+                {'name': 'fim', 'in': 'query', 'schema': DT},
+                {'name': 'excluirId', 'in': 'query', 'description': 'A própria actividade, ao editar', 'schema': I}],
+    responses=resp('200', obj(['conflitos', 'alternativas'], conflitos={'type': 'array', 'items': CONFLITO},
+                              alternativas={'type': 'array', 'items': obj(['dataInicio'], dataInicio=DT, dataFim=DT_N)})))}
 
 doc = {
  'openapi': '3.0.3',

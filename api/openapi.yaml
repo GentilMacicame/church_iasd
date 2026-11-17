@@ -253,6 +253,101 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/conflitos:
+    get:
+      summary: Conflitos de calendário de uma actividade
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade.ler
+      operationId: conflitosActividade
+      x-funcao-bd: actividades.fn_conflitos_actividade, actividades.fn_datas_alternativas
+      description: 'Actividades da igreja (não canceladas) que se sobrepõem ao horário e os dias seguintes livres, à mesma hora. Só informa: a
+        actividade pode gravar-se com conflito, se quem a regista confirmar. Sem fim, conta 2 horas.'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: inicio
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: fim
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: excluirId
+        in: query
+        description: A própria actividade, ao editar
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - conflitos
+                - alternativas
+                properties:
+                  conflitos:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - actividadeId
+                      - nome
+                      - departamento
+                      - dataInicio
+                      properties:
+                        actividadeId:
+                          type: integer
+                        nome:
+                          type: string
+                        departamento:
+                          type: string
+                        dataInicio:
+                          type: string
+                          format: date-time
+                        dataFim:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        local:
+                          type: string
+                          nullable: true
+                  alternativas:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - dataInicio
+                      properties:
+                        dataInicio:
+                          type: string
+                          format: date-time
+                        dataFim:
+                          type: string
+                          format: date-time
+                          nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/actividades/dias-escala:
     get:
       summary: 'Dias escala: listar'
@@ -1283,6 +1378,270 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscalaPlano'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programa:
+    get:
+      summary: 'Relatório: Programa'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade.ler
+      operationId: relVActividadesPrograma
+      description: Lido da vista actividades.vw_actividades_execucao.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: ano
+        in: query
+        schema:
+          type: integer
+      - name: mes
+        in: query
+        schema:
+          type: integer
+      x-vista: actividades.vw_actividades_execucao
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/responsaveis-actividade:
+    get:
+      summary: 'Responsaveis actividade: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.ler
+      operationId: listarActividadeResponsavel
+      description: Responsáveis de uma actividade, além do principal, e a função de cada um (V34)
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: actividadeId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ActividadeResponsavel'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Responsaveis actividade: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.criar
+      operationId: criarActividadeResponsavel
+      description: Responsáveis de uma actividade, além do principal, e a função de cada um (V34)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ActividadeResponsavel'
+              required:
+              - actividadeId
+              - membroId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadeResponsavel'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/responsaveis-actividade/{id}:
+    get:
+      summary: 'Responsaveis actividade: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.ler
+      operationId: lerActividadeResponsavel
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadeResponsavel'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Responsaveis actividade: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.alterar
+      operationId: alterarActividadeResponsavel
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActividadeResponsavel'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadeResponsavel'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/responsaveis-actividade/{id}/reactivar:
+    post:
+      summary: 'Responsaveis actividade: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.terminar
+      operationId: reactivarActividadeResponsavel
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadeResponsavel'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/responsaveis-actividade/{id}/terminar:
+    post:
+      summary: 'Responsaveis actividade: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.actividade_responsavel.terminar
+      operationId: terminarActividadeResponsavel
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadeResponsavel'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -9182,6 +9541,10 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/EnumEscolaridade'
+      - name: conjugeMembroId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -9291,6 +9654,141 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/membros-lista:
+    get:
+      summary: 'Relatório: Membros lista'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.membro.ler
+      operationId: relVSecretariaMembrosLista
+      description: Lido da vista secretaria.vw_membros_lista.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      x-vista: secretaria.vw_membros_lista
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/membros-parecidos:
+    get:
+      summary: Membros parecidos (possíveis duplicados)
+      tags:
+      - Secretaria
+      x-permissao: secretaria.membro.ler (só compara com os membros que o utilizador vê)
+      operationId: membrosParecidos
+      x-funcao-bd: nucleo.fn_membros_parecidos
+      description: 'Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.'
+      parameters:
+      - name: nome
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: apelido
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: dataNascimento
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: naturalidade
+        in: query
+        schema:
+          type: string
+      - name: numeroIdentificacao
+        in: query
+        schema:
+          type: string
+      - name: excluirId
+        in: query
+        description: O próprio membro, ao editar
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - membroId
+                  - igrejaId
+                  - nome
+                  - pontos
+                  - motivos
+                  properties:
+                    membroId:
+                      type: integer
+                    igrejaId:
+                      type: integer
+                    nome:
+                      type: string
+                    dataNascimento:
+                      type: string
+                      format: date
+                      nullable: true
+                    naturalidade:
+                      type: string
+                      nullable: true
+                    numeroIdentificacao:
+                      type: string
+                      nullable: true
+                    estado:
+                      $ref: '#/components/schemas/EnumEstadoMembro'
+                    pontos:
+                      type: integer
+                      description: Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável
+                    motivos:
+                      type: array
+                      items:
+                        type: string
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -17330,6 +17828,9 @@ components:
           type: string
           pattern: ^-?\d{1,14}(\.\d{1,2})?$
           example: '650.00'
+        objectivos:
+          type: string
+          description: O que a actividade pretende alcançar (V34)
         estado:
           $ref: '#/components/schemas/EnumEstadoActividade'
         criadoEm:
@@ -17357,6 +17858,54 @@ components:
       - departamentoIgrejaId
       - nome
       - dataInicio
+    ActividadeResponsavel:
+      type: object
+      description: Responsáveis de uma actividade, além do principal, e a função de cada um (V34)
+      x-tabela: actividades.actividade_responsavel
+      x-prefixo: acr
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        actividadeId:
+          type: integer
+          format: int32
+          description: → actividades.actividade
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        funcao:
+          type: string
+          maxLength: 100
+          description: 'Ex.: coordenação, logística, programa, finanças'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - actividadeId
+      - membroId
     Alvo:
       type: object
       description: Alvos de arrecadação por fundo
@@ -18660,6 +19209,7 @@ components:
       - EMAIL
       - WHATSAPP
       - OUTRO
+      - TELEFONE_FIXO
     EnumTipoDocumento:
       type: string
       enum:
@@ -19575,6 +20125,45 @@ components:
           type: string
           maxLength: 20
           description: Número da casa ou do talhão
+        outroDocumento:
+          type: string
+          maxLength: 100
+          description: 'Outro documento além do principal (tipo e número, ex.: NUIT 400123456)'
+        exMembro:
+          type: boolean
+          description: Já foi membro da IASD (o baptismo anterior fica em baptismo, sem rebaptismo) (V33)
+        enderecoPostal:
+          type: string
+          maxLength: 150
+          description: Endereço para correspondência (caixa postal, rua)
+        codigoPostal:
+          type: string
+          maxLength: 20
+        localTrabalho:
+          type: string
+          maxLength: 150
+          description: Onde trabalha (empresa ou instituição)
+        dataCasamento:
+          type: string
+          format: date
+        conjugeMembroId:
+          type: integer
+          format: int32
+          description: '→ secretaria.membro · Cônjuge que é membro (no sistema): liga os dois registos, sem criar outro (V33)'
+        nomeConjuge:
+          type: string
+          maxLength: 150
+          description: Nome do cônjuge que não está no sistema
+        dependentes:
+          type: integer
+          description: Número de dependentes a cargo
+        religiaoAnterior:
+          type: string
+          maxLength: 100
+        metodoConversao:
+          type: string
+          maxLength: 100
+          description: Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...)
         estado:
           $ref: '#/components/schemas/EnumEstadoMembro'
         criadoEm:

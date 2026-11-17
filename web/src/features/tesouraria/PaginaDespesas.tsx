@@ -188,7 +188,10 @@ const esquemaPedir = z.object({
   fundoId: z.string().min(1, t.comum.obrigatorio),
 })
 
-function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boolean) => void }) {
+/** Pedir uma despesa; vinda da ficha de uma actividade, fica ligada a ela e ao departamento (execução da actividade). */
+export function DialogoPedir({ aberto, aoMudar, actividade }: {
+  aberto: boolean; aoMudar: (v: boolean) => void; actividade?: { id: number; departamentoIgrejaId: number; nome: string }
+}) {
   const igreja = useIgreja()
   const { usuario } = useSessao()
   const fundos = useFundos()
@@ -221,6 +224,7 @@ function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boole
       await pedir.mutateAsync({
         igrejaId: igreja.id, descricao: v.descricao, fornecedor: v.fornecedor || undefined, valorSolicitado: v.valor,
         categoriaId: Number(v.categoriaId), outraCategoria: outra ? v.outraCategoria : undefined, fundoId: Number(v.fundoId), solicitadoPorUsuarioId: usuario!.id,
+        actividadeId: actividade?.id, departamentoIgrejaId: actividade?.departamentoIgrejaId,
       } as never)
       toast.success('Despesa pedida. Outra pessoa com permissão decide.')
       aoMudar(false)
@@ -234,7 +238,7 @@ function DialogoPedir({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v: boole
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Pedir despesa</DialogTitle>
-          <DialogDescription>O pedido fica por decidir até um ancião, o pastor ou a comissão o aprovar.</DialogDescription>
+          <DialogDescription>{actividade ? `Para a actividade «${actividade.nome}». ` : ''}O pedido fica por decidir até um ancião, o pastor ou a comissão o aprovar.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />

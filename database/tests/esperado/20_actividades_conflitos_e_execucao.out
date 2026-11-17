@@ -1,0 +1,82 @@
+1. director do departamento (autorizado): regista a actividade com objectivos e material
+       act_nome        |        act_objectivos         
+-----------------------+-------------------------------
+ Acampamento de jovens | Formar 30 jovens em liderança
+(1 row)
+
+2. outros responsáveis: um membro da igreja entra; um de outra igreja é recusado; o mesmo duas vezes também
+ acr_mem_id | acr_funcao 
+------------+------------
+        961 | Logística
+(1 row)
+
+psql:database/tests/20_actividades_conflitos_e_execucao.sql:25: ERROR:  O responsável tem de ser membro da igreja da actividade
+psql:database/tests/20_actividades_conflitos_e_execucao.sql:27: ERROR:  duplicate key value violates unique constraint "uq_acr_act_id_mem_id"
+3. conflito: outra actividade às 10:00 do mesmo dia sobrepõe-se ao acampamento
+         nome          |   departamento   |   inicio    
+-----------------------+------------------+-------------
+ Acampamento de jovens | Ministério Jovem | 05/12 09:00
+(1 row)
+
+   datas livres sugeridas (dias seguintes, à mesma hora)
+   inicio    |  fim  
+-------------+-------
+ 06/12 10:00 | 11:00
+ 07/12 10:00 | 11:00
+ 08/12 10:00 | 11:00
+(3 rows)
+
+   à tarde não há conflito; sem hora de fim conta 2 horas (11:30 ainda conflitua)
+ conflitos_tarde 
+-----------------
+               0
+(1 row)
+
+ conflitos_sem_fim 
+-------------------
+                 1
+(1 row)
+
+   o conflito só avisa: a segunda actividade grava-se na mesma (quem a regista confirma)
+    act_nome    
+----------------
+ Ensaio do coro
+(1 row)
+
+   ao editar o acampamento, não conflitua consigo próprio (só com o ensaio)
+      nome      
+----------------
+ Ensaio do coro
+(1 row)
+
+   cancelada deixa de contar
+ conflitos 
+-----------
+         0
+(1 row)
+
+4. programa anual e execução: previsto, material, despesas e executado
+         nome          |   departamento   | ano  | mes |  estado   | responsavel | outros_responsaveis | valor_previsto | material_previsto | despesas_aprovadas | executado 
+-----------------------+------------------+------+-----+-----------+-------------+---------------------+----------------+-------------------+--------------------+-----------
+ Acampamento de jovens | Ministério Jovem | 2026 |  12 | PLANEADA  |             |                   1 |        5000.00 |           1500.00 |               0.00 |      0.00
+ Ensaio do coro        | Ministério Jovem | 2026 |  12 | CANCELADA |             |                   0 |           0.00 |              0.00 |               0.00 |      0.00
+(2 rows)
+
+5. tesoureiro da igreja 1 (lê actividades, não gere responsáveis): vê o programa, não acrescenta responsáveis
+ actividades_no_programa 
+-------------------------
+                       2
+(1 row)
+
+psql:database/tests/20_actividades_conflitos_e_execucao.sql:58: ERROR:  new row violates row-level security policy for table "actividade_responsavel"
+6. tesoureiro da igreja 2: não vê as actividades da igreja 1 nem os seus conflitos
+ actividades_no_programa 
+-------------------------
+                       0
+(1 row)
+
+ conflitos 
+-----------
+         0
+(1 row)
+

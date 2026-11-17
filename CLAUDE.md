@@ -12,8 +12,8 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 66 tabelas, 6 schemas, migrações V1–V32 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (320 caminhos, 446 operações) |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 67 tabelas, 6 schemas, migrações V1–V34 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (334 caminhos, 464 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, mandatos com conselho e direcção, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V32 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V34 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–18 (tem de dar 19× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–20 (tem de dar 21× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -87,7 +87,7 @@ diff: um `ERROR` que desapareceu é quase sempre uma regra partida.
    ```
    Sem isto a base não devolve linhas e recusa escritas. Implementado **uma vez** em
    `bd/ExecutorTransaccao` + `@Transaccional` (interceptor CDI), nunca em cada endpoint. Nunca `set_config(..., false)` na API.
-5. **Migrações aplicadas não se editam.** Alteração = nova migração `V33__...sql`, `V34__...`.
+5. **Migrações aplicadas não se editam.** Alteração = nova migração `V35__...sql`, `V36__...`.
 6. **SQL só parametrizado.** Nenhum texto do pedido concatenado em SQL (JDBC `PreparedStatement` com `?`).
 7. **Segredos fora do código** (`.env`, nunca commitado).
 
@@ -259,6 +259,16 @@ Nunca devolver stack traces nem SQL ao cliente.
   pode haver remessa complementar no mesmo mês) e envia-se o relatório mensal com os recibos.
   Membros que pagam directamente na conta da Missão: entrada na conta marcada com `cfi_ent_id` (só entradas, só fundos
   da Missão, com a referência do comprovativo); conta como contribuição e como já remetido, não como saldo da igreja.
+- Ficha do membro (V33): cônjuge por `mem_conjuge_mem_id` (ligação recíproca feita pela base; quem já está ligado a outro
+  não pode ser escolhido; `mem_nome_conjuge` só para quem não está no sistema). O baptismo anterior de um ex-membro é a
+  linha de `baptismo` sem rebaptismo. Contacto `TELEFONE` = telemóvel (recebe SMS); `TELEFONE_FIXO` não recebe.
+  Possíveis duplicados: `nucleo.fn_membros_parecidos` (`GET /v1/secretaria/membros-parecidos`) só avisa, não bloqueia.
+- Actividades (V34): responsáveis além do principal em `actividade_responsavel` (membro da mesma igreja); conflitos de
+  calendário com `actividades.fn_conflitos_actividade` / `fn_datas_alternativas` (`GET /v1/actividades/conflitos`): só
+  avisam, a actividade grava-se se quem regista confirmar; programa anual e execução (previsto, material, despesas,
+  saídas confirmadas) na vista `vw_actividades_execucao` (`GET /v1/actividades/programa?ano=`).
+- Colunas de vistas: a API tira o prefixo de 3 letras (`act_id` → `id`, `igr_id` → `id`!). Numa vista com mais de um
+  id, dê nomes sem prefixo (`igreja_id`, `departamento_igreja_id`), senão os campos sobrepõem-se no JSON.
 - Conselho e reuniões: os cargos do conselho (`car_conselho`) e a duração dos mandatos da igreja (`igr_mandato_anos`);
   o fim previsto de cada mandato é calculado (`ofi_fim_previsto`); vista `vw_conselho`. Mandatos (V31, `secretaria.mandato`,
   `/v1/secretaria/mandatos`): período com duração; mandatos activos da mesma igreja não se sobrepõem; cada oficial pertence a um
@@ -281,7 +291,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 19× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 21× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

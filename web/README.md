@@ -198,6 +198,32 @@ src/
   Associação, distrito pastoral e nome. O pastor do distrito vê só as igrejas do seu distrito (a base de dados decide:
   vistas V30 `security_invoker`).
 
+- **Ficha do membro completa** (F-SEC-01, V33): formulário em 6 secções (dados pessoais, familiares, contactos e
+  residência, profissão e estudos, religião e baptismo, participação) e a revisão. Novos: outro documento, ex-membro com a
+  data do baptismo anterior (o actual fica como rebaptismo), endereço e código postal, local de trabalho, casamento e
+  cônjuge (escolhido entre os membros: os dois registos ficam ligados; senão, o nome), dependentes, religião anterior e
+  como conheceu a mensagem. Telemóvel, telefone fixo e e-mail editam-se no formulário (mudar guarda o anterior no
+  histórico); o baptismo também (data, igreja, local, ministro). Campos condicionais escondem-se mas não se apagam.
+  Validação do BI (12 algarismos e uma letra), passaporte, telefones e e-mail. **Possíveis duplicados**: enquanto se
+  escreve, a API devolve os registos parecidos (mesmo documento; nome e data/local de nascimento); os prováveis pedem
+  "Conferi: é outra pessoa" antes de gravar, nada é bloqueado. Ficha com cônjuge (ligação), cargos actuais e classe da
+  Escola Sabatina. Lista com filtros por sexo e estado civil e "Exportar" (PDF/CSV de `membros-lista`).
+- **Mandatos em tabelas**: no mandato escolhido (actual, a terminar ou terminado: o histórico fica na linha dos mandatos),
+  separadores Conselho da igreja, Direcção e Todos os oficiais, cada um uma tabela (membro, cargo, órgão, início, término,
+  estado, acções: ver a ficha, passar de órgão, corrigir datas, terminar antes do fim). Oficiais sem mandato também em tabela.
+- **Membros sem família** em destaque (o cartão inteiro na cor de aviso, `Indicador destaque`) em Famílias e no Início;
+  no cartão Membros do Início, os activos por estado civil (casados, solteiros, viúvos, viúvas, ...), cada um abre a lista filtrada.
+
+- **Actividades e programa anual** (F-ACT, V34; menu Actividades › Programa anual, `features/actividades/`): o programa
+  do ano mês a mês (data, hora, actividade, departamento, responsável, estado, previsto, executado), com filtros por
+  departamento e estado, total previsto/executado e "Exportar"; separador Por departamento (actividades, concluídas,
+  previsto, executado, % de execução; activar outro departamento na igreja). Nova/editar actividade com objectivos,
+  datas e horas (pode terminar noutro dia), local, responsável principal e orçamento: antes de gravar procura **conflitos
+  de calendário** na igreja e, havendo, mostra as actividades envolvidas, os dias livres seguintes à mesma hora (um clique
+  muda a data) e "Gravar mesmo assim". Ficha da actividade: iniciar, concluir, cancelar; objectivos; responsáveis com a
+  função; material (orçamento detalhado); despesas pedidas para a actividade ("Pedir despesa" liga-a à actividade e ao
+  departamento; decide-se na tesouraria) e a execução (saídas confirmadas, barra e aviso se passar o previsto).
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

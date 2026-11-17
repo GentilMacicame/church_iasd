@@ -17,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,9 @@ import mz.org.iasd.igreja.services.tesouraria.TransacoesService;
 import mz.org.iasd.igreja.infraestrutura.ficheiros.ArmazemFicheiros;
 import mz.org.iasd.igreja.models.catalogo.Catalogo;
 import mz.org.iasd.igreja.repositories.base.TabelaRepository;
+import mz.org.iasd.igreja.repositories.secretaria.MembrosParecidosRepository;
+import mz.org.iasd.igreja.repositories.actividades.ConflitosRepository;
+import mz.org.iasd.igreja.controllers.actividades.RelatoriosActividadesController;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Segredos;
 import mz.org.iasd.igreja.infraestrutura.seguranca.Senhas;
 import mz.org.iasd.igreja.infraestrutura.tarefas.TarefasAgendadas;
@@ -830,6 +834,155 @@ class BaseDadosTest {
     void pesquisaDeMembrosPorNome() throws Exception {
         ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.listar(c, Catalogo.de(Membro.class),
                 Map.of("igrejaId", Integer.toString(igrejaCentral), "q", "silva")));
+    }
+
+    // ------------------------------------------------------------------ V33: ficha completa, cônjuge e parecidos
+
+    @Test
+    void fichaCompletaConjugeEParecidosComPerfis() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v33@teste.mz", null, "SECRETARIO");
+        int semPerfil = criarUsuarioComDono("membro.v33@teste.mz", null, "MEMBRO");
+        int rosa;
+        int albino;
+        int carlos;
+        try (Connection dono = ligarComoDono()) {
+            rosa = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido, mem_data_nascimento, "
+                    + "mem_tipo_identificacao, mem_numero_identificacao) VALUES (" + igrejaCentral
+                    + ", 'Rosa', 'Macuácua', '1985-04-12', 'BI', '120300400500B') RETURNING mem_id");
+            albino = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES ("
+                    + igrejaCentral + ", 'Albino', 'Tembe') RETURNING mem_id");
+            carlos = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES ("
+                    + igrejaCentral + ", 'Carlos', 'Sitoe') RETURNING mem_id");
+        }
+        var membro = Catalogo.de(Membro.class);
+
+        // parecidos: o secretário vê a Rosa pelo nome + data de nascimento, e pelo documento escrito de outra forma
+        JsonArray porNome = ExecutorTransaccao.executar(api, secretario, c -> MembrosParecidosRepository.procurar(c,
+                new MembrosParecidosRepository.Pedido("Rosa", "Macuacua", java.sql.Date.valueOf("1985-04-12"), null, null, null)));
+        assertEquals(1, porNome.size());
+        assertEquals(rosa, porNome.getJsonObject(0).getInt("membroId"));
+        assertTrue(porNome.getJsonObject(0).getInt("pontos") >= 70);
+        assertTrue(porNome.getJsonObject(0).getJsonArray("motivos").getString(1).contains("data de nascimento"));
+        JsonArray porDocumento = ExecutorTransaccao.executar(api, secretario, c -> MembrosParecidosRepository.procurar(c,
+                new MembrosParecidosRepository.Pedido("Outra", "Pessoa", null, null, "1203 0040 0500-b", null)));
+        assertEquals(100, porDocumento.getJsonObject(0).getInt("pontos"));
+        // a editar a própria Rosa não aparece ela mesma
+        assertEquals(0, ExecutorTransaccao.executar(api, secretario, c -> MembrosParecidosRepository.procurar(c,
+                new MembrosParecidosRepository.Pedido("Rosa", "Macuácua", java.sql.Date.valueOf("1985-04-12"), null, null, rosa))).size());
+        // sem perfil na igreja: não vê nenhum membro, nem como parecido
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> MembrosParecidosRepository.procurar(c,
+                new MembrosParecidosRepository.Pedido("Rosa", "Macuacua", java.sql.Date.valueOf("1985-04-12"), null, null, null))).size());
+
+        // campos novos e cônjuge pela API genérica: ligar a Rosa ao Albino liga o Albino à Rosa
+        JsonObject alterada = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, membro, rosa,
+                Json.createObjectBuilder().add("estadoCivil", "CASADO").add("dataCasamento", "2010-06-05")
+                        .add("conjugeMembroId", albino).add("exMembro", true).add("localTrabalho", "Hospital da Machava")
+                        .add("dependentes", 2).build()));
+        assertEquals(albino, alterada.getInt("conjugeMembroId"));
+        assertTrue(alterada.getBoolean("exMembro"));
+        JsonObject doAlbino = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.obterOu404(c, membro, albino));
+        assertEquals(rosa, doAlbino.getInt("conjugeMembroId"));
+
+        // a Rosa já está ligada: o Carlos não a pode escolher → 422 com a frase da base de dados
+        SQLException ligada = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                c -> TabelaRepository.alterar(c, membro, carlos, Json.createObjectBuilder().add("conjugeMembroId", rosa).build())));
+        TradutorErrosSql.Traducao t = TradutorErrosSql.traduzir(ligada);
+        assertEquals(422, t.estadoHttp());
+        assertTrue(t.mensagem().startsWith("Rosa Macuácua já está ligado(a) a outro cônjuge"), t.mensagem());
+
+        // dependentes fora do intervalo → 422 com a frase da restrição, no campo certo
+        var frases = ExecutorTransaccao.executar(api, null, c -> {
+            Map<String, String> m = new java.util.HashMap<>();
+            try (PreparedStatement ps = c.prepareStatement("SELECT nome, mensagem FROM nucleo.fn_mensagens_restricoes()");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    m.put(rs.getString(1), rs.getString(2));
+                }
+            }
+            return m;
+        });
+        MensagensRestricoes.definir(frases);
+        try {
+            SQLException dependentes = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario,
+                    c -> TabelaRepository.alterar(c, membro, carlos, Json.createObjectBuilder().add("dependentes", 99).build())));
+            TradutorErrosSql.Traducao td = TradutorErrosSql.traduzir(dependentes);
+            assertEquals("dependentes", td.campo());
+            assertEquals("O número de dependentes tem de estar entre 0 e 50.", td.mensagem());
+        } finally {
+            MensagensRestricoes.definir(Map.of());
+        }
+
+        // o tesoureiro lê a ficha mas não a altera → 403
+        ApiException naoAltera = assertThrows(ApiException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, membro, rosa, Json.createObjectBuilder().add("localTrabalho", "X").build())));
+        assertEquals(403, naoAltera.estadoHttp());
+
+        // a lista para exportar tem a Rosa, com o estado civil
+        JsonArray lista = ExecutorTransaccao.executar(api, secretario, c -> RelatoriosSecretariaController.MEMBROS_LISTA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral))));
+        assertTrue(lista.stream().map(JsonValue::asJsonObject)
+                .anyMatch(o -> "Rosa Macuácua".equals(o.getString("nome")) && "CASADO".equals(o.getString("estadoCivil"))));
+    }
+
+    // ------------------------------------------------------------------ V34: actividades, responsáveis, conflitos
+
+    @Test
+    void actividadesComResponsaveisConflitosEProgramaComPerfis() throws Exception {
+        int director = criarUsuarioComDono("director.v34@teste.mz", null, "DIRECTOR_DEPARTAMENTO");
+        int semPerfil = criarUsuarioComDono("membro.v34@teste.mz", null, "MEMBRO");
+        int departamento;
+        int joana;
+        int deFora;
+        try (Connection dono = ligarComoDono()) {
+            departamento = inserir(dono, "INSERT INTO organizacao.igreja_departamento (ide_igr_id, ide_dep_id) SELECT " + igrejaCentral
+                    + ", dep_id FROM organizacao.departamento ORDER BY dep_id LIMIT 1 RETURNING ide_id");
+            joana = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral
+                    + ", 'Joana', 'Mucavel') RETURNING mem_id");
+            deFora = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaBairro
+                    + ", 'Pedro', 'Nhaca') RETURNING mem_id");
+        }
+        var actividade = Catalogo.de(mz.org.iasd.igreja.models.actividades.Actividade.class);
+        var responsavel = Catalogo.de(mz.org.iasd.igreja.models.actividades.ActividadeResponsavel.class);
+        OffsetDateTime inicio = OffsetDateTime.parse("2027-03-06T09:00:00+02:00");
+
+        JsonObject criada = ExecutorTransaccao.executar(api, director, c -> TabelaRepository.criar(c, actividade,
+                Json.createObjectBuilder().add("departamentoIgrejaId", departamento).add("nome", "Semana de oração jovem")
+                        .add("dataInicio", inicio.toString()).add("dataFim", inicio.plusHours(3).toString())
+                        .add("valorPrevisto", "2500.00").add("objectivos", "Reavivar os jovens").build()));
+        int act = criada.getInt("id");
+        assertEquals("Reavivar os jovens", criada.getString("objectivos"));
+
+        // responsáveis: da igreja entra; de outra igreja → 422 com a frase da base
+        ExecutorTransaccao.executar(api, director, c -> TabelaRepository.criar(c, responsavel,
+                Json.createObjectBuilder().add("actividadeId", act).add("membroId", joana).add("funcao", "Programa").build()));
+        SQLException fora = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, director, c -> TabelaRepository.criar(c,
+                responsavel, Json.createObjectBuilder().add("actividadeId", act).add("membroId", deFora).build())));
+        assertEquals("O responsável tem de ser membro da igreja da actividade", TradutorErrosSql.traduzir(fora).mensagem());
+        // o tesoureiro não gere responsáveis → 403
+        SQLException tesoureiroNao = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c,
+                responsavel, Json.createObjectBuilder().add("actividadeId", act).add("membroId", joana).add("funcao", "X").build())));
+        assertEquals(403, TradutorErrosSql.traduzir(tesoureiroNao).estadoHttp());
+
+        // conflito às 10:00 do mesmo dia, com 3 datas livres sugeridas; editar a própria não conflitua consigo
+        JsonObject r = ExecutorTransaccao.executar(api, director, c -> ConflitosRepository.procurar(c, igrejaCentral,
+                inicio.plusHours(1), inicio.plusHours(2), null));
+        assertEquals(1, r.getJsonArray("conflitos").size());
+        assertEquals("Semana de oração jovem", r.getJsonArray("conflitos").getJsonObject(0).getString("nome"));
+        assertEquals(3, r.getJsonArray("alternativas").size());
+        assertEquals(0, ExecutorTransaccao.executar(api, director, c -> ConflitosRepository.procurar(c, igrejaCentral,
+                inicio, inicio.plusHours(3), act)).getJsonArray("conflitos").size());
+        // sem perfil: não vê a actividade, nem como conflito
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> ConflitosRepository.procurar(c, igrejaCentral,
+                inicio.plusHours(1), null, null)).getJsonArray("conflitos").size());
+
+        // programa anual: o director vê a actividade com o previsto; quem não tem perfil não vê nada
+        JsonArray programa = ExecutorTransaccao.executar(api, director, c -> RelatoriosActividadesController.PROGRAMA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral), "ano", "2027")));
+        JsonObject linha = programa.stream().map(JsonValue::asJsonObject).filter(o -> o.getInt("id") == act).findFirst().orElseThrow();
+        assertEquals("2500.00", linha.getString("valorPrevisto"));
+        assertEquals(1, linha.getInt("outrosResponsaveis"));
+        assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> RelatoriosActividadesController.PROGRAMA
+                .consultar(c, Map.of("igrejaId", Integer.toString(igrejaCentral)))).size());
     }
 
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS

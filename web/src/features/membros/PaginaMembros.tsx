@@ -10,10 +10,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
-import { useSessao } from '@/auth/sessao'
+import { useIgreja, useSessao } from '@/auth/sessao'
+import { Seleccao } from '@/components/comum/Seleccao'
+import { Exportar } from '@/components/comum/Exportar'
 import { f, rotulos, t } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
-import { useContagemPorAprovar, useListaMembros, useMembrosBasicos, type EstadoMembro, type Membro } from './api'
+import { useContagemPorAprovar, useListaMembros, useMembrosBasicos, type EstadoMembro, type FiltrosMembros, type Membro } from './api'
 import { ControlosPaginacao, usePaginacao } from '@/components/comum/Paginacao'
 
 const OUTROS_ESTADOS: EstadoMembro[] = ['TRANSFERIDO', 'FALECIDO', 'REMOVIDO', 'DESAPARECIDO']
@@ -88,6 +90,7 @@ function LinhaLista({ m }: { m: Membro }) {
 
 export default function PaginaMembros() {
   const { pode } = useSessao()
+  const igreja = useIgreja()
   const [params, setParams] = useSearchParams()
   const estado = (params.get('estado') as EstadoMembro | null) ?? undefined
   const soPorAprovar = params.get('validacao') === 'PENDENTE'
@@ -102,9 +105,19 @@ export default function PaginaMembros() {
     }, { replace: true })
   }, [q, setParams])
 
+  const sexo = (params.get('sexo') as 'M' | 'F' | null) ?? undefined
+  const estadoCivil = (params.get('estadoCivil') as FiltrosMembros['estadoCivil'] | null) ?? undefined
+  /** Filtros que se juntam aos indicadores (sexo, estado civil): ficam no endereço, para partilhar e voltar. */
+  const mudarFiltro = (chave: 'sexo' | 'estadoCivil', valor: string) =>
+    setParams((p) => {
+      const n = new URLSearchParams(p)
+      if (valor) n.set(chave, valor); else n.delete(chave)
+      return n
+    }, { replace: true })
+
   const basicos = useMembrosBasicos()
   const porAprovar = useContagemPorAprovar()
-  const lista = useListaMembros({ q, estado, validacao: soPorAprovar ? 'PENDENTE' : undefined })
+  const lista = useListaMembros({ q, estado, validacao: soPorAprovar ? 'PENDENTE' : undefined, sexo, estadoCivil })
 
   const contagens = useMemo(() => {
     const c: Record<string, number> = {}
@@ -115,7 +128,8 @@ export default function PaginaMembros() {
   const saidas = OUTROS_ESTADOS.reduce((s, e) => s + (contagens[e] ?? 0), 0)
   const membros = (lista.data?.pages.flatMap((p) => p.dados) ?? []) as Membro[]
   const pag = usePaginacao(membros)
-  const totalFiltro = !q && !soPorAprovar ? (estado ? contagens[estado] ?? 0 : total) : null
+  const totalFiltro = !q && !soPorAprovar && !sexo && !estadoCivil ? (estado ? contagens[estado] ?? 0 : total) : null
+  const comFiltros = !!(q || estado || soPorAprovar || sexo || estadoCivil)
 
   /** Um filtro de cada vez: estado OU "por aprovar". */
   const filtrar = (fl: { estado?: EstadoMembro; validacao?: string }) =>
@@ -134,9 +148,14 @@ export default function PaginaMembros() {
         icone={Users}
         titulo={t.membros.titulo}
         descricao="Livro de membros da igreja: interessados, membros activos e saídas"
-        accoes={pode('secretaria.membro.criar') && (
-          <Button asChild className="alvo"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
-        )}
+        accoes={
+          <>
+            <Exportar caminho="/v1/secretaria/membros-lista" query={{ igrejaId: igreja.id }} nome={`membros-${igreja.nome}`} />
+            {pode('secretaria.membro.criar') && (
+              <Button asChild className="alvo"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
+            )}
+          </>
+        }
       />
 
       {basicos.isError ? <EstadoErro erro={basicos.error} aoTentar={() => basicos.refetch()} className="mb-6" /> : (
@@ -164,6 +183,16 @@ export default function PaginaMembros() {
             <Input type="search" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={t.membros.pesquisar}
               aria-label={t.membros.pesquisar} className="alvo h-9 pl-9" />
           </div>
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto">
+            <Seleccao value={sexo ?? ''} onChange={(e) => mudarFiltro('sexo', e.target.value)} aria-label="Filtrar por sexo" className="h-9 sm:w-36">
+              <option value="">Sexo: todos</option>
+              {Object.entries(rotulos.sexo).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+            </Seleccao>
+            <Seleccao value={estadoCivil ?? ''} onChange={(e) => mudarFiltro('estadoCivil', e.target.value)} aria-label="Filtrar por estado civil" className="h-9 sm:w-44">
+              <option value="">Estado civil: todos</option>
+              {Object.entries(rotulos.estadoCivil).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+            </Seleccao>
+          </div>
           {filtroActivo && (
             <button type="button" onClick={() => filtrar({})} aria-label={`Limpar filtro ${filtroActivo}`}
               className="alvo inline-flex h-8 items-center gap-1.5 rounded-md border bg-secondary px-2.5 text-xs font-medium text-secondary-foreground hover:bg-muted">
@@ -183,11 +212,11 @@ export default function PaginaMembros() {
         {lista.isPending ? <LinhasACarregar linhas={6} />
           : lista.isError ? <EstadoErro erro={lista.error} aoTentar={() => lista.refetch()} className="m-4" />
           : membros.length === 0 ? (
-            <EstadoVazio icone={Users} titulo={q || estado || soPorAprovar ? 'Sem resultados' : 'Sem membros'}
-              accao={!q && !estado && !soPorAprovar && pode('secretaria.membro.criar') && (
+            <EstadoVazio icone={Users} titulo={comFiltros ? 'Sem resultados' : 'Sem membros'}
+              accao={!comFiltros && pode('secretaria.membro.criar') && (
                 <Button asChild size="sm"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
               )}>
-              {q || estado || soPorAprovar ? t.membros.nenhumFiltro : t.membros.nenhum}
+              {comFiltros ? t.membros.nenhumFiltro : t.membros.nenhum}
             </EstadoVazio>
           ) : (
             <>

@@ -29,6 +29,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoActividade;
  * @param dataFim coluna {@code act_data_fim}
  * @param dataHoraLembrete coluna {@code act_data_hora_lembrete}
  * @param valorPrevisto coluna {@code act_valor_previsto} — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
+ * @param objectivos O que a actividade pretende alcançar (V34)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -58,6 +59,8 @@ public record Actividade(
         OffsetDateTime dataHoraLembrete,
         @ColunaBd(value = "act_valor_previsto", tipo = Tipo.DINHEIRO, naoNula = true)
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal valorPrevisto,
+        @ColunaBd(value = "act_objectivos", tipo = Tipo.TEXTO)
+        String objectivos,
         @ColunaBd(value = "act_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoActividade estado,
         @ColunaBd(value = "act_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

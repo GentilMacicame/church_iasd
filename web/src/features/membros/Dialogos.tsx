@@ -18,9 +18,9 @@ import { useCriarBaptismo, useCriarContacto, type Contacto } from './api'
 type TipoContacto = NonNullable<Contacto['tipo']>
 
 const esquemaContacto = z
-  .object({ tipo: z.enum(['TELEFONE', 'WHATSAPP', 'EMAIL', 'OUTRO']), valor: z.string().trim().min(1, t.comum.obrigatorio), principal: z.boolean() })
+  .object({ tipo: z.enum(['TELEFONE', 'TELEFONE_FIXO', 'WHATSAPP', 'EMAIL', 'OUTRO']), valor: z.string().trim().min(1, t.comum.obrigatorio), principal: z.boolean() })
   .superRefine((v, ctx) => {
-    if ((v.tipo === 'TELEFONE' || v.tipo === 'WHATSAPP') && !/^\+?\d[\d\s]{7,16}$/.test(v.valor)) {
+    if ((v.tipo === 'TELEFONE' || v.tipo === 'TELEFONE_FIXO' || v.tipo === 'WHATSAPP') && !/^\+?\d[\d\s]{7,16}$/.test(v.valor)) {
       ctx.addIssue({ code: 'custom', path: ['valor'], message: 'Escreva o número com o indicativo, por exemplo +258 84 123 4567' })
     }
     if (v.tipo === 'EMAIL' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.valor)) {
@@ -53,14 +53,14 @@ export function DialogoContacto({ membroId, igrejaId, gatilho, primeiro }: { mem
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.contactos.adicionar}</DialogTitle>
-          <DialogDescription>O telefone principal recebe os lembretes das escalas por SMS.</DialogDescription>
+          <DialogDescription>O telemóvel principal recebe os lembretes das escalas e os recibos por SMS; o telefone fixo não recebe SMS.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <CampoFormulario rotulo={t.contactos.tipo} erro={e.tipo?.message}>
             {(p) => (
               <Seleccao {...p} {...form.register('tipo')}>
-                {(['TELEFONE', 'WHATSAPP', 'EMAIL', 'OUTRO'] as const).map((k) => <option key={k} value={k}>{rotulos.tipoContacto[k]}</option>)}
+                {(['TELEFONE', 'TELEFONE_FIXO', 'WHATSAPP', 'EMAIL', 'OUTRO'] as const).map((k) => <option key={k} value={k}>{rotulos.tipoContacto[k]}</option>)}
               </Seleccao>
             )}
           </CampoFormulario>

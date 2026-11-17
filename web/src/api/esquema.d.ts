@@ -89,6 +89,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/actividades/conflitos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Conflitos de calendário de uma actividade
+         * @description Actividades da igreja (não canceladas) que se sobrepõem ao horário e os dias seguintes livres, à mesma hora. Só informa: a actividade pode gravar-se com conflito, se quem a regista confirmar. Sem fim, conta 2 horas.
+         */
+        get: operations["conflitosActividade"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/actividades/dias-escala": {
         parameters: {
             query?: never;
@@ -480,6 +500,111 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarEscalaPlano"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Programa
+         * @description Lido da vista actividades.vw_actividades_execucao.
+         */
+        get: operations["relVActividadesPrograma"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/responsaveis-actividade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Responsaveis actividade: listar
+         * @description Responsáveis de uma actividade, além do principal, e a função de cada um (V34)
+         */
+        get: operations["listarActividadeResponsavel"];
+        put?: never;
+        /**
+         * Responsaveis actividade: criar
+         * @description Responsáveis de uma actividade, além do principal, e a função de cada um (V34)
+         */
+        post: operations["criarActividadeResponsavel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/responsaveis-actividade/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Responsaveis actividade: ler um */
+        get: operations["lerActividadeResponsavel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Responsaveis actividade: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarActividadeResponsavel"];
+        trace?: never;
+    };
+    "/v1/actividades/responsaveis-actividade/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Responsaveis actividade: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarActividadeResponsavel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/responsaveis-actividade/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Responsaveis actividade: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarActividadeResponsavel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3662,6 +3787,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/secretaria/membros-lista": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Membros lista
+         * @description Lido da vista secretaria.vw_membros_lista.
+         */
+        get: operations["relVSecretariaMembrosLista"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/membros-parecidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Membros parecidos (possíveis duplicados)
+         * @description Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.
+         */
+        get: operations["membrosParecidos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/secretaria/membros/{id}": {
         parameters: {
             query?: never;
@@ -6762,7 +6927,35 @@ export interface components {
             dataHoraLembrete?: string;
             /** @example 650.00 */
             valorPrevisto?: string;
+            /** @description O que a actividade pretende alcançar (V34) */
+            objectivos?: string;
             estado?: components["schemas"]["EnumEstadoActividade"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Responsáveis de uma actividade, além do principal, e a função de cada um (V34) */
+        ActividadeResponsavel: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → actividades.actividade
+             */
+            actividadeId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro
+             */
+            membroId?: number;
+            /** @description Ex.: coordenação, logística, programa, finanças */
+            funcao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -7438,7 +7631,7 @@ export interface components {
         /** @enum {string} */
         EnumTipoConta: "MPESA" | "EMOLA" | "BANCO" | "CAIXA";
         /** @enum {string} */
-        EnumTipoContacto: "TELEFONE" | "EMAIL" | "WHATSAPP" | "OUTRO";
+        EnumTipoContacto: "TELEFONE" | "EMAIL" | "WHATSAPP" | "OUTRO" | "TELEFONE_FIXO";
         /** @enum {string} */
         EnumTipoDocumento: "FACTURA" | "RECIBO" | "COMPROVATIVO" | "EXTRACTO" | "OUTRO";
         /** @enum {string} */
@@ -7908,6 +8101,29 @@ export interface components {
             quarteirao?: string;
             /** @description Número da casa ou do talhão */
             numeroCasa?: string;
+            /** @description Outro documento além do principal (tipo e número, ex.: NUIT 400123456) */
+            outroDocumento?: string;
+            /** @description Já foi membro da IASD (o baptismo anterior fica em baptismo, sem rebaptismo) (V33) */
+            exMembro?: boolean;
+            /** @description Endereço para correspondência (caixa postal, rua) */
+            enderecoPostal?: string;
+            codigoPostal?: string;
+            /** @description Onde trabalha (empresa ou instituição) */
+            localTrabalho?: string;
+            /** Format: date */
+            dataCasamento?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Cônjuge que é membro (no sistema): liga os dois registos, sem criar outro (V33)
+             */
+            conjugeMembroId?: number;
+            /** @description Nome do cônjuge que não está no sistema */
+            nomeConjuge?: string;
+            /** @description Número de dependentes a cargo */
+            dependentes?: number;
+            religiaoAnterior?: string;
+            /** @description Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...) */
+            metodoConversao?: string;
             estado?: components["schemas"]["EnumEstadoMembro"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -9297,6 +9513,55 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    conflitosActividade: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                inicio: string;
+                fim?: string;
+                /** @description A própria actividade, ao editar */
+                excluirId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        conflitos: {
+                            actividadeId: number;
+                            nome: string;
+                            departamento: string;
+                            /** Format: date-time */
+                            dataInicio: string;
+                            /** Format: date-time */
+                            dataFim?: string | null;
+                            local?: string | null;
+                        }[];
+                        alternativas: {
+                            /** Format: date-time */
+                            dataInicio: string;
+                            /** Format: date-time */
+                            dataFim?: string | null;
+                        }[];
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarEscalaDia: {
         parameters: {
             query?: {
@@ -10135,6 +10400,222 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EscalaPlano"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVActividadesPrograma: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                ano?: number;
+                mes?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarActividadeResponsavel: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                actividadeId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ActividadeResponsavel"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarActividadeResponsavel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ActividadeResponsavel"], "actividadeId" | "membroId">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActividadeResponsavel"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerActividadeResponsavel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActividadeResponsavel"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarActividadeResponsavel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActividadeResponsavel"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActividadeResponsavel"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarActividadeResponsavel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActividadeResponsavel"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarActividadeResponsavel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActividadeResponsavel"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -16750,6 +17231,7 @@ export interface operations {
                 validadoPorUsuarioId?: number;
                 tipoIdentificacao?: components["schemas"]["EnumTipoIdentificacao"];
                 escolaridade?: components["schemas"]["EnumEscolaridade"];
+                conjugeMembroId?: number;
                 estado?: components["schemas"]["EnumEstadoMembro"];
                 /** @description Procura por nome ou apelido */
                 q?: string;
@@ -16829,6 +17311,81 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVSecretariaMembrosLista: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    membrosParecidos: {
+        parameters: {
+            query: {
+                nome: string;
+                apelido: string;
+                dataNascimento?: string;
+                naturalidade?: string;
+                numeroIdentificacao?: string;
+                /** @description O próprio membro, ao editar */
+                excluirId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        membroId: number;
+                        igrejaId: number;
+                        nome: string;
+                        /** Format: date */
+                        dataNascimento?: string | null;
+                        naturalidade?: string | null;
+                        numeroIdentificacao?: string | null;
+                        estado?: components["schemas"]["EnumEstadoMembro"];
+                        /** @description Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável */
+                        pontos: number;
+                        motivos: string[];
+                    }[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

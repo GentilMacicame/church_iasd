@@ -12,5 +12,6 @@ public enum TipoContacto {
     TELEFONE,
     EMAIL,
     WHATSAPP,
-    OUTRO
+    OUTRO,
+    TELEFONE_FIXO
 }

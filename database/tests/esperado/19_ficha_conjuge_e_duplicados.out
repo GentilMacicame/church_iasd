@@ -1,0 +1,102 @@
+1. secretário (autorizado): preenche os campos novos do Paulo
+ mem_ex_membro | mem_outro_documento |     mem_local_trabalho      | mem_dependentes | mem_metodo_conversao | mem_data_casamento 
+---------------+---------------------+-----------------------------+-----------------+----------------------+--------------------
+ t             | NUIT 400123456      | Escola Secundária da Matola |               3 | Estudo bíblico       | 1995-12-09
+(1 row)
+
+2. valores fora das regras: recusados (dependentes, casamento antes do nascimento, o próprio como cônjuge)
+psql:database/tests/19_ficha_conjuge_e_duplicados.sql:23: ERROR:  new row for relation "membro" violates check constraint "chk_mem_dependentes"
+psql:database/tests/19_ficha_conjuge_e_duplicados.sql:24: ERROR:  new row for relation "membro" violates check constraint "chk_mem_casamento"
+psql:database/tests/19_ficha_conjuge_e_duplicados.sql:25: ERROR:  new row for relation "membro" violates check constraint "chk_mem_conjuge"
+3. cônjuge: ligar o Paulo à Joana liga também a Joana ao Paulo (sem segundo registo)
+ mem_id | mem_conjuge_mem_id 
+--------+--------------------
+    960 |                961
+    961 |                960
+(2 rows)
+
+4. a Joana já está ligada: outro membro não a pode escolher como cônjuge
+psql:database/tests/19_ficha_conjuge_e_duplicados.sql:32: ERROR:  Joana Cumbe já está ligado(a) a outro cônjuge. Desligue primeiro esse registo.
+5. desligar de um lado desliga dos dois
+ mem_id | mem_conjuge_mem_id 
+--------+--------------------
+    960 |                   
+    961 |                   
+(2 rows)
+
+6. telefone fixo: novo tipo de contacto
+   cto_tipo    |    cto_valor    
+---------------+-----------------
+ TELEFONE_FIXO | +258 21 123 456
+(1 row)
+
+7. registos parecidos: mesmo documento (escrito com espaços), nome e data de nascimento
+    nome    | pontos |                           motivos                            
+------------+--------+--------------------------------------------------------------
+ Elisa Fumo |    140 | {"Mesmo número de documento","Nome igual ou muito parecido"}
+(1 row)
+
+     nome      | pontos |                           motivos                           
+---------------+--------+-------------------------------------------------------------
+ Paulo Mabjaia |     70 | {"Nome igual ou muito parecido","Mesma data de nascimento"}
+(1 row)
+
+   só o nome parecido: aparece como possível, não bloqueia nada
+     nome      | pontos |             motivos              
+---------------+--------+----------------------------------
+ Paulo Mabjaia |     40 | {"Nome igual ou muito parecido"}
+(1 row)
+
+   a editar o próprio registo: não se compara consigo
+ parecidos 
+-----------
+         0
+(1 row)
+
+   nada parecido
+ parecidos 
+-----------
+         0
+(1 row)
+
+8. a lista para exportar e a vista básica com os campos novos
+     nome      | estado_civil |   telemovel   | email 
+---------------+--------------+---------------+-------
+ Paulo Mabjaia | CASADO       | +258843330000 | 
+(1 row)
+
+ mem_estado_civil | mem_data_nascimento | mem_conjuge_mem_id 
+------------------+---------------------+--------------------
+ CASADO           | 1970-02-02          |                961
+(1 row)
+
+9. tesoureiro da igreja 1 (não autorizado a alterar): lê, mas não altera
+     mem_local_trabalho      
+-----------------------------
+ Escola Secundária da Matola
+(1 row)
+
+          continua           
+-----------------------------
+ Escola Secundária da Matola
+(1 row)
+
+10. tesoureiro da igreja 2: não vê o Paulo, nem como parecido nem na lista
+ parecidos 
+-----------
+         0
+(1 row)
+
+ na_lista 
+----------
+        0
+(1 row)
+
+11. a frase de cada restrição nova está no COMMENT (a API devolve-a)
+       conname       |                                    frase                                     
+---------------------+------------------------------------------------------------------------------
+ chk_mem_casamento   | [dataCasamento] A data do casamento tem de ser depois da data de nascimento.
+ chk_mem_conjuge     | [conjugeMembroId] O membro não pode ser o seu próprio cônjuge.
+ chk_mem_dependentes | [dependentes] O número de dependentes tem de estar entre 0 e 50.
+(3 rows)
+
