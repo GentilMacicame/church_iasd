@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, HandCoins,
+  ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, Flame, HandCoins, HeartHandshake,
   LayoutDashboard, Megaphone, Mic, Plus, Wine, Sprout, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -237,6 +237,63 @@ function useFinancas() {
   const total = contas.reduce((s, c) => s + centimos(c.saldo), 0)
   const n = resumo.entradas.length
   return { resumo, saldos, contas, total, entradasMes: resumo.entradas[n - 1] ?? 0, entradasAntes: resumo.entradas[n - 2] ?? 0, saidasMes: resumo.saidas[n - 1] ?? 0 }
+}
+
+/* ===================================================================== contribuições da igreja (dashboard, ponto 9) */
+interface LinhaPeriodo { id: number; veTesouraria: boolean; membros: number; dizimos: string; ofertas: string; reavivamento: string; contribuintes: number }
+interface LinhaMes { id: number; ano: number; mes: number; dizimos: string; ofertas: string; reavivamento: string }
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+const num = (v?: string | number | null) => Number(v ?? 0) || 0
+
+/** Os números desta igreja do painel por período (V38): o mês, o ano e os últimos 12 meses. */
+function useContribuicoesIgreja(activo: boolean) {
+  const igreja = useIgreja()
+  const hoje = hojeIso()
+  const periodo = (inicio: string) => ({
+    queryKey: ['inicio', igreja.id, 'painel-periodo', inicio, hoje],
+    enabled: activo,
+    queryFn: async () => ((await dados(api.GET('/v1/organizacao/painel-periodo', { params: { query: { inicio, fim: hoje } } }))) as unknown as LinhaPeriodo[])
+      .find((l) => l.id === igreja.id) ?? null,
+  })
+  const mes = useQuery(periodo(`${hoje.slice(0, 7)}-01`))
+  const ano = useQuery(periodo(`${hoje.slice(0, 4)}-01-01`))
+  const mensal = useQuery({
+    queryKey: ['inicio', igreja.id, 'painel-mensal'],
+    enabled: activo,
+    queryFn: async () => ((await dados(api.GET('/v1/organizacao/painel-igrejas-mensal', {}))) as unknown as LinhaMes[])
+      .filter((l) => l.id === igreja.id).sort((a, b) => a.ano - b.ano || a.mes - b.mes),
+  })
+  return { mes, ano, mensal }
+}
+
+function ContribuicoesIgreja() {
+  const { mes, ano, mensal } = useContribuicoesIgreja(true)
+  if (mes.isError || ano.isError || (mes.isSuccess && (!mes.data || !mes.data.veTesouraria))) return null
+  const m = mes.data, a = ano.data
+  const fidelidade = a && a.membros ? Math.round((a.contribuintes / a.membros) * 100) : null
+  const linhas = mensal.data ?? []
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-span-12">
+        <Indicador rotulo="Dízimos do mês" valor={mt(num(m?.dizimos))} icone={HandCoins} tom="success" aCarregar={mes.isPending}
+          nota={<>Ofertas: <strong className="font-semibold text-foreground">{mt(num(m?.ofertas))}</strong> · no ano {mt(num(a?.dizimos))}</>} />
+        <Indicador rotulo="Obra de reavivamento" valor={mt(num(a?.reavivamento))} icone={Flame} tom="warning" aCarregar={ano.isPending}
+          nota={`no ano · este mês ${mt(num(m?.reavivamento))}`} />
+        <Indicador rotulo="Fidelidade contributiva" valor={fidelidade == null ? '—' : `${fidelidade}%`} icone={HeartHandshake} tom="info" aCarregar={ano.isPending}
+          nota={a ? `${a.contribuintes} de ${a.membros} membros contribuíram no ano` : undefined} />
+      </div>
+      <Cartao titulo="Evolução das contribuições" descricao="Dízimos, ofertas e reavivamento nos últimos 12 meses" icone={BarChart3} className="lg:col-span-12">
+        {mensal.isPending ? <Barra className="h-56 w-full" />
+          : mensal.isError ? <EstadoErro erro={mensal.error} />
+          : linhas.length === 0 ? <EstadoVazio icone={BarChart3}>Ainda sem contribuições registadas.</EstadoVazio>
+          : <GraficoBarras rotulo="Contribuições por mês" altura={220} formatar={mt} destaque={linhas.length - 1}
+              categorias={linhas.map((l) => `${MESES[l.mes - 1]}${l.mes === 1 ? ` ${String(l.ano).slice(2)}` : ''}`)}
+              series={[{ nome: 'Dízimos', slot: 1, valores: linhas.map((l) => num(l.dizimos)) },
+                { nome: 'Ofertas', slot: 2, valores: linhas.map((l) => num(l.ofertas)) },
+                { nome: 'Reavivamento', slot: 3, valores: linhas.map((l) => num(l.reavivamento)) }]} />}
+      </Cartao>
+    </>
+  )
 }
 
 function Financas() {
@@ -520,7 +577,10 @@ export default function PaginaInicio() {
         {comTesouraria && (
           <section aria-label="Tesouraria" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Tesouraria</h2>
-            <div className="grid items-stretch gap-6 lg:grid-cols-12"><Financas /></div>
+            <div className="grid items-stretch gap-6 lg:grid-cols-12">
+              {pode('organizacao.igreja.ler') && <ContribuicoesIgreja />}
+              <Financas />
+            </div>
           </section>
         )}
 

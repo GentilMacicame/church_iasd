@@ -24,6 +24,7 @@ import { data, diasAte, hojeIso, hora, idade } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembro, useMembrosBasicos } from '@/features/membros/api'
 import { CampoVoto } from '@/features/livro/CampoVoto'
+import { DialogoMovimento } from '@/features/livro/MovimentosMembro'
 import { lerMotivoCensura, useAcessosConfidenciais, useDisciplinaMut, useDisciplinas, useRemovidos, type Disciplina } from './api'
 import { useUsuarios } from '@/features/acessos/api'
 import { useQuery } from '@tanstack/react-query'
@@ -48,6 +49,7 @@ export default function PaginaDisciplina() {
   const [motivoDe, setMotivoDe] = useState<Disciplina | null>(null)
   const [aba, setAba] = useState('censuras')
   const veAcessos = pode('nucleo.acesso_confidencial.ler')
+  const [remover, setRemover] = useState(false)
   const removidos = useRemovidos(pode('secretaria.movimento_membro.ler'))
   const acessos = useAcessosConfidenciais(veAcessos && aba === 'acessos')
   const hoje = hojeIso()
@@ -69,7 +71,12 @@ export default function PaginaDisciplina() {
   return (
     <>
       <TituloPagina icone={Gavel} titulo="Disciplina" descricao="Censuras votadas pela igreja (1 a 12 meses) e remoções do livro · informação confidencial"
-        accoes={pode('secretaria.disciplina.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Aplicar censura</Button>} />
+        accoes={(
+          <>
+            {pode('secretaria.movimento_membro.criar') && <Button variant="outline" className="alvo" onClick={() => setRemover(true)}><UserX className="size-4" />Registar remoção</Button>}
+            {pode('secretaria.disciplina.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Aplicar censura</Button>}
+          </>
+        )} />
       {q.isPending ? <Barra className="h-64 w-full" /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} /> : (
         <div className="grid gap-6">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -133,7 +140,10 @@ export default function PaginaDisciplina() {
             <TabsContent value="removidos" className="mt-0">
               <Cartao semMargem>
                 {removidos.isPending ? <Barra className="m-4 h-24" /> : removidos.isError ? <EstadoErro erro={removidos.error} className="m-4" /> : !(removidos.data ?? []).length ? (
-                  <EstadoVazio icone={UserX} titulo="Nenhuma remoção registada">A remoção regista-se na ficha do membro (Livro de membros › Registar saída do livro), com o voto.</EstadoVazio>
+                  <EstadoVazio icone={UserX} titulo="Nenhuma remoção registada"
+                    accao={pode('secretaria.movimento_membro.criar') && <Button variant="outline" className="alvo" onClick={() => setRemover(true)}>Registar remoção</Button>}>
+                    A remoção (por disciplina ou a pedido) regista-se com o voto da igreja.
+                  </EstadoVazio>
                 ) : (
                   <Tabela>
                     <thead><tr><th className="sm:pl-6">Membro</th><th>Data</th><th>Motivo da saída</th><th className="hidden md:table-cell sm:pr-6">Observações</th></tr></thead>
@@ -167,6 +177,7 @@ export default function PaginaDisciplina() {
       <DialogoConfirmar aberto={!!aAnular} aoMudar={(v) => !v && setAAnular(null)} perigo titulo="Anular esta censura?" accao="Anular"
         texto="Use só para corrigir um registo errado. Os cargos que o membro deixou não voltam automaticamente." aCorrer={anular.isPending}
         aoConfirmar={() => aAnular && anular.mutate(aAnular.id, { onSuccess: () => { setAAnular(null); toast.success('Censura anulada.') }, onError: (e) => toast.error(mensagemDe(e)) })} />
+      {remover && <DialogoMovimento m={null} sentido="saida" aberto tipos={['REMOCAO_DISCIPLINA', 'REMOCAO_PEDIDO']} aoMudar={(v) => !v && setRemover(false)} />}
     </>
   )
 }

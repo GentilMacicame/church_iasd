@@ -21,7 +21,8 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, hojeIso } from '@/lib/formatos'
-import type { Membro } from '@/features/membros/api'
+import { useMembrosBasicos, type Membro } from '@/features/membros/api'
+import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { ENTRADAS, REUNIOES_QUE_VOTAM, SAIDAS, eEntrada, useCriarMovimento, useMovimentosDoMembro, useReunioes, useVotos, type TipoMovimento } from './api'
 
 const esquema = z.object({
@@ -31,13 +32,24 @@ const esquema = z.object({
   observacoes: z.string().trim().max(255),
 })
 
-function DialogoMovimento({ m, sentido, aberto, aoMudar }: { m: Membro; sentido: 'entrada' | 'saida'; aberto: boolean; aoMudar: (v: boolean) => void }) {
+/**
+ * Registar uma entrada ou saída do livro. Na ficha vem o membro; noutros sítios (ex.: Disciplina › Registar remoção)
+ * escolhe-se o membro aqui e podem limitar-se os tipos (só as remoções).
+ */
+export function DialogoMovimento({ m: doMembro, sentido, aberto, aoMudar, tipos: soEstes }: {
+  m: Membro | null; sentido: 'entrada' | 'saida'; aberto: boolean; aoMudar: (v: boolean) => void; tipos?: TipoMovimento[]
+}) {
   const igreja = useIgreja()
   const votos = useVotos()
   const reunioes = useReunioes()
-  const criar = useCriarMovimento(m.id)
+  const basicos = useMembrosBasicos()
+  const [escolhido, setEscolhido] = useState<number | null>(null)
+  const membroId = doMembro?.id ?? escolhido
+  const b = basicos.data?.find((x) => x.id === membroId)
+  const m = doMembro ?? (b ? { id: b.id, nome: b.nome, apelido: b.apelido } as Membro : null)
+  const criar = useCriarMovimento(membroId ?? 0)
   const [erro, setErro] = useState<string | null>(null)
-  const tipos = sentido === 'entrada' ? ENTRADAS : SAIDAS
+  const tipos = soEstes ?? (sentido === 'entrada' ? ENTRADAS : SAIDAS)
   const form = useForm({ resolver: zodResolver(esquema), defaultValues: { tipo: tipos[0], data: hojeIso(), voto: '', observacoes: '' } })
   const tipo = form.watch('tipo') as TipoMovimento
   const precisaVoto = tipo !== 'FALECIMENTO'
@@ -54,6 +66,7 @@ function DialogoMovimento({ m, sentido, aberto, aoMudar }: { m: Membro; sentido:
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
+    if (!m) { setErro('Escolha o membro.'); return }
     if (precisaVoto && !v.voto) { form.setError('voto', { message: 'Escolha o voto que autoriza este movimento' }); return }
     try {
       await criar.mutateAsync({
@@ -75,13 +88,20 @@ function DialogoMovimento({ m, sentido, aberto, aoMudar }: { m: Membro; sentido:
         <DialogHeader>
           <DialogTitle>{sentido === 'entrada' ? 'Registar entrada no livro' : 'Registar saída do livro'}</DialogTitle>
           <DialogDescription>
-            {sentido === 'entrada'
+            {!m ? 'Escolha o membro. Fica registado no livro de membros, com o voto da igreja.'
+              : sentido === 'entrada'
               ? `${m.nome} ${m.apelido} passa a membro activo desta igreja, com a data e o modo de entrada.`
               : `${m.nome} ${m.apelido} deixa de ser membro activo e deixa os cargos que tiver.`}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />
+          {!doMembro && (
+            <CampoFormulario rotulo="Membro" obrigatorio>
+              {(p) => <CampoMembro id={p.id} valor={escolhido} aoMudar={setEscolhido} estados={['ACTIVO']} vazio="Procurar o membro…"
+                nomeDe={(id) => { const x = basicos.data?.find((y) => y.id === id); return x && `${x.nome} ${x.apelido}` }} />}
+            </CampoFormulario>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <CampoFormulario rotulo="Movimento">
               {(p) => <Seleccao {...p} {...form.register('tipo')}>{tipos.map((k) => <option key={k} value={k}>{rotulos.modoEntrada[k]}</option>)}</Seleccao>}
