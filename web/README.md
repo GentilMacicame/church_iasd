@@ -268,6 +268,13 @@ src/
   **Notificações** (Administração, `features/notificacoes/`): histórico dos SMS/WhatsApp/e-mail com estado, tentativas e
   erro, filtros por estado e canal, e Reenviar das que falharam.
 
+- **Registar membro começa pela procura** (V43, `PaginaProcurarMembro`): nome, apelido, data e local de nascimento e
+  documento, em todas as igrejas. Sem resultados segue logo para a ficha (`/membros/novo/ficha`, já preenchida); o mesmo
+  membro (mesmo documento, ou mesmo nome e data) aparece como "Este membro já existe", com a ficha ou, se for de outra
+  igreja, a indicação de pedir a transferência, e não se regista; parecidos só pelo nome pedem "Conferi: é outra pessoa".
+- **Contagem** (V43): a nova contagem pede o tesoureiro, o representante da Escola Sabatina e o diácono (o ancião é
+  opcional) e regista-os como participantes; "Conferir" só fica activo com os três.
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

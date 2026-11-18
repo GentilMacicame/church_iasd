@@ -7,10 +7,13 @@
  * Ao editar, todas as secções ficam abertas e "Guardar" está sempre à mão; envia só o que mudou.
  * Campos condicionais (casamento, baptismo anterior) escondem-se mas não se apagam: o que já estava gravado fica.
  * Registos parecidos (mesmo documento, nome e data de nascimento) aparecem como aviso: quem regista confirma que é
- * outra pessoa; não há bloqueio automático.
+ * outra pessoa; não há bloqueio automático só pelo nome.
+ * V43: o registo novo começa pela procura (/membros/novo → PaginaProcurarMembro): esta ficha só abre depois dela e vem
+ * com o que se procurou. O mesmo membro já registado (existe = true: mesmo documento, ou mesmo nome e data de
+ * nascimento, em qualquer igreja) não se grava outra vez — a base de dados também o recusa.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -302,27 +305,31 @@ function AvisoParecidos({ lista, confirmado, aoConfirmar, editar }: {
 }) {
   const { igrejas } = useSessao()
   if (lista.length === 0) return null
-  const provaveis = lista.some((p) => p.pontos >= 70)
+  const existe = lista.some((p) => p.existe)
+  const provaveis = !existe && lista.some((p) => p.pontos >= 70)
   return (
-    <section role={provaveis ? 'alert' : 'status'}
-      className={cn('rounded-xl border p-4', provaveis ? 'border-warning/40 bg-tint-warning' : 'border-border bg-muted/40')}>
+    <section role={existe || provaveis ? 'alert' : 'status'}
+      className={cn('rounded-xl border p-4', existe ? 'border-destructive/40 bg-tint-destructive' : provaveis ? 'border-warning/40 bg-tint-warning' : 'border-border bg-muted/40')}>
       <div className="flex items-start gap-3">
-        <AlertTriangle className={cn('mt-0.5 size-5 flex-none', provaveis ? 'text-warning-text' : 'text-muted-foreground')} aria-hidden />
+        <AlertTriangle className={cn('mt-0.5 size-5 flex-none', existe ? 'text-destructive-text' : provaveis ? 'text-warning-text' : 'text-muted-foreground')} aria-hidden />
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold">{provaveis ? 'Pode ser alguém que já está registado' : 'Há registos com nome parecido'}</h3>
+          <h3 className="text-sm font-semibold">{existe ? 'Este membro já existe' : provaveis ? 'Pode ser alguém que já está registado' : 'Há registos com nome parecido'}</h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Confira antes de {editar ? 'guardar' : 'registar'}: um segundo registo da mesma pessoa divide o histórico dela.
+            {existe ? `Mesmo documento, ou mesmo nome e data de nascimento: não se ${editar ? 'guarda' : 'regista'} outra vez. Use o registo existente (ou peça a transferência à igreja onde está).`
+              : `Confira antes de ${editar ? 'guardar' : 'registar'}: um segundo registo da mesma pessoa divide o histórico dela.`}
           </p>
           <ul className="mt-3 grid gap-2">
-            {lista.map((p) => (
-              <li key={p.membroId} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-card px-3 py-2 text-sm">
-                <Link to={`/membros/${p.membroId}`} target="_blank" className="font-medium hover:text-primary hover:underline">{p.nome}</Link>
+            {lista.map((p, i) => (
+              <li key={p.membroId ?? `f${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-card px-3 py-2 text-sm">
+                {p.membroId != null
+                  ? <Link to={`/membros/${p.membroId}`} target="_blank" className="font-medium hover:text-primary hover:underline">{p.nome}</Link>
+                  : <span className="font-medium">{p.nome}</span>}
                 <span className="text-muted-foreground">
-                  {[p.dataNascimento && dataEcra(p.dataNascimento), p.numeroIdentificacao, igrejas.find((i) => i.id === p.igrejaId)?.nome,
+                  {[p.dataNascimento && dataEcra(p.dataNascimento), p.numeroIdentificacao, p.igreja ?? igrejas.find((x) => x.id === p.igrejaId)?.nome,
                     p.estado && rotulos.estadoMembro[p.estado]].filter(Boolean).join(' · ')}
                 </span>
                 <span className="flex flex-wrap gap-1">
-                  {p.motivos.map((m) => <Pilula key={m} variante={p.pontos >= 70 ? 'warning' : 'secondary'}>{m}</Pilula>)}
+                  {p.motivos.map((m) => <Pilula key={m} variante={p.existe ? 'destructive' : p.pontos >= 70 ? 'warning' : 'secondary'}>{m}</Pilula>)}
                 </span>
               </li>
             ))}
@@ -345,6 +352,12 @@ export default function PaginaFormMembro() {
   const igreja = useIgreja()
   const { igrejas } = useSessao()
   const navigate = useNavigate()
+  const [qs] = useSearchParams()
+  // registo novo: só depois da procura (V43), com o que se procurou
+  const procurado = qs.get('procurado') === '1'
+  const daProcura = { nome: qs.get('nome') ?? '', apelido: qs.get('apelido') ?? '', dataNascimento: qs.get('dataNascimento') ?? '',
+    naturalidade: qs.get('naturalidade') ?? '', numeroIdentificacao: qs.get('numeroIdentificacao') ?? '' }
+  const confirmadoNaProcura = qs.get('confirmado') === '1'
   const existente = useMembro(id ?? 0)
   const contactos = useContactos(id ?? 0)
   const baptismos = useBaptismos(id ?? 0)
@@ -358,7 +371,7 @@ export default function PaginaFormMembro() {
   const [confirmouOutra, setConfirmouOutra] = useState(false)
   const ultimo = PASSOS.length - 1
 
-  const form = useForm<Valores>({ resolver: zodResolver(esquema), defaultValues: { ...VAZIO, igrejaBaptismo: String(igreja.id) } })
+  const form = useForm<Valores>({ resolver: zodResolver(esquema), defaultValues: { ...VAZIO, ...(id ? {} : daProcura), igrejaBaptismo: String(igreja.id) } })
   const { register, formState: { errors: e, isSubmitting, dirtyFields } } = form
 
   // carrega a ficha (membro, contactos e baptismos) uma vez, quando tudo chega; "form" não entra nas dependências:
@@ -398,8 +411,12 @@ export default function PaginaFormMembro() {
   const chaveParecidos = useAtrasado({ nome: v.nome, apelido: v.apelido, dataNascimento: v.dataNascimento, naturalidade: v.naturalidade, numeroIdentificacao: v.numeroIdentificacao })
   const parecidos = useParecidos({ ...chaveParecidos, excluirId: id })
   const listaParecidos = parecidos.data ?? []
-  const provaveis = listaParecidos.some((p) => p.pontos >= 70)
-  useEffect(() => { setConfirmouOutra(false) }, [parecidos.data])
+  const jaExiste = listaParecidos.some((p) => p.existe)
+  const provaveis = !jaExiste && listaParecidos.some((p) => p.pontos >= 70)
+  // o "é outra pessoa" confirmado na procura vale enquanto os dados forem os mesmos que se procuraram
+  const mesmosDaProcura = [v.nome.trim(), v.apelido.trim(), v.dataNascimento, v.numeroIdentificacao.trim()].join('|')
+    === [daProcura.nome, daProcura.apelido, daProcura.dataNascimento, daProcura.numeroIdentificacao].join('|')
+  useEffect(() => { setConfirmouOutra(!id && confirmadoNaProcura && mesmosDaProcura) }, [parecidos.data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const casado = v.estadoCivil === 'CASADO' || v.estadoCivil === 'UNIAO_FACTO'
   const mostraCasamento = casado || !!(v.dataCasamento || v.conjugeMembroId || v.nomeConjuge)   // nada se esconde se já tiver valor
@@ -432,6 +449,11 @@ export default function PaginaFormMembro() {
 
   const submeter = form.handleSubmit(async (x) => {
     setErroTopo(null)
+    if (jaExiste) {
+      setErroTopo('Este membro já existe (veja a lista em "Dados pessoais"): abra o registo existente em vez de criar outro.')
+      irPara(0)
+      return
+    }
     if (provaveis && !confirmouOutra) {
       setErroTopo('Há um registo que pode ser desta pessoa. Confira a lista em "Dados pessoais" e marque "Conferi: é outra pessoa" para continuar.')
       irPara(0)
@@ -474,9 +496,10 @@ export default function PaginaFormMembro() {
     void submeter(ev)
   }
 
-  const voltarPara = id ? `/membros/${id}` : '/membros'
+  const voltarPara = id ? `/membros/${id}` : '/membros/novo'
   const titulo = id ? t.membros.editarTitulo : t.membros.novo
 
+  if (!id && !procurado) return <Navigate to="/membros/novo" replace />
   if (id && (existente.isPending || contactos.isPending || baptismos.isPending)) {
     return <div className="grid gap-4" aria-busy="true" aria-label="A carregar"><Barra className="h-8 w-64" /><Barra className="h-64 w-full" /></div>
   }
@@ -505,7 +528,7 @@ export default function PaginaFormMembro() {
       <TituloPagina
         antes={
           <Link to={voltarPara} className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="size-4" /> {id && existente.data ? `${existente.data.nome} ${existente.data.apelido}` : t.membros.titulo}
+            <ArrowLeft className="size-4" /> {id && existente.data ? `${existente.data.nome} ${existente.data.apelido}` : id ? t.membros.titulo : 'Voltar à procura'}
           </Link>
         }
         icone={id ? UserPen : UserPlus}

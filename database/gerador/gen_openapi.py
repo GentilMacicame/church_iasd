@@ -308,15 +308,23 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
 rel('/v1/secretaria/membros-lista', 'secretaria.vw_membros_lista', SEC, 'secretaria.membro.ler')   # V33: exportar
 # V33: registos parecidos (possíveis duplicados) antes de registar ou ao editar; só avisa, não bloqueia
-PARECIDO = obj(['membroId', 'igrejaId', 'nome', 'pontos', 'motivos'], membroId=I, igrejaId=I, nome=STR,
+PARECIDO = obj(['membroId', 'igrejaId', 'nome', 'pontos', 'existe', 'motivos'],
+               membroId={**I, 'nullable': True, 'description': 'Nulo quando o membro está numa igreja que o utilizador não vê'},
+               igrejaId=I, nome=STR,
+               igreja={**STR, 'description': 'Nome da igreja onde o membro já está (quando existe = true)'},
+               existe={'type': 'boolean', 'description': 'O mesmo membro já registado; registar outra vez é recusado (V43)'},
                dataNascimento={**D, 'nullable': True}, naturalidade={**STR, 'nullable': True},
                numeroIdentificacao={**STR, 'nullable': True}, estado=ref('EnumEstadoMembro'),
                pontos={'type': 'integer', 'description': 'Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável'},
                motivos={'type': 'array', 'items': STR})
 paths['/v1/secretaria/membros-parecidos'] = {'get': op(
-    'Membros parecidos (possíveis duplicados)', SEC, 'secretaria.membro.ler (só compara com os membros que o utilizador vê)',
-    operationId='membrosParecidos', **{'x-funcao-bd': 'nucleo.fn_membros_parecidos'},
-    description='Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.',
+    'Membros parecidos (possíveis duplicados)', SEC,
+    'secretaria.membro.ler (parecidos entre os membros que o utilizador vê; o mesmo membro em qualquer igreja)',
+    operationId='membrosParecidos', **{'x-funcao-bd': 'nucleo.fn_membros_parecidos, nucleo.fn_membro_existente'},
+    description='Mesmo documento, ou nome parecido com a mesma data/local de nascimento. O nome só parecido é aviso; existe = true '
+                'é o mesmo membro já registado (mesmo documento, ou mesmo nome e data de nascimento, em qualquer igreja), que a '
+                'base de dados não deixa registar outra vez. De uma igreja que o utilizador não vê só vêm o nome e a igreja '
+                '(membroId nulo).',
     parameters=[{'name': 'nome', 'in': 'query', 'required': True, 'schema': STR},
                 {'name': 'apelido', 'in': 'query', 'required': True, 'schema': STR},
                 {'name': 'dataNascimento', 'in': 'query', 'schema': D},

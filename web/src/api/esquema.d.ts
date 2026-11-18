@@ -4168,7 +4168,7 @@ export interface paths {
         };
         /**
          * Membros parecidos (possíveis duplicados)
-         * @description Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.
+         * @description Mesmo documento, ou nome parecido com a mesma data/local de nascimento. O nome só parecido é aviso; existe = true é o mesmo membro já registado (mesmo documento, ou mesmo nome e data de nascimento, em qualquer igreja), que a base de dados não deixa registar outra vez. De uma igreja que o utilizador não vê só vêm o nome e a igreja (membroId nulo).
          */
         get: operations["membrosParecidos"];
         put?: never;
@@ -9418,6 +9418,8 @@ export interface components {
             votoId?: number;
             /** @description Decisão ou deliberação tomada */
             deliberacao?: string;
+            /** @description Resumo da discussão do ponto (o que se disse); a descrição fica em detalhes (V43) */
+            discussao?: string;
             estado?: components["schemas"]["EnumEstadoPonto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -18799,9 +18801,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        membroId: number;
+                        /** @description Nulo quando o membro está numa igreja que o utilizador não vê */
+                        membroId: number | null;
                         igrejaId: number;
                         nome: string;
+                        /** @description Nome da igreja onde o membro já está (quando existe = true) */
+                        igreja?: string;
+                        /** @description O mesmo membro já registado; registar outra vez é recusado (V43) */
+                        existe: boolean;
                         /** Format: date */
                         dataNascimento?: string | null;
                         naturalidade?: string | null;

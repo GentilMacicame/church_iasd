@@ -317,7 +317,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/secretaria/membros` | MembrosController · criar | `secretaria.membro.criar` |
 | GET | `/v1/secretaria/membros-basico` | RelatoriosSecretariaController · membrosBasico | `secretaria.membro.ler` |
 | GET | `/v1/secretaria/membros-lista` | RelatoriosSecretariaController · membrosLista | `secretaria.membro.ler` |
-| GET | `/v1/secretaria/membros-parecidos` | RelatoriosSecretariaController · membrosParecidos | `secretaria.membro.ler (só compara com os membros que o utilizador vê)` |
+| GET | `/v1/secretaria/membros-parecidos` | RelatoriosSecretariaController · membrosParecidos | `secretaria.membro.ler (parecidos entre os membros que o utilizador vê; o mesmo membro em qualquer igreja)` |
 | GET | `/v1/secretaria/membros/{id}` | MembrosController · obter | `secretaria.membro.ler` |
 | PATCH | `/v1/secretaria/membros/{id}` | MembrosController · alterar | `secretaria.membro.alterar` |
 | POST | `/v1/secretaria/membros/{id}/reactivar` | MembrosController · reactivar | `secretaria.membro.terminar` |

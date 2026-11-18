@@ -10640,10 +10640,12 @@ paths:
       summary: Membros parecidos (possíveis duplicados)
       tags:
       - Secretaria
-      x-permissao: secretaria.membro.ler (só compara com os membros que o utilizador vê)
+      x-permissao: secretaria.membro.ler (parecidos entre os membros que o utilizador vê; o mesmo membro em qualquer igreja)
       operationId: membrosParecidos
-      x-funcao-bd: nucleo.fn_membros_parecidos
-      description: 'Mesmo documento, ou nome parecido com a mesma data/local de nascimento. Só avisa: o registo não é bloqueado.'
+      x-funcao-bd: nucleo.fn_membros_parecidos, nucleo.fn_membro_existente
+      description: Mesmo documento, ou nome parecido com a mesma data/local de nascimento. O nome só parecido é aviso; existe = true é o mesmo
+        membro já registado (mesmo documento, ou mesmo nome e data de nascimento, em qualquer igreja), que a base de dados não deixa registar
+        outra vez. De uma igreja que o utilizador não vê só vêm o nome e a igreja (membroId nulo).
       parameters:
       - name: nome
         in: query
@@ -10687,14 +10689,23 @@ paths:
                   - igrejaId
                   - nome
                   - pontos
+                  - existe
                   - motivos
                   properties:
                     membroId:
                       type: integer
+                      nullable: true
+                      description: Nulo quando o membro está numa igreja que o utilizador não vê
                     igrejaId:
                       type: integer
                     nome:
                       type: string
+                    igreja:
+                      type: string
+                      description: Nome da igreja onde o membro já está (quando existe = true)
+                    existe:
+                      type: boolean
+                      description: O mesmo membro já registado; registar outra vez é recusado (V43)
                     dataNascimento:
                       type: string
                       format: date
@@ -22965,6 +22976,9 @@ components:
         deliberacao:
           type: string
           description: Decisão ou deliberação tomada
+        discussao:
+          type: string
+          description: Resumo da discussão do ponto (o que se disse); a descrição fica em detalhes (V43)
         estado:
           $ref: '#/components/schemas/EnumEstadoPonto'
         criadoEm:

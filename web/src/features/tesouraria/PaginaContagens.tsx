@@ -3,8 +3,9 @@
  * 1. Contar: depois do culto, duas pessoas contam o dinheiro (dízimos, ofertas, Escola Sabatina, outras).
  * 2. Lançar: cada envelope e a salva lançam-se em "Lançar entrada", ligados a esta contagem.
  * 3. Conferir: quando o lançado é igual ao contado, a contagem confere-se.
- * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar, e quem participou (V42: tesoureiro,
- * Escola Sabatina, diácono, ancião…), além dos dois contadores.
+ * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar, e quem participou (V42).
+ * V43: contam no mínimo o tesoureiro, um representante da Escola Sabatina e um diácono (o ancião pode juntar-se); sem os
+ * três a contagem não se confere (a base de dados recusa). Os dois primeiros ficam também como os contadores 1 e 2.
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -27,7 +28,7 @@ import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoTransferencia } from './DialogoTransferencia'
-import { FUNCOES_CONTAGEM, PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, useParticipantesContagem, useParticipantesContagemMut, type Conferencia } from './api'
+import { FUNCOES_CONTAGEM, MINIMO_CONTAGEM, PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, useParticipantesContagem, useParticipantesContagemMut, type Conferencia, type ParticipanteContagem } from './api'
 import { Paginada } from '@/components/comum/Paginacao'
 
 const ESTADO = {
@@ -60,7 +61,7 @@ export default function PaginaContagens() {
       <div className="grid gap-6">
         <ol className="grid gap-3 rounded-xl border bg-card p-4 text-sm shadow-card sm:grid-cols-3 sm:p-5">
           {[
-            { n: 1, t: 'Contar', d: 'Depois do culto, duas pessoas contam o dinheiro e registam a contagem.' },
+            { n: 1, t: 'Contar', d: 'Depois do culto, o tesoureiro, um representante da Escola Sabatina e um diácono contam o dinheiro.' },
             { n: 2, t: 'Lançar', d: 'Cada envelope e a salva lançam-se em "Lançar entrada", escolhendo esta contagem.' },
             { n: 3, t: 'Conferir', d: 'Quando o lançado é igual ao contado, carregue em "Conferir".' },
           ].map((p) => (
@@ -81,7 +82,7 @@ export default function PaginaContagens() {
           : conf.isError ? <EstadoErro erro={conf.error} aoTentar={() => conf.refetch()} />
           : lista.length === 0 ? (
             <div className="rounded-xl border bg-card shadow-card">
-              <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe o que os dois contadores contaram.</EstadoVazio>
+              <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe quem contou (tesoureiro, Escola Sabatina, diácono) e o que se contou.</EstadoVazio>
             </div>
           ) : (
             <Paginada itens={lista} className="rounded-xl border bg-card">{(vis) => (
@@ -104,7 +105,10 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
   const { pode } = useSessao()
   const { mudarEstado } = useContagensMut()
   const contagens = useContagens()
+  const participantes = useParticipantesContagem(c.id)
   const [depositar, setDepositar] = useState(false)
+  const activos = (participantes.data ?? []).filter((x) => !x.endDate)
+  const faltam = participantes.isPending ? [] : MINIMO_CONTAGEM.filter((f) => !activos.some((x) => x.funcao === f.funcao))
   const caixaId = contagens.data?.find((x) => x.id === c.id)?.contaId
   const contado = centimos(c.totalContado), lancado = centimos(c.totalLancado), falta = contado - lancado
   const pct = contado ? Math.min(100, Math.round((lancado / contado) * 100)) : 0
@@ -123,7 +127,7 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
       <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
         <div className="min-w-0">
           <h2 className="font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</h2>
-          {contadores && <p className="text-sm text-muted-foreground">Contado por {contadores}</p>}
+          {contadores && !activos.length && !participantes.isPending && <p className="text-sm text-muted-foreground">Contado por {contadores}</p>}
         </div>
         <Pilula variante={est.v}>{est.r}</Pilula>
       </header>
@@ -171,12 +175,13 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
         </table>
       </div>
 
-      <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} />
+      <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} lista={activos} aCarregar={participantes.isPending} />
 
       {aberta && (
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
           <p className="text-xs text-muted-foreground">
-            {falta === 0 ? 'Está tudo lançado: pode conferir.' : falta > 0 ? 'Lance o que falta (escolhendo esta contagem) para poder conferir.' : 'Lançou-se mais do que o contado: verifique as entradas ligadas a esta contagem.'}
+            {faltam.length ? `Para conferir, registe nos participantes: ${faltam.map((f) => f.rotulo).join(', ')}.`
+              : falta === 0 ? 'Está tudo lançado: pode conferir.' : falta > 0 ? 'Lance o que falta (escolhendo esta contagem) para poder conferir.' : 'Lançou-se mais do que o contado: verifique as entradas ligadas a esta contagem.'}
           </p>
           <div className="flex flex-wrap gap-2">
             {falta > 0 && pode('tesouraria.transacao.criar') && (
@@ -185,7 +190,7 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
               </Button>
             )}
             {pode('tesouraria.contagem_numerario.alterar') && (
-              <Button size="sm" variant={falta === 0 ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || falta !== 0} onClick={conferir}>
+              <Button size="sm" variant={falta === 0 && !faltam.length ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || falta !== 0 || faltam.length > 0 || participantes.isPending} onClick={conferir}>
                 <CircleCheck className="size-4" />Conferir
               </Button>
             )}
@@ -204,14 +209,14 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
 }
 
 /** Quem participou na contagem (com a função); enquanto está aberta, junta-se ou tira-se alguém. */
-function Participantes({ contagemId, aberta, nomeDe }: { contagemId: number; aberta: boolean; nomeDe: (id: number) => string | undefined }) {
+function Participantes({ contagemId, aberta, nomeDe, lista, aCarregar }: {
+  contagemId: number; aberta: boolean; nomeDe: (id: number) => string | undefined; lista: ParticipanteContagem[]; aCarregar: boolean
+}) {
   const { pode } = useSessao()
-  const q = useParticipantesContagem(contagemId)
   const { juntar, tirar } = useParticipantesContagemMut()
   const [aJuntar, setAJuntar] = useState(false)
   const [membro, setMembro] = useState<number | null>(null)
   const [funcao, setFuncao] = useState('DIACONO')
-  const lista = (q.data ?? []).filter((x) => !x.endDate)
   const podeJuntar = aberta && pode('tesouraria.contagem_participante.criar')
   const podeTirar = aberta && pode('tesouraria.contagem_participante.terminar')
   if (!lista.length && !podeJuntar) return null
@@ -228,7 +233,7 @@ function Participantes({ contagemId, aberta, nomeDe }: { contagemId: number; abe
     <div className="border-t px-4 py-3 sm:px-6">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="flex items-center gap-1.5 text-muted-foreground"><Users className="size-4" />Participantes:</span>
-        {q.isPending ? <Barra className="h-5 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">ninguém registado</span> : lista.map((x) => (
+        {aCarregar ? <Barra className="h-5 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">ninguém registado</span> : lista.map((x) => (
           <span key={x.id} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5">
             {nomeDe(x.membroId) ?? `Membro ${x.membroId}`} <span className="text-xs text-muted-foreground">· {FUNCOES_CONTAGEM[x.funcao] ?? x.funcao}</span>
             {podeTirar && (
@@ -261,12 +266,13 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
   const igreja = useIgreja()
   const contas = useContas()
   const { criar } = useContagensMut()
+  const { juntar } = useParticipantesContagemMut()
   const caixas = (contas.data ?? []).filter((c) => c.tipo === 'CAIXA')
   const [contaId, setContaId] = useState('')
   const [dia, setDia] = useState(hojeIso())
   const [ocasiao, setOcasiao] = useState('Culto de sábado')
-  const [c1, setC1] = useState<number | null>(null)
-  const [c2, setC2] = useState<number | null>(null)
+  // quem conta: tesoureiro, Escola Sabatina e diácono (obrigatórios) e o ancião (opcional)
+  const [quem, setQuem] = useState<Record<string, number | null>>({ TESOUREIRO: null, ESCOLA_SABATINA: null, DIACONO: null, ANCIAO: null })
   const [partes, setPartes] = useState<Record<string, string>>({ dizimos: '', ofertas: '', escolaSabatina: '', outras: '' })
   const validoOuVazio = (v: string) => v === '' || /^\d{1,14}(\.\d{1,2})?$/.test(v)
   const total = Object.values(partes).reduce((s, v) => s + (v && validoOuVazio(v) ? centimos(v) : 0), 0)
@@ -276,15 +282,25 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
   const submeter = async () => {
     setErro(null)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hojeIso()) return setErro('A data tem de ser dd/mm/aaaa e não pode ser no futuro.')
-    if (!c1 || !c2) return setErro('Escolha os dois contadores.')
-    if (c1 === c2) return setErro('Os dois contadores têm de ser pessoas diferentes.')
+    const faltam = MINIMO_CONTAGEM.filter((f) => !quem[f.funcao])
+    if (faltam.length) return setErro(`Escolha ${faltam.map((f) => f.rotulo).join(', ')}: contam pelo menos três pessoas.`)
+    const escolhidos = Object.values(quem).filter((x): x is number => x != null)
+    if (new Set(escolhidos).size !== escolhidos.length) return setErro('Cada pessoa só pode ter uma função na contagem.')
     if (!Object.values(partes).every(validoOuVazio)) return setErro('Há um valor inválido: escreva, por exemplo, 2 350,00.')
     if (total <= 0) return setErro('Escreva o que se contou em pelo menos uma das partes.')
     const parte = (v: string) => (v ? v : '0.00')
     try {
-      await criar.mutateAsync({ igrejaId: igreja.id, contaId: conta!.id, data: dia, ocasiao: ocasiao.trim() || undefined, contador1MembroId: c1, contador2MembroId: c2,
+      const nova = await criar.mutateAsync({ igrejaId: igreja.id, contaId: conta!.id, data: dia, ocasiao: ocasiao.trim() || undefined,
+        contador1MembroId: quem.TESOUREIRO, contador2MembroId: quem.ESCOLA_SABATINA,
         totalContado: deCentimos(total), dizimos: parte(partes.dizimos), ofertas: parte(partes.ofertas), escolaSabatina: parte(partes.escolaSabatina), outras: parte(partes.outras) } as never)
-      toast.success('Contagem registada. Ao lançar as entradas em numerário, escolha esta contagem.')
+      // os participantes com a função: se algum falhar, a contagem fica e junta-se no cartão
+      const falhas: string[] = []
+      for (const [funcao, membroId] of Object.entries(quem)) {
+        if (membroId == null) continue
+        try { await juntar.mutateAsync({ contagemId: nova.id, membroId, funcao }) } catch (e) { falhas.push(`${FUNCOES_CONTAGEM[funcao]}: ${mensagemDe(e)}`) }
+      }
+      if (falhas.length) toast.warning('A contagem ficou registada, mas falta juntar participantes no cartão', { description: falhas.join(' · '), duration: 10_000 })
+      else toast.success('Contagem registada. Ao lançar as entradas em numerário, escolha esta contagem.')
       aoFechar()
     } catch (e) {
       setErro(mensagemDe(e))
@@ -296,7 +312,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova contagem</DialogTitle>
-          <DialogDescription>O dinheiro do culto, contado por duas pessoas antes de sair da igreja.</DialogDescription>
+          <DialogDescription>O dinheiro do culto, contado antes de sair da igreja pelo tesoureiro, um representante da Escola Sabatina e um diácono.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
@@ -309,14 +325,14 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
               <label htmlFor="cnt-ocasiao" className="text-sm font-medium">Culto</label>
               <Input id="cnt-ocasiao" value={ocasiao} onChange={(e) => setOcasiao(e.target.value)} maxLength={100} className="alvo" />
             </div>
-            <div className="grid gap-1.5">
-              <label htmlFor="cnt-c1" className="text-sm font-medium">1.º contador</label>
-              <CampoMembro id="cnt-c1" valor={c1} aoMudar={setC1} nomeDe={nomeDe} />
-            </div>
-            <div className="grid gap-1.5">
-              <label htmlFor="cnt-c2" className="text-sm font-medium">2.º contador</label>
-              <CampoMembro id="cnt-c2" valor={c2} aoMudar={setC2} nomeDe={nomeDe} />
-            </div>
+            {[...MINIMO_CONTAGEM, { funcao: 'ANCIAO', rotulo: 'o ancião', titulo: 'Ancião (opcional)' }].map((f) => (
+              <div key={f.funcao} className="grid gap-1.5">
+                <label htmlFor={`cnt-${f.funcao}`} className="text-sm font-medium">
+                  {f.titulo}{f.funcao !== 'ANCIAO' && <span className="text-destructive-text"> *</span>}
+                </label>
+                <CampoMembro id={`cnt-${f.funcao}`} valor={quem[f.funcao]} aoMudar={(x) => setQuem((q) => ({ ...q, [f.funcao]: x }))} nomeDe={nomeDe} />
+              </div>
+            ))}
             <div className="grid gap-1.5 sm:col-span-2">
               <label htmlFor="cnt-conta" className="text-sm font-medium">Fica no</label>
               <Seleccao id="cnt-conta" value={conta ? String(conta.id) : ''} onChange={(e) => setContaId(e.target.value)}>
@@ -342,7 +358,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
-          <Button type="button" className="alvo" disabled={criar.isPending || !conta} onClick={submeter}>{criar.isPending ? t.comum.aGravar : 'Registar contagem'}</Button>
+          <Button type="button" className="alvo" disabled={criar.isPending || juntar.isPending || !conta} onClick={submeter}>{criar.isPending || juntar.isPending ? t.comum.aGravar : 'Registar contagem'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

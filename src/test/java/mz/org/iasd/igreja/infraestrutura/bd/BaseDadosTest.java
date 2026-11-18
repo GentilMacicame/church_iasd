@@ -873,9 +873,17 @@ class BaseDadosTest {
         // a editar a própria Rosa não aparece ela mesma
         assertEquals(0, ExecutorTransaccao.executar(api, secretario, c -> MembrosParecidosRepository.procurar(c,
                 new MembrosParecidosRepository.Pedido("Rosa", "Macuácua", java.sql.Date.valueOf("1985-04-12"), null, null, rosa))).size());
-        // sem perfil na igreja: não vê nenhum membro, nem como parecido
+        assertTrue(porNome.getJsonObject(0).getBoolean("existe"));
+        // sem perfil na igreja: não vê a ficha; o mesmo membro (V43) vem só com o nome e a igreja, para não o registar outra vez
+        JsonArray deFora = ExecutorTransaccao.executar(api, semPerfil, c -> MembrosParecidosRepository.procurar(c,
+                new MembrosParecidosRepository.Pedido("Rosa", "Macuacua", java.sql.Date.valueOf("1985-04-12"), null, null, null)));
+        assertEquals(1, deFora.size());
+        assertTrue(deFora.getJsonObject(0).isNull("membroId"));
+        assertTrue(deFora.getJsonObject(0).getBoolean("existe"));
+        assertFalse(deFora.getJsonObject(0).containsKey("dataNascimento"));
+        // só o nome parecido (sem data nem documento) não é o mesmo membro
         assertEquals(0, ExecutorTransaccao.executar(api, semPerfil, c -> MembrosParecidosRepository.procurar(c,
-                new MembrosParecidosRepository.Pedido("Rosa", "Macuacua", java.sql.Date.valueOf("1985-04-12"), null, null, null))).size());
+                new MembrosParecidosRepository.Pedido("Rosa", "Macuacua", null, null, null, null))).size());
 
         // campos novos e cônjuge pela API genérica: ligar a Rosa ao Albino liga o Albino à Rosa
         JsonObject alterada = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, membro, rosa,
@@ -1243,6 +1251,55 @@ class BaseDadosTest {
         SQLException naoPode = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c,
                 participante, Json.createObjectBuilder().add("contagemId", contagem).add("membroId", a).add("funcao", "TESOUREIRO").build())));
         assertEquals(403, TradutorErrosSql.traduzir(naoPode).estadoHttp());
+    }
+
+    // ------------------------------------------------------------------ V43: membro único e contagem com o mínimo
+
+    @Test
+    void membroUnicoEContagemComTresParticipantes() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v43@teste.mz", null, "SECRETARIO");
+        var membro = Catalogo.de(Membro.class);
+        JsonObject corpo = Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("nome", "Benedita").add("apelido", "Nhantumbo V43")
+                .add("dataNascimento", "1991-03-03").build();
+        ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, membro, corpo));
+        // a mesma pessoa outra vez (nome com outra escrita) → 422, no campo do nome
+        SQLException repetido = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c,
+                membro, Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("nome", "BENEDITA").add("apelido", "nhantumbo  v43")
+                        .add("dataNascimento", "1991-03-03").build())));
+        var t = TradutorErrosSql.traduzir(repetido);
+        assertEquals(422, t.estadoHttp());
+        assertEquals("nome", t.campo());
+        assertTrue(t.mensagem().startsWith("Este membro já existe"), t.mensagem());
+
+        // contagem: com o tesoureiro e o diácono não se confere; com o representante da Escola Sabatina, sim
+        int contagem;
+        int a;
+        int b;
+        int e;
+        try (Connection dono = ligarComoDono()) {
+            a = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Tomas', 'Tesoureiro V43') RETURNING mem_id");
+            b = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Dina', 'Diacono V43') RETURNING mem_id");
+            e = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Sara', 'Sabatina V43') RETURNING mem_id");
+            int caixa = inserir(dono, "INSERT INTO tesouraria.conta_financeira (cfi_igr_id, cfi_tipo, cfi_nome, cfi_data_saldo_inicial) VALUES ("
+                    + igrejaCentral + ", 'CAIXA', 'Caixa V43', '2026-01-01') RETURNING cfi_id");
+            contagem = inserir(dono, "INSERT INTO tesouraria.contagem_numerario (cnu_igr_id, cnu_cfi_id, cnu_data, cnu_contador1_mem_id, cnu_contador2_mem_id, cnu_total_contado) VALUES ("
+                    + igrejaCentral + ", " + caixa + ", '2026-11-14', " + a + ", " + e + ", 900) RETURNING cnu_id");
+        }
+        var participante = Catalogo.de(mz.org.iasd.igreja.models.tesouraria.ContagemParticipante.class);
+        var contagens = Catalogo.de(mz.org.iasd.igreja.models.tesouraria.ContagemNumerario.class);
+        for (Object[] x : new Object[][] {{a, "TESOUREIRO"}, {b, "DIACONO"}}) {
+            ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, participante, Json.createObjectBuilder()
+                    .add("contagemId", contagem).add("membroId", (Integer) x[0]).add("funcao", (String) x[1]).build()));
+        }
+        JsonObject conferir = Json.createObjectBuilder().add("estado", "CONFERIDA").build();
+        SQLException falta = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, contagens, contagem, conferir)));
+        assertEquals(422, TradutorErrosSql.traduzir(falta).estadoHttp());
+        assertTrue(TradutorErrosSql.traduzir(falta).mensagem().contains("Escola Sabatina"));
+        ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, participante, Json.createObjectBuilder()
+                .add("contagemId", contagem).add("membroId", e).add("funcao", "ESCOLA_SABATINA").build()));
+        assertEquals("CONFERIDA", ExecutorTransaccao.executar(api, tesoureiro,
+                c -> TabelaRepository.alterar(c, contagens, contagem, conferir)).getString("estado"));
     }
 
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS

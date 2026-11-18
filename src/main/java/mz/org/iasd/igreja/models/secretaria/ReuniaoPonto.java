@@ -28,6 +28,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoPonto;
  * @param abstencoes coluna {@code rpt_abstencoes}
  * @param votoId Voto formal da acta (admissões, transferências, ...) ligado a este ponto
  * @param deliberacao Decisão ou deliberação tomada
+ * @param discussao Resumo da discussão do ponto (o que se disse); a descrição fica em detalhes (V43)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -61,6 +62,8 @@ public record ReuniaoPonto(
         Integer votoId,
         @ColunaBd(value = "rpt_deliberacao", tipo = Tipo.TEXTO)
         String deliberacao,
+        @ColunaBd(value = "rpt_discussao", tipo = Tipo.TEXTO)
+        String discussao,
         @ColunaBd(value = "rpt_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoPonto estado,
         @ColunaBd(value = "rpt_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

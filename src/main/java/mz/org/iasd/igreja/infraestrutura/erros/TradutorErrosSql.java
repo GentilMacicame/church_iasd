@@ -11,7 +11,7 @@ import mz.org.iasd.igreja.comum.Nomes;
  * Traduz um erro do PostgreSQL para a resposta HTTP do contrato (CLAUDE.md, "Erros").
  *
  * <pre>
- *   42501 → 403 sem_permissao        P0001 → 422 regra_negocio
+ *   42501 → 403 sem_permissao        P0001 → 422 regra_negocio (campo do USING COLUMN)
  *   23514 → 422 validacao            23505 → 409 duplicado
  *   23503 → 422 referencia_invalida  23502 → 400 campo_obrigatorio
  *   40001 / 40P01 → 503 tentar_novamente (depois de 3 tentativas)
@@ -56,7 +56,7 @@ public final class TradutorErrosSql {
 
         return switch (estado) {
             case "42501" -> new Traducao(403, "sem_permissao", mensagemPermissao(mensagemBd), null);
-            case "P0001" -> new Traducao(422, "regra_negocio", mensagemBd, null);
+            case "P0001" -> new Traducao(422, "regra_negocio", mensagemBd, Nomes.campo(coluna));   // RAISE ... USING COLUMN (V43)
             case "P0002" -> new Traducao(404, "nao_encontrado", mensagemBd, null);   // no_data_found: não existe ou não é visível (V41)
             case "23514" -> comFrase(restricao, new Traducao(422, "validacao",
                     "Valor não permitido" + (restricao != null ? " (" + restricao + ")" : ""), campoDaRestricao(restricao)));

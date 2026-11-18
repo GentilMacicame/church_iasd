@@ -126,6 +126,7 @@ export default function PaginaActa() {
                 <div key={p.id} className="break-inside-avoid">
                   <p className="font-semibold">Ponto {i + 1}. {p.assunto}</p>
                   {p.detalhes && <p className="mt-1 text-justify whitespace-pre-line">{p.detalhes}</p>}
+                  {p.discussao && <p className="mt-1 text-justify whitespace-pre-line"><span className="font-semibold">Discussão:</span> {p.discussao}</p>}
                   {!p.discutido && p.estado !== 'APROVADO' && p.estado !== 'REJEITADO' && <p className="mt-1 italic text-neutral-600">Não chegou a ser discutido.</p>}
                   {p.votado && (
                     <p className="mt-1">Submetido à votação: <strong>{p.aFavor ?? 0}</strong> a favor, <strong>{p.contra ?? 0}</strong> contra e <strong>{p.abstencoes ?? 0}</strong> {p.abstencoes === 1 ? 'abstenção' : 'abstenções'}.</p>

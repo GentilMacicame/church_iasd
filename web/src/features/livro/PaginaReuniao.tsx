@@ -200,6 +200,7 @@ export default function PaginaReuniao() {
                         <span className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-center gap-2"><span className="font-medium">{p.assunto}</span><PilulaPonto estado={p.estado} /></span>
                           {p.detalhes && <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{p.detalhes}</span>}
+                          {p.discussao && <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground"><span className="font-medium text-foreground">Discussão: </span>{p.discussao}</span>}
                           <span className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1">{p.discutido ? <Check className="size-3.5 text-success-text" /> : <Circle className="size-3" />}{p.discutido ? 'Discutido' : 'Por discutir'}</span>
                             {p.votado && <span className="inline-flex items-center gap-1 tabular-nums"><Vote className="size-3.5" />{p.aFavor ?? 0} a favor · {p.contra ?? 0} contra · {p.abstencoes ?? 0} abst.</span>}
@@ -369,6 +370,7 @@ function DialogoPonto({ reuniaoId, ponto, ordem, votos, aoFechar }: { reuniaoId:
   const { pode } = useSessao()
   const [assunto, setAssunto] = useState(ponto?.assunto ?? '')
   const [detalhes, setDetalhes] = useState(ponto?.detalhes ?? '')
+  const [discussao, setDiscussao] = useState(ponto?.discussao ?? '')
   const [discutido, setDiscutido] = useState(ponto?.discutido ?? false)
   const [votado, setVotado] = useState(ponto?.votado ?? false)
   const [aFavor, setAFavor] = useState(ponto?.aFavor != null ? String(ponto.aFavor) : '')
@@ -386,7 +388,7 @@ function DialogoPonto({ reuniaoId, ponto, ordem, votos, aoFechar }: { reuniaoId:
     if ([aFavor, contra, abst].some((x) => x !== '' && !/^\d+$/.test(x))) return setErro('Os votos são números inteiros.')
     try {
       await mut.gravarPonto.mutateAsync({
-        id: ponto?.id, ordem: ponto?.ordem ?? ordem, assunto: assunto.trim(), detalhes: detalhes.trim() || null, discutido, votado,
+        id: ponto?.id, ordem: ponto?.ordem ?? ordem, assunto: assunto.trim(), detalhes: detalhes.trim() || null, discussao: discussao.trim() || null, discutido, votado,
         aFavor: votado ? n(aFavor) : null, contra: votado ? n(contra) : null, abstencoes: votado ? n(abst) : null,
         estado, deliberacao: deliberacao.trim() || null, votoId: votoId ? Number(votoId) : null,
       } as never)
@@ -405,8 +407,10 @@ function DialogoPonto({ reuniaoId, ponto, ordem, votos, aoFechar }: { reuniaoId:
           <ErroFormulario mensagem={erro} />
           <div className="grid gap-1.5"><label htmlFor="pt-ass" className="text-sm font-medium">Assunto <span className="text-destructive-text">*</span></label>
             <Input id="pt-ass" value={assunto} onChange={(e) => setAssunto(e.target.value)} maxLength={255} placeholder="ex.: Pintura da fachada do templo" className="alvo" autoFocus /></div>
-          <div className="grid gap-1.5"><label htmlFor="pt-det" className="text-sm font-medium">Detalhes</label>
+          <div className="grid gap-1.5"><label htmlFor="pt-det" className="text-sm font-medium">Descrição</label>
             <Textarea id="pt-det" rows={3} value={detalhes} onChange={(e) => setDetalhes(e.target.value)} placeholder="O que foi apresentado, propostas, valores…" /></div>
+          <div className="grid gap-1.5"><label htmlFor="pt-disc" className="text-sm font-medium">Discussão</label>
+            <Textarea id="pt-disc" rows={3} value={discussao} onChange={(e) => setDiscussao(e.target.value)} placeholder="O resumo do que se disse: opiniões, dúvidas, propostas de alteração…" /></div>
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="alvo flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={discutido} onChange={(e) => setDiscutido(e.target.checked)} className="size-4 accent-[var(--primary)]" />Foi discutido</label>
             <label className="alvo flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={votado} onChange={(e) => setVotado(e.target.checked)} className="size-4 accent-[var(--primary)]" />Foi submetido à votação</label>

@@ -1,0 +1,61 @@
+1. procurar antes de registar: a Ana Cossa existe noutra igreja (só o nome e a igreja, sem a ficha)
+ sem_ficha |   nome    |             motivo              | visivel 
+-----------+-----------+---------------------------------+---------
+ t         | Ana Cossa | Mesmo nome e data de nascimento | f
+(1 row)
+
+   o documento escrito de outra forma também a encontra (Elisa, da própria igreja: com a ficha)
+ mem_id |    nome    |          motivo           | visivel 
+--------+------------+---------------------------+---------
+    900 | Elisa Fumo | Mesmo número de documento | t
+(1 row)
+
+   só o nome igual, sem data nem documento: não é o mesmo membro (fica para o aviso de parecidos)
+ existentes 
+------------
+          0
+(1 row)
+
+2. registar a mesma pessoa: recusado (mesmo nome e data; mesmo documento)
+psql:database/tests/29_membro_unico_contagem_minima.sql:20: ERROR:  Este membro já existe: Ana Cossa (Igreja da Matola), com o mesmo nome e data de nascimento. Abra o registo existente ou peça a transferência a essa igreja.
+psql:database/tests/29_membro_unico_contagem_minima.sql:21: ERROR:  Este membro já existe: Elisa Fumo (Igreja Adventista do Sétimo Dia), com o mesmo número de documento. Abra o registo existente.
+3. homónimo com outra data de nascimento: registado; mudar-lhe a data para a da Ana: recusado
+ mem_nome | mem_apelido | mem_data_nascimento 
+----------+-------------+---------------------
+ Ana      | Cossa       | 1999-09-09
+(1 row)
+
+psql:database/tests/29_membro_unico_contagem_minima.sql:26: ERROR:  Este membro já existe: Ana Cossa (Igreja da Matola), com o mesmo nome e data de nascimento. Abra o registo existente ou peça a transferência a essa igreja.
+   editar outro campo de um membro já existente não volta a comparar
+ mem_profissao 
+---------------
+ Professora
+(1 row)
+
+4. conferir a contagem sem o representante da Escola Sabatina: recusado
+psql:database/tests/29_membro_unico_contagem_minima.sql:32: ERROR:  Para conferir, a contagem tem de ter pelo menos o tesoureiro, o representante da Escola Sabatina e o diácono. Falta: o representante da Escola Sabatina.
+   com o representante da Escola Sabatina: conferida
+   cpa_funcao    
+-----------------
+ ESCOLA_SABATINA
+(1 row)
+
+ cnu_estado 
+------------
+ CONFERIDA
+(1 row)
+
+5. depois de conferida, os participantes não mudam
+psql:database/tests/29_membro_unico_contagem_minima.sql:38: ERROR:  A contagem já foi conferida: os participantes ficam como estavam
+psql:database/tests/29_membro_unico_contagem_minima.sql:39: ERROR:  A contagem já foi conferida: os participantes ficam como estavam
+6. reuniões: o secretário regista a discussão do ponto, separada da descrição
+ reu_numero 
+------------
+ 2026-V43
+(1 row)
+
+   rpt_assunto   |      rpt_detalhes      |         rpt_discussao         
+-----------------+------------------------+-------------------------------
+ Obras no templo | Orçamento de 50 000,00 | Pediu-se um segundo orçamento
+(1 row)
+

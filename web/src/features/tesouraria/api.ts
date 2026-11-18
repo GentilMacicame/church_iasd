@@ -470,6 +470,12 @@ export function useContagensMut() {
 export const FUNCOES_CONTAGEM: Record<string, string> = {
   TESOUREIRO: 'Tesoureiro', ESCOLA_SABATINA: 'Escola Sabatina', DIACONO: 'Diácono', ANCIAO: 'Ancião', OUTRO: 'Outro',
 }
+/** V43: sem estes três a contagem não se confere (o ancião é opcional). */
+export const MINIMO_CONTAGEM = [
+  { funcao: 'TESOUREIRO', rotulo: 'o tesoureiro', titulo: 'Tesoureiro' },
+  { funcao: 'ESCOLA_SABATINA', rotulo: 'o representante da Escola Sabatina', titulo: 'Representante da Escola Sabatina' },
+  { funcao: 'DIACONO', rotulo: 'o diácono', titulo: 'Diácono' },
+]
 export type ParticipanteContagem = Esquema<'ContagemParticipante'> & { id: number; contagemId: number; membroId: number; funcao: string }
 
 /** Quem participou numa contagem, além dos dois contadores. */

@@ -129,7 +129,7 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
             <ul className="grid gap-0.5">
               {itens.map((it) => {
                 // "Membros" não fica activo quando se está a registar (esse tem o seu próprio item)
-                const activo = it.fim ? pathname === it.para : pathname.startsWith(it.para) && pathname !== '/membros/novo'
+                const activo = it.fim ? pathname === it.para : pathname.startsWith(it.para) && !pathname.startsWith('/membros/novo')
                 const ligacao = (
                   <NavLink
                     to={it.para}
@@ -217,6 +217,7 @@ function Caminho() {
   if (pathname.startsWith('/membros')) {
     partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.nav.membros, para: '/membros' })
     if (pathname === '/membros/novo') partes.push({ rotulo: t.membros.registar })
+    if (pathname === '/membros/novo/ficha') partes.push({ rotulo: t.membros.registar, para: '/membros/novo' }, { rotulo: 'Ficha' })
     else if (pathname.endsWith('/editar')) partes.push({ rotulo: t.ficha.titulo, para: pathname.replace(/\/editar$/, '') }, { rotulo: t.comum.editar })
     else if (/^\/membros\/\d+/.test(pathname)) partes.push({ rotulo: t.ficha.titulo })
   }
