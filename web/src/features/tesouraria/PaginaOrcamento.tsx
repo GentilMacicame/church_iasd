@@ -9,7 +9,7 @@ import { CircleCheck, ClipboardList, Printer, Plus, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Cartao, Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Dinheiro, Indicador, Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
@@ -67,14 +67,8 @@ export default function PaginaOrcamento() {
         ) : (
           <>
             {daIgreja.length > 1 && (
-              <div role="tablist" aria-label="Ano" className="mb-4 flex flex-wrap gap-2 print:hidden">
-                {daIgreja.map((o) => (
-                  <button key={o.id} role="tab" aria-selected={o.id === sel.id} onClick={() => setParams({ ano: String(o.ano) })}
-                    className={cn('alvo rounded-full border px-4 text-sm font-medium tabular-nums', o.id === sel.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:text-foreground')}>
-                    {o.ano}
-                  </button>
-                ))}
-              </div>
+              <Segmentos rotulo="Ano" valor={String(sel.id)} aoMudar={(v) => setParams({ ano: String(daIgreja.find((o) => String(o.id) === v)?.ano) })} className="mb-4 print:hidden"
+                opcoes={daIgreja.map((o) => ({ valor: String(o.id), rotulo: String(o.ano) }))} />
             )}
             <Detalhe key={sel.id} o={sel} />
           </>

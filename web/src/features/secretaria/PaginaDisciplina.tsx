@@ -20,7 +20,7 @@ import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { data, diasAte, hojeIso, hora, idade } from '@/lib/formatos'
+import { data, diasAte, hojeIso, hora, idade, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembro, useMembrosBasicos } from '@/features/membros/api'
 import { CampoVoto } from '@/features/livro/CampoVoto'
@@ -112,7 +112,7 @@ export default function PaginaDisciplina() {
                             <td className="tabular-nums">
                               <p>{data(d.dataInicio)} a {data(d.dataFim)}</p>
                               {e.r === 'Em censura' && <p className="text-xs text-muted-foreground">faltam {dias} dia{dias === 1 ? '' : 's'}</p>}
-                              {e.r === 'A começar' && <p className="text-xs text-muted-foreground">começa dentro de {diasAte(d.dataInicio)} dia(s)</p>}
+                              {e.r === 'A começar' && <p className="text-xs text-muted-foreground">começa dentro de {qtd(diasAte(d.dataInicio), 'dia(s)')}</p>}
                             </td>
                             <td className="hidden w-48 md:table-cell">
                               <div className="flex items-center gap-2">

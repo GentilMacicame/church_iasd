@@ -21,7 +21,7 @@ import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { METODO_DA_CONTA } from './PaginaEntrada'
 import {
   useCategorias, useConfirmarRemessa, useContasIgreja as useContas, useEntidades, useEnviarRemessa, useFundos, useRemessas, useRemessasDevidas,
@@ -85,9 +85,9 @@ export default function PaginaRemessas() {
       <TituloPagina icone={Landmark} titulo="Depósitos à Missão" descricao="Dízimos e a parte da Missão nas ofertas, todos os meses" />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-          <Indicador rotulo="Por depositar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${porEnviar.length} mês(es)`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
-          <Indicador rotulo="Depositados, por confirmar" valor={<Dinheiro valor={soma(enviadas)} />} nota={`${enviadas.length} depósito(s)`} icone={Send} tom="info" aCarregar={remessas.isPending} />
-          <Indicador rotulo={`Confirmados em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${confirmadasAno.length} depósito(s)`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
+          <Indicador rotulo="Por depositar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${qtd(porEnviar.length, 'mês(es)')}`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
+          <Indicador rotulo="Depositados, por confirmar" valor={<Dinheiro valor={soma(enviadas)} />} nota={`${qtd(enviadas.length, 'depósito(s)')}`} icone={Send} tom="info" aCarregar={remessas.isPending} />
+          <Indicador rotulo={`Confirmados em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${qtd(confirmadasAno.length, 'depósito(s)')}`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
         </div>
 
         <Cartao titulo="Por depositar" descricao="Por mês: entradas por fundo e a parte da Missão" icone={Hourglass} semMargem>

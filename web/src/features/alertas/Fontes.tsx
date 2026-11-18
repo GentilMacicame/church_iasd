@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { api, dados } from '@/api/cliente'
 import { useIgreja, useSessao } from '@/auth/sessao'
-import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { useContagens, useDespesas, useFechos, useMovimentos, useOrcamentos, useRemessas, useRemessasDevidas } from '@/features/tesouraria/api'
 import { useTransferencias } from '@/features/secretaria/api'
 import { useReunioes } from '@/features/livro/api'
@@ -68,7 +68,7 @@ function MembrosPorAprovar() {
   const itens = limitar((q.data ?? []).map((m): Alerta => ({
     chave: `membro:${m.id}`, modulo: 'Secretaria', icone: UserCheck, tom: 'warning', data: m.criadoEm,
     titulo: `Aprovar o registo de ${m.nome} ${m.apelido}`, detalhe: 'Registo de membro à espera de validação', para: `/membros/${m.id}`,
-  })), 8, (n) => ({ chave: 'membro:resto', modulo: 'Secretaria', icone: Users, tom: 'warning', titulo: `E mais ${n} registo(s) por aprovar`, para: '/membros?validacao=PENDENTE' }))
+  })), 8, (n) => ({ chave: 'membro:resto', modulo: 'Secretaria', icone: Users, tom: 'warning', titulo: `E mais ${qtd(n, 'registo(s)')} por aprovar`, para: '/membros?validacao=PENDENTE' }))
   usePublicar('membros', itens, q.isPending)
   return null
 }
@@ -79,7 +79,7 @@ function Menores() {
     chave: `menor:${m.id}`, modulo: 'Secretaria', icone: ShieldAlert, tom: 'warning',
     titulo: `${m.nome} ${m.apelido}: menor sem ${m.faltaEncarregado ? 'encarregado de educação' : 'consentimento'}`,
     detalhe: m.faltaEncarregado && m.faltaConsentimento ? 'Falta o encarregado e o consentimento' : 'Complete a ficha do membro', para: `/membros/${m.id}`,
-  })), 5, (n) => ({ chave: 'menor:resto', modulo: 'Secretaria', icone: ShieldAlert, tom: 'warning', titulo: `E mais ${n} menor(es) com a ficha incompleta`, para: '/secretaria/relatorio' }))
+  })), 5, (n) => ({ chave: 'menor:resto', modulo: 'Secretaria', icone: ShieldAlert, tom: 'warning', titulo: `E mais ${qtd(n, 'menor(es)')} com a ficha incompleta`, para: '/secretaria/relatorio' }))
   usePublicar('menores', itens, q.isPending)
   return null
 }
@@ -136,7 +136,7 @@ function Reunioes() {
         detalhe: 'A reunião já passou; registe as presenças e as deliberações', para: `/reunioes/${r.id}` })
     }
   }
-  usePublicar('reunioes', limitar(itens, 6, (n) => ({ chave: 'reunioes:resto', modulo: 'Reuniões', icone: Gavel, tom: 'info', titulo: `E mais ${n} reunião(ões) por concluir`, para: '/reunioes' })), q.isPending)
+  usePublicar('reunioes', limitar(itens, 6, (n) => ({ chave: 'reunioes:resto', modulo: 'Reuniões', icone: Gavel, tom: 'info', titulo: `E mais ${qtd(n, 'reunião(ões)')} por concluir`, para: '/reunioes' })), q.isPending)
   return null
 }
 
@@ -161,7 +161,7 @@ function MovimentosPendentes() {
         detalhe: saida ? 'Já aprovada; confirme quando o dinheiro sair' : 'Confirme para entrar nos saldos', para: `/tesouraria/movimentos/${tr.id}` })
     }
   }
-  usePublicar('movimentos', limitar(itens, 10, (n) => ({ chave: 'movimentos:resto', modulo: 'Tesouraria', icone: ReceiptText, tom: 'info', titulo: `E mais ${n} movimento(s) por confirmar ou aprovar`, para: '/tesouraria/movimentos?ver=pendentes' })), q.isPending)
+  usePublicar('movimentos', limitar(itens, 10, (n) => ({ chave: 'movimentos:resto', modulo: 'Tesouraria', icone: ReceiptText, tom: 'info', titulo: `E mais ${qtd(n, 'movimento(s)')} por confirmar ou aprovar`, para: '/tesouraria/movimentos?ver=pendentes' })), q.isPending)
   return null
 }
 
@@ -180,7 +180,7 @@ function Despesas() {
         titulo: `Pagar a despesa ${d.descricao}`, detalhe: `Aprovada: ${dinheiro(d.valorAprovado ?? d.valorSolicitado)}`, para: `/tesouraria/despesas?despesa=${d.id}` })
     }
   }
-  usePublicar('despesas', limitar(itens, 8, (n) => ({ chave: 'despesas:resto', modulo: 'Tesouraria', icone: ClipboardList, tom: 'warning', titulo: `E mais ${n} despesa(s) por tratar`, para: '/tesouraria/despesas' })), q.isPending)
+  usePublicar('despesas', limitar(itens, 8, (n) => ({ chave: 'despesas:resto', modulo: 'Tesouraria', icone: ClipboardList, tom: 'warning', titulo: `E mais ${qtd(n, 'despesa(s)')} por tratar`, para: '/tesouraria/despesas' })), q.isPending)
   return null
 }
 
@@ -190,7 +190,7 @@ function Contagens() {
   const itens = limitar(abertas.map((c): Alerta => ({
     chave: `contagem:${c.id}`, modulo: 'Tesouraria', icone: Calculator, tom: 'warning', data: c.data,
     titulo: `Conferir a contagem de ${data(c.data)}`, detalhe: `Contado: ${dinheiro(c.totalContado)} · compare com o lançado`, para: '/tesouraria/contagens',
-  })), 4, (n) => ({ chave: 'contagem:resto', modulo: 'Tesouraria', icone: Calculator, tom: 'warning', titulo: `E mais ${n} contagem(ns) por conferir`, para: '/tesouraria/contagens' }))
+  })), 4, (n) => ({ chave: 'contagem:resto', modulo: 'Tesouraria', icone: Calculator, tom: 'warning', titulo: `E mais ${qtd(n, 'contagem(ns)')} por conferir`, para: '/tesouraria/contagens' }))
   usePublicar('contagens', itens, q.isPending)
   return null
 }
@@ -277,7 +277,7 @@ function EsOfertas({ lancar, fechar }: { lancar: boolean; fechar: boolean }) {
         titulo: 'Fechar o relatório do sábado', detalhe: `${onde} · ofertas conferidas`, para: `/escola-sabatina/relatorios/${l.id}` })
     }
   }
-  usePublicar('es-ofertas', limitar(itens, 8, (n) => ({ chave: 'es-ofertas:resto', modulo: 'Escola Sabatina', icone: BookOpenCheck, tom: 'info', titulo: `E mais ${n} relatório(s) por tratar`, para: '/escola-sabatina' })),
+  usePublicar('es-ofertas', limitar(itens, 8, (n) => ({ chave: 'es-ofertas:resto', modulo: 'Escola Sabatina', icone: BookOpenCheck, tom: 'info', titulo: `E mais ${qtd(n, 'relatório(s)')} por tratar`, para: '/escola-sabatina' })),
     conf.isPending || (fechar && abertos.isPending))
   return null
 }

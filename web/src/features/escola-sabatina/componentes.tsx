@@ -37,10 +37,10 @@ export function textoMT(v?: string | number | null) {
 export function tomPct(v: number | null, tipo: 'presenca' | 'alvo') {
   if (v == null || Number.isNaN(v)) return ''
   const [bom, medio] = tipo === 'alvo' ? [1, 0.9] : [0.85, 0.75]
-  return v >= bom ? 'bg-tint-success text-success-text' : v >= medio ? 'bg-tint-warning text-warning-text' : 'bg-tint-destructive text-destructive-text'
+  return v >= bom ? 'text-success-text' : v >= medio ? 'text-warning-text' : 'text-destructive-text'
 }
 
-/** Célula de percentagem a cores. */
+/** Célula de percentagem: o número a verde, âmbar ou vermelho conforme o limiar. */
 export function CelulaPct({ v, tipo = 'presenca', casas = 1, className }: { v?: string | number | null; tipo?: 'presenca' | 'alvo'; casas?: number; className?: string }) {
   const n = fr(v)
   return <td className={cn('num font-medium tabular-nums', tomPct(n, tipo), className)}>{textoPct(n, casas)}</td>
@@ -61,7 +61,7 @@ export function BarraDados({ v, max, children, tom = 'primary' }: { v: number; m
   const pct = max > 0 ? Math.max(0, Math.min(100, (v / max) * 100)) : 0
   return (
     <span className="relative flex h-6 items-center justify-end overflow-hidden rounded-sm px-1.5">
-      <span aria-hidden className={cn('absolute inset-y-0 left-0 rounded-sm', tom === 'warning' ? 'bg-warning/25' : 'bg-primary/15')} style={{ width: `${pct}%` }} />
+      <span aria-hidden className={cn('absolute inset-y-0 left-0 rounded-sm', tom === 'warning' ? 'bg-warning/20' : 'bg-primary/10')} style={{ width: `${pct}%` }} />
       <span className="relative tabular-nums">{children}</span>
     </span>
   )
@@ -100,20 +100,21 @@ export function EscolherTrimestre({ trimestres, valor, aoMudar, className }: { t
 }
 
 /**
- * Tabela no estilo da folha de cálculo: cabeçalho em faixa escura (como o quadro), números à direita, linhas finas,
- * primeira coluna fixa ao deslocar no telemóvel e linha de totais destacada (<tfoot>). Imprime com as cores.
+ * Tabela larga de relatório: o mesmo aspecto da Tabela comum (cabeçalho claro, linhas finas), números à direita,
+ * primeira coluna fixa ao deslocar no telemóvel e linha de totais (<tfoot>) em cinzento suave.
  */
 export function Folha({ children, className, minimo = 'min-w-[56rem]' }: { children: ReactNode; className?: string; minimo?: string }) {
   return (
     <div className="relative w-full overflow-x-auto rounded-lg border print:overflow-visible print:border-0">
       <table className={cn(
-        'w-full border-collapse text-sm text-foreground [print-color-adjust:exact]', minimo,
-        '[&_thead_th]:bg-[#1f3a5f] [&_thead_th]:px-3 [&_thead_th]:py-2.5 [&_thead_th]:text-[11px] [&_thead_th]:font-semibold [&_thead_th]:tracking-wide [&_thead_th]:text-white [&_thead_th]:uppercase dark:[&_thead_th]:bg-[#16283f]',
-        '[&_thead_tr+tr_th]:bg-[#2b4b74] [&_thead_tr+tr_th]:py-1.5 [&_thead_tr+tr_th]:text-[10px] dark:[&_thead_tr+tr_th]:bg-[#1d3452]',
-        '[&_thead_th]:border-r [&_thead_th]:border-white/10 [&_thead_th:last-child]:border-r-0',
-        '[&_tbody_td]:border-t [&_tbody_td]:px-3 [&_tbody_td]:py-2 [&_tbody_tr:hover]:bg-muted/40',
-        '[&_tfoot_td]:border-t-2 [&_tfoot_td]:border-[#1f3a5f]/40 [&_tfoot_td]:bg-[#e8eef6] [&_tfoot_td]:px-3 [&_tfoot_td]:py-2.5 [&_tfoot_td]:font-semibold dark:[&_tfoot_td]:bg-[#1a2635]',
-        '[&_.num]:text-right [&_.num]:whitespace-nowrap [&_th.num]:text-right [&_.centro]:text-center',
+        'w-full border-collapse text-sm text-foreground', minimo,
+        '[&_thead_th]:h-10 [&_thead_th]:bg-muted [&_thead_th]:px-3 [&_thead_th]:py-2 [&_thead_th]:text-left [&_thead_th]:align-middle [&_thead_th]:text-xs [&_thead_th]:font-medium [&_thead_th]:whitespace-nowrap [&_thead_th]:text-muted-foreground',
+        '[&_thead_tr+tr_th]:h-8 [&_thead_tr+tr_th]:bg-muted/60 [&_thead_tr+tr_th]:text-[12px] [&_thead_tr+tr_th]:font-normal',
+        '[&_thead_tr]:border-b',
+        '[&_tbody_td]:border-t [&_tbody_td]:px-3 [&_tbody_td]:py-2.5 [&_tbody_td]:align-middle [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/40',
+        '[&_tfoot_td]:border-t [&_tfoot_td]:bg-muted/60 [&_tfoot_td]:px-3 [&_tfoot_td]:py-2.5 [&_tfoot_td]:font-semibold',
+        '[&_.num]:text-right [&_.num]:whitespace-nowrap [&_.num]:tabular-nums [&_th.num]:text-right [&_.centro]:text-center [&_th.centro]:text-center',
+        '[&_thead_th:first-child]:sticky [&_thead_th:first-child]:left-0 [&_thead_th:first-child]:z-[2]',
         '[&_tbody_td:first-child]:sticky [&_tbody_td:first-child]:left-0 [&_tbody_td:first-child]:z-[1] [&_tbody_td:first-child]:bg-card',
         '[&_tfoot_td:first-child]:sticky [&_tfoot_td:first-child]:left-0 [&_tfoot_td:first-child]:z-[1]',
         className,

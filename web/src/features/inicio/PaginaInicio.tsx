@@ -21,7 +21,7 @@ import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { api, dados } from '@/api/cliente'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, dataPorExtenso, deCentimos, diasAte, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos, useParticipacao } from '@/features/membros/api'
 import { emVigor as comunicadoEmVigor, useComunicados } from '@/features/comunicados/api'
@@ -132,7 +132,7 @@ function ListaAtencao() {
   const visiveis = todos ? grupos : grupos.slice(0, 7)
   return (
     <Cartao titulo="Precisa de atenção" icone={ClipboardCheck} semMargem className="h-full lg:col-span-7"
-      descricao={aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${alertas.length} assunto(s) em ${grupos.length} tipo(s) · o detalhe está no sino` : 'Nada à espera'}>
+      descricao={aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${qtd(alertas.length, 'assunto(s)')} em ${qtd(grupos.length, 'tipo(s)')} · o detalhe está no sino` : 'Nada à espera'}>
       {aCarregar && !alertas.length ? (
         <div className="grid gap-3 px-5 pb-5 sm:px-6" aria-busy="true" aria-label="A carregar">{[0, 1, 2].map((i) => <Barra key={i} className="h-12 w-full" />)}</div>
       ) : !alertas.length ? (
@@ -159,7 +159,7 @@ function ListaAtencao() {
         {grupos.length > 7 && (
           <button type="button" onClick={() => setTodos((x) => !x)}
             className="alvo mt-auto w-full border-t px-5 py-2.5 text-left text-sm font-medium text-primary hover:bg-muted/50 sm:px-6">
-            {todos ? 'Mostrar menos' : `Mostrar mais ${grupos.length - 7} tipo(s)`}
+            {todos ? 'Mostrar menos' : `Mostrar mais ${qtd(grupos.length - 7, 'tipo(s)')}`}
           </button>
         )}
         </>
@@ -320,10 +320,10 @@ function Financas() {
             </ul>
           )}
         {!resumo.aCarregar && (
-          <dl className="mt-auto grid grid-cols-3 gap-2 border-t pt-4 text-xs">
-            <div><dt className="text-muted-foreground">Entradas do mês</dt><dd className="num mt-0.5 text-sm font-semibold text-success-text">{mt(entradasMes)}</dd></div>
-            <div><dt className="text-muted-foreground">Saídas do mês</dt><dd className="num mt-0.5 text-sm font-semibold">{mt(saidasMes)}</dd></div>
-            <div><dt className="text-muted-foreground">Resultado</dt><dd className={cn('num mt-0.5 text-sm font-semibold', entradasMes - saidasMes < 0 && 'text-destructive-text')}>{mt(entradasMes - saidasMes)}</dd></div>
+          <dl className="mt-auto grid gap-1.5 border-t pt-4 text-sm">
+            <div className="flex items-baseline justify-between gap-3"><dt className="text-muted-foreground">Entradas do mês</dt><dd className="num font-semibold text-success-text">{mt(entradasMes)}</dd></div>
+            <div className="flex items-baseline justify-between gap-3"><dt className="text-muted-foreground">Saídas do mês</dt><dd className="num font-semibold">{mt(saidasMes)}</dd></div>
+            <div className="flex items-baseline justify-between gap-3"><dt className="text-muted-foreground">Resultado</dt><dd className={cn('num font-semibold', entradasMes - saidasMes < 0 && 'text-destructive-text')}>{mt(entradasMes - saidasMes)}</dd></div>
           </dl>
         )}
         </div>
@@ -346,7 +346,7 @@ function LivroDoAno({ className }: { className?: string }) {
   const saidas = meses.map((m) => n(doMes(m), ['transferenciasSaida', 'falecimentos', 'remocoes', 'desaparecidos']))
   const somaE = entradas.reduce((a, b) => a + b, 0), somaS = saidas.reduce((a, b) => a + b, 0)
   return (
-    <Cartao titulo={`Livro de membros em ${ano}`} descricao={`${somaE} entrada(s) e ${somaS} saída(s), com o voto da igreja`} icone={BookOpen} className={cn('h-full', className)}
+    <Cartao titulo={`Livro de membros em ${ano}`} descricao={`${qtd(somaE, 'entrada(s)')} e ${qtd(somaS, 'saída(s)')}, com o voto da igreja`} icone={BookOpen} className={cn('h-full', className)}
       accoes={<Button asChild variant="ghost" size="sm"><Link to="/livro">{t.comum.verTodos}</Link></Button>}>
       {q.isPending ? <Barra className="h-48 w-full" />
         : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
@@ -494,9 +494,9 @@ function Indicadores({ comTesouraria }: { comTesouraria: boolean }) {
       {podeMembros && (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Indicador rotulo="Total de membros" valor={membros} icone={Users} para="/membros?estado=ACTIVO" aCarregar={basicos.isPending}
-            nota={`${interessados} interessado(s) · ${lista.length} registos no livro`} />
+            nota={`${qtd(interessados, 'interessado(s)')} · ${lista.length} registos no livro`} />
           <Indicador rotulo="Membros activos" valor={activos} icone={UserCheck} tom="success" aCarregar={basicos.isPending || participacao.isPending}
-            nota={<>{pct(activos, membros)} de {membros} membros · {inactivos} inactivo(s)</>} />
+            nota={<>{pct(activos, membros)} de {membros} membros · {qtd(inactivos, 'inactivo(s)')}</>} />
           <Indicador rotulo="Sem família" valor={semFamilia} icone={UserPlus} tom={semFamilia ? 'destructive' : 'success'} para="/familias" aCarregar={basicos.isPending}
             destaque={semFamilia > 0} nota={semFamilia ? 'membros activos sem família associada' : 'todos os membros têm família'} />
           <Indicador rotulo="Por aprovar" valor={porAprovar ?? 0} nota="registos à espera do secretário" icone={ClipboardCheck} tom="warning" para="/membros?validacao=PENDENTE" aCarregar={basicos.isPending} />
@@ -562,7 +562,7 @@ export default function PaginaInicio() {
       />
       <div className="grid gap-6">
         <Indicadores comTesouraria={comTesouraria} />
-        <div className="grid gap-6 lg:grid-cols-2 empty:hidden">
+        <div className="grid gap-6 lg:grid-cols-2 empty:hidden lg:[&>*:only-child]:col-span-2">
           <ComunicadosEmVigor />
           <SantaCeiaResumo />
         </div>

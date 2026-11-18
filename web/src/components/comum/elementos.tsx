@@ -71,7 +71,7 @@ export function Indicador({ rotulo, valor, nota, icone, tom = 'primary', para, a
   const conteudo = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <span className="min-w-0 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase sm:text-xs">{rotulo}</span>
+        <span className="min-w-0 text-[12px] font-semibold tracking-wider text-muted-foreground uppercase sm:text-xs">{rotulo}</span>
         {icone && <span className="hidden sm:block"><IconeTom icone={icone} tom={tom} /></span>}
       </div>
       {aCarregar ? <span className="mt-3 block h-9 w-16 rounded-md bg-muted" aria-hidden />
@@ -95,8 +95,8 @@ export function Cartao({ titulo, descricao, icone, accoes, children, className, 
   return (
     <section className={cn('flex min-w-0 flex-col rounded-xl border bg-card text-card-foreground shadow-card', className)}>
       {temCabeca && (
-        <header className="flex items-start justify-between gap-4 px-5 pt-5 sm:px-6">
-          <div className="flex min-w-0 items-start gap-3">
+        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 px-5 pt-5 sm:px-6">
+          <div className="flex min-w-[10rem] flex-1 basis-0 items-start gap-3">
             {icone && (
               <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" aria-hidden>
                 {(() => { const I = icone; return <I className="size-4" /> })()}
@@ -107,7 +107,7 @@ export function Cartao({ titulo, descricao, icone, accoes, children, className, 
               {descricao && <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>}
             </div>
           </div>
-          {accoes && <div className="flex flex-none items-center gap-2">{accoes}</div>}
+          {accoes && <div className="ml-auto flex flex-wrap items-center gap-2">{accoes}</div>}
         </header>
       )}
       <div className={cn('flex min-w-0 flex-1 flex-col', !semMargem && 'p-5 sm:p-6', !semMargem && temCabeca && 'pt-4 sm:pt-4', semMargem && temCabeca && 'mt-4')}>
@@ -197,11 +197,11 @@ export function Tabela({ children, className, porPagina = POR_PAGINA }: { childr
       const n = i++
       return p.naPagina(n) ? l : cloneElement(l, { className: cn(l.props.className, 'hidden print:table-row') })
     }
-    return cloneElement(c, {}, linhas.map((l) => marcar(l as ReactElement<{ className?: string }>)))
+    return cloneElement(c, {}, linhas.map((l, k) => cloneElement(marcar(l as ReactElement<{ className?: string }>), { key: l.key ?? `linha-${k}` })))
   })
   return (
     <div className="relative w-full min-w-0">
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className={cn(
           'w-full border-collapse text-sm text-foreground',
           '[&_thead_tr]:border-b [&_th]:h-10 [&_th]:bg-muted/50 [&_th]:px-4 [&_th]:text-left [&_th]:align-middle [&_th]:text-xs [&_th]:font-medium [&_th]:whitespace-nowrap [&_th]:text-muted-foreground',
@@ -212,6 +212,32 @@ export function Tabela({ children, className, porPagina = POR_PAGINA }: { childr
         </table>
       </div>
       {activa && <ControlosPaginacao {...p} total={paginaveis.length} />}
+    </div>
+  )
+}
+
+/**
+ * Controlo segmentado (filtros e vistas da mesma lista): fundo cinzento, a opção escolhida em branco com sombra
+ * e o número de cada uma num contador discreto. O mesmo aspecto em toda a aplicação.
+ */
+export function Segmentos<T extends string>({ opcoes, valor, aoMudar, rotulo, className }: {
+  opcoes: readonly { valor: T; rotulo: ReactNode; contagem?: number }[]; valor: T; aoMudar: (v: T) => void; rotulo: string; className?: string
+}) {
+  return (
+    <div role="tablist" aria-label={rotulo} className={cn('inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-1 [scrollbar-width:none]', className)}>
+      {opcoes.map((o) => {
+        const activo = o.valor === valor
+        return (
+          <button key={o.valor} type="button" role="tab" aria-selected={activo} onClick={() => aoMudar(o.valor)}
+            className={cn('alvo inline-flex h-8 flex-none items-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all',
+              activo ? 'bg-card text-foreground shadow-[0_1px_3px_rgb(15_23_42/0.12)]' : 'text-muted-foreground hover:text-foreground')}>
+            {o.rotulo}
+            {o.contagem != null && (
+              <span className={cn('min-w-5 rounded-full px-1.5 text-center text-xs tabular-nums', activo ? 'bg-primary/10 text-primary' : 'bg-background/70 text-muted-foreground')}>{o.contagem}</span>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { useIgreja, useSessao } from '@/auth/sessao'
-import { dinheiro, hojeIso, hora } from '@/lib/formatos'
+import { dinheiro, hojeIso, hora, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useEntidadeDaIgreja, useIgrejasDaEntidade } from '@/features/comunicados/api'
 import { ROTULO_ESTADO, VARIANTE_ESTADO, useDistritoDaIgreja, usePrograma } from './api'
@@ -65,7 +65,7 @@ export default function PaginaAreaPastoral() {
               <Indicador rotulo="Igrejas" valor={doDistrito.length || '—'} icone={Church} nota={doDistrito.map((i) => i.nome).slice(0, 2).join(', ') || 'do distrito'} />
               <Indicador rotulo={`Actividades ${ano}`} valor={lista.length} icone={CalendarRange} tom="info" nota={`${proximas.length} por realizar`} aCarregar={q.isPending} />
               <Indicador rotulo="Realizadas" valor={lista.filter((x) => x.estado === 'CONCLUIDA').length} icone={CircleCheck} tom="success"
-                nota={`${lista.filter((x) => x.estado === 'CANCELADA').length} cancelada(s)`} aCarregar={q.isPending} />
+                nota={`${qtd(lista.filter((x) => x.estado === 'CANCELADA').length, 'cancelada(s)')}`} aCarregar={q.isPending} />
               <Indicador rotulo="Orçamento" valor={dinheiro(previsto.toFixed(2))} icone={Coins} nota={`executado ${dinheiro(lista.reduce((s, x) => s + Number(x.executado ?? 0), 0).toFixed(2))}`} aCarregar={q.isPending} />
             </div>
 

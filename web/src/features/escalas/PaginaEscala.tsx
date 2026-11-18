@@ -33,7 +33,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { ErroApi, mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { data, dataPorExtenso, hojeIso } from '@/lib/formatos'
+import { data, dataPorExtenso, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
@@ -366,7 +366,7 @@ export default function PaginaEscala() {
                 <DropdownMenuTrigger asChild><Button variant="outline" size="icon" aria-label="Mais acções" className="alvo"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem disabled={gerar.isPending}
-                    onSelect={() => gerar.mutate(undefined, { onSuccess: (r) => toast.success(`${(r as { criados: number }).criados} sábado(s) acrescentado(s).`), onError: (e) => toast.error(mensagemDe(e)) })}>
+                    onSelect={() => gerar.mutate(undefined, { onSuccess: (r) => toast.success(`${qtd((r as { criados: number }).criados, 'sábado(s) acrescentado(s)')}.`), onError: (e) => toast.error(mensagemDe(e)) })}>
                     <RefreshCw className="size-4" /> Acrescentar sábados em falta
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -376,7 +376,7 @@ export default function PaginaEscala() {
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Indicador rotulo="Sábados" valor={lista.length} nota={`${lista.length - normais.length} dia(s) especial(ais)`} icone={CalendarDays} aCarregar={dias.isPending} />
+          <Indicador rotulo="Sábados" valor={lista.length} nota={`${qtd(lista.length - normais.length, 'dia(s) especial(is)')}`} icone={CalendarDays} aCarregar={dias.isPending} />
           {culto
             ? <Indicador rotulo="Sermão principal" valor={`${comPregador}/${normais.length}`} nota="sábados com quem prega" icone={Mic} tom="success" aCarregar={dias.isPending || escalados.isPending} />
             : <Indicador rotulo="Colunas" valor={cols.length} nota={`definidas pela igreja para a ${TIPOS_ESCALA[tipo]}`} icone={Columns3} aCarregar={colunasIgreja.isPending} />}

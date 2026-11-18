@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { Marca } from './Marca'
 import { BarraCarregamento, CarregandoPagina } from './Carregamento'
 import { Inactividade } from './Inactividade'
+import { qtd } from '@/lib/formatos'
 
 /** Sino de alertas: carregado a pedido (as fontes usam os módulos; não entram no pacote inicial). */
 const Sino = pagina(() => import('@/features/alertas/Sino'))
@@ -135,7 +136,7 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
         return (
           <div key={i} className={cn(grupo.rotulo && 'mt-5')}>
             {grupo.rotulo && !encolhida && (
-              <p className="px-2.5 pb-1.5 text-[11px] font-semibold tracking-wider text-sidebar-muted uppercase">{grupo.rotulo}</p>
+              <p className="px-2.5 pb-1.5 text-[12px] font-semibold tracking-wider text-sidebar-muted uppercase">{grupo.rotulo}</p>
             )}
             {grupo.rotulo && encolhida && <div className="mx-2.5 mb-2 h-px bg-sidebar-border" aria-hidden />}
             <ul className="grid gap-0.5">
@@ -197,8 +198,8 @@ function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; abe
           <Link to="/" onClick={aoFechar} className="flex min-w-0 items-center gap-3 text-foreground">
             <Marca className="size-8 flex-none" />
             <span className={cn('flex min-w-0 flex-col leading-tight', encolhida && 'lg:hidden')}>
-              <span className="truncate text-sm font-semibold">{distrito?.nome ?? igreja?.nome ?? t.produto.nome}</span>
-              <span className="text-xs text-muted-foreground">{distrito ? `Área pastoral · ${distrito.igrejas.length} igreja(s)` : t.produto.descricao}</span>
+              <span className="line-clamp-2 text-sm leading-tight font-semibold">{distrito?.nome ?? igreja?.nome ?? t.produto.nome}</span>
+              <span className="text-xs text-muted-foreground">{distrito ? `Área pastoral · ${qtd(distrito.igrejas.length, 'igreja(s)')}` : t.produto.descricao}</span>
             </span>
           </Link>
           <button type="button" onClick={aoFechar} aria-label={t.comum.fechar}
@@ -401,7 +402,7 @@ function useSairSeguro() {
   const dialogo = (
     <DialogoConfirmar aberto={porEnviar > 0} aoMudar={(v) => !v && setPorEnviar(0)} perigo
       titulo="Há relatórios por enviar"
-      texto={`${porEnviar} relatório(s) da Escola Sabatina ainda não chegaram ao servidor. Ficam guardados neste telemóvel e são enviados quando alguém entrar com rede. Sair mesmo assim?`}
+      texto={`${qtd(porEnviar, 'relatório(s)')} da Escola Sabatina ainda não chegaram ao servidor. Ficam guardados neste telemóvel e são enviados quando alguém entrar com rede. Sair mesmo assim?`}
       accao="Sair" aoConfirmar={() => { setPorEnviar(0); void sair() }} />
   )
   return { pedir, dialogo }

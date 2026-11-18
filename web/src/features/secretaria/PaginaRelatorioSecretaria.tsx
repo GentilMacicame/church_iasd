@@ -18,7 +18,7 @@ import { GraficoBarras } from '@/components/comum/graficos'
 import { CabecalhoDocumento } from '@/components/layout/Marca'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos } from '@/i18n/pt-MZ'
-import { data, idade } from '@/lib/formatos'
+import { data, idade, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { imprimirComo } from '@/lib/documentos'
 import { Exportar } from '@/components/comum/Exportar'
@@ -152,10 +152,10 @@ export default function PaginaRelatorioSecretaria() {
               formatar={(v) => String(v)} />
           </Cartao>
           <div className="grid gap-6 lg:col-span-5">
-            <Cartao titulo="De onde vieram" descricao={`${entradas} entrada(s) com o voto da igreja`} icone={ArrowDownLeft}>
+            <Cartao titulo="De onde vieram" descricao={`${qtd(entradas, 'entrada(s)')} com o voto da igreja`} icone={ArrowDownLeft}>
               <Barras tom="success" itens={ENTRADAS.map((c) => ({ r: c.r, n: total(c.campo) }))} />
             </Cartao>
-            <Cartao titulo="Para onde foram" descricao={`${saidas} saída(s)`} icone={ArrowUpRight}>
+            <Cartao titulo="Para onde foram" descricao={`${qtd(saidas, 'saída(s)')}`} icone={ArrowUpRight}>
               <Barras tom="destructive" itens={SAIDAS.map((c) => ({ r: c.r, n: total(c.campo) }))} />
             </Cartao>
           </div>
@@ -188,9 +188,9 @@ export default function PaginaRelatorioSecretaria() {
                   <tr key={nome} className={cn(futuro && 'text-muted-foreground/60')}>
                     <td className="font-medium">{nome}</td>
                     {ENTRADAS.map((c) => <td key={c.campo} className="num tabular-nums">{n(valor(m, c.campo))}</td>)}
-                    <td className={cn('num font-semibold tabular-nums', e > 0 && 'bg-tint-success/60 text-success-text')}>{n(e)}</td>
+                    <td className={cn('num font-semibold tabular-nums', e > 0 && 'text-success-text')}>{n(e)}</td>
                     {SAIDAS.map((c) => <td key={c.campo} className="num tabular-nums">{n(valor(m, c.campo))}</td>)}
-                    <td className={cn('num font-semibold tabular-nums', s > 0 && 'bg-tint-destructive/60 text-destructive-text')}>{n(s)}</td>
+                    <td className={cn('num font-semibold tabular-nums', s > 0 && 'text-destructive-text')}>{n(s)}</td>
                     <td className={cn('num font-semibold tabular-nums', e - s > 0 && 'text-success-text', e - s < 0 && 'text-destructive-text')}>{futuro && !e && !s ? '' : sinal(e - s)}</td>
                   </tr>
                 )
@@ -215,7 +215,7 @@ export default function PaginaRelatorioSecretaria() {
 
         {/* 4. estado e pendentes */}
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <Cartao titulo="Membros por estado" descricao={`${lista.length} registo(s) no livro desta igreja`} icone={Users}>
+          <Cartao titulo="Membros por estado" descricao={`${qtd(lista.length, 'registo(s)')} no livro desta igreja`} icone={Users}>
             <div className="mb-4 flex h-3 overflow-hidden rounded-full bg-muted" aria-hidden>
               {porEstado.map(([e, n]) => <div key={e} className={cn('h-full', CORES_ESTADO[e] ?? 'bg-muted-foreground')} style={{ width: `${(n / Math.max(1, lista.length)) * 100}%` }} />)}
             </div>

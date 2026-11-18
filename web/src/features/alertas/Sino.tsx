@@ -14,6 +14,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { cn } from '@/lib/utils'
 import { Fontes } from './Fontes'
 import { lerVistos, marcarVistos, useAlertas, type Alerta, type ModuloAlerta } from './loja'
+import { qtd } from '@/lib/formatos'
 
 const ORDEM: ModuloAlerta[] = ['Tesouraria', 'Secretaria', 'Reuniões', 'Escola Sabatina', 'Escalas']
 /** Consultas que alimentam os alertas (primeiro elemento da chave). */
@@ -63,7 +64,7 @@ export default function Sino() {
   }
 
   const grupos = useMemo(() => ORDEM.map((m) => ({ m, itens: alertas.filter((a) => a.modulo === m) })).filter((g) => g.itens.length), [alertas])
-  const rotulo = novos ? `Alertas: ${novos} novo(s) de ${alertas.length}` : alertas.length ? `Alertas: ${alertas.length} por resolver` : 'Alertas: nada por resolver'
+  const rotulo = novos ? `Alertas: ${qtd(novos, 'novo(s)')} de ${alertas.length}` : alertas.length ? `Alertas: ${alertas.length} por resolver` : 'Alertas: nada por resolver'
 
   return (
     <>
@@ -75,7 +76,7 @@ export default function Sino() {
             {novos ? <BellRing className="size-[18px]" /> : <Bell className="size-[18px]" />}
             {alertas.length > 0 && (
               <span aria-hidden className={cn(
-                'absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums ring-2 ring-background',
+                'absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[12px] leading-none font-semibold tabular-nums ring-2 ring-background',
                 novos ? (graves ? 'bg-destructive text-white' : 'bg-primary text-primary-foreground') : 'bg-muted text-muted-foreground')}>
                 {(novos || alertas.length) > 99 ? '99+' : novos || alertas.length}
               </span>
@@ -87,7 +88,7 @@ export default function Sino() {
             <div>
               <p className="text-sm font-semibold">Alertas</p>
               <p className="text-xs text-muted-foreground">
-                {aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${alertas.length} assunto(s) à espera de uma acção` : 'Nada à espera'}
+                {aCarregar && !alertas.length ? 'A verificar…' : alertas.length ? `${qtd(alertas.length, 'assunto(s)')} à espera de uma acção` : 'Nada à espera'}
               </p>
             </div>
             <Link to="/" onClick={() => abrir(false)} className="alvo text-xs font-medium text-primary hover:underline">Ver no Início</Link>
@@ -101,7 +102,7 @@ export default function Sino() {
               </div>
             ) : grupos.map((g) => (
               <section key={g.m} aria-label={g.m}>
-                <p className="sticky top-0 z-10 bg-popover/95 px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase backdrop-blur">{g.m}</p>
+                <p className="sticky top-0 z-10 bg-popover/95 px-4 pt-3 pb-1 text-[12px] font-semibold tracking-wider text-muted-foreground uppercase backdrop-blur">{g.m}</p>
                 <ul>
                   {g.itens.map((a) => (
                     <li key={a.chave}>

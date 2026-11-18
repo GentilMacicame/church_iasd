@@ -109,7 +109,7 @@ export function GraficoBarras({ categorias, series, formatar, altura = 220, rotu
             {passos.map((p) => (
               <g key={p}>
                 <line x1={m.esq} x2={m.esq + w} y1={y(p)} y2={y(p)} stroke="var(--border)" strokeDasharray={p === 0 ? undefined : '3 4'} />
-                <text x={m.esq - 8} y={y(p)} dy="0.32em" textAnchor="end" className="fill-muted-foreground text-[11px] tabular-nums">{curto(p)}</text>
+                <text x={m.esq - 8} y={y(p)} dy="0.32em" textAnchor="end" className="fill-muted-foreground text-[12px] tabular-nums">{curto(p)}</text>
               </g>
             ))}
             {categorias.map((c, i) => {
@@ -120,7 +120,7 @@ export function GraficoBarras({ categorias, series, formatar, altura = 220, rotu
                   {(foco === i || destaque === i) && <rect x={x0 + 2} y={m.cima} width={grupo - 4} height={h} rx={6} className={foco === i ? 'fill-muted' : 'fill-muted/50'} />}
                   {series.map((s, j) => <path key={s.nome} d={barra(inicio + j * (larguraBarra + 2), s.valores[i] ?? 0)} fill={cor(s.slot)} />)}
                   {i % rotuloCada === 0 && (
-                    <text x={x0 + grupo / 2} y={m.cima + h + 17} textAnchor="middle" className={cn('text-[11px]', destaque === i ? 'fill-foreground font-medium' : 'fill-muted-foreground')}>{c}</text>
+                    <text x={x0 + grupo / 2} y={m.cima + h + 17} textAnchor="middle" className={cn('text-[12px]', destaque === i ? 'fill-foreground font-medium' : 'fill-muted-foreground')}>{c}</text>
                   )}
                   <rect x={x0} y={0} width={grupo} height={altura} fill="transparent" onMouseEnter={() => setFoco(i)} onClick={() => setFoco(i)} />
                 </g>
@@ -201,7 +201,7 @@ export function Donut({ fatias, formatar, rotulo, centro, tamanho = 148, lado }:
             x2={raio + (r + espessura) * Math.cos(a.ini)} y2={raio + (r + espessura) * Math.sin(a.ini)} stroke="var(--card)" strokeWidth={2} />
         ))}
         <text x={raio} y={raio - 4} textAnchor="middle" className="fill-foreground text-lg font-semibold tabular-nums">{activa ? formatar(activa.valor) : centro ?? formatar(total)}</text>
-        <text x={raio} y={raio + 14} textAnchor="middle" className="fill-muted-foreground text-[11px]">{activa ? pct(activa.valor) : 'total'}</text>
+        <text x={raio} y={raio + 14} textAnchor="middle" className="fill-muted-foreground text-[12px]">{activa ? pct(activa.valor) : 'total'}</text>
       </svg>
       <ul className="grid w-full min-w-0 gap-2 text-sm">
         {fatias.map((f, i) => (

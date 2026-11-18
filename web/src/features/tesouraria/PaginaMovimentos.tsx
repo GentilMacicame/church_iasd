@@ -7,7 +7,7 @@ import { Dinheiro, Indicador, Tabela, TituloPagina } from '@/components/comum/el
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
@@ -76,8 +76,8 @@ export default function PaginaMovimentos() {
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           <Indicador rotulo="Entradas" valor={<Dinheiro valor={soma(entradas)} />}
-            nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={soma(pagoNaMissao.filter((x) => x.tipo === 'ENTRADA'))} /> pagos na Missão</> : `${entradas.length} confirmada(s)`} icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
-          <Indicador rotulo="Saídas" valor={<Dinheiro valor={soma(saidas)} />} nota={`${saidas.length} confirmada(s)`} icone={ArrowUpRight} tom="destructive" aCarregar={q.isPending} />
+            nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={soma(pagoNaMissao.filter((x) => x.tipo === 'ENTRADA'))} /> pagos na Missão</> : `${qtd(entradas.length, 'confirmada(s)')}`} icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
+          <Indicador rotulo="Saídas" valor={<Dinheiro valor={soma(saidas)} />} nota={`${qtd(saidas.length, 'confirmada(s)')}`} icone={ArrowUpRight} tom="destructive" aCarregar={q.isPending} />
           <Indicador rotulo="Por confirmar" valor={pendentes.length} nota="pendentes ou por aprovar" icone={ShieldAlert} tom="warning" aCarregar={q.isPending}
             aoClicar={() => definir('ver', 'pendentes')} activo={filtro === 'pendentes'} />
         </div>

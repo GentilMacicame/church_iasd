@@ -26,6 +26,7 @@ import { useFamiliasResumo } from '@/features/secretaria/api'
 import { useDepartamentosIgreja } from '@/features/actividades/api'
 import { useColunas, type Coluna } from '@/features/escalas/api'
 import { ESCALA, tituloDoDia, useProgramacao, useProgramacaoMut, type Item, type Parte } from './api'
+import { qtd } from '@/lib/formatos'
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
 type Tipo = 'membro' | 'familia' | 'departamento' | 'texto' | 'nenhum'
@@ -100,7 +101,7 @@ export default function PaginaProgramacao() {
   const { programa, partes, itens } = q.data
   const titulo = programa.titulo || tituloDoDia(programa.data)
   const preencher = () => mut.preencher.mutate(undefined, {
-    onSuccess: (r) => toast.success(r.mudaram ? `${r.mudaram} nome(s) actualizado(s) pela escala.` : 'Já estava tudo como na escala.'),
+    onSuccess: (r) => toast.success(r.mudaram ? `${qtd(r.mudaram, 'nome(s) actualizado(s)')} pela escala.` : 'Já estava tudo como na escala.'),
     onError: (e) => toast.error(mensagemDe(e)),
   })
 
@@ -116,7 +117,7 @@ export default function PaginaProgramacao() {
             <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden><ClipboardList className="size-5" /></span>
             <div className="min-w-0">
               <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{igreja.nome} · {partes.length} parte(s), {itens.length} item(ns){podeAlterar ? ' · toque numa linha para a alterar' : ''}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{igreja.nome} · {qtd(partes.length, 'parte(s)')}, {qtd(itens.length, 'item(ns)')}{podeAlterar ? ' · toque numa linha para a alterar' : ''}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

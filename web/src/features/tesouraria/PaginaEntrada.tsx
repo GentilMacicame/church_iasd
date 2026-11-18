@@ -33,7 +33,7 @@ import { Barra, EstadoErro } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
 import { t } from '@/i18n/pt-MZ'
-import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
 import { cn } from '@/lib/utils'
@@ -358,7 +358,7 @@ export default function PaginaEntrada() {
                 <label htmlFor="ent-familia" className="text-sm font-medium">Família <span className="text-destructive" aria-hidden>*</span></label>
                 <CampoEscolha id="ent-familia" valor={familia} aoMudar={(v) => { setFamilia(v); setErroFamilia(null) }} invalido={!!erroFamilia}
                   vazio="Procurar a família pelo nome…" pesquisar="Pesquisar família…" semOpcoes="Ainda não há famílias registadas (Secretaria › Famílias)"
-                  opcoes={(familias.data ?? []).map((f) => ({ valor: String(f.id), rotulo: f.nome, detalhe: `${f.membrosActivos} membro(s) activo(s)` }))} />
+                  opcoes={(familias.data ?? []).map((f) => ({ valor: String(f.id), rotulo: f.nome, detalhe: `${qtd(f.membrosActivos, 'membro(s) activo(s)')}` }))} />
                 {erroFamilia && <p className="text-xs font-medium text-destructive-text">{erroFamilia}</p>}
               </div>
             )}
@@ -371,7 +371,7 @@ export default function PaginaEntrada() {
             )}
             {!anonimo && contribuinte && (
               <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-                <span>Este ano: <strong className="num text-foreground">{dinheiro(deCentimos(anoMembro))}</strong> em {new Set(doMembro.map((c) => c.id)).size} entrega(s)</span>
+                <span>Este ano: <strong className="num text-foreground">{dinheiro(deCentimos(anoMembro))}</strong> em {qtd(new Set(doMembro.map((c) => c.id)).size, 'entrega(s)')}</span>
                 {ultima && <span>Última: {dataEcra(ultima.dataHora)}</span>}
               </p>
             )}
@@ -423,7 +423,7 @@ export default function PaginaEntrada() {
                     {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                   </CampoFormulario>
                   <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
+                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
                   </CampoFormulario>
                 </div>
                 <CampoFormulario rotulo="Descrição" erro={e.descricao?.message} className="sm:col-span-2" ajuda="O que o membro escreveu no comprovativo (ex.: dízimo de Outubro)">
@@ -440,9 +440,9 @@ export default function PaginaEntrada() {
             {principais.length > 0 && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {principais.map(({ i, fundo }) => (
-                  <div key={fields[i].id} className="rounded-lg border p-4">
+                  <div key={fields[i].id} className="flex flex-col rounded-lg border p-4">
                     <p className="text-sm font-semibold">{fundo?.tipo === 'OFERTA_COMBINADA' ? 'Oferta' : fundo?.nome}</p>
-                    <p className="mb-2 text-xs text-muted-foreground">{fundo?.tipo === 'OFERTA_COMBINADA' ? `${fundo.nome} · ` : ''}{fundo && parteDoFundo(fundo)}</p>
+                    <p className="mb-2 flex-1 text-xs text-muted-foreground">{fundo?.tipo === 'OFERTA_COMBINADA' ? `${fundo.nome} · ` : ''}{fundo && parteDoFundo(fundo)}</p>
                     {campoValor(i, true)}
                     {categoria(i)}
                   </div>
@@ -502,7 +502,7 @@ export default function PaginaEntrada() {
                     {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                   </CampoFormulario>
                   <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-28" />}
+                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
                   </CampoFormulario>
                 </div>
                 {contagensAbertas.length > 0 && (
@@ -554,9 +554,9 @@ export default function PaginaEntrada() {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
+            <p className="text-[12px] font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
             <p className="num truncate text-xl font-bold"><Dinheiro valor={deCentimos(total)} /></p>
-            {total > 0 && paraMissao > 0 && <p className="num truncate text-[11px] text-muted-foreground">Missão {dinheiro(deCentimos(paraMissao))} · igreja {dinheiro(deCentimos(total - paraMissao))}</p>}
+            {total > 0 && paraMissao > 0 && <p className="num truncate text-[12px] text-muted-foreground">Missão {dinheiro(deCentimos(paraMissao))} · igreja {dinheiro(deCentimos(total - paraMissao))}</p>}
           </div>
           {contribuinte && !anonimo && (
             <label className="alvo flex items-center gap-1.5 text-xs">
@@ -573,7 +573,7 @@ export default function PaginaEntrada() {
 
 function ListaSessao({ sessao, total, n }: { sessao: Lancada[]; total: number; n?: number }) {
   return (
-    <Cartao titulo="Nesta sessão" descricao={`${n ?? sessao.length} lançamento(s) · ${dinheiro(deCentimos(total))}`} icone={Receipt} semMargem>
+    <Cartao titulo="Nesta sessão" descricao={`${qtd(n ?? sessao.length, 'lançamento(s)')} · ${dinheiro(deCentimos(total))}`} icone={Receipt} semMargem>
       <ul className="max-h-72 divide-y overflow-y-auto">
         {sessao.map((x) => (
           <li key={x.id}>

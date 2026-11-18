@@ -9,12 +9,12 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calculator, CircleCheck, HandCoins, Landmark, Plus, Scale, UserPlus, Users, X } from 'lucide-react'
+import { Calculator, Check, CircleCheck, HandCoins, Landmark, Plus, Scale, UserPlus, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
@@ -24,12 +24,11 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoTransferencia } from './DialogoTransferencia'
 import { FUNCOES_CONTAGEM, MINIMO_CONTAGEM, PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, useParticipantesContagem, useParticipantesContagemMut, type Conferencia, type ParticipanteContagem } from './api'
-import { Paginada } from '@/components/comum/Paginacao'
 
 const ESTADO = {
   ABERTA: { r: 'Por conferir', v: 'warning' as const },
@@ -38,6 +37,9 @@ const ESTADO = {
 }
 /** Valor sem "MT" (a tabela das partes já é toda em meticais): "1 200,00". */
 const mt = (c: number) => dinheiro(deCentimos(Math.abs(c))).replace(/\s*MT$/, '')
+
+/** Rótulos curtos dos que contam, na janela da nova contagem. */
+const ROTULO_CURTO: Record<string, string> = { TESOUREIRO: 'Tesoureiro', ESCOLA_SABATINA: 'Escola Sabatina', DIACONO: 'Diácono' }
 
 export default function PaginaContagens() {
   const { pode } = useSessao()
@@ -49,6 +51,8 @@ export default function PaginaContagens() {
   const porId = useMemo(() => new Map((contagens.data ?? []).map((c) => [c.id, c])), [contagens.data])
   const lista = [...(conf.data ?? [])].sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id)
   const abertas = lista.filter((c) => c.estado === 'ABERTA')
+  const porTratar = lista.filter((c) => c.estado !== 'DEPOSITADA')
+  const historico = lista.filter((c) => c.estado === 'DEPOSITADA')
   const faltaLancar = abertas.reduce((s, c) => s + Math.max(0, centimos(c.diferenca)), 0)
   const mes = hojeIso().slice(0, 7)
   const doMes = lista.filter((c) => c.data.startsWith(mes))
@@ -60,7 +64,7 @@ export default function PaginaContagens() {
         accoes={pode('tesouraria.contagem_numerario.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova contagem</Button>} />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-          <Indicador rotulo="Contado este mês" valor={<Dinheiro valor={contadoMes} />} nota={`${doMes.length} contagem(ns)`} icone={Calculator} aCarregar={conf.isPending} />
+          <Indicador rotulo="Contado este mês" valor={<Dinheiro valor={contadoMes} />} nota={`${qtd(doMes.length, 'contagem(ns)')}`} icone={Calculator} aCarregar={conf.isPending} />
           <Indicador rotulo="Por conferir" valor={abertas.length} nota="contagens ainda abertas" icone={Scale} tom="warning" aCarregar={conf.isPending} />
           <Indicador rotulo="Falta lançar" valor={<Dinheiro valor={deCentimos(faltaLancar)} />} nota="contado e ainda não lançado" icone={HandCoins} tom={faltaLancar ? 'destructive' : 'success'} aCarregar={conf.isPending} />
         </div>
@@ -69,17 +73,37 @@ export default function PaginaContagens() {
           : conf.isError ? <EstadoErro erro={conf.error} aoTentar={() => conf.refetch()} />
           : lista.length === 0 ? (
             <div className="rounded-xl border bg-card shadow-card">
-              <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe quem contou (tesoureiro, Escola Sabatina, diácono) e o que se contou.</EstadoVazio>
+              <EstadoVazio icone={Calculator} titulo="Ainda não há contagens">Depois do culto, registe quem contou e o que se contou.</EstadoVazio>
             </div>
           ) : (
-            <Paginada itens={lista} className="rounded-xl border bg-card">{(vis) => (
-            <div className="grid gap-4">
-              {vis.map((c) => {
-                const cont = porId.get(c.id)
-                return <CartaoContagem key={c.id} c={c} nomeDe={(id) => nomes.get(id)} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
-              })}
-            </div>
-            )}</Paginada>
+            <>
+              {porTratar.length > 0 && (
+                <section className="grid gap-3">
+                  <h2 className="text-sm font-semibold">Por tratar <span className="font-normal text-muted-foreground">· {porTratar.length}</span></h2>
+                  {porTratar.map((c) => {
+                    const cont = porId.get(c.id)
+                    return <CartaoContagem key={c.id} c={c} nomeDe={(id) => nomes.get(id)} contadores={cont ? `${nomes.get(cont.contador1MembroId) ?? '—'} e ${nomes.get(cont.contador2MembroId) ?? '—'}` : ''} />
+                  })}
+                </section>
+              )}
+              {historico.length > 0 && (
+                <Cartao titulo="Histórico" descricao="Contagens já depositadas no banco" icone={Landmark} semMargem>
+                  <Tabela porPagina={10}>
+                    <thead><tr><th className="sm:pl-6">Data</th><th>Culto</th><th className="num">Contado</th><th className="num sm:pr-6">Estado</th></tr></thead>
+                    <tbody>
+                      {historico.map((c) => (
+                        <tr key={c.id}>
+                          <td className="tabular-nums sm:pl-6">{data(c.data)}</td>
+                          <td>{c.ocasiao ?? 'Culto'}</td>
+                          <td className="num font-medium"><Dinheiro valor={c.totalContado} /></td>
+                          <td className="text-right sm:pr-6"><Pilula variante="info">Depositada</Pilula></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Tabela>
+                </Cartao>
+              )}
+            </>
           )}
       </div>
       {nova && <DialogoContagem aoFechar={() => setNova(false)} nomeDe={(id) => nomes.get(id)} />}
@@ -109,87 +133,103 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
     onSuccess: () => toast.success('Contagem conferida.'), onError: (e) => toast.error(mensagemDe(e)),
   })
 
+  // os quatro passos: quem contou → lançar → conferir → depositar
+  const okQuem = !participantes.isPending && faltam.length === 0
+  const okLancar = falta === 0
+  const passo = !aberta ? 4 : !okQuem ? 1 : !okLancar ? 2 : 3
+  const passos = [
+    { r: 'Quem contou', d: !aberta ? 'registado' : okQuem ? `${activos.length} pessoas` : `faltam ${faltam.length}`, ok: okQuem || !aberta },
+    { r: 'Lançar entradas', d: okLancar ? 'tudo lançado' : `${pct}% lançado`, ok: okLancar || !aberta },
+    { r: 'Conferir', d: aberta ? 'tesoureiro confere' : 'conferida', ok: !aberta },
+    { r: 'Depositar', d: c.estado === 'DEPOSITADA' ? 'depositada' : 'no banco', ok: c.estado === 'DEPOSITADA' },
+  ]
+  const dica = !aberta ? 'Quando levar o dinheiro ao banco, registe o depósito com o n.º do talão.'
+    : !okQuem ? `Junte ${faltam.map((f) => f.rotulo).join(', ').replace(/, ([^,]*)$/, ' e $1')}.`
+    : falta > 0 ? `Faltam ${dinheiro(deCentimos(falta))} por lançar: em "Lançar entrada", escolha esta contagem.`
+    : falta < 0 ? 'Lançou-se mais do que o contado: verifique as entradas desta contagem.'
+    : 'Está tudo lançado: pode conferir.'
+
   return (
-    <section className="min-w-0 rounded-xl border bg-card shadow-card">
-      <header className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
+    <section className={cn('min-w-0 overflow-hidden rounded-xl border bg-card shadow-card', !aberta && 'border-success/40')}>
+      <header className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
         <div className="min-w-0">
-          <h2 className="font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</h3>
+            <Pilula variante={est.v}>{est.r}</Pilula>
+          </div>
           {contadores && !activos.length && !participantes.isPending && <p className="text-sm text-muted-foreground">Contado por {contadores}</p>}
         </div>
-        <Pilula variante={est.v}>{est.r}</Pilula>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Contado</p>
+          <p className="num text-xl font-semibold tracking-tight"><Dinheiro valor={c.totalContado} /></p>
+        </div>
       </header>
 
-      <div className="grid gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1fr_1.5fr]">
-        <div className="grid content-start gap-3">
-          <dl className="grid grid-cols-3 gap-2">
-            <div><dt className="text-xs text-muted-foreground">Contado</dt><dd className="num font-semibold"><Dinheiro valor={c.totalContado} /></dd></div>
-            <div><dt className="text-xs text-muted-foreground">Já lançado</dt><dd className="num font-semibold"><Dinheiro valor={c.totalLancado} /></dd></div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{falta >= 0 ? 'Falta lançar' : 'Lançado a mais'}</dt>
-              <dd className={cn('num font-semibold', falta === 0 ? 'text-success-text' : 'text-destructive-text')}>{falta === 0 ? 'nada ✓' : <Dinheiro valor={deCentimos(Math.abs(falta))} />}</dd>
-            </div>
-          </dl>
-          <div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${pct}% lançado`}>
-              <div className={cn('h-full rounded-full', falta === 0 ? 'bg-success' : 'bg-primary')} style={{ width: `${pct}%` }} />
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">{pct}% do contado já está lançado</p>
-          </div>
-        </div>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs text-muted-foreground">
-              <th className="pb-1.5 text-left font-medium">Parte</th><th className="pb-1.5 text-right font-medium">Contado</th>
-              <th className="pb-1.5 text-right font-medium">Lançado</th><th className="pb-1.5 text-right font-medium">Falta</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {partes.map((p) => {
-              const f = p.contado - p.lancado
-              return (
-                <tr key={p.rotulo}>
-                  <td className="py-1.5">{p.rotulo}</td>
-                  <td className="num py-1.5 text-right">{mt(p.contado)}</td>
-                  <td className="num py-1.5 text-right text-muted-foreground">{mt(p.lancado)}</td>
-                  <td className={cn('num py-1.5 text-right font-medium', f === 0 ? 'text-success-text' : 'text-destructive-text')}>
-                    {f === 0 ? '✓' : `${mt(f)}${f < 0 ? ' a mais' : ''}`}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} lista={activos} aCarregar={participantes.isPending} />
+      <ol className="mx-4 mt-4 grid grid-cols-2 gap-2 sm:mx-6 sm:grid-cols-4" aria-label="Passos da contagem">
+        {passos.map((x, i) => {
+          const n = i + 1, actual = n === passo
+          return (
+            <li key={x.r} aria-current={actual ? 'step' : undefined}
+              className={cn('flex items-center gap-2.5 rounded-lg border px-3 py-2', actual ? 'border-primary bg-primary/5' : x.ok ? 'border-success/30 bg-tint-success/40' : 'bg-muted/30')}>
+              <span className={cn('flex size-6 flex-none items-center justify-center rounded-full text-xs font-semibold',
+                x.ok ? 'bg-success text-white' : actual ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                {x.ok ? <Check className="size-3.5" /> : n}
+              </span>
+              <span className="min-w-0">
+                <span className={cn('block truncate text-sm font-medium', !x.ok && !actual && 'text-muted-foreground')}>{x.r}</span>
+                <span className="block truncate text-xs text-muted-foreground">{x.d}</span>
+              </span>
+            </li>
+          )
+        })}
+      </ol>
 
       {aberta && (
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
-          <p className="text-xs text-muted-foreground">
-            {faltam.length ? `Para conferir, registe nos participantes: ${faltam.map((f) => f.rotulo).join(', ')}.`
-              : falta === 0 ? 'Está tudo lançado: pode conferir.' : falta > 0 ? 'Lance o que falta (escolhendo esta contagem) para poder conferir.' : 'Lançou-se mais do que o contado: verifique as entradas ligadas a esta contagem.'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {falta > 0 && pode('tesouraria.transacao.criar') && (
-              <Button asChild size="sm" className="alvo">
-                <Link to={`/tesouraria/entrada?contagem=${c.id}`}><HandCoins className="size-4" />Lançar entradas desta contagem</Link>
-              </Button>
-            )}
-            {pode('tesouraria.contagem_numerario.alterar') && (
-              <Button size="sm" variant={falta === 0 && !faltam.length ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || falta !== 0 || faltam.length > 0 || participantes.isPending} onClick={conferir}>
-                <CircleCheck className="size-4" />Conferir
-              </Button>
-            )}
+        <div className="grid gap-4 px-4 py-4 sm:px-6 lg:grid-cols-2">
+          <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} lista={activos} aCarregar={participantes.isPending} />
+          <div className="rounded-lg border">
+            <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
+              <span className="text-sm font-medium">Lançado</span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="h-1.5 w-24 overflow-hidden rounded-full bg-muted" aria-hidden><span className={cn('block h-full rounded-full', falta === 0 ? 'bg-success' : 'bg-primary')} style={{ width: `${pct}%` }} /></span>
+                {pct}%
+              </span>
+            </div>
+            <table className="w-full text-sm">
+              <thead><tr className="text-xs text-muted-foreground"><th className="px-3 pt-2 pb-1 text-left font-medium">Parte</th><th className="px-3 pt-2 pb-1 text-right font-medium">Contado</th><th className="px-3 pt-2 pb-1 text-right font-medium">Falta</th></tr></thead>
+              <tbody>
+                {partes.map((x) => {
+                  const f = x.contado - x.lancado
+                  return (
+                    <tr key={x.rotulo} className="border-t">
+                      <td className="px-3 py-1.5">{x.rotulo}</td>
+                      <td className="num px-3 py-1.5 text-right">{mt(x.contado)}</td>
+                      <td className={cn('num px-3 py-1.5 text-right font-medium', f === 0 ? 'text-success-text' : 'text-destructive-text')}>{f === 0 ? <Check className="ml-auto size-4" aria-label="lançado" /> : `${mt(f)}${f < 0 ? ' a mais' : ''}`}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-        </footer>
+        </div>
       )}
-      {c.estado === 'CONFERIDA' && pode('tesouraria.transacao.criar') && (
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 sm:px-6">
-          <p className="text-xs text-muted-foreground">Conferida. Quando levar o numerário ao banco, registe aqui o depósito com o n.º do talão.</p>
-          <Button size="sm" className="alvo" onClick={() => setDepositar(true)}><Landmark className="size-4" />Depositar no banco</Button>
-        </footer>
-      )}
+
+      <footer className={cn('mt-4 flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 sm:px-6', aberta && 'mt-0')}>
+        <p className="text-sm text-muted-foreground">{dica}</p>
+        <div className="flex flex-wrap gap-2">
+          {aberta && passo === 2 && falta > 0 && pode('tesouraria.transacao.criar') && (
+            <Button asChild size="sm" className="alvo"><Link to={`/tesouraria/entrada?contagem=${c.id}`}><HandCoins className="size-4" />Lançar entradas</Link></Button>
+          )}
+          {aberta && pode('tesouraria.contagem_numerario.alterar') && (
+            <Button size="sm" variant={passo === 3 ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || passo !== 3} onClick={conferir}>
+              <CircleCheck className="size-4" />Conferir
+            </Button>
+          )}
+          {c.estado === 'CONFERIDA' && pode('tesouraria.transacao.criar') && (
+            <Button size="sm" className="alvo" onClick={() => setDepositar(true)}><Landmark className="size-4" />Depositar no banco</Button>
+          )}
+        </div>
+      </footer>
       {depositar && <DialogoTransferencia origem={caixaId} valor={c.totalContado} contagem={{ id: c.id, data: c.data, ocasiao: c.ocasiao }} aoFechar={() => setDepositar(false)} />}
     </section>
   )
@@ -217,24 +257,26 @@ function Participantes({ contagemId, aberta, nomeDe, lista, aCarregar }: {
   }
 
   return (
-    <div className="border-t px-4 py-3 sm:px-6">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="flex items-center gap-1.5 text-muted-foreground"><Users className="size-4" />Participantes:</span>
-        {aCarregar ? <Barra className="h-5 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">ninguém registado</span> : lista.map((x) => (
-          <span key={x.id} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5">
-            {nomeDe(x.membroId) ?? `Membro ${x.membroId}`} <span className="text-xs text-muted-foreground">· {FUNCOES_CONTAGEM[x.funcao] ?? x.funcao}</span>
+    <div className="rounded-lg border">
+      <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
+        <span className="flex items-center gap-1.5 text-sm font-medium"><Users className="size-4 text-muted-foreground" />Quem contou</span>
+        {podeJuntar && !aJuntar && <Button type="button" size="sm" variant="ghost" className="alvo h-7" onClick={() => setAJuntar(true)}><UserPlus className="size-4" />Juntar</Button>}
+      </div>
+      <div className="flex flex-wrap gap-2 px-3 py-3 text-sm">
+        {aCarregar ? <Barra className="h-6 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">Ninguém registado</span> : lista.map((x) => (
+          <span key={x.id} className="inline-flex items-center gap-1.5 rounded-full border bg-card py-1 pr-1.5 pl-3">
+            <span className="font-medium">{nomeDe(x.membroId) ?? `Membro ${x.membroId}`}</span> <span className="text-xs text-muted-foreground">{FUNCOES_CONTAGEM[x.funcao] ?? x.funcao}</span>
             {podeTirar && (
-              <button type="button" className="-mr-1 rounded-full p-0.5 hover:bg-muted" aria-label={`Tirar ${nomeDe(x.membroId) ?? 'participante'}`} disabled={tirar.isPending}
+              <button type="button" className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Tirar ${nomeDe(x.membroId) ?? 'participante'}`} disabled={tirar.isPending}
                 onClick={() => tirar.mutate(x.id, { onError: (e) => toast.error(mensagemDe(e)) })}>
                 <X className="size-3" />
               </button>
             )}
           </span>
         ))}
-        {podeJuntar && !aJuntar && <Button type="button" size="sm" variant="ghost" className="alvo" onClick={() => setAJuntar(true)}><UserPlus className="size-4" />Juntar</Button>}
       </div>
       {aJuntar && (
-        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_180px_auto]">
+        <div className="grid gap-2 border-t px-3 py-3">
           <CampoMembro id={`cpa-${contagemId}`} valor={membro} aoMudar={setMembro} nomeDe={nomeDe} vazio="Procurar o membro…" />
           <Seleccao aria-label="Função na contagem" value={funcao} onChange={(e) => setFuncao(e.target.value)}>
             {Object.entries(FUNCOES_CONTAGEM).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
@@ -296,52 +338,56 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
 
   return (
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Nova contagem</DialogTitle>
           <DialogDescription>Contam o tesoureiro, um representante da Escola Sabatina e um diácono.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4">
-          <ErroFormulario mensagem={erro} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <label htmlFor="cnt-data" className="text-sm font-medium">Data</label>
-              <CampoData id="cnt-data" value={dia} onChange={setDia} className="alvo" />
+        <ErroFormulario mensagem={erro} />
+        <div className="grid gap-6 md:grid-cols-2">
+          <section className="grid content-start gap-3">
+            <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Quem conta</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <label htmlFor="cnt-data" className="text-sm font-medium">Data</label>
+                <CampoData id="cnt-data" value={dia} onChange={setDia} className="alvo" />
+              </div>
+              <div className="grid gap-1.5">
+                <label htmlFor="cnt-ocasiao" className="text-sm font-medium">Culto</label>
+                <Input id="cnt-ocasiao" value={ocasiao} onChange={(e) => setOcasiao(e.target.value)} maxLength={100} className="alvo" />
+              </div>
             </div>
-            <div className="grid gap-1.5">
-              <label htmlFor="cnt-ocasiao" className="text-sm font-medium">Culto</label>
-              <Input id="cnt-ocasiao" value={ocasiao} onChange={(e) => setOcasiao(e.target.value)} maxLength={100} className="alvo" />
-            </div>
-            {[...MINIMO_CONTAGEM, { funcao: 'ANCIAO', rotulo: 'o ancião', titulo: 'Ancião (opcional)' }].map((f) => (
+            {[...MINIMO_CONTAGEM, { funcao: 'ANCIAO', rotulo: 'o ancião', titulo: 'Ancião' }].map((f) => (
               <div key={f.funcao} className="grid gap-1.5">
                 <label htmlFor={`cnt-${f.funcao}`} className="text-sm font-medium">
-                  {f.titulo}{f.funcao !== 'ANCIAO' && <span className="text-destructive-text"> *</span>}
+                  {ROTULO_CURTO[f.funcao] ?? f.titulo}
+                  {f.funcao !== 'ANCIAO' ? <span className="text-destructive-text"> *</span> : <span className="font-normal text-muted-foreground"> (opcional)</span>}
                 </label>
                 <CampoMembro id={`cnt-${f.funcao}`} valor={quem[f.funcao]} aoMudar={(x) => setQuem((q) => ({ ...q, [f.funcao]: x }))} nomeDe={nomeDe} />
               </div>
             ))}
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="grid gap-1.5">
               <label htmlFor="cnt-conta" className="text-sm font-medium">Fica no</label>
               <Seleccao id="cnt-conta" value={conta ? String(conta.id) : ''} onChange={(e) => setContaId(e.target.value)}>
                 {(caixas.length ? caixas : contas.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </Seleccao>
             </div>
-          </div>
-          <fieldset className="grid gap-3 rounded-lg border p-3">
-            <legend className="px-1 text-sm font-medium">O que se contou</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
+          </section>
+          <section className="grid content-start gap-3">
+            <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">O que se contou</h3>
+            <div className="divide-y rounded-xl border bg-muted/30">
               {PARTES_CONTAGEM.map((p) => (
-                <div key={p.campo} className="grid gap-1">
-                  <label htmlFor={`cnt-${p.campo}`} className="text-sm">{p.rotulo} <span className="text-xs text-muted-foreground">· {p.ajuda}</span></label>
-                  <CampoDinheiro id={`cnt-${p.campo}`} value={partes[p.campo]} onChange={(v: string) => setPartes((x) => ({ ...x, [p.campo]: v }))} className="alvo" />
+                <div key={p.campo} className="flex items-center justify-between gap-3 px-3 py-2">
+                  <label htmlFor={`cnt-${p.campo}`} title={p.ajuda} className="text-sm font-medium">{p.rotulo}</label>
+                  <CampoDinheiro id={`cnt-${p.campo}`} value={partes[p.campo]} onChange={(v: string) => setPartes((x) => ({ ...x, [p.campo]: v }))} className="alvo w-40 flex-none" />
                 </div>
               ))}
+              <p className="flex items-baseline justify-between gap-3 rounded-b-xl bg-card px-3 py-3">
+                <span className="text-sm font-medium">Total contado</span>
+                <span className="num text-xl font-semibold tracking-tight"><Dinheiro valor={deCentimos(total)} /></span>
+              </p>
             </div>
-            <p className="flex items-baseline justify-between border-t pt-2 text-sm">
-              <span className="font-medium">Total contado</span>
-              <span className="num text-lg font-semibold"><Dinheiro valor={deCentimos(total)} /></span>
-            </p>
-          </fieldset>
+          </section>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

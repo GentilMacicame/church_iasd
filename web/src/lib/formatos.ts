@@ -108,3 +108,21 @@ export function deCentimos(c: number): string {
   const a = Math.abs(Math.round(c))
   return `${c < 0 ? '-' : ''}${Math.floor(a / 100)}.${String(a % 100).padStart(2, '0')}`
 }
+
+/**
+ * Número com o texto no singular ou no plural: as marcas entre parênteses resolvem-se conforme n.
+ * "(s)" e "(es)" acrescentam; "(is)" troca o l final (oficial → oficiais); "(ns)" troca o m (item → itens);
+ * "(ões)" troca o ão (permissão → permissões). qtd(1, 'movimento(s) pendente(s)') → "1 movimento pendente".
+ */
+export function qtd(n: number, texto: string): string {
+  const um = Math.abs(n) === 1
+  const t = texto.replace(/(\p{L}*)\((s|es|is|ns|ões)\)/gu, (_, p: string, m: string) => {
+    if (um) return p
+    if (m === 'is') return p.replace(/l$/, '') + 'is'
+    if (m === 'ns') return p.replace(/m$/, '') + 'ns'
+    if (m === 'ões') return p.replace(/ão$/, '') + 'ões'
+    if (m === 'es' && p.endsWith('ês')) return p.slice(0, -2) + 'eses'
+    return p + m
+  })
+  return `${n.toLocaleString('pt-PT')} ${t}`
+}

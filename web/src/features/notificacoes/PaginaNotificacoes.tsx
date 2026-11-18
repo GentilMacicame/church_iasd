@@ -14,7 +14,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { Paginada } from '@/components/comum/Paginacao'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
-import { data, hora } from '@/lib/formatos'
+import { data, hora, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { ROTULO_CANAL, ROTULO_ESTADO, ROTULO_ORIGEM, useNotificacoes, useReenviar, type EstadoNotificacao } from './api'
@@ -98,7 +98,7 @@ export default function PaginaNotificacoes() {
                         <td>
                           <Pilula variante={est.v}>{est.r}</Pilula>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {n.estado === 'ENVIADA' && n.enviadaEm ? `${data(n.enviadaEm)} ${hora(n.enviadaEm)}` : `${n.tentativas ?? 0} tentativa(s)`}
+                            {n.estado === 'ENVIADA' && n.enviadaEm ? `${data(n.enviadaEm)} ${hora(n.enviadaEm)}` : `${qtd(n.tentativas ?? 0, 'tentativa(s)')}`}
                           </p>
                           {n.erro && n.estado !== 'ENVIADA' && <p className="line-clamp-2 max-w-56 text-xs text-destructive-text" title={n.erro}>{n.erro}</p>}
                         </td>

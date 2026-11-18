@@ -20,7 +20,7 @@ import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { CabecalhoDocumento } from '@/components/layout/Marca'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
-import { data, dataCompleta, hojeIso } from '@/lib/formatos'
+import { data, dataCompleta, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
@@ -113,9 +113,9 @@ export default function PaginaEleicao() {
     setLinhas((ls) => ls.map((l) => resultados.has(l.chave) ? { ...l, resultado: resultados.get(l.chave) } : l))
     setARegistar(false)
     const ok = [...resultados.values()].filter((r) => r.ok).length, falhas = resultados.size - ok
-    if (falhas) toast.error(`${ok} registado(s); ${falhas} recusado(s) — veja o motivo em cada linha.`)
+    if (falhas) toast.error(`${qtd(ok, 'registado(s)')}; ${qtd(falhas, 'recusado(s)')} — veja o motivo em cada linha.`)
     else {
-      toast.success(`${ok} oficial(is) registado(s)${terminados ? `; ${terminados} mandato(s) anterior(es) terminado(s)` : ''}.`)
+      toast.success(`${qtd(ok, 'oficial(is) registado(s)')}${terminados ? `; ${qtd(terminados, 'mandato(s) anterior(es) terminado(s)')}` : ''}.`)
       setLinhas([]); rascunho.gravar(null); setVoto('')
     }
   }
@@ -208,7 +208,7 @@ export default function PaginaEleicao() {
               </label>
               <div className="flex justify-end">
                 <Button className="alvo" disabled={aRegistar || !completas.length} onClick={registarTudo}>
-                  <Vote className="size-4" />{aRegistar ? 'A registar…' : `Registar ${porRegistar.filter((l) => l.cargoId && l.membroId).length} eleito(s)`}
+                  <Vote className="size-4" />{aRegistar ? 'A registar…' : `Registar ${qtd(porRegistar.filter((l) => l.cargoId && l.membroId).length, 'eleito(s)')}`}
                 </Button>
               </div>
             </div>

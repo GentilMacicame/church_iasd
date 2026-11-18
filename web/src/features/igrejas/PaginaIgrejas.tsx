@@ -23,6 +23,7 @@ import { t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
 import { TIPO_ENTIDADE, TIPO_IGREJA, useAdministradores, useOrganizacaoMut, useDistritos, useDistritosAdministrativos, useEntidadesOrg, useIgrejas, useIgrejasMut, useProvincias, type Distrito, type Igreja, type NovoAdministrador, type TipoIgreja } from './api'
 import { useUsuarios } from '@/features/acessos/api'
+import { qtd } from '@/lib/formatos'
 
 export default function PaginaIgrejas() {
   const { pode, escolherIgreja, recarregar } = useSessao()
@@ -108,7 +109,7 @@ export default function PaginaIgrejas() {
           <Indicador rotulo="Sem administrador" valor={semAdmin} nota="ninguém as administra ainda" icone={ShieldAlert} tom={semAdmin ? 'warning' : 'success'} aCarregar={igrejas.isPending || admins.isPending} />
         </div>
 
-        <Cartao titulo="Todas as igrejas" descricao={comFiltros ? `${lista.length} de ${activas.length} igreja(s)` : `${activas.length} igreja(s)`} icone={Church} semMargem>
+        <Cartao titulo="Todas as igrejas" descricao={comFiltros ? `${lista.length} de ${qtd(activas.length, 'igreja(s)')}` : `${qtd(activas.length, 'igreja(s)')}`} icone={Church} semMargem>
           <div className="grid gap-2 border-y bg-muted/30 px-4 py-3 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
             <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Procurar por nome ou localidade…" className="alvo h-9" aria-label="Procurar igreja" />
             <CampoEscolha valor={fEnt} aoMudar={setFEnt} vazio="Associação" permitirLimpar

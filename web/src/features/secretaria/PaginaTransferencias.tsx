@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Indicador, Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoData } from '@/components/comum/CampoData'
@@ -76,12 +76,8 @@ export default function PaginaTransferencias() {
             <Indicador rotulo="A chegar (por aceitar)" valor={String(pendentes(entradas))} icone={ArrowDownLeft} tom="info" activo={aba === 'entradas'} aoClicar={() => setAba('entradas')} />
             <Indicador rotulo="Cartas a expirar (30 dias)" valor={String(lista.filter((x) => x.estado === 'CARTA_EMITIDA' && x.validaAte && diasAte(x.validaAte) <= 30).length)} icone={FileSignature} tom="destructive" />
           </div>
-          <div role="tablist" aria-label="Sentido" className="flex gap-2">
-            {([['saidas', `A sair desta igreja (${saidas.length})`], ['entradas', `A chegar a esta igreja (${entradas.length})`]] as const).map(([v, r]) => (
-              <button key={v} role="tab" aria-selected={aba === v} onClick={() => setAba(v)}
-                className={cn('alvo rounded-full border px-4 text-sm font-medium', aba === v ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:text-foreground')}>{r}</button>
-            ))}
-          </div>
+          <Segmentos rotulo="Sentido" valor={aba} aoMudar={setAba} className="justify-self-start"
+            opcoes={[{ valor: 'saidas', rotulo: 'A sair desta igreja', contagem: saidas.length }, { valor: 'entradas', rotulo: 'A chegar a esta igreja', contagem: entradas.length }] as const} />
           <Cartao semMargem>
             {!visiveis.length ? (
               <EstadoVazio icone={ArrowRightLeft} titulo={aba === 'saidas' ? 'Nenhum membro a sair' : 'Nenhum membro a chegar'}>

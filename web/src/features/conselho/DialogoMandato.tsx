@@ -75,7 +75,7 @@ export function DialogoMandato({ mandato, anosPadrao, inicioSugerido, aoFechar, 
               {['1', '2', '3', '4', '5', 'outra'].map((n) => (
                 <button key={n} type="button" role="radio" aria-checked={duracao === n} onClick={() => setDuracao(n)}
                   className={cn('alvo rounded-lg border py-2 text-sm font-semibold transition', duracao === n ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground hover:border-primary/40')}>
-                  {n === 'outra' ? <>Outra<span className="block text-[11px] font-normal">data</span></> : <>{n}<span className="block text-[11px] font-normal">{n === '1' ? 'ano' : 'anos'}</span></>}
+                  {n === 'outra' ? <>Outra<span className="block text-[12px] font-normal">data</span></> : <>{n}<span className="block text-[12px] font-normal">{n === '1' ? 'ano' : 'anos'}</span></>}
                 </button>
               ))}
             </div>

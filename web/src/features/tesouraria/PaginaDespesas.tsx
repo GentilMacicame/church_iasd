@@ -25,7 +25,7 @@ import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { METODO_DA_CONTA } from './PaginaEntrada'
 import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, useSaldosFundos, type Despesa } from './api'
@@ -94,9 +94,9 @@ export default function PaginaDespesas() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <Indicador rotulo="Por decidir" valor={porDecidir.length} nota={dinheiro(soma(porDecidir, 'valorSolicitado'))} icone={Hourglass} tom="warning" aCarregar={q.isPending}
             aoClicar={() => setAba('decidir')} activo={aba === 'decidir'} />
-          <Indicador rotulo="Aprovadas por pagar" valor={<Dinheiro valor={soma(porPagar, 'valorAprovado')} />} nota={`${porPagar.length} despesa(s)`} icone={HandCoins} tom="info" aCarregar={q.isPending}
+          <Indicador rotulo="Aprovadas por pagar" valor={<Dinheiro valor={soma(porPagar, 'valorAprovado')} />} nota={`${qtd(porPagar.length, 'despesa(s)')}`} icone={HandCoins} tom="info" aCarregar={q.isPending}
             aoClicar={() => setAba('pagar')} activo={aba === 'pagar'} />
-          <Indicador rotulo={`Pagas em ${ano}`} valor={<Dinheiro valor={soma(pagasAno, 'valorAprovado')} />} nota={`${pagasAno.length} despesa(s)`} icone={CircleCheck} tom="success" aCarregar={q.isPending}
+          <Indicador rotulo={`Pagas em ${ano}`} valor={<Dinheiro valor={soma(pagasAno, 'valorAprovado')} />} nota={`${qtd(pagasAno.length, 'despesa(s)')}`} icone={CircleCheck} tom="success" aCarregar={q.isPending}
             aoClicar={() => setAba('pagas')} activo={aba === 'pagas'} />
         </div>
 

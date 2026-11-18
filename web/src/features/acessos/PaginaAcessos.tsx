@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Indicador, Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { Seleccao } from '@/components/comum/Seleccao'
@@ -23,6 +23,7 @@ import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { qtd } from '@/lib/formatos'
 import {
   ACCOES, MODULOS, ROTULO_ACCAO, nomeDoRecurso, useEnviarCodigo, usePerfis, usePerfisDaIgreja, usePerfisMut, usePerfisPermissoes,
   usePermissoes, useUsuarios, type Perfil, type Permissao, type Usuario,
@@ -132,7 +133,7 @@ function AbaUtilizadores() {
         <Indicador rotulo="Ainda não entraram" valor={n('por_entrar')} nota="sem senha definida" icone={UserPlus} tom="info" aCarregar={usuarios.isPending}
           aoClicar={() => setFiltro('por_entrar')} activo={filtro === 'por_entrar'} />
         <Indicador rotulo="Perfis em uso" valor={perfisEmUso} nota="nesta igreja" icone={ShieldCheck} aCarregar={ligacoes.isPending} />
-        <Indicador rotulo="Total de utilizadores" valor={lista.length} nota={`${n('inactivo')} desactivado(s)`} icone={Users} aCarregar={usuarios.isPending}
+        <Indicador rotulo="Total de utilizadores" valor={lista.length} nota={`${qtd(n('inactivo'), 'desactivado(s)')}`} icone={Users} aCarregar={usuarios.isPending}
           aoClicar={() => setFiltro('todos')} activo={filtro === 'todos'} />
       </div>
 
@@ -143,14 +144,8 @@ function AbaUtilizadores() {
               <h2 className="font-semibold">Utilizadores do sistema</h2>
               <p className="text-sm text-muted-foreground">Registe utilizadores, dê-lhes perfis nesta igreja e acompanhe quem já entrou.</p>
             </div>
-            <div role="group" aria-label="Filtrar por estado" className="flex flex-wrap gap-1">
-              {([['todos', 'Todos'], ['activo', 'Activos'], ['por_entrar', 'Ainda não entraram'], ['inactivo', 'Desactivados']] as [Filtro, string][]).map(([k, r]) => (
-                <button key={k} type="button" aria-pressed={filtro === k} onClick={() => setFiltro(k)}
-                  className={cn('alvo h-8 rounded-md px-3 text-sm font-medium text-muted-foreground hover:text-foreground', filtro === k && 'bg-primary text-primary-foreground hover:text-primary-foreground')}>
-                  {r}
-                </button>
-              ))}
-            </div>
+            <Segmentos<Filtro> rotulo="Filtrar por estado" valor={filtro} aoMudar={setFiltro}
+              opcoes={[{ valor: 'todos', rotulo: 'Todos' }, { valor: 'activo', rotulo: 'Activos' }, { valor: 'por_entrar', rotulo: 'Ainda não entraram' }, { valor: 'inactivo', rotulo: 'Desactivados' }]} />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="relative block sm:w-64">
@@ -303,7 +298,7 @@ function AbaPerfis({ aoVerPermissoes }: { aoVerPermissoes: (id: number) => void 
               <dl className="mt-4 grid gap-4 text-sm">
                 <div><dt className="text-muted-foreground">Descrição</dt><dd>{seleccionado.descricao ?? '—'}</dd></div>
                 <div><dt className="text-muted-foreground">Âmbito</dt><dd>{seleccionado.ambito === 'ENTIDADE' ? 'Associação/Missão (todas as igrejas abaixo dela)' : 'Uma igreja'}</dd></div>
-                {seleccionado.ambito === 'IGREJA' && <div><dt className="text-muted-foreground">Utilizadores nesta igreja</dt><dd>{utilizadoresDe(seleccionado.id)} atribuído(s)</dd></div>}
+                {seleccionado.ambito === 'IGREJA' && <div><dt className="text-muted-foreground">Utilizadores nesta igreja</dt><dd>{qtd(utilizadoresDe(seleccionado.id), 'atribuído(s)')}</dd></div>}
                 <div><dt className="text-muted-foreground">Permissões</dt><dd>{permissoesDe(seleccionado.id).length} de {(permissoes.data ?? []).length}</dd></div>
                 <div><dt className="text-muted-foreground">Estado</dt><dd>{seleccionado.endDate ? <Pilula variante="secondary">Inactivo</Pilula> : <Pilula variante="success">Activo</Pilula>}</dd></div>
                 {seleccionado.codigo && <div><dt className="text-muted-foreground">Perfil do sistema</dt><dd>Código {seleccionado.codigo}: não se desactiva</dd></div>}
@@ -456,7 +451,7 @@ function AbaPermissoes() {
     const dar = [...actual].filter((id) => !inicial.has(id))
     const tirar = ligacoes.filter((l) => !actual.has(l.permissaoId))
     aplicar.mutate({ perfilId: perfil.id, dar, tirar }, {
-      onSuccess: () => { toast.success(`Permissões de ${nomePerfil(perfil)} actualizadas: ${dar.length} dada(s), ${tirar.length} retirada(s).`); setMarcadas(null) },
+      onSuccess: () => { toast.success(`Permissões de ${nomePerfil(perfil)} actualizadas: ${qtd(dar.length, 'dada(s)')}, ${qtd(tirar.length, 'retirada(s)')}.`); setMarcadas(null) },
       onError: (e) => { toast.error(mensagemDe(e)); setMarcadas(null) },
     })
   }
@@ -550,7 +545,7 @@ function AbaPermissoes() {
       </div>
       {editavel && (
         <div className="sticky bottom-0 flex justify-end gap-3 border-t bg-card/95 py-3 backdrop-blur">
-          <span className="mr-auto self-center text-sm text-muted-foreground">{actual.size} permissão(ões) marcada(s)</span>
+          <span className="mr-auto self-center text-sm text-muted-foreground">{qtd(actual.size, 'permissão(ões) marcada(s)')}</span>
           <Button variant="outline" className="alvo" disabled={!alterado || aplicar.isPending} onClick={() => setMarcadas(null)}>{t.comum.cancelar}</Button>
           <Button className="alvo" disabled={!alterado || aplicar.isPending} onClick={guardar}>{aplicar.isPending ? t.comum.aGravar : 'Aplicar'}</Button>
         </div>

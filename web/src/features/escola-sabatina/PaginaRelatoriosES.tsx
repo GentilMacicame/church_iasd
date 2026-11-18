@@ -83,13 +83,13 @@ export default function PaginaRelatoriosES() {
   )
 }
 
-function Cabeca({ n, titulo, nota, exportar }: { n: number; titulo: string; nota: string; exportar?: { caminho: string; nome: string; trimestre: Trimestre } }) {
+function Cabeca({ titulo, nota, exportar }: { titulo: string; nota: string; exportar?: { caminho: string; nome: string; trimestre: Trimestre } }) {
   const igreja = useIgreja()
   return (
-    <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h2 className="text-base font-semibold tracking-tight uppercase">{n}. {titulo}</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground italic">{nota}</p>
+        <h2 className="text-base leading-6 font-semibold tracking-tight">{titulo}</h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">{nota}</p>
       </div>
       {exportar && <span className="print:hidden"><Exportar caminho={exportar.caminho} query={{ igrejaId: igreja.id, trimestreId: exportar.trimestre.id }} nome={exportar.nome} /></span>}
     </div>
@@ -111,7 +111,7 @@ function Resumo({ trimestre }: { trimestre: Trimestre }) {
 
   return (
     <Cartao>
-      <Cabeca n={1} titulo="Resumo do trimestre por classe" nota="Valores trazidos das folhas de cada classe. Classes desactivadas aparecem a cinzento e ficam fora das médias."
+      <Cabeca titulo="Resumo do trimestre por classe" nota="Das folhas de cada classe; as desactivadas ficam fora das médias"
         exportar={{ caminho: '/v1/escola-sabatina/resumo-classes', nome: `resumo-classes-${trimestre.ano}-${trimestre.numero}`, trimestre }} />
       {q.isPending ? <LinhasACarregar linhas={6} /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : !linhas.length ? <EstadoVazio>Nenhuma classe configurada neste trimestre.</EstadoVazio> : (
@@ -138,7 +138,7 @@ function Resumo({ trimestre }: { trimestre: Trimestre }) {
                 }
                 return (
                   <tr key={r.id} className={cn(cinza && 'text-muted-foreground')}>
-                    <td className="font-semibold">{r.classe}<span className="block text-[11px] font-normal text-muted-foreground">{rotulos.divisao[r.divisao]} · {r.sabadosRegistados} sáb.</span></td>
+                    <td className="font-semibold">{r.classe}<span className="block text-[12px] font-normal text-muted-foreground">{rotulos.divisao[r.divisao]} · {r.sabadosRegistados} sáb.</span></td>
                     <td>{r.professor ?? <span className="text-muted-foreground">Ir. ________</span>}</td>
                     <td className="num tabular-nums">{textoNum(r.mediaMatriculados)}</td>
                     <td className="num tabular-nums">{textoNum(r.mediaPresentes)}</td>
@@ -179,7 +179,7 @@ function Resumo({ trimestre }: { trimestre: Trimestre }) {
             )}
           </Folha>
         )}
-      <p className="mt-2 text-[11px] text-muted-foreground">Na linha final: médias por classe; 13.º sábado, baptismos e alvo de baptismos são somas.</p>
+      <p className="mt-2 text-[12px] text-muted-foreground">Na linha final: médias por classe; 13.º sábado, baptismos e alvo de baptismos são somas.</p>
     </Cartao>
   )
 }
@@ -203,17 +203,16 @@ function Classificacao({ trimestre }: { trimestre: Trimestre }) {
   const pc = (v?: string) => `${Math.round(Number(v ?? 0) * 100)}%`
   return (
     <Cartao>
-      <Cabeca n={2} titulo="Classificação das classes" nota="1.º lugar a dourado, 2.º a prateado, 3.º a bronze. Em caso de empate, fica à frente a classe que aparece primeiro."
+      <Cabeca titulo="Classificação das classes" nota="Pontuação de 0 a 100; em empate, fica à frente a primeira da lista"
         exportar={{ caminho: '/v1/escola-sabatina/classificacao', nome: `classificacao-${trimestre.ano}-${trimestre.numero}`, trimestre }} />
       {aCarregar ? <LinhasACarregar linhas={6} /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : !linhas.length ? <EstadoVazio icone={Trophy}>Nenhuma classe configurada neste trimestre.</EstadoVazio> : (
-          <Folha minimo="min-w-[52rem]" className="[&_thead_th]:bg-[#9a7612] dark:[&_thead_th]:bg-[#5c470b]">
+          <Folha minimo="min-w-[52rem]">
             <thead>
               <tr><th className="min-w-44 text-left">Classe</th><th className="num w-36">Pontuação (0–100)</th><th className="centro w-24">Posição</th><th className="centro w-32">Lugar</th><th className="text-left">Gráfico da pontuação</th></tr>
             </thead>
             <tbody>
               {linhas.map(({ r, c }) => {
-                const medalha = c && c.lugar <= 3 ? ['bg-[#fdf6dc]! dark:bg-[#3a2f0c]!', 'bg-[#f1f3f6]! dark:bg-[#262b33]!', 'bg-[#fbeee4]! dark:bg-[#3a2416]!'][c.lugar - 1] : ''
                 if (!r.activa || !c) {
                   return (
                     <tr key={r.id} className="text-muted-foreground [&_td]:bg-muted/40">
@@ -225,11 +224,11 @@ function Classificacao({ trimestre }: { trimestre: Trimestre }) {
                 const v = Number(c.pontuacao)
                 return (
                   <tr key={r.id}>
-                    <td className={cn('font-semibold', medalha)}>{r.classe}</td>
-                    <td className={cn('num text-base font-bold tabular-nums', medalha)}>{textoNum(v)}</td>
-                    <td className={cn('centro font-semibold tabular-nums', medalha)}>{c.lugar}</td>
-                    <td className={cn('centro', medalha)}><Lugar n={c.lugar} /></td>
-                    <td className={medalha}>
+                    <td className="font-semibold">{r.classe}</td>
+                    <td className="num font-semibold">{textoNum(v)}</td>
+                    <td className="centro tabular-nums">{c.lugar}</td>
+                    <td className="centro"><Lugar n={c.lugar} /></td>
+                    <td>
                       <span className="flex items-center gap-2">
                         <span className="h-4 flex-1 overflow-hidden rounded-sm bg-muted">
                           <span className="block h-full rounded-sm" style={{ width: `${Math.max(0, Math.min(100, v))}%`, background: corPontuacao(c.lugar) }} />
@@ -260,10 +259,10 @@ function Comparativo({ trimestre }: { trimestre: Trimestre }) {
   const mediaOf = media(activas.map(({ r }) => Number(r.ofertas)))
   return (
     <Cartao>
-      <Cabeca n={3} titulo="Quadro comparativo · cada classe comparada com a média" nota="Números positivos (verde) = acima da média das classes activas; negativos (vermelho) = abaixo." />
+      <Cabeca titulo="Quadro comparativo" nota="Cada classe comparada com a média das classes activas" />
       {aCarregar ? <LinhasACarregar linhas={6} /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : !activas.length ? <EstadoVazio icone={Scale}>As classes aparecem aqui depois do primeiro relatório do sábado.</EstadoVazio> : (
-          <Folha minimo="min-w-[60rem]" className="[&_thead_th]:bg-[#2c5aa0] dark:[&_thead_th]:bg-[#1d3a68]">
+          <Folha minimo="min-w-[60rem]">
             <thead>
               <tr>
                 <th className="min-w-44 text-left">Classe</th><th className="num">% Presença</th><th className="num">Diferença vs. média</th><th className="num">% Estudo diário</th>
@@ -278,11 +277,11 @@ function Comparativo({ trimestre }: { trimestre: Trimestre }) {
                   <tr key={r.id}>
                     <td className="font-semibold">{r.classe}</td>
                     <td className="num tabular-nums">{textoPct(r.pctPresenca)}</td>
-                    <td className={cn('num', Number(c!.difPresencaMedia) >= 0 ? 'bg-tint-success/70' : 'bg-tint-destructive/70')}><Diferenca v={c!.difPresencaMedia} tipo="pp" /></td>
+                    <td className="num"><Diferenca v={c!.difPresencaMedia} tipo="pp" /></td>
                     <td className="num tabular-nums">{textoPct(r.pctEstudoDiario)}</td>
-                    <td className={cn('num', Number(c!.difEstudoMedia) >= 0 ? 'bg-tint-success/70' : 'bg-tint-destructive/70')}><Diferenca v={c!.difEstudoMedia} tipo="pp" /></td>
+                    <td className="num"><Diferenca v={c!.difEstudoMedia} tipo="pp" /></td>
                     <td className="num tabular-nums">{textoMT(r.ofertas)}</td>
-                    <td className={cn('num', Number(c!.difOfertasMedia) >= 0 ? 'bg-tint-success/70' : 'bg-tint-destructive/70')}><Diferenca v={c!.difOfertasMedia} tipo="mt" /></td>
+                    <td className="num"><Diferenca v={c!.difOfertasMedia} tipo="mt" /></td>
                     <td className="num tabular-nums">{atras === 0 ? '—' : textoNum(atras)}</td>
                     <td className={cn('font-semibold whitespace-nowrap', acima ? 'text-success-text' : 'text-destructive-text')}>{acima ? '▲' : '▼'} {c!.situacao}</td>
                   </tr>
@@ -327,7 +326,7 @@ function Evolucao({ trimestre }: { trimestre: Trimestre }) {
   let acum = 0
   return (
     <Cartao>
-      <Cabeca n={4} titulo="Evolução da igreja sábado a sábado" nota={`Soma das classes activas em cada sábado (${activas.size} classes). O alvo é a soma dos alvos de ofertas por sábado.`}
+      <Cabeca titulo="Evolução da igreja sábado a sábado" nota={`Soma das classes activas em cada sábado (${activas.size} classes). O alvo é a soma dos alvos de ofertas por sábado.`}
         exportar={{ caminho: '/v1/escola-sabatina/evolucao', nome: `evolucao-${trimestre.ano}-${trimestre.numero}`, trimestre }} />
       {sabados.isPending || cts.isPending || q.isPending ? <LinhasACarregar linhas={8} />
         : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} /> : (
@@ -345,7 +344,7 @@ function Evolucao({ trimestre }: { trimestre: Trimestre }) {
                 const vazio = l.n === 0
                 return (
                   <tr key={l.s.id} className={cn(vazio && 'text-muted-foreground')}>
-                    <td className="centro font-semibold tabular-nums">{String(l.s.numero).padStart(2, '0')}{l.s.decimoTerceiro && <span className="ml-1 rounded bg-tint-warning px-1 text-[10px] text-warning-text">13.º</span>}</td>
+                    <td className="centro font-semibold tabular-nums">{String(l.s.numero).padStart(2, '0')}{l.s.decimoTerceiro && <span className="ml-1 rounded bg-tint-warning px-1 text-[12px] text-warning-text">13.º</span>}</td>
                     <td className="tabular-nums">{data(l.s.data)}</td>
                     <td className="num tabular-nums">{vazio ? '—' : `${l.n}/${activas.size}`}</td>
                     <td className="num tabular-nums">{vazio ? '—' : l.mm}</td><td className="num tabular-nums">{vazio ? '—' : l.mp}</td>
@@ -400,7 +399,7 @@ function PorDivisao({ trimestre }: { trimestre: Trimestre }) {
   const S = (f: (x: LinhaDivisao) => number) => l.reduce((s, x) => s + f(x), 0)
   return (
     <Cartao>
-      <Cabeca n={5} titulo="Relatório por divisão (Associação / Missão)" nota="Consolidado das igrejas da Associação que esta igreja integra, por divisão da Escola Sabatina (médias do trimestre)."
+      <Cabeca titulo="Relatório por divisão (Associação / Missão)" nota="Consolidado das igrejas da Associação que esta igreja integra, por divisão da Escola Sabatina (médias do trimestre)."
         exportar={{ caminho: '/v1/escola-sabatina/relatorio-associacao', nome: `es-por-divisao-${trimestre.ano}-${trimestre.numero}`, trimestre }} />
       {q.isPending ? <LinhasACarregar linhas={5} /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : !l.length ? <EstadoVazio icone={Layers}>Sem relatórios neste trimestre.</EstadoVazio> : (

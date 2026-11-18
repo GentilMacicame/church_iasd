@@ -27,7 +27,7 @@ import { Exportar } from '@/components/comum/Exportar'
 import { api, dados } from '@/api/cliente'
 import { useSessao } from '@/auth/sessao'
 import { imprimirComo } from '@/lib/documentos'
-import { data as dataEcra, hojeIso } from '@/lib/formatos'
+import { data as dataEcra, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { CelulaPct, Folha, textoMT, textoPct } from '@/features/escola-sabatina/componentes'
 import { useHistoricoSantaCeia } from '@/features/santa-ceia/api'
@@ -224,7 +224,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
       <TituloPagina
         icone={ChartColumn}
         titulo={tituloFixo ?? 'Painel geral das igrejas'}
-        descricao={aCarregar ? 'A carregar…' : `${linhas.length} igreja(s)${distrito ? ` do ${distritos.find(([id]) => String(id) === distrito)?.[1]}` : entidade ? ` da ${entidades.find(([id]) => String(id) === entidade)?.[1]}` : ' a seu cargo'} · ${intervalo.rotulo}`}
+        descricao={aCarregar ? 'A carregar…' : `${qtd(linhas.length, 'igreja(s)')}${distrito ? ` do ${distritos.find(([id]) => String(id) === distrito)?.[1]}` : entidade ? ` da ${entidades.find(([id]) => String(id) === entidade)?.[1]}` : ' a seu cargo'} · ${intervalo.rotulo}`}
         accoes={<>
           <Exportar caminho="/v1/organizacao/painel-igrejas" query={{ entidadeId: entidade || undefined, distritoId: distrito || undefined }} nome="painel-geral-igrejas" />
           <Button variant="outline" className="alvo print:hidden" onClick={() => imprimirComo('Painel geral das igrejas')}><Printer className="size-4" />Imprimir</Button>
@@ -273,7 +273,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
           <section aria-label="Membros" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros</h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size} distrito(s) pastoral(is)`} icone={Building2} aCarregar={aCarregar} />
+              <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${qtd(new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size, 'distrito(s) pastoral(is)')}`} icone={Building2} aCarregar={aCarregar} />
               <Indicador rotulo="Total de membros" valor={inteiro(membros)} icone={Users} aCarregar={aCarregar}
                 nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados a preparar`} />
               <Indicador rotulo="Membros activos" valor={inteiro(activos)} icone={UserCheck} tom="success" aCarregar={aCarregar}
@@ -317,11 +317,11 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Contribuições e finanças {comTes.length < linhas.length && <span className="font-normal normal-case">· {comTes.length} de {linhas.length} igrejas com acesso à tesouraria</span>}</h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <Indicador rotulo="Dízimos" valor={mtCurto(dizimos)} nota={`ofertas: ${mtCurto(ofertas)} · ${intervalo.rotulo}`} icone={HandCoins} tom="info" aCarregar={aCarregar} />
-              <Indicador rotulo="Reavivamento" valor={mtCurto(reavivamento)} nota={`${comTes.filter((l) => n(l.reavivamento) > 0).length} igreja(s) contribuíram · ${intervalo.rotulo}`} icone={Flame} tom="warning" aCarregar={aCarregar} />
+              <Indicador rotulo="Reavivamento" valor={mtCurto(reavivamento)} nota={`${qtd(comTes.filter((l) => n(l.reavivamento) > 0).length, 'igreja(s)')} contribuíram · ${intervalo.rotulo}`} icone={Flame} tom="warning" aCarregar={aCarregar} />
               <Indicador rotulo="Saldo nas contas" valor={mtCurto(S(comTes, (l) => l.saldo))} nota="hoje: caixa, M-Pesa e bancos das igrejas" icone={Wallet} aCarregar={aCarregar || qh.isPending} />
               <Indicador rotulo="Por depositar à Missão" valor={mtCurto(S(comTes, (l) => l.porRemeter))} icone={Landmark} aCarregar={aCarregar || qh.isPending}
                 tom={S(comTes, (l) => l.porRemeter) > 0 ? 'destructive' : 'primary'}
-                nota={`hoje: ${comTes.filter((l) => l.porRemeter > 0).length} igreja(s) com depósito em falta`} />
+                nota={`hoje: ${qtd(comTes.filter((l) => l.porRemeter > 0).length, 'igreja(s)')} com depósito em falta`} />
             </div>
           </section>
 

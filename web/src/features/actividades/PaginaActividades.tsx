@@ -73,12 +73,12 @@ export default function PaginaActividades() {
           </div>
           {aba === 'programa' && (
             <div className="grid w-full grid-cols-2 gap-2 sm:w-auto">
-              <Seleccao aria-label="Filtrar por departamento" value={dep} onChange={(e) => mudar('departamento', e.target.value)} className="h-9 sm:w-52">
+              <Seleccao aria-label="Filtrar por departamento" value={dep} onChange={(e) => mudar('departamento', e.target.value)} className="h-9 sm:w-60">
                 <option value="">Todos os departamentos</option>
                 <option value="pastoral">Área pastoral (distrito)</option>
                 {(deps.data?.daIgreja ?? []).map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}
               </Seleccao>
-              <Seleccao aria-label="Filtrar por estado" value={estado} onChange={(e) => mudar('estado', e.target.value)} className="h-9 sm:w-40">
+              <Seleccao aria-label="Filtrar por estado" value={estado} onChange={(e) => mudar('estado', e.target.value)} className="h-9 sm:w-44">
                 <option value="">Todos os estados</option>
                 {Object.entries(ROTULO_ESTADO).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
@@ -135,7 +135,7 @@ export default function PaginaActividades() {
                                     <span className="block text-xs text-muted-foreground md:hidden">{x.departamento}</span>
                                     {x.local && <span className="hidden text-xs text-muted-foreground md:block">{x.local}</span>}
                                   </td>
-                                  <td className="hidden md:table-cell">{x.origem === 'AREA_PASTORAL' ? `Distrito · ${x.distrito ?? ''}` : x.departamento}</td>
+                                  <td className="hidden md:table-cell">{x.origem === 'AREA_PASTORAL' ? (x.distrito ?? 'Distrito') : x.departamento}</td>
                                   <td className="hidden lg:table-cell">{x.responsavel ?? '—'}{x.outrosResponsaveis > 0 && <span className="text-xs text-muted-foreground"> +{x.outrosResponsaveis}</span>}</td>
                                   <td><Pilula variante={VARIANTE_ESTADO[x.estado]}>{ROTULO_ESTADO[x.estado]}</Pilula></td>
                                   <td className="num hidden sm:table-cell">{dinheiro(x.valorPrevisto)}</td>

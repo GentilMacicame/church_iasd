@@ -77,7 +77,7 @@ function Passo({ n, children }: { n: number; children: ReactNode }) {
 
 /** Percentagem pequena a cores (ao lado dos números e no resumo). */
 function PctPilula({ v, tipo = 'presenca' }: { v: number | null; tipo?: 'presenca' | 'alvo' }) {
-  return <span className={cn('rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums', v == null ? 'text-muted-foreground' : tomPct(v, tipo))}>{textoPct(v)}</span>
+  return <span className={cn('rounded px-1.5 py-0.5 text-[12px] font-semibold tabular-nums', v == null ? 'text-muted-foreground' : tomPct(v, tipo))}>{textoPct(v)}</span>
 }
 
 /** Caixa de marcar da chamada (alvo de 44px; só um ✓ quando o relatório está fechado). */

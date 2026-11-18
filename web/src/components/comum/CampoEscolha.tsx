@@ -52,18 +52,18 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
     <Popover open={aberto} onOpenChange={(v) => { setAberto(v); if (!v) aoFechar?.(); if (v) { setBusca(''); setActivo(Math.max(0, opcoes.findIndex((o) => o.valor === valor))) } }}>
       <PopoverTrigger asChild>
         <button id={id} type="button" role="combobox" aria-label={rotuloAcessivel} aria-expanded={aberto} aria-haspopup="listbox" disabled={disabled} aria-invalid={invalido || undefined}
-          className={cn('alvo flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(0_0_0/0.04)]',
-            'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive')}>
+          className={cn('group/escolha alvo flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-[border-color,box-shadow] hover:border-foreground/20',
+            'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/15 focus-visible:outline-none aria-expanded:border-primary aria-expanded:ring-[3px] aria-expanded:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive')}>
           <span className={cn('truncate', escolhida ? 'text-foreground' : 'text-muted-foreground')}>{escolhida ? escolhida.rotulo : (opcoes.length ? vazio : semOpcoes)}</span>
           {escolhida && permitirLimpar
             ? <span role="button" tabIndex={0} aria-label="Limpar" onClick={(e) => { e.stopPropagation(); aoMudar('') }}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); aoMudar('') } }}
                 className="flex-none text-xs text-muted-foreground hover:text-foreground">Limpar</span>
-            : <ChevronDown aria-hidden className="size-4 flex-none text-muted-foreground" />}
+            : <ChevronDown aria-hidden className="size-4 flex-none text-muted-foreground transition-transform duration-200 group-aria-expanded/escolha:rotate-180" />}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 p-0">
-        <div className="flex items-center gap-2 border-b px-3">
+      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-56 overflow-hidden p-0">
+        <div className="flex items-center gap-2 border-b bg-muted/30 px-3">
           <Search className="size-4 flex-none text-muted-foreground" aria-hidden />
           <input autoFocus value={busca} placeholder={pesquisar} aria-label={pesquisar}
             onChange={(e) => { setBusca(e.target.value); setActivo(0) }}
@@ -74,12 +74,12 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
             }}
             className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
         </div>
-        <ul ref={lista} role="listbox" className="max-h-64 overflow-y-auto p-1">
+        <ul ref={lista} role="listbox" className="max-h-64 overflow-y-auto p-1.5">
           {filtradas.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted-foreground">{opcoes.length ? 'Nada encontrado' : semOpcoes}</li>}
           {filtradas.map((o, i) => (
             <li key={o.valor} role="option" aria-selected={o.valor === valor} aria-disabled={o.desactivada || undefined}
               onMouseEnter={() => setActivo(i)} onMouseDown={(e) => e.preventDefault()} onClick={() => escolher(o)}
-              className={cn('flex min-h-9 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm', i === activo && 'bg-accent text-accent-foreground', o.desactivada && 'cursor-not-allowed opacity-50')}>
+              className={cn('flex min-h-9 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors', i === activo && 'bg-muted', o.valor === valor && 'font-medium text-primary', o.desactivada && 'cursor-not-allowed opacity-50')}>
               <Check className={cn('size-4 flex-none', o.valor === valor ? 'text-primary' : 'invisible')} aria-hidden />
               <span className="min-w-0">
                 <span className="block truncate">{o.rotulo}</span>

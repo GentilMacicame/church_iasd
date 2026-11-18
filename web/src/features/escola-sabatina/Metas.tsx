@@ -22,7 +22,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { data, hojeIso } from '@/lib/formatos'
+import { data, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { textoMT, textoPct } from './componentes'
 import {
@@ -76,12 +76,12 @@ export function MetasDaClasse({ trimestre, classeTrimestre }: { trimestre: Trime
   return (
     <div className="grid gap-5">
       <dl className="grid grid-cols-2 overflow-hidden rounded-xl border bg-card shadow-card lg:grid-cols-4">
-        {[['Meta da classe', textoMT(meta), `soma das metas de ${classe?.comMeta ?? 0} aluno(s) · ${textoMT(meta / (trimestre.numSabados || 13))} por sábado`],
+        {[['Meta da classe', textoMT(meta), `soma das metas de ${qtd(classe?.comMeta ?? 0, 'aluno(s)')} · ${textoMT(meta / (trimestre.numSabados || 13))} por sábado`],
           ['Contribuído', textoMT(contribuido), `oferta missionária em ${classe?.sabadosComRelatorio ?? 0} de ${trimestre.numSabados} sábados`],
           ['Identificado por aluno', textoMT(identificado), contribuido ? `${textoPct(razao(identificado, contribuido), 0)} do contribuído` : 'na chamada nominal'],
           ['Cumprimento', meta ? textoPct(razao(contribuido, meta), 0) : '—', 'contribuído ÷ meta da classe']].map(([r, v, n]) => (
           <div key={r} className="border-r border-b px-4 py-3">
-            <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{r}</dt>
+            <dt className="text-[12px] font-semibold tracking-wide text-muted-foreground uppercase">{r}</dt>
             <dd className="mt-1 text-lg font-semibold tabular-nums">{v}</dd>
             <dd className="text-xs text-muted-foreground">{n}</dd>
           </div>

@@ -7,7 +7,7 @@ import { Donut, GraficoBarras, curto, type FatiaDonut, type Slot } from '@/compo
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFundos, useMovimentos, useResumoMensal, useSaldosContas, useSaldosFundos, type Transacao } from './api'
 import { PilulaEstado, Valor, parteDoFundo, quem } from './comum'
@@ -60,8 +60,8 @@ export default function PaginaTesouraria() {
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Indicador rotulo="Saldo total" valor={<Dinheiro valor={total} />} nota={centimos(porRemeter) > 0 ? <>contas da igreja · <Dinheiro valor={porRemeter} /> é da Missão</> : 'nas contas da igreja'} icone={Wallet} para="/tesouraria/remessas" aCarregar={contas.isPending || fundosSaldo.isPending} />
-          <Indicador rotulo="Entradas do mês" valor={<Dinheiro valor={soma(entradas)} />} nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={somaComSinal(pagoNaMissao)} /> pagos na Missão</> : `${entradas.length} confirmada(s)`} icone={ArrowDownRight} tom="success" para="/tesouraria/movimentos?ver=entradas" aCarregar={movs.isPending || contas.isPending} />
-          <Indicador rotulo="Saídas do mês" valor={<Dinheiro valor={soma(saidas)} />} nota={`${saidas.length} confirmada(s)`} icone={ArrowUpRight} tom="destructive" para="/tesouraria/movimentos?ver=saidas" aCarregar={movs.isPending} />
+          <Indicador rotulo="Entradas do mês" valor={<Dinheiro valor={soma(entradas)} />} nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={somaComSinal(pagoNaMissao)} /> pagos na Missão</> : `${qtd(entradas.length, 'confirmada(s)')}`} icone={ArrowDownRight} tom="success" para="/tesouraria/movimentos?ver=entradas" aCarregar={movs.isPending || contas.isPending} />
+          <Indicador rotulo="Saídas do mês" valor={<Dinheiro valor={soma(saidas)} />} nota={`${qtd(saidas.length, 'confirmada(s)')}`} icone={ArrowUpRight} tom="destructive" para="/tesouraria/movimentos?ver=saidas" aCarregar={movs.isPending} />
           <Indicador rotulo="Por confirmar" valor={pendentes.length} nota="pendentes ou por aprovar" icone={ShieldAlert} tom="warning" para="/tesouraria/movimentos?ver=pendentes" aCarregar={movs.isPending} />
         </div>
         <div className="grid items-start gap-6 lg:grid-cols-12">

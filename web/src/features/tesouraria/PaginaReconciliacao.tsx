@@ -16,7 +16,7 @@ import { CampoEscolha } from '@/components/comum/CampoEscolha'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { centimos, data, deCentimos } from '@/lib/formatos'
+import { centimos, data, deCentimos, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { Exportar } from '@/components/comum/Exportar'
 import { useContasIgreja, useExtractosMut, useMovimentos, usePorReconciliar, type PorReconciliar, type Transacao } from './api'
@@ -189,7 +189,7 @@ function DialogoImportar({ contas, aoFechar }: { contas: { id: number; nome: str
     if (!conta) return setErro('Escolha a conta do extracto.')
     if (!csv.trim()) return setErro('Escolha o ficheiro ou cole as linhas do extracto.')
     importar.mutate({ contaId: Number(conta), csv }, {
-      onSuccess: (r) => { toast.success(`${r.importadas} linha(s) importada(s)${r.repetidas ? `; ${r.repetidas} já estavam importadas` : ''}.`); aoFechar() },
+      onSuccess: (r) => { toast.success(`${qtd(r.importadas, 'linha(s) importada(s)')}${r.repetidas ? `; ${r.repetidas} já estavam importadas` : ''}.`); aoFechar() },
       onError: (e) => setErro(mensagemDe(e)),
     })
   }

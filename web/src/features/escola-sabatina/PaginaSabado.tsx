@@ -14,7 +14,7 @@ import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/est
 import { Seleccao } from '@/components/comum/Seleccao'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { f, rotulos, t } from '@/i18n/pt-MZ'
-import { data, dinheiro, deCentimos, centimos } from '@/lib/formatos'
+import { data, dinheiro, deCentimos, centimos, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import {
   nomeTrimestre, sabadoActual, trimestreActual, useClasses, useClassesTrimestre, useRelatoriosSabado, useSabados, useTrimestres,
@@ -40,10 +40,10 @@ export function AvisosRede() {
           <CloudUpload className="size-4 flex-none" aria-hidden />
           <p className="min-w-0 flex-1">
             {f(t.es.porEnviar, { n: fila.length })}
-            {recusados.length > 0 && <> · {recusados.length} recusado(s): abra-o(s) para corrigir</>}
+            {recusados.length > 0 && <> · {qtd(recusados.length, 'recusado(s)')}: abra para corrigir</>}
           </p>
           {emLinha && (
-            <Button size="sm" variant="outline" className="alvo" onClick={() => void sincronizarTudo().then(async () => { const resta = await porEnviar(); if (resta.length) toast.warning(`${resta.length} relatório(s) ainda por enviar.`); else toast.success('Relatórios enviados.') })}>
+            <Button size="sm" variant="outline" className="alvo" onClick={() => void sincronizarTudo().then(async () => { const resta = await porEnviar(); if (resta.length) toast.warning(`${qtd(resta.length, 'relatório(s)')} ainda por enviar.`); else toast.success('Relatórios enviados.') })}>
               {t.es.enviarAgora}
             </Button>
           )}

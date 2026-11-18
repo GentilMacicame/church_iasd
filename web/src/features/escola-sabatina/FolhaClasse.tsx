@@ -19,7 +19,7 @@ import { EstadoErro, LinhasACarregar } from '@/components/comum/estados'
 import { Pilula } from '@/components/comum/elementos'
 import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
-import { data, dinheiroParaApi, hojeIso } from '@/lib/formatos'
+import { data, dinheiroParaApi, hojeIso, qtd } from '@/lib/formatos'
 import { imprimirComo } from '@/lib/documentos'
 import { cn } from '@/lib/utils'
 import {
@@ -192,7 +192,7 @@ export function FolhaClasse({ classe, ct, trimestre }: { classe: Classe; ct: Cla
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <p className="text-sm text-muted-foreground">
           {inactiva ? 'Classe desactivada neste trimestre: a folha é só de leitura.'
-            : porRegistar ? <><strong className="font-semibold text-warning-text">{porRegistar} sábado(s) por registar.</strong> Carregue em <strong className="font-semibold">Registar</strong> na linha do sábado, escreva os números e Guardar (ou Enter).</>
+            : porRegistar ? <><strong className="font-semibold text-warning-text">{qtd(porRegistar, 'sábado(s)')} por registar.</strong> Carregue em <strong className="font-semibold">Registar</strong> na linha do sábado, escreva os números e Guardar (ou Enter).</>
             : 'Todos os sábados que já passaram estão registados. Para corrigir um sábado aberto, use Editar.'}
         </p>
         <Button variant="outline" size="sm" onClick={() => imprimirComo(`Folha ${classe.nome} ${nomeTrimestre(trimestre)}`)}><Printer className="size-4" />Imprimir</Button>
@@ -227,7 +227,7 @@ export function FolhaClasse({ classe, ct, trimestre }: { classe: Classe; ct: Cla
                 !l.tem && !l.futuro && !l.aEditar && '[&_td]:bg-tint-warning/25')}>
                 <td className="centro tabular-nums font-semibold">
                   {String(l.s.numero).padStart(2, '0')}
-                  {l.s.decimoTerceiro && <span className="ml-1 rounded bg-tint-warning px-1 text-[10px] text-warning-text" title="13.º sábado">13.º</span>}
+                  {l.s.decimoTerceiro && <span className="ml-1 rounded bg-tint-warning px-1 text-[12px] text-warning-text" title="13.º sábado">13.º</span>}
                 </td>
                 <td className="whitespace-nowrap tabular-nums">{data(l.s.data)}</td>
                 <td className="print:hidden">{accoes(l)}</td>

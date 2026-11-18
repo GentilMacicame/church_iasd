@@ -20,7 +20,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { useSessao } from '@/auth/sessao'
 import { mensagemDe } from '@/api/erros'
 import { t } from '@/i18n/pt-MZ'
-import { data, hojeIso } from '@/lib/formatos'
+import { data, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import {
   nomeTrimestre, sabadosEntre, trimestreActual, useCriarSabadosEmFalta, useCriarTrimestre, useGravarPesos, useMarcar13, usePesos, useSabados, useTrimestres,
@@ -93,7 +93,7 @@ function Sabados({ trimestre }: { trimestre: Trimestre }) {
     <>
     {emFalta > 0 && (
       <div className="flex flex-wrap items-center gap-3 bg-tint-warning px-5 py-3 text-sm text-warning-text sm:px-6">
-        <p className="flex-1">Faltam {emFalta} sábado(s) neste trimestre.</p>
+        <p className="flex-1">Faltam {qtd(emFalta, 'sábado(s)')} neste trimestre.</p>
         {pode('escola_sabatina.sabado.criar') && (
           <Button size="sm" variant="outline" disabled={criarFalta.isPending}
             onClick={() => criarFalta.mutate({ trimestre, existentes: q.data }, { onSuccess: () => toast.success('Sábados criados.'), onError: (e) => toast.error(mensagemDe(e)) })}>

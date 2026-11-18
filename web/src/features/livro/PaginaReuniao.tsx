@@ -24,7 +24,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { ErroApi, mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { dataPorExtenso } from '@/lib/formatos'
+import { dataPorExtenso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { emExercicio, useConselho, type Oficial } from '@/features/conselho/api'
@@ -184,7 +184,7 @@ export default function PaginaReuniao() {
 
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid min-w-0 gap-6 lg:col-span-8">
-          <Cartao titulo="Agenda e deliberações" descricao={`${listaPontos.length} ponto(s) · ${listaPontos.filter((p) => p.estado === 'APROVADO').length} aprovado(s) · ${listaPontos.filter((p) => p.estado === 'PENDENTE').length} pendente(s)`} icone={ListChecks} semMargem
+          <Cartao titulo="Agenda e deliberações" descricao={`${qtd(listaPontos.length, 'ponto(s)')} · ${qtd(listaPontos.filter((p) => p.estado === 'APROVADO').length, 'aprovado(s)')} · ${qtd(listaPontos.filter((p) => p.estado === 'PENDENTE').length, 'pendente(s)')}`} icone={ListChecks} semMargem
             accoes={pode('secretaria.reuniao_ponto.criar') && !fechada && <Button size="sm" className="alvo" onClick={() => setPonto('novo')}><Plus className="size-4" />Acrescentar ponto</Button>}>
             {pontos.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
               : pontos.isError ? <EstadoErro erro={pontos.error} aoTentar={() => pontos.refetch()} className="mx-6 mb-6" />
@@ -250,7 +250,7 @@ export default function PaginaReuniao() {
       {ponto && <DialogoPonto reuniaoId={r.id} ponto={ponto === 'novo' ? null : ponto} ordem={listaPontos.length + 1} votos={daReuniao} aoFechar={() => setPonto(null)} />}
       {editar && <DialogoEditarReuniao reuniao={r} aoFechar={() => setEditar(false)} />}
       <DialogoConfirmar aberto={aprovar} aoMudar={setAprovar} titulo="Aprovar a acta?"
-        texto={<>Depois de aprovada, a acta fica fechada: as presenças ({presentes} presente(s)), os {listaPontos.length} pontos da agenda e o encerramento já não se alteram.</>}
+        texto={<>Depois de aprovada, a acta fica fechada: as presenças ({qtd(presentes, 'presente(s)')}), os {listaPontos.length} pontos da agenda e o encerramento já não se alteram.</>}
         accao="Aprovar acta" aCorrer={mut.alterarReuniao.isPending} aoConfirmar={() => mudarEstado('ACTA_APROVADA', 'Acta aprovada.')} />
     </>
   )
@@ -289,7 +289,7 @@ function Presencas({ reuniaoId, fechada, oficiais, presencas, aCarregar, nomeDe 
   const todosPresentes = () => pessoas.filter((m) => !porMembro.has(m)).forEach((m) => marcar(m, true))
 
   return (
-    <Cartao titulo="Presenças" descricao={`${presentes} presente(s) · ${ausentes} ausente(s)${porMarcar ? ` · ${porMarcar} por marcar` : ''}`} icone={Users} semMargem
+    <Cartao titulo="Presenças" descricao={`${qtd(presentes, 'presente(s)')} · ${qtd(ausentes, 'ausente(s)')}${porMarcar ? ` · ${porMarcar} por marcar` : ''}`} icone={Users} semMargem
       accoes={podeMarcar && porMarcar > 0 && <Button size="sm" variant="ghost" onClick={todosPresentes}>Todos presentes</Button>}>
       {aCarregar ? <div className="px-6 pb-6"><Barra className="h-32 w-full" /></div>
         : !pessoas.length ? <EstadoVazio icone={Users} titulo="Sem conselho registado">Registe os oficiais em <Link to="/conselho" className="font-medium text-primary hover:underline">Conselho da igreja</Link> ou acrescente participantes abaixo.</EstadoVazio>

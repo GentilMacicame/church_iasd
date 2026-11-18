@@ -105,7 +105,7 @@ function Grelha({ titulo, children }: { titulo?: string; children: React.ReactNo
   return (
     <div className="border-t pt-5 first:border-t-0 first:pt-0">
       {titulo && <h3 className="mb-3 text-sm font-semibold">{titulo}</h3>}
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">{children}</dl>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 xl:grid-cols-3">{children}</dl>
     </div>
   )
 }

@@ -20,6 +20,7 @@ import {
 } from './api'
 import { DialogoClasse } from './DialogoClasse'
 import { EscolherTrimestre, Folha, textoMT } from './componentes'
+import { qtd } from '@/lib/formatos'
 
 export default function PaginaClasses() {
   const { pode } = useSessao()
@@ -53,9 +54,9 @@ export default function PaginaClasses() {
     if (!anterior || !trimestre) return
     try {
       const r = await copiar.mutateAsync({ de: anterior.id, para: trimestre.id })
-      if (r.copiadas) toast.success(`${r.copiadas} classe(s) configurada(s) como no ${nomeTrimestre(anterior)}. Reveja os alvos.`)
+      if (r.copiadas) toast.success(`${qtd(r.copiadas, 'classe(s) configurada(s)')} como no ${nomeTrimestre(anterior)}. Reveja os alvos.`)
       else if (!r.erros.length) toast.info(`O ${nomeTrimestre(anterior)} não tem classes por copiar.`)
-      if (r.erros.length) toast.error(`${r.erros.length} classe(s) não copiada(s): ${r.erros[0]}`)
+      if (r.erros.length) toast.error(`${qtd(r.erros.length, 'classe(s) não copiada(s)')}: ${r.erros[0]}`)
     } catch (e) {
       toast.error(mensagemDe(e))
     }
@@ -77,7 +78,7 @@ export default function PaginaClasses() {
           <Indicador rotulo="Classes activas" valor={activas.length} nota={`de ${lista.length} registadas`} icone={School} aCarregar={classes.isPending || cts.isPending} />
           <Indicador rotulo="Alvo de membros" valor={somaAlvo('alvoMembros')} nota="soma das classes activas" tom="info" aCarregar={cts.isPending} />
           <Indicador rotulo="Alvo de ofertas" valor={textoMT(somaOfertas)} nota="por sábado, todas as classes" tom="success" aCarregar={cts.isPending} />
-          <Indicador rotulo="Alvo de baptismos" valor={somaAlvo('alvoBaptismos')} nota={semConfig ? `${semConfig} classe(s) por configurar` : 'no trimestre'} tom={semConfig ? 'warning' : 'primary'} aCarregar={cts.isPending} />
+          <Indicador rotulo="Alvo de baptismos" valor={somaAlvo('alvoBaptismos')} nota={semConfig ? `${qtd(semConfig, 'classe(s)')} por configurar` : 'no trimestre'} tom={semConfig ? 'warning' : 'primary'} aCarregar={cts.isPending} />
         </div>
 
         <Cartao

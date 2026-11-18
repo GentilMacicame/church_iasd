@@ -15,7 +15,7 @@ import { Barra, EstadoErro, LinhasACarregar } from '@/components/comum/estados'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
-import { centimos, data, deCentimos, hojeIso } from '@/lib/formatos'
+import { centimos, data, deCentimos, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { daMissao, useContagens, useContas, useFechos, useFechosMut, useMovimentos, useRemessas, useRemessasDevidas, type Fecho } from './api'
 import { nomeMes } from './PaginaRemessas'
@@ -108,7 +108,7 @@ export default function PaginaFechos() {
                       <p className="text-xs text-muted-foreground">
                         {m.fecho ? `Fechado em ${data(m.fecho.criadoEm)}` : m.chave === actual ? 'Mês em curso' : m === proximo ? 'A fechar a seguir' : vazio ? 'Sem movimentos' : 'Por fechar'}
                         {m.reaberturas.length > 0 && ` · reaberto ${m.reaberturas.length}×`}
-                        {!m.fecho && m.pendentes > 0 && <span className="text-warning-text"> · {m.pendentes} pendente(s)</span>}
+                        {!m.fecho && m.pendentes > 0 && <span className="text-warning-text"> · {qtd(m.pendentes, 'pendente(s)')}</span>}
                       </p>
                     </td>
                     <td className="num hidden sm:table-cell">{m.entradas ? <Dinheiro valor={deCentimos(m.entradas)} /> : <span className="text-muted-foreground">—</span>}</td>
@@ -143,7 +143,7 @@ export default function PaginaFechos() {
         <DialogoConfirmar aberto aoMudar={(v) => !v && setAFechar(null)} titulo={`Fechar ${nomeMes(aFechar.ano, aFechar.mes)}?`} aCorrer={fechar.isPending} accao="Fechar mês"
           texto={<>
             Depois de fechado, ninguém lança nem confirma movimentos com data neste mês.
-            {aFechar.pendentes > 0 && <strong className="mt-2 block text-warning-text">Há {aFechar.pendentes} movimento(s) pendente(s): confirme-os ou anule-os antes de fechar.</strong>}
+            {aFechar.pendentes > 0 && <strong className="mt-2 block text-warning-text">Há {qtd(aFechar.pendentes, 'movimento(s) pendente(s)')}: confirme-os ou anule-os antes de fechar.</strong>}
             {aFechar.porRemeter > 0 && <strong className="mt-2 block text-warning-text">Falta depositar <Dinheiro valor={deCentimos(aFechar.porRemeter)} /> à Missão neste mês.</strong>}
           </>}
           aoConfirmar={() => fechar.mutate({ ano: aFechar.ano, mes: aFechar.mes }, {
@@ -167,9 +167,9 @@ function ProximoFecho({ m, podeFechar, aoFechar }: { m: Mes; podeFechar: boolean
   const resultado = m.entradas - m.saidas
   const passos: { ok: boolean | null; titulo: string; detalhe: ReactNode; para?: string; accao?: string }[] = [
     { ok: m.pendentes === 0, titulo: 'Movimentos confirmados', para: '/tesouraria/movimentos', accao: 'Ver movimentos',
-      detalhe: m.pendentes ? `${m.pendentes} pendente(s): confirme ou anule` : 'Nenhum pendente' },
+      detalhe: m.pendentes ? `${qtd(m.pendentes, 'pendente(s)')}: confirme ou anule` : 'Nenhum pendente' },
     { ok: m.contagensAbertas === 0, titulo: 'Contagens conferidas', para: '/tesouraria/contagens', accao: 'Ver contagens',
-      detalhe: m.contagensAbertas ? `${m.contagensAbertas} contagem(ns) por conferir` : 'Contado = lançado' },
+      detalhe: m.contagensAbertas ? `${qtd(m.contagensAbertas, 'contagem(ns)')} por conferir` : 'Contado = lançado' },
     { ok: m.porRemeter === 0 && (m.remessaEnviada || m.entradas === 0), titulo: 'Depósito à Missão', para: '/tesouraria/remessas', accao: 'Ver depósitos',
       detalhe: m.porRemeter > 0 ? <>Falta depositar <Dinheiro valor={deCentimos(m.porRemeter)} /></> : m.remessaEnviada ? 'Depositado' : 'Nada a depositar' },
     { ok: null, titulo: 'Saldos conferidos', para: '/tesouraria/contas', accao: 'Ver contas',

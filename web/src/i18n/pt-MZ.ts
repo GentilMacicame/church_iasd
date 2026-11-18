@@ -180,7 +180,7 @@ export const t = {
     guardadoTelemovel: 'Guardado no telemóvel. É enviado quando houver rede.',
     enviado: 'Relatório enviado.',
     recusado: 'A base de dados recusou o relatório. Corrija e guarde de novo.',
-    porEnviar: '{n} relatório(s) por enviar',
+    porEnviar: 'Relatórios por enviar: {n}',
     enviarAgora: 'Enviar agora',
     oferta: 'Oferta missionária',
     oferta13: 'Oferta do 13.º sábado',

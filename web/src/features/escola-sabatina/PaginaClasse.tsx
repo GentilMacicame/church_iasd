@@ -18,7 +18,7 @@ import { Paginada } from '@/components/comum/Paginacao'
 import { useSessao } from '@/auth/sessao'
 import { ErroApi, mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { data } from '@/lib/formatos'
+import { data, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import {
@@ -84,7 +84,7 @@ export default function PaginaClasse() {
           <dl className="grid grid-cols-2 overflow-hidden rounded-xl border bg-card shadow-card sm:grid-cols-4 lg:grid-cols-7">
             {resumo.map(([r, v]) => (
               <div key={r} className="border-r border-b px-4 py-3">
-                <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{r}</dt>
+                <dt className="text-[12px] font-semibold tracking-wide text-muted-foreground uppercase">{r}</dt>
                 <dd className="mt-1 truncate text-sm font-semibold tabular-nums">{v}</dd>
               </div>
             ))}
@@ -185,7 +185,7 @@ function Matriculas({ classe }: { classe: Classe }) {
   }
 
   return (
-    <Cartao titulo="Matrículas" icone={Users} descricao={`${activas.length} aluno(s) na classe`}
+    <Cartao titulo="Matrículas" icone={Users} descricao={`${qtd(activas.length, 'aluno(s)')} na classe`}
       accoes={antigas.length > 0 && <Button variant="ghost" size="sm" onClick={() => setHistorico((x) => !x)}>{historico ? 'Ocultar saídas' : `Saídas (${antigas.length})`}</Button>}>
       <div className="grid gap-3">
         <ErroFormulario mensagem={erro} />
