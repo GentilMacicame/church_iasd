@@ -55,7 +55,10 @@ CREATE TYPE nucleo.estado_actividade_t     AS ENUM ('PLANEADA', 'EM_CURSO', 'CON
 CREATE TYPE nucleo.funcao_escala_t         AS ENUM ('PREGADOR', 'ANCIAO_DO_DIA', 'DIACONO', 'DIACONISA', 'RECEPCAO', 'MUSICA',
                                                     'SONOPLASTIA', 'PROFESSOR_ES', 'DIRECTOR_ES', 'LIMPEZA', 'OUTRA',
                                                     -- V17: escala de pregação (tradutor e acompanhantes do pregador)
-                                                    'TRADUTOR', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS', 'ACOMPANHANTE_BOAS_VINDAS');
+                                                    'TRADUTOR', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS', 'ACOMPANHANTE_BOAS_VINDAS',
+                                                    -- V44: as funções da programação do culto
+                                                    'APRESENTADOR_ES', 'APRESENTADOR_CULTO', 'SERMAO_CRIANCA', 'ORACAO_INICIAL',
+                                                    'ORACAO_FINAL', 'APRESENTADOR_JA', 'MEDITACAO_JA');
 CREATE TYPE nucleo.estado_santa_ceia_t     AS ENUM ('AGENDADA', 'REALIZADA', 'CANCELADA');
 CREATE TYPE nucleo.estado_escala_t         AS ENUM ('PREVISTA', 'CONFIRMADA', 'SUBSTITUIDA', 'CUMPRIDA', 'FALTOU');
 CREATE TYPE nucleo.es_divisao_t            AS ENUM ('ROL_DO_BERCO', 'JARDIM_DE_INFANCIA', 'PRIMARIOS', 'JUVENIS',

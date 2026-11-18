@@ -24,6 +24,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param grupoCoral coluna {@code eds_grupo_coral}
  * @param departamentoIgrejaId Departamento responsável
  * @param observacoes coluna {@code eds_observacoes}
+ * @param familiaId Família responsável pela programação da Escola Sabatina (V44)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -47,6 +48,8 @@ public record EscalaDia(
         Integer departamentoIgrejaId,
         @ColunaBd(value = "eds_observacoes", tipo = Tipo.TEXTO)
         String observacoes,
+        @ColunaBd(value = "eds_fam_id", tipo = Tipo.INT)
+        Integer familiaId,
         @ColunaBd(value = "eds_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "eds_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

@@ -319,6 +319,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/actividades/itens-programa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Itens programa: listar
+         * @description Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)
+         */
+        get: operations["listarProgramaItem"];
+        put?: never;
+        /**
+         * Itens programa: criar
+         * @description Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)
+         */
+        post: operations["criarProgramaItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/itens-programa/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Itens programa: ler um */
+        get: operations["lerProgramaItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Itens programa: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarProgramaItem"];
+        trace?: never;
+    };
+    "/v1/actividades/itens-programa/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Itens programa: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarProgramaItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/itens-programa/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Itens programa: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarProgramaItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/actividades/materiais": {
         parameters: {
             query?: never;
@@ -398,6 +483,91 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/partes-programa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Partes programa: listar
+         * @description Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)
+         */
+        get: operations["listarProgramaParte"];
+        put?: never;
+        /**
+         * Partes programa: criar
+         * @description Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)
+         */
+        post: operations["criarProgramaParte"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/partes-programa/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partes programa: ler um */
+        get: operations["lerProgramaParte"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Partes programa: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarProgramaParte"];
+        trace?: never;
+    };
+    "/v1/actividades/partes-programa/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Partes programa: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarProgramaParte"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/partes-programa/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Partes programa: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarProgramaParte"];
         delete?: never;
         options?: never;
         head?: never;
@@ -520,6 +690,125 @@ export interface paths {
         get: operations["relVActividadesPrograma"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Programas dia: listar
+         * @description Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)
+         */
+        get: operations["listarProgramaDia"];
+        put?: never;
+        /**
+         * Programas dia: criar
+         * @description Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)
+         */
+        post: operations["criarProgramaDia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia/preparar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preparar a programação de um dia: do modelo (Escola Sabatina, Transição, Culto Divino, JA) ou copiando outro dia, já preenchida pela escala */
+        post: operations["VActividadesProgramasDiaPreparar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Programas dia: ler um */
+        get: operations["lerProgramaDia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Programas dia: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarProgramaDia"];
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia/{id}/preencher-escala": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pôr nas partes e itens ligados à escala quem está escalado nesse dia */
+        post: operations["VActividadesProgramasDiaIdPreencherEscala"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Programas dia: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarProgramaDia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/programas-dia/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Programas dia: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarProgramaDia"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8265,7 +8554,7 @@ export interface components {
         /** @enum {string} */
         EnumEstadoValidacao: "PENDENTE" | "APROVADO" | "REJEITADO";
         /** @enum {string} */
-        EnumFuncaoEscala: "PREGADOR" | "ANCIAO_DO_DIA" | "DIACONO" | "DIACONISA" | "RECEPCAO" | "MUSICA" | "SONOPLASTIA" | "PROFESSOR_ES" | "DIRECTOR_ES" | "LIMPEZA" | "OUTRA" | "TRADUTOR" | "ACOMPANHANTE_VISITAS" | "ACOMPANHANTE_OFERTAS" | "ACOMPANHANTE_BOAS_VINDAS";
+        EnumFuncaoEscala: "PREGADOR" | "ANCIAO_DO_DIA" | "DIACONO" | "DIACONISA" | "RECEPCAO" | "MUSICA" | "SONOPLASTIA" | "PROFESSOR_ES" | "DIRECTOR_ES" | "LIMPEZA" | "OUTRA" | "TRADUTOR" | "ACOMPANHANTE_VISITAS" | "ACOMPANHANTE_OFERTAS" | "ACOMPANHANTE_BOAS_VINDAS" | "APRESENTADOR_ES" | "APRESENTADOR_CULTO" | "SERMAO_CRIANCA" | "ORACAO_INICIAL" | "ORACAO_FINAL" | "APRESENTADOR_JA" | "MEDITACAO_JA";
         /** @enum {string} */
         EnumMetodoPagamento: "MPESA" | "EMOLA" | "BANCO" | "NUMERARIO";
         /** @enum {string} */
@@ -8370,6 +8659,11 @@ export interface components {
              */
             departamentoIgrejaId?: number;
             observacoes?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.familia · Família responsável pela programação da Escola Sabatina (V44)
+             */
+            familiaId?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -9164,6 +9458,121 @@ export interface components {
             readonly igrejaId?: number;
             presente?: boolean;
             estudouLicao?: boolean;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44) */
+        ProgramaDia: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /** Format: date */
+            data?: string;
+            /** @description Título da folha; por defeito, a data por extenso */
+            titulo?: string;
+            /** @description Nota no fim da folha (ex.: passível de ajustes e simplificação) */
+            observacoes?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44) */
+        ProgramaItem: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → actividades.programa_dia
+             */
+            programaDiaId?: number;
+            /**
+             * Format: int32
+             * @description → actividades.programa_parte
+             */
+            programaParteId?: number;
+            ordem?: number;
+            /** @description Hora (hh:mm) */
+            horaInicio?: string;
+            /** @description Hora (hh:mm) */
+            horaFim?: string;
+            /** @description Ex.: Hino inicial (H.A 509) */
+            actividade?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Responsável (membro)
+             */
+            responsavelMembroId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.familia · Responsável (família)
+             */
+            responsavelFamiliaId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja_departamento · Responsável (departamento, ex.: Mulher Adventista)
+             */
+            responsavelDepartamentoIgrejaId?: number;
+            /** @description Responsável escrito (ex.: Todos, Diáconos, Monitores, um visitante) */
+            responsavelTexto?: string;
+            /** @description Função da escala que preenche o responsável (ex.: PREGADOR, TRADUTOR, FAMILIA_ES) */
+            escala?: string;
+            /** @description Linha em destaque na folha (ex.: Sermão principal) */
+            destaque?: boolean;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44) */
+        ProgramaParte: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → actividades.programa_dia
+             */
+            programaDiaId?: number;
+            ordem?: number;
+            /** @description Ex.: Programação do Culto Divino */
+            titulo?: string;
+            /** @description Cabeçalho da coluna do apresentador (ex.: Apresentador, Transição) */
+            rotulo?: string;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Apresentador (membro)
+             */
+            apresentadorMembroId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.familia · Apresentador (família, ex.: Família Magaia)
+             */
+            apresentadorFamiliaId?: number;
+            /** @description Apresentador escrito (visitante, grupo) */
+            apresentadorTexto?: string;
+            /** @description Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES) */
+            escala?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -10262,6 +10671,7 @@ export interface operations {
                 incluirTerminados?: components["parameters"]["IncluirTerminados"];
                 escalaPlanoId?: number;
                 departamentoIgrejaId?: number;
+                familiaId?: number;
                 estado?: components["schemas"]["EnumEstadoRegisto"];
                 desde?: string;
                 ate?: string;
@@ -10689,6 +11099,194 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarProgramaItem: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                programaDiaId?: number;
+                programaParteId?: number;
+                responsavelMembroId?: number;
+                responsavelFamiliaId?: number;
+                responsavelDepartamentoIgrejaId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ProgramaItem"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarProgramaItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ProgramaItem"], "programaDiaId" | "programaParteId" | "actividade">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaItem"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerProgramaItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaItem"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarProgramaItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaItem"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaItem"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarProgramaItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaItem"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarProgramaItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaItem"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarMaterial: {
         parameters: {
             query?: {
@@ -10863,6 +11461,192 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Material"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarProgramaParte: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                programaDiaId?: number;
+                apresentadorMembroId?: number;
+                apresentadorFamiliaId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ProgramaParte"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarProgramaParte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ProgramaParte"], "programaDiaId" | "titulo">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaParte"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerProgramaParte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaParte"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarProgramaParte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaParte"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaParte"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarProgramaParte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaParte"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarProgramaParte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaParte"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -11120,6 +11904,258 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarProgramaDia: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ProgramaDia"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarProgramaDia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ProgramaDia"], "igrejaId" | "data">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    VActividadesProgramasDiaPreparar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    igrejaId: number;
+                    /** Format: date */
+                    data: string;
+                    /** @description Programação a copiar (outro dia); sem ela, o modelo */
+                    origemId?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerProgramaDia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarProgramaDia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramaDia"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    VActividadesProgramasDiaIdPreencherEscala: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        mudaram: number;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarProgramaDia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarProgramaDia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramaDia"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

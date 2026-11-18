@@ -275,6 +275,14 @@ src/
 - **Contagem** (V43): a nova contagem pede o tesoureiro, o representante da Escola Sabatina e o diácono (o ancião é
   opcional) e regista-os como participantes; "Conferir" só fica activo com os três.
 
+- **Escala** (V44): colunas pelas partes do dia — Escola Sabatina (família responsável e apresentador), Culto Divino
+  (apresentador, Sermão principal, tradutor, Sermão da criança, oração inicial e final) e JA (apresentador e meditação);
+  os acompanhantes e as outras funções escalam-se no diálogo do dia. Imprime-se ao baixo (A4 paisagem).
+- **Programação do dia** (V44, menu Actividades, `features/programacao/`): lista por data e "Preparar" (do modelo da
+  igreja ou copiando outro dia, já com os nomes da escala); a folha como a da igreja (título, partes com o apresentador,
+  horas, actividade, responsável, linhas em destaque, nota), editável linha a linha (membro, família, departamento ou
+  texto; ligação à escala), "Preencher pela escala" e "Imprimir" (A4).
+
 ## Por fazer (próximas iterações)
 
 - Escolha do pastor oficiante no baptismo (precisa de uma lista de pastores na API).

@@ -21,8 +21,22 @@ export function emVigor(p: Plano) {
   return p.dataInicio <= hoje && hoje <= p.dataFim
 }
 
-/** As colunas da escala de pregação (como na escala em papel). */
-export const COLUNAS: FuncaoEscala[] = ['PREGADOR', 'TRADUTOR', 'ACOMPANHANTE_VISITAS', 'ACOMPANHANTE_OFERTAS', 'ACOMPANHANTE_BOAS_VINDAS']
+/**
+ * As colunas da escala, pelas partes da programação do dia (V44). A Escola Sabatina tem ainda a família responsável
+ * (no dia da escala). As outras funções (acompanhantes, diáconos…) escalam-se no dia, sem coluna própria.
+ */
+export const GRUPOS: { titulo: string; familia?: boolean; funcoes: FuncaoEscala[] }[] = [
+  { titulo: 'Escola Sabatina', familia: true, funcoes: ['APRESENTADOR_ES'] },
+  { titulo: 'Culto Divino', funcoes: ['APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL'] },
+  { titulo: 'JA', funcoes: ['APRESENTADOR_JA', 'MEDITACAO_JA'] },
+]
+export const COLUNAS: FuncaoEscala[] = GRUPOS.flatMap((g) => g.funcoes)
+/** Nome curto na grelha (o grupo já diz de que parte é). */
+export const CURTO: Record<string, string> = {
+  APRESENTADOR_ES: 'Apresentador', APRESENTADOR_CULTO: 'Apresentador', PREGADOR: 'Sermão principal', TRADUTOR: 'Tradutor',
+  SERMAO_CRIANCA: 'Sermão da criança', ORACAO_INICIAL: 'Oração inicial', ORACAO_FINAL: 'Oração final',
+  APRESENTADOR_JA: 'Apresentador', MEDITACAO_JA: 'Meditação',
+}
 
 const chaves = {
   planos: (igreja: number) => ['escalas', igreja, 'planos'] as const,

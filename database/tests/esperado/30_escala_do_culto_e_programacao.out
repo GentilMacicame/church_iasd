@@ -1,0 +1,72 @@
+1. escala de dezembro: o dia 05/12 com a família da Escola Sabatina e as funções do culto
+     epl_titulo      
+---------------------
+ Escala do culto V44
+(1 row)
+
+  eds_data  | eds_fam_id 
+------------+------------
+ 2026-12-05 |       2201
+(1 row)
+
+   uma família de outra igreja: recusada
+psql:database/tests/30_escala_do_culto_e_programacao.sql:20: ERROR:  A família tem de ser da igreja da escala
+     esc_funcao     | esc_mem_id |            nome_no_sms             
+--------------------+------------+------------------------------------
+ APRESENTADOR_CULTO |        961 | apresentador(a) do Culto Divino
+ PREGADOR           |        960 | pregador(a) do Sermão principal
+ SERMAO_CRIANCA     |        961 | responsável pelo Sermão da criança
+(3 rows)
+
+2. preparar a programação de 05/12 a partir do modelo: partes, itens e quem a escala põe
+ preparada 
+-----------
+ t
+(1 row)
+
+ ppa_ordem |           ppa_titulo           | ppa_apresentador_mem_id | ppa_apresentador_fam_id | itens 
+-----------+--------------------------------+-------------------------+-------------------------+-------
+         1 | Programação da Escola Sabatina |                         |                    2201 |    10
+         2 | Transição                      |                         |                         |     3
+         3 | Programação do Culto Divino    |                     961 |                         |    13
+         4 | JA                             |                         |                         |    11
+(4 rows)
+
+ pit_hora_inicio |         pit_actividade         | pit_responsavel_mem_id | pit_responsavel_fam_id | pit_responsavel_texto | pit_destaque 
+-----------------+--------------------------------+------------------------+------------------------+-----------------------+--------------
+ 10:30           | Entrada da tribuna e doxologia |                        |                        | Todos                 | f
+ 10:35           | Boas-vindas e anúncios         |                        |                        | Secretaria            | f
+ 10:40           | Hino inicial                   |                        |                        | Todos                 | f
+ 10:45           | Oração inicial                 |                        |                        |                       | f
+ 10:50           | Marca de um mordomo            |                        |                        | Tesouraria            | f
+ 10:55           | Música especial                |                        |                        |                       | f
+ 11:00           | Recolha das ofertas e dízimos  |                        |                        | Diáconos              | f
+ 11:05           | Sermão da criança              |                    961 |                        |                       | f
+ 11:15           | Sermão principal               |                    960 |                        |                       | t
+(9 rows)
+
+   a mesma igreja e o mesmo dia outra vez: recusado
+psql:database/tests/30_escala_do_culto_e_programacao.sql:38: ERROR:  duplicate key value violates unique constraint "uq_pgd_igr_id_data"
+3. ajustar: um item com dois responsáveis é recusado; horas mal escritas também
+psql:database/tests/30_escala_do_culto_e_programacao.sql:42: ERROR:  new row for relation "programa_item" violates check constraint "chk_pit_responsavel"
+psql:database/tests/30_escala_do_culto_e_programacao.sql:44: ERROR:  new row for relation "programa_item" violates check constraint "chk_pit_horas"
+4. mudar o pregador na escala e voltar a preencher: só muda o que vem da escala
+ mudaram 
+---------
+       1
+(1 row)
+
+5. copiar para 12/12: as mesmas partes e itens
+ copiada 
+---------
+ t
+(1 row)
+
+  pgd_data  | partes | itens 
+------------+--------+-------
+ 2026-12-05 |      4 |    37
+ 2026-12-12 |      4 |    37
+(2 rows)
+
+6. o tesoureiro não prepara programações
+psql:database/tests/30_escala_do_culto_e_programacao.sql:59: ERROR:  new row violates row-level security policy for table "programa_dia"

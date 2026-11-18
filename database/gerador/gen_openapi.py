@@ -344,6 +344,13 @@ acao('/v1/actividades/planos-escala/{id}/gerar-dias', 'Elaborar a escala: um dia
      obj([], diaSemana={'type': 'integer', 'minimum': 1, 'maximum': 7, 'description': '1 = segunda … 7 = domingo; por defeito 6 (sábado)'}),
      obj(['criados'], criados=I), 'actividades.fn_gerar_dias_escala', code='201')
 rel('/v1/actividades/escalas-proximas', 'actividades.vw_escala_proximas', 'Actividades e escalas', 'actividades.escala.ler')
+# V44: programação do dia — preparar (modelo ou cópia de outro dia) e preencher pela escala
+acao('/v1/actividades/programas-dia/preparar', 'Preparar a programação de um dia: do modelo (Escola Sabatina, Transição, Culto Divino, JA) ou copiando outro dia, já preenchida pela escala',
+     TITULO['actividades'], 'actividades.programa_dia.criar (e partes e itens)',
+     obj(['igrejaId', 'data'], igrejaId=I, data=D, origemId={**I, 'description': 'Programação a copiar (outro dia); sem ela, o modelo'}),
+     ref('ProgramaDia'), 'actividades.fn_programa_preparar', code='201')
+acao('/v1/actividades/programas-dia/{id}/preencher-escala', 'Pôr nas partes e itens ligados à escala quem está escalado nesse dia',
+     TITULO['actividades'], 'actividades.programa_item.alterar', None, obj(['mudaram'], mudaram=I), 'actividades.fn_programa_preencher')
 # V36: participação (inactivos), dízimos sobrepostos (membro/família), metas +5% e arrecadado por mês
 paths['/v1/secretaria/participacao'] = {'get': op(
     'Participação dos membros (inactivos)', SEC, 'secretaria.membro.ler', operationId='participacaoMembros',

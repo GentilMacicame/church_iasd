@@ -77,10 +77,10 @@ psql:database/tests/05_escalas_e_lembretes.sql:50: ERROR:  new row violates row-
      1
 (1 row)
 
-  ntf_destino  |                                                   ntf_mensagem                                                    |    envio    | ntf_estado 
----------------+-------------------------------------------------------------------------------------------------------------------+-------------+------------
- +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a). Deus o(a) abençoe. | 14/10 18:00 | PENDENTE
- +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a). Deus o(a) abençoe. | 16/10 18:00 | PENDENTE
+  ntf_destino  |                                                             ntf_mensagem                                                              |    envio    | ntf_estado 
+---------------+---------------------------------------------------------------------------------------------------------------------------------------+-------------+------------
+ +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a) do Sermão principal. Deus o(a) abençoe. | 14/10 18:00 | PENDENTE
+ +258841110000 | Igreja Adventista do Sétimo Dia: lembrete - no sábado 17/10 está escalado(a) como pregador(a) do Sermão principal. Deus o(a) abençoe. | 16/10 18:00 | PENDENTE
 (2 rows)
 
 9. envio: a fila reserva cada SMS uma vez; enviado → ENVIADA; erro → volta a tentar

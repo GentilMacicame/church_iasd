@@ -9,6 +9,9 @@ import mz.org.iasd.igreja.models.actividades.Escala;
 import mz.org.iasd.igreja.models.actividades.EscalaDia;
 import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.actividades.Material;
+import mz.org.iasd.igreja.models.actividades.ProgramaDia;
+import mz.org.iasd.igreja.models.actividades.ProgramaItem;
+import mz.org.iasd.igreja.models.actividades.ProgramaParte;
 import mz.org.iasd.igreja.models.actividades.SantaCeia;
 import mz.org.iasd.igreja.models.escolasabatina.Classe;
 import mz.org.iasd.igreja.models.escolasabatina.ClasseTrimestre;
@@ -203,6 +206,9 @@ public final class CatalogoGerado {
             EscalaPlano.class,
             EscalaDia.class,
             SantaCeia.class,
+            ProgramaDia.class,
+            ProgramaParte.class,
+            ProgramaItem.class,
             Trimestre.class,
             Sabado.class,
             Classe.class,

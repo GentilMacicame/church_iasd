@@ -540,6 +540,16 @@ public final class Rotas {
 
         /** SantasCeiasController · rotas-padrão (V39): Santa Ceia, agendamento e participantes */
         public static final String SANTAS_CEIAS = "/v1/actividades/santas-ceias";
+        /** ProgramasDiaController · rotas-padrão (V44): programação do dia (folha do sábado) */
+        public static final String PROGRAMAS_DIA = "/v1/actividades/programas-dia";
+        /** POST /v1/actividades/programas-dia/preparar  (ProgramasDiaController.preparar) */
+        public static final String PROGRAMAS_DIA_PREPARAR = "preparar";
+        /** POST /v1/actividades/programas-dia/{id}/preencher-escala  (ProgramasDiaController.preencherEscala) */
+        public static final String PROGRAMAS_DIA_PREENCHER = "{id: \\d+}/preencher-escala";
+        /** PartesProgramaController · rotas-padrão (V44): partes da programação e o apresentador */
+        public static final String PARTES_PROGRAMA = "/v1/actividades/partes-programa";
+        /** ItensProgramaController · rotas-padrão (V44): itens da programação */
+        public static final String ITENS_PROGRAMA = "/v1/actividades/itens-programa";
 
         /** GET /v1/actividades/santa-ceia-historico?igrejaId=&amp;ano=  (RelatoriosActividadesController, V39) */
         public static final String SANTA_CEIA_HISTORICO = "santa-ceia-historico";

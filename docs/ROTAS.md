@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 497 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 517 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -28,12 +28,24 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/escalas/{id}` | EscalasController · alterar | `actividades.escala.alterar` |
 | POST | `/v1/actividades/escalas/{id}/reactivar` | EscalasController · reactivar | `actividades.escala.terminar` |
 | POST | `/v1/actividades/escalas/{id}/terminar` | EscalasController · terminar | `actividades.escala.terminar` |
+| GET | `/v1/actividades/itens-programa` | ItensProgramaController · listar | `actividades.programa_item.ler` |
+| POST | `/v1/actividades/itens-programa` | ItensProgramaController · criar | `actividades.programa_item.criar` |
+| GET | `/v1/actividades/itens-programa/{id}` | ItensProgramaController · obter | `actividades.programa_item.ler` |
+| PATCH | `/v1/actividades/itens-programa/{id}` | ItensProgramaController · alterar | `actividades.programa_item.alterar` |
+| POST | `/v1/actividades/itens-programa/{id}/reactivar` | ItensProgramaController · reactivar | `actividades.programa_item.terminar` |
+| POST | `/v1/actividades/itens-programa/{id}/terminar` | ItensProgramaController · terminar | `actividades.programa_item.terminar` |
 | GET | `/v1/actividades/materiais` | MateriaisController · listar | `actividades.material.ler` |
 | POST | `/v1/actividades/materiais` | MateriaisController · criar | `actividades.material.criar` |
 | GET | `/v1/actividades/materiais/{id}` | MateriaisController · obter | `actividades.material.ler` |
 | PATCH | `/v1/actividades/materiais/{id}` | MateriaisController · alterar | `actividades.material.alterar` |
 | POST | `/v1/actividades/materiais/{id}/reactivar` | MateriaisController · reactivar | `actividades.material.terminar` |
 | POST | `/v1/actividades/materiais/{id}/terminar` | MateriaisController · terminar | `actividades.material.terminar` |
+| GET | `/v1/actividades/partes-programa` | PartesProgramaController · listar | `actividades.programa_parte.ler` |
+| POST | `/v1/actividades/partes-programa` | PartesProgramaController · criar | `actividades.programa_parte.criar` |
+| GET | `/v1/actividades/partes-programa/{id}` | PartesProgramaController · obter | `actividades.programa_parte.ler` |
+| PATCH | `/v1/actividades/partes-programa/{id}` | PartesProgramaController · alterar | `actividades.programa_parte.alterar` |
+| POST | `/v1/actividades/partes-programa/{id}/reactivar` | PartesProgramaController · reactivar | `actividades.programa_parte.terminar` |
+| POST | `/v1/actividades/partes-programa/{id}/terminar` | PartesProgramaController · terminar | `actividades.programa_parte.terminar` |
 | GET | `/v1/actividades/planos-escala` | PlanosEscalaController · listar | `actividades.escala_plano.ler` |
 | POST | `/v1/actividades/planos-escala` | PlanosEscalaController · criar | `actividades.escala_plano.criar` |
 | GET | `/v1/actividades/planos-escala/{id}` | PlanosEscalaController · obter | `actividades.escala_plano.ler` |
@@ -42,6 +54,14 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/actividades/planos-escala/{id}/reactivar` | PlanosEscalaController · reactivar | `actividades.escala_plano.terminar` |
 | POST | `/v1/actividades/planos-escala/{id}/terminar` | PlanosEscalaController · terminar | `actividades.escala_plano.terminar` |
 | GET | `/v1/actividades/programa` | RelatoriosActividadesController · programa | `actividades.actividade.ler` |
+| GET | `/v1/actividades/programas-dia` | ProgramasDiaController · listar | `actividades.programa_dia.ler` |
+| POST | `/v1/actividades/programas-dia` | ProgramasDiaController · criar | `actividades.programa_dia.criar` |
+| POST | `/v1/actividades/programas-dia/preparar` | ProgramasDiaController · preparar | `actividades.programa_dia.criar (e partes e itens)` |
+| GET | `/v1/actividades/programas-dia/{id}` | ProgramasDiaController · obter | `actividades.programa_dia.ler` |
+| PATCH | `/v1/actividades/programas-dia/{id}` | ProgramasDiaController · alterar | `actividades.programa_dia.alterar` |
+| POST | `/v1/actividades/programas-dia/{id}/preencher-escala` | ProgramasDiaController · preencherEscala | `actividades.programa_item.alterar` |
+| POST | `/v1/actividades/programas-dia/{id}/reactivar` | ProgramasDiaController · reactivar | `actividades.programa_dia.terminar` |
+| POST | `/v1/actividades/programas-dia/{id}/terminar` | ProgramasDiaController · terminar | `actividades.programa_dia.terminar` |
 | GET | `/v1/actividades/responsaveis-actividade` | ResponsaveisActividadeController · listar | `actividades.actividade_responsavel.ler` |
 | POST | `/v1/actividades/responsaveis-actividade` | ResponsaveisActividadeController · criar | `actividades.actividade_responsavel.criar` |
 | GET | `/v1/actividades/responsaveis-actividade/{id}` | ResponsaveisActividadeController · obter | `actividades.actividade_responsavel.ler` |

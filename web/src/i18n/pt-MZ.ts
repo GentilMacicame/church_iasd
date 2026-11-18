@@ -280,10 +280,13 @@ export const rotulos = {
   } as Record<string, string>,
   estadoRelatorio: { ABERTO: 'Aberto', FECHADO: 'Fechado' } as Record<string, string>,
   funcaoEscala: {
-    PREGADOR: 'Pregador', ANCIAO_DO_DIA: 'Ancião do dia', DIACONO: 'Diácono', DIACONISA: 'Diaconisa', RECEPCAO: 'Recepção',
+    PREGADOR: 'Sermão principal (pregador)', ANCIAO_DO_DIA: 'Ancião do dia', DIACONO: 'Diácono', DIACONISA: 'Diaconisa', RECEPCAO: 'Recepção',
     MUSICA: 'Música', SONOPLASTIA: 'Sonoplastia', PROFESSOR_ES: 'Professor da ES', DIRECTOR_ES: 'Director da ES',
     LIMPEZA: 'Limpeza', OUTRA: 'Outra função', TRADUTOR: 'Tradutor', ACOMPANHANTE_VISITAS: 'Acompanhante das visitas',
     ACOMPANHANTE_OFERTAS: 'Acompanhante das ofertas', ACOMPANHANTE_BOAS_VINDAS: 'Boas-vindas',
+    APRESENTADOR_ES: 'Apresentador da Escola Sabatina', APRESENTADOR_CULTO: 'Apresentador do Culto Divino',
+    SERMAO_CRIANCA: 'Sermão da criança', ORACAO_INICIAL: 'Oração inicial (culto)', ORACAO_FINAL: 'Oração final (culto)',
+    APRESENTADOR_JA: 'Apresentador da JA', MEDITACAO_JA: 'Meditação da JA',
   },
 } as const
 

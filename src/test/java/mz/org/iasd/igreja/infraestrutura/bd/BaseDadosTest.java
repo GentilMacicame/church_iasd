@@ -1302,6 +1302,42 @@ class BaseDadosTest {
                 c -> TabelaRepository.alterar(c, contagens, contagem, conferir)).getString("estado"));
     }
 
+    // ------------------------------------------------------------------ V44: programação do dia
+
+    @Test
+    void programacaoDoDiaPreparadaDoModeloEPreenchidaPelaEscala() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v44@teste.mz", null, "SECRETARIO");
+        int pregador;
+        try (Connection dono = ligarComoDono()) {
+            pregador = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES (" + igrejaCentral + ", 'Jacinto', 'Pregador V44') RETURNING mem_id");
+            int plano = inserir(dono, "INSERT INTO actividades.escala_plano (epl_igr_id, epl_titulo, epl_data_inicio, epl_data_fim) VALUES ("
+                    + igrejaCentral + ", 'Escala V44', '2027-01-01', '2027-01-31') RETURNING epl_id");
+            int dia = inserir(dono, "INSERT INTO actividades.escala_dia (eds_epl_id, eds_data) VALUES (" + plano + ", '2027-01-09') RETURNING eds_id");
+            inserir(dono, "INSERT INTO actividades.escala (esc_eds_id, esc_funcao, esc_mem_id) VALUES (" + dia + ", 'PREGADOR', " + pregador + ") RETURNING esc_id");
+        }
+        long programa = ExecutorTransaccao.executar(api, secretario, c -> contar(c,
+                "SELECT actividades.fn_programa_preparar(" + igrejaCentral + ", '2027-01-09')"));
+        // o Sermão principal veio da escala; a API devolve os itens pela rota genérica
+        var item = Catalogo.de(mz.org.iasd.igreja.models.actividades.ProgramaItem.class);
+        long sermao = ExecutorTransaccao.executar(api, secretario, c -> contar(c,
+                "SELECT pit_id FROM actividades.programa_item WHERE pit_pgd_id = " + programa + " AND pit_actividade = 'Sermão principal'"));
+        JsonObject lido = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.obterOu404(c, item, sermao));
+        assertEquals(pregador, lido.getInt("responsavelMembroId"));
+        assertEquals("PREGADOR", lido.getString("escala"));
+        assertTrue(lido.getBoolean("destaque"));
+        // ajustar: o responsável passa a texto (um visitante); dois responsáveis ao mesmo tempo → 422
+        JsonObject visitante = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c, item, sermao,
+                Json.createObjectBuilder().addNull("responsavelMembroId").add("responsavelTexto", "Pr. Visitante").build()));
+        assertEquals("Pr. Visitante", visitante.getString("responsavelTexto"));
+        SQLException dois = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.alterar(c,
+                item, sermao, Json.createObjectBuilder().add("responsavelMembroId", pregador).build())));
+        assertEquals(422, TradutorErrosSql.traduzir(dois).estadoHttp());
+        // o tesoureiro não prepara programações → 403
+        SQLException naoPode = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> contar(c,
+                "SELECT actividades.fn_programa_preparar(" + igrejaCentral + ", '2027-01-16')")));
+        assertEquals(403, TradutorErrosSql.traduzir(naoPode).estadoHttp());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

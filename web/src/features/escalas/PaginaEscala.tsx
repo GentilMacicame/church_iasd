@@ -1,11 +1,12 @@
 /**
  * Editor da escala · "Quem prega e quem serve em cada sábado, e falta alguém?"
- * Grelha como a escala em papel: um sábado por linha, as funções em colunas, o grupo coral; um dia especial
- * ocupa a linha inteira. Tocar numa célula escala, troca ou retira. Publicar torna-a visível aos membros
+ * Grelha como a escala em papel: um sábado por linha, as funções em colunas agrupadas pelas partes da programação do
+ * dia (V44: Escola Sabatina com a família responsável, Culto Divino, JA), o grupo coral; um dia especial ocupa a linha
+ * inteira. As outras funções (acompanhantes, diáconos…) escalam-se no dia. Tocar numa célula escala, troca ou retira. Publicar torna-a visível aos membros
  * (e activa os lembretes por SMS). Imprimir dá a folha para afixar, com as assinaturas.
  */
 import { Marca } from '@/components/layout/Marca'
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -30,15 +31,15 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
+import { useFamiliasResumo } from '@/features/secretaria/api'
+import { CampoEscolha } from '@/components/comum/CampoEscolha'
+import { Seleccao } from '@/components/comum/Seleccao'
 import { EstadoPlano } from './PaginaEscalas'
 import {
-  COLUNAS, useAlterarDia, useAlterarPlano, useDias, useEscalados, useEscalar, useGerarDias, usePlano, useRetirar, useTrocar,
+  COLUNAS, CURTO, GRUPOS, useAlterarDia, useAlterarPlano, useDias, useEscalados, useEscalar, useGerarDias, usePlano, useRetirar, useTrocar,
   type Dia, type Escalado, type FuncaoEscala, type Plano,
 } from './api'
 
-const CURTO: Record<string, string> = {
-  PREGADOR: 'Pregador', TRADUTOR: 'Tradutor', ACOMPANHANTE_VISITAS: 'Visitas', ACOMPANHANTE_OFERTAS: 'Ofertas', ACOMPANHANTE_BOAS_VINDAS: 'Boas-vindas',
-}
 
 interface Celula { dia: Dia; funcao: FuncaoEscala; escalado?: Escalado }
 
@@ -91,18 +92,28 @@ function DialogoCelula({ celula, plano, aoFechar, nomeDe }: { celula: Celula | n
   )
 }
 
-/* ---------------------------------------------------------------- dia: evento, grupo coral, observações */
-const esquemaDia = z.object({ evento: z.string().trim().max(150), grupoCoral: z.string().trim().max(100), observacoes: z.string().trim().max(255) })
+/* ---------------------------------------------------------------- dia: evento, família da ES, grupo coral, outras funções */
+const esquemaDia = z.object({ evento: z.string().trim().max(150), grupoCoral: z.string().trim().max(100), observacoes: z.string().trim().max(255), familia: z.string() })
 
 function DialogoDia({ dia, plano, aoFechar, outros, nomeDe }: { dia: Dia | null; plano: Plano; aoFechar: () => void; outros: Escalado[]; nomeDe: (id: number) => string }) {
   const alterar = useAlterarDia(plano.id)
+  const familias = useFamiliasResumo()
+  const { pode } = useSessao()
+  const escalar = useEscalar(plano.id)
+  const retirar = useRetirar(plano.id)
   const [erro, setErro] = useState<string | null>(null)
-  const form = useForm({ resolver: zodResolver(esquemaDia), values: { evento: dia?.evento ?? '', grupoCoral: dia?.grupoCoral ?? '', observacoes: dia?.observacoes ?? '' } })
+  const [outraFuncao, setOutraFuncao] = useState<FuncaoEscala>('ACOMPANHANTE_BOAS_VINDAS')
+  const form = useForm({ resolver: zodResolver(esquemaDia), values: {
+    evento: dia?.evento ?? '', grupoCoral: dia?.grupoCoral ?? '', observacoes: dia?.observacoes ?? '', familia: dia?.familiaId ? String(dia.familiaId) : '',
+  } })
   if (!dia) return null
+  const funcoesSemColuna = (Object.keys(rotulos.funcaoEscala) as FuncaoEscala[]).filter((f) => !COLUNAS.includes(f))
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     try {
-      await alterar.mutateAsync({ id: dia.id, corpo: { evento: v.evento || null, grupoCoral: v.grupoCoral || null, observacoes: v.observacoes || null } as never })
+      await alterar.mutateAsync({ id: dia.id, corpo: {
+        evento: v.evento || null, grupoCoral: v.grupoCoral || null, observacoes: v.observacoes || null, familiaId: v.familia ? Number(v.familia) : null,
+      } as never })
       toast.success('Dia actualizado.')
       aoFechar()
     } catch (e) {
@@ -111,7 +122,7 @@ function DialogoDia({ dia, plano, aoFechar, outros, nomeDe }: { dia: Dia | null;
   })
   return (
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="first-letter:uppercase">{dataPorExtenso(dia.data)}</DialogTitle>
           <DialogDescription>Um dia especial substitui a escala desse sábado e não gera lembretes.</DialogDescription>
@@ -121,18 +132,48 @@ function DialogoDia({ dia, plano, aoFechar, outros, nomeDe }: { dia: Dia | null;
           <CampoFormulario rotulo="Dia especial" ajuda="ex.: Simpósio da Teologia, 13.º sábado, Santa Ceia" erro={form.formState.errors.evento?.message}>
             {(p) => <Input {...p} {...form.register('evento')} className="alvo" />}
           </CampoFormulario>
+          <CampoFormulario rotulo="Família da Escola Sabatina" ajuda="A família que faz a programação da Escola Sabatina neste sábado">
+            {(p) => (
+              <CampoEscolha id={p.id} valor={form.watch('familia')} aoMudar={(x) => form.setValue('familia', x, { shouldDirty: true })} permitirLimpar
+                vazio="Escolher a família…" pesquisar="Pesquisar família…" semOpcoes="Ainda não há famílias (Secretaria › Famílias)"
+                opcoes={(familias.data ?? []).map((f) => ({ valor: String(f.id), rotulo: f.nome }))} />
+            )}
+          </CampoFormulario>
           <CampoFormulario rotulo="Grupo coral" ajuda="ex.: MA, Coro Jovem" erro={form.formState.errors.grupoCoral?.message}>
             {(p) => <Input {...p} {...form.register('grupoCoral')} className="alvo" />}
           </CampoFormulario>
           <CampoFormulario rotulo="Observações" erro={form.formState.errors.observacoes?.message}>
             {(p) => <Textarea {...p} {...form.register('observacoes')} rows={2} />}
           </CampoFormulario>
-          {outros.length > 0 && (
-            <div className="rounded-lg border p-3 text-sm">
-              <p className="mb-1 font-medium">Outras funções neste dia</p>
-              <ul className="grid gap-1 text-muted-foreground">{outros.map((o) => <li key={o.id}>{rotulos.funcaoEscala[o.funcao]}: <span className="text-foreground">{nomeDe(o.membroId)}</span></li>)}</ul>
-            </div>
-          )}
+          <div className="grid gap-2 rounded-lg border p-3 text-sm">
+            <p className="font-medium">Outras funções neste dia <span className="font-normal text-muted-foreground">(acompanhantes, diáconos, recepção…)</span></p>
+            {outros.length > 0 && (
+              <ul className="grid gap-1 text-muted-foreground">
+                {outros.map((o) => (
+                  <li key={o.id} className="flex items-center justify-between gap-2">
+                    <span>{rotulos.funcaoEscala[o.funcao]}: <span className="text-foreground">{nomeDe(o.membroId)}</span></span>
+                    {pode('actividades.escala.terminar') && (
+                      <Button type="button" variant="ghost" size="sm" disabled={retirar.isPending} aria-label={`Retirar ${nomeDe(o.membroId)}`}
+                        onClick={() => retirar.mutate(o.id, { onSuccess: () => toast.success('Retirado da escala.'), onError: (e) => toast.error(mensagemDe(e)) })}>
+                        <UserMinus className="size-4" />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {pode('actividades.escala.criar') && (
+              <div className="grid gap-2">
+                <Seleccao aria-label="Função a escalar" value={outraFuncao} onChange={(e) => setOutraFuncao(e.target.value as FuncaoEscala)}>
+                  {funcoesSemColuna.map((f) => <option key={f} value={f}>{rotulos.funcaoEscala[f]}</option>)}
+                </Seleccao>
+                <ListaMembros aoEscolher={(m) => escalar.mutate({ escalaDiaId: dia.id, funcao: outraFuncao, membroId: m.id }, {
+                  onSuccess: () => toast.success(`${m.nome} ${m.apelido} escalado(a) como ${rotulos.funcaoEscala[outraFuncao].toLowerCase()}.`),
+                  onError: (e) => toast.error(mensagemDe(e)),
+                })} />
+              </div>
+            )}
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={aoFechar}>{t.comum.cancelar}</Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? t.comum.aGravar : t.comum.guardar}</Button>
@@ -168,6 +209,7 @@ export default function PaginaEscala() {
   const dias = useDias(id)
   const escalados = useEscalados(plano.data)
   const basicos = useMembrosBasicos()
+  const familias = useFamiliasResumo()
   const alterarPlano = useAlterarPlano(id)
   const gerar = useGerarDias(id)
   const [celula, setCelula] = useState<Celula | null>(null)
@@ -176,6 +218,7 @@ export default function PaginaEscala() {
 
   const nomes = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, `${m.nome} ${m.apelido}`])), [basicos.data])
   const nomeDe = (mid: number) => nomes.get(mid) ?? '—'
+  const nomeFamilia = (fid?: number | null) => (fid ? familias.data?.find((f) => f.id === fid)?.nome : undefined)
   const porDia = useMemo(() => {
     const mapa = new Map<number, Escalado[]>()
     for (const e of escalados.data ?? []) mapa.set(e.escalaDiaId!, [...(mapa.get(e.escalaDiaId!) ?? []), e])
@@ -206,6 +249,8 @@ export default function PaginaEscala() {
 
   return (
     <>
+      {/* a grelha tem muitas colunas: imprime-se ao baixo */}
+      <style>{'@media print { @page { size: A4 landscape; margin: 10mm; } }'}</style>
       {/* cabeçalho da folha impressa */}
       <div className="mb-6 hidden text-center print:block">
         <Marca className="mx-auto mb-2 size-12" />
@@ -247,7 +292,7 @@ export default function PaginaEscala() {
 
         <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Indicador rotulo="Sábados" valor={lista.length} nota={`${lista.length - normais.length} dia(s) especial(ais)`} icone={CalendarDays} aCarregar={dias.isPending} />
-          <Indicador rotulo="Com pregador" valor={`${comPregador}/${normais.length}`} nota="sábados com quem prega" icone={Mic} tom="success" aCarregar={dias.isPending || escalados.isPending} />
+          <Indicador rotulo="Sermão principal" valor={`${comPregador}/${normais.length}`} nota="sábados com quem prega" icone={Mic} tom="success" aCarregar={dias.isPending || escalados.isPending} />
           <Indicador rotulo="Por preencher" valor={porPreencher} nota="funções ainda sem ninguém" icone={CircleAlert} tom={porPreencher ? 'warning' : 'success'} aCarregar={dias.isPending || escalados.isPending} />
           <Indicador rotulo="Lembretes" valor={p.publicada ? 'Activos' : 'Parados'} nota={p.publicada ? 'SMS à quarta e à sexta, 18:00' : 'publique para enviar os SMS'} icone={BellRing} tom={p.publicada ? 'info' : 'warning'} />
         </div>
@@ -264,10 +309,21 @@ export default function PaginaEscala() {
               <div className="hidden overflow-x-auto lg:block print:block">
                 <table className="w-full border-collapse text-sm">
                   <thead>
+                    <tr>
+                      <th rowSpan={2} className="h-10 border-b bg-muted/50 px-4 text-left align-bottom text-xs font-medium text-muted-foreground sm:pl-6">Data</th>
+                      {GRUPOS.map((g) => (
+                        <th key={g.titulo} colSpan={g.funcoes.length + (g.familia ? 1 : 0)}
+                          className="h-8 border-b border-l bg-muted/70 px-4 text-left text-xs font-semibold tracking-wider text-foreground uppercase">{g.titulo}</th>
+                      ))}
+                      <th rowSpan={2} className="h-10 border-b border-l bg-muted/50 px-4 text-left align-bottom text-xs font-medium text-muted-foreground sm:pr-6">Grupo coral</th>
+                    </tr>
                     <tr className="border-b">
-                      <th className="h-10 bg-muted/50 px-4 text-left text-xs font-medium text-muted-foreground sm:pl-6">Data</th>
-                      {COLUNAS.map((c) => <th key={c} className="h-10 bg-muted/50 px-4 text-left text-xs font-medium text-muted-foreground">{CURTO[c]}</th>)}
-                      <th className="h-10 bg-muted/50 px-4 text-left text-xs font-medium text-muted-foreground sm:pr-6">Grupo coral</th>
+                      {GRUPOS.map((g) => (
+                        <Fragment key={g.titulo}>
+                          {g.familia && <th className="h-9 border-l bg-muted/50 px-4 text-left text-xs font-medium text-muted-foreground">Família</th>}
+                          {g.funcoes.map((c, i) => <th key={c} className={cn('h-9 bg-muted/50 px-4 text-left text-xs font-medium text-muted-foreground', i === 0 && !g.familia && 'border-l')}>{CURTO[c]}</th>)}
+                        </Fragment>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -284,18 +340,27 @@ export default function PaginaEscala() {
                             </button>
                           </td>
                           {d.evento ? (
-                            <td colSpan={COLUNAS.length} className="px-4 py-2">
+                            <td colSpan={COLUNAS.length + 1} className="border-l px-4 py-2">
                               <span className="inline-flex items-center gap-2 font-semibold text-accent-foreground"><Sparkles className="size-4 print:hidden" />{d.evento}</span>
                             </td>
-                          ) : COLUNAS.map((c) => {
-                            const e = doDia.find((x) => x.funcao === c)
-                            return (
-                              <td key={c} className="px-4 py-2">
-                                <BotaoCelula nome={e && nomeDe(e.membroId)} destaque={c === 'PREGADOR'} pode={podeCriar} aoClicar={() => abrir(d, c)} />
-                              </td>
-                            )
-                          })}
-                          <td className="px-4 py-2 sm:pr-6">
+                          ) : GRUPOS.map((g) => (
+                            <Fragment key={g.titulo}>
+                              {g.familia && (
+                                <td className="border-l px-4 py-2">
+                                  <BotaoCelula nome={nomeFamilia(d.familiaId)} pode={podeDia} aoClicar={() => setDiaAberto(d)} />
+                                </td>
+                              )}
+                              {g.funcoes.map((c, i) => {
+                                const e = doDia.find((x) => x.funcao === c)
+                                return (
+                                  <td key={c} className={cn('px-4 py-2', i === 0 && !g.familia && 'border-l')}>
+                                    <BotaoCelula nome={e && nomeDe(e.membroId)} destaque={c === 'PREGADOR'} pode={podeCriar} aoClicar={() => abrir(d, c)} />
+                                  </td>
+                                )
+                              })}
+                            </Fragment>
+                          ))}
+                          <td className="border-l px-4 py-2 sm:pr-6">
                             <button type="button" disabled={!podeDia} onClick={() => setDiaAberto(d)} aria-label={d.grupoCoral ? undefined : 'Indicar o grupo coral'}
                               className="group alvo -mx-2 flex min-h-9 items-center rounded-md px-2 text-left enabled:hover:bg-accent">
                               {d.grupoCoral ?? (podeDia
@@ -321,19 +386,30 @@ export default function PaginaEscala() {
                         {podeDia && <Button variant="ghost" size="icon" aria-label="Editar o dia" className="size-9" onClick={() => setDiaAberto(d)}><Pencil className="size-4" /></Button>}
                       </div>
                       {d.evento ? <p className="flex items-center gap-2 font-medium text-accent-foreground"><Sparkles className="size-4" />{d.evento}</p> : (
-                        <dl className="grid gap-0.5">
-                          {COLUNAS.map((c) => {
-                            const e = doDia.find((x) => x.funcao === c)
-                            return (
-                              <div key={c} className="flex items-center justify-between gap-3">
-                                <dt className="text-sm text-muted-foreground">{CURTO[c]}</dt>
-                                <dd className="min-w-0 max-w-[60%] text-right">
-                                  <BotaoCelula nome={e && nomeDe(e.membroId)} destaque={c === 'PREGADOR'} pode={podeCriar} aoClicar={() => abrir(d, c)} />
-                                </dd>
-                              </div>
-                            )
-                          })}
-                        </dl>
+                        <div className="grid gap-2">
+                          {GRUPOS.map((g) => (
+                            <dl key={g.titulo} className="grid gap-0.5">
+                              <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{g.titulo}</p>
+                              {g.familia && (
+                                <div className="flex items-center justify-between gap-3">
+                                  <dt className="text-sm text-muted-foreground">Família</dt>
+                                  <dd className="min-w-0 max-w-[60%] text-right"><BotaoCelula nome={nomeFamilia(d.familiaId)} pode={podeDia} aoClicar={() => setDiaAberto(d)} /></dd>
+                                </div>
+                              )}
+                              {g.funcoes.map((c) => {
+                                const e = doDia.find((x) => x.funcao === c)
+                                return (
+                                  <div key={c} className="flex items-center justify-between gap-3">
+                                    <dt className="text-sm text-muted-foreground">{CURTO[c]}</dt>
+                                    <dd className="min-w-0 max-w-[60%] text-right">
+                                      <BotaoCelula nome={e && nomeDe(e.membroId)} destaque={c === 'PREGADOR'} pode={podeCriar} aoClicar={() => abrir(d, c)} />
+                                    </dd>
+                                  </div>
+                                )
+                              })}
+                            </dl>
+                          ))}
+                        </div>
                       )}
                       {d.grupoCoral && <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground"><Music className="size-3.5" />{d.grupoCoral}</p>}
                     </li>

@@ -372,6 +372,10 @@ paths:
         in: query
         schema:
           type: integer
+      - name: familiaId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -905,6 +909,231 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/itens-programa:
+    get:
+      summary: 'Itens programa: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.ler
+      operationId: listarProgramaItem
+      description: 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: programaDiaId
+        in: query
+        schema:
+          type: integer
+      - name: programaParteId
+        in: query
+        schema:
+          type: integer
+      - name: responsavelMembroId
+        in: query
+        schema:
+          type: integer
+      - name: responsavelFamiliaId
+        in: query
+        schema:
+          type: integer
+      - name: responsavelDepartamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgramaItem'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Itens programa: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.criar
+      operationId: criarProgramaItem
+      description: 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ProgramaItem'
+              required:
+              - programaDiaId
+              - programaParteId
+              - actividade
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaItem'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/itens-programa/{id}:
+    get:
+      summary: 'Itens programa: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.ler
+      operationId: lerProgramaItem
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaItem'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Itens programa: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.alterar
+      operationId: alterarProgramaItem
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramaItem'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaItem'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/itens-programa/{id}/reactivar:
+    post:
+      summary: 'Itens programa: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.terminar
+      operationId: reactivarProgramaItem
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaItem'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/itens-programa/{id}/terminar:
+    post:
+      summary: 'Itens programa: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.terminar
+      operationId: terminarProgramaItem
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaItem'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/actividades/materiais:
     get:
       summary: 'Materiais: listar'
@@ -1101,6 +1330,222 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Material'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/partes-programa:
+    get:
+      summary: 'Partes programa: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.ler
+      operationId: listarProgramaParte
+      description: 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: programaDiaId
+        in: query
+        schema:
+          type: integer
+      - name: apresentadorMembroId
+        in: query
+        schema:
+          type: integer
+      - name: apresentadorFamiliaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgramaParte'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Partes programa: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.criar
+      operationId: criarProgramaParte
+      description: 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ProgramaParte'
+              required:
+              - programaDiaId
+              - titulo
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaParte'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/partes-programa/{id}:
+    get:
+      summary: 'Partes programa: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.ler
+      operationId: lerProgramaParte
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaParte'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Partes programa: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.alterar
+      operationId: alterarProgramaParte
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramaParte'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaParte'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/partes-programa/{id}/reactivar:
+    post:
+      summary: 'Partes programa: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.terminar
+      operationId: reactivarProgramaParte
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaParte'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/partes-programa/{id}/terminar:
+    post:
+      summary: 'Partes programa: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_parte.terminar
+      operationId: terminarProgramaParte
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaParte'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -1433,6 +1878,305 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia:
+    get:
+      summary: 'Programas dia: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.ler
+      operationId: listarProgramaDia
+      description: 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ate
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgramaDia'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Programas dia: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.criar
+      operationId: criarProgramaDia
+      description: 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ProgramaDia'
+              required:
+              - igrejaId
+              - data
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia/preparar:
+    post:
+      summary: 'Preparar a programação de um dia: do modelo (Escola Sabatina, Transição, Culto Divino, JA) ou copiando outro dia, já preenchida
+        pela escala'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.criar (e partes e itens)
+      operationId: VActividadesProgramasDiaPreparar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - igrejaId
+              - data
+              properties:
+                igrejaId:
+                  type: integer
+                data:
+                  type: string
+                  format: date
+                origemId:
+                  type: integer
+                  description: Programação a copiar (outro dia); sem ela, o modelo
+      x-funcao-bd: actividades.fn_programa_preparar
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia/{id}:
+    get:
+      summary: 'Programas dia: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.ler
+      operationId: lerProgramaDia
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Programas dia: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.alterar
+      operationId: alterarProgramaDia
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramaDia'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia/{id}/preencher-escala:
+    post:
+      summary: Pôr nas partes e itens ligados à escala quem está escalado nesse dia
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_item.alterar
+      operationId: VActividadesProgramasDiaIdPreencherEscala
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      x-funcao-bd: actividades.fn_programa_preencher
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - mudaram
+                properties:
+                  mudaram:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia/{id}/reactivar:
+    post:
+      summary: 'Programas dia: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.terminar
+      operationId: reactivarProgramaDia
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/programas-dia/{id}/terminar:
+    post:
+      summary: 'Programas dia: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.programa_dia.terminar
+      operationId: terminarProgramaDia
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramaDia'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -20775,6 +21519,13 @@ components:
       - ACOMPANHANTE_VISITAS
       - ACOMPANHANTE_OFERTAS
       - ACOMPANHANTE_BOAS_VINDAS
+      - APRESENTADOR_ES
+      - APRESENTADOR_CULTO
+      - SERMAO_CRIANCA
+      - ORACAO_INICIAL
+      - ORACAO_FINAL
+      - APRESENTADOR_JA
+      - MEDITACAO_JA
     EnumMetodoPagamento:
       type: string
       enum:
@@ -21032,6 +21783,10 @@ components:
         observacoes:
           type: string
           maxLength: 255
+        familiaId:
+          type: integer
+          format: int32
+          description: → secretaria.familia · Família responsável pela programação da Escola Sabatina (V44)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -22563,6 +23318,205 @@ components:
       - relatorioId
       - membroId
       - presente
+    ProgramaDia:
+      type: object
+      description: 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)'
+      x-tabela: actividades.programa_dia
+      x-prefixo: pgd
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        data:
+          type: string
+          format: date
+        titulo:
+          type: string
+          maxLength: 150
+          description: Título da folha; por defeito, a data por extenso
+        observacoes:
+          type: string
+          maxLength: 500
+          description: 'Nota no fim da folha (ex.: passível de ajustes e simplificação)'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - data
+    ProgramaItem:
+      type: object
+      description: 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)'
+      x-tabela: actividades.programa_item
+      x-prefixo: pit
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        programaDiaId:
+          type: integer
+          format: int32
+          description: → actividades.programa_dia
+        programaParteId:
+          type: integer
+          format: int32
+          description: → actividades.programa_parte
+        ordem:
+          type: integer
+        horaInicio:
+          type: string
+          maxLength: 5
+          description: Hora (hh:mm)
+        horaFim:
+          type: string
+          maxLength: 5
+          description: Hora (hh:mm)
+        actividade:
+          type: string
+          maxLength: 200
+          description: 'Ex.: Hino inicial (H.A 509)'
+        responsavelMembroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Responsável (membro)
+        responsavelFamiliaId:
+          type: integer
+          format: int32
+          description: → secretaria.familia · Responsável (família)
+        responsavelDepartamentoIgrejaId:
+          type: integer
+          format: int32
+          description: '→ organizacao.igreja_departamento · Responsável (departamento, ex.: Mulher Adventista)'
+        responsavelTexto:
+          type: string
+          maxLength: 150
+          description: 'Responsável escrito (ex.: Todos, Diáconos, Monitores, um visitante)'
+        escala:
+          type: string
+          maxLength: 20
+          description: 'Função da escala que preenche o responsável (ex.: PREGADOR, TRADUTOR, FAMILIA_ES)'
+        destaque:
+          type: boolean
+          description: 'Linha em destaque na folha (ex.: Sermão principal)'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - programaDiaId
+      - programaParteId
+      - actividade
+    ProgramaParte:
+      type: object
+      description: 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)'
+      x-tabela: actividades.programa_parte
+      x-prefixo: ppa
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        programaDiaId:
+          type: integer
+          format: int32
+          description: → actividades.programa_dia
+        ordem:
+          type: integer
+        titulo:
+          type: string
+          maxLength: 100
+          description: 'Ex.: Programação do Culto Divino'
+        rotulo:
+          type: string
+          maxLength: 30
+          description: 'Cabeçalho da coluna do apresentador (ex.: Apresentador, Transição)'
+        apresentadorMembroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Apresentador (membro)
+        apresentadorFamiliaId:
+          type: integer
+          format: int32
+          description: '→ secretaria.familia · Apresentador (família, ex.: Família Magaia)'
+        apresentadorTexto:
+          type: string
+          maxLength: 150
+          description: Apresentador escrito (visitante, grupo)
+        escala:
+          type: string
+          maxLength: 20
+          description: 'Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES)'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - programaDiaId
+      - titulo
     Provincia:
       type: object
       description: Províncias de Moçambique (e a Cidade de Maputo)

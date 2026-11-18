@@ -281,7 +281,8 @@ M('V5__actividades', 'actividades', 'Actividades e escalas',
    ('epl_id', 'fk:escala_plano', NN), ('data', 'DATE', NN),
    ('evento', 'VARCHAR(200)', '', 'Dia especial que substitui a escala (ex.: Simpósio, 13.º sábado)'),
    ('grupo_coral', 'VARCHAR(100)'), ('ide_id', 'fk:igreja_departamento', '', 'Departamento responsável'),
-   ('observacoes', 'VARCHAR(255)')],
+   ('observacoes', 'VARCHAR(255)'),
+   ('fam_id', 'fk:familia', '', 'Família responsável pela programação da Escola Sabatina (V44)')],
    uniq=[['epl_id', 'data']]),
  # V39: Santa Ceia (agendamento e participantes)
  T('santa_ceia', 'stc', 'Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39)', [
@@ -296,6 +297,36 @@ M('V5__actividades', 'actividades', 'Actividades e escalas',
            ('chk_stc_hora', "@hora IS NULL OR @hora ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'"),
            ('chk_stc_realizada', "@estado <> 'REALIZADA' OR (@homens IS NOT NULL AND @mulheres IS NOT NULL AND @visitantes IS NOT NULL)")],
    estado=('estado_santa_ceia_t', "'AGENDADA'")),
+ # V44: programação do dia (Escola Sabatina, transição, Culto Divino, JA), para preparar e imprimir
+ T('programa_dia', 'pgd', 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)', [
+   ('igr_id', 'fk:igreja', NN), ('data', 'DATE', NN),
+   ('titulo', 'VARCHAR(150)', '', 'Título da folha; por defeito, a data por extenso'),
+   ('observacoes', 'VARCHAR(500)', '', 'Nota no fim da folha (ex.: passível de ajustes e simplificação)')],
+   uniq=[['igr_id', 'data']]),
+ T('programa_parte', 'ppa', 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)', [
+   ('pgd_id', 'fk:programa_dia', NN), ('ordem', 'SMALLINT', 'NOT NULL DEFAULT 1'),
+   ('titulo', 'VARCHAR(100)', NN, 'Ex.: Programação do Culto Divino'),
+   ('rotulo', 'VARCHAR(30)', "NOT NULL DEFAULT 'Apresentador'", 'Cabeçalho da coluna do apresentador (ex.: Apresentador, Transição)'),
+   ('apresentador_mem_id', 'fk:membro', '', 'Apresentador (membro)'),
+   ('apresentador_fam_id', 'fk:familia', '', 'Apresentador (família, ex.: Família Magaia)'),
+   ('apresentador_texto', 'VARCHAR(150)', '', 'Apresentador escrito (visitante, grupo)'),
+   ('escala', 'VARCHAR(20)', '', 'Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES)')],
+   checks=[('chk_ppa_apresentador', 'num_nonnulls(@apresentador_mem_id, @apresentador_fam_id, @apresentador_texto) <= 1'),
+           ('chk_ppa_escala', "@escala IS NULL OR @escala IN ('APRESENTADOR_ES', 'APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL', 'APRESENTADOR_JA', 'MEDITACAO_JA', 'FAMILIA_ES')")]),
+ T('programa_item', 'pit', 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)', [
+   ('pgd_id', 'fk:programa_dia', NN), ('ppa_id', 'fk:programa_parte', NN), ('ordem', 'SMALLINT', 'NOT NULL DEFAULT 1'),
+   ('hora_inicio', 'VARCHAR(5)', '', 'Hora (hh:mm)'), ('hora_fim', 'VARCHAR(5)', '', 'Hora (hh:mm)'),
+   ('actividade', 'VARCHAR(200)', NN, 'Ex.: Hino inicial (H.A 509)'),
+   ('responsavel_mem_id', 'fk:membro', '', 'Responsável (membro)'),
+   ('responsavel_fam_id', 'fk:familia', '', 'Responsável (família)'),
+   ('responsavel_ide_id', 'fk:igreja_departamento', '', 'Responsável (departamento, ex.: Mulher Adventista)'),
+   ('responsavel_texto', 'VARCHAR(150)', '', 'Responsável escrito (ex.: Todos, Diáconos, Monitores, um visitante)'),
+   ('escala', 'VARCHAR(20)', '', 'Função da escala que preenche o responsável (ex.: PREGADOR, TRADUTOR, FAMILIA_ES)'),
+   ('destaque', 'BOOLEAN', 'NOT NULL DEFAULT FALSE', 'Linha em destaque na folha (ex.: Sermão principal)')],
+   checks=[('chk_pit_responsavel', 'num_nonnulls(@responsavel_mem_id, @responsavel_fam_id, @responsavel_ide_id, @responsavel_texto) <= 1'),
+           ('chk_pit_horas', "(@hora_inicio IS NULL OR @hora_inicio ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$') AND "
+                             "(@hora_fim IS NULL OR @hora_fim ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$')"),
+           ('chk_pit_escala', "@escala IS NULL OR @escala IN ('APRESENTADOR_ES', 'APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL', 'APRESENTADOR_JA', 'MEDITACAO_JA', 'FAMILIA_ES')")]),
 ])
 
 # ======================================================================= escola_sabatina
@@ -602,7 +633,8 @@ SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
  'oficial': ('direct', 'igr_id'), 'mandato': ('direct', 'igr_id'), 'igreja_departamento': ('direct', 'igr_id'), 'escala': ('direct', 'igr_id'),
- 'escala_plano': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
+ 'escala_plano': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'programa_dia': ('direct', 'igr_id'),
+ 'programa_parte': ('parent', 'pgd_id', 'programa_dia'), 'programa_item': ('parent', 'pgd_id', 'programa_dia'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
  'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'),
  'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'), 'contagem_participante': ('parent', 'cnu_id', 'contagem_numerario'),
@@ -696,7 +728,7 @@ PERFIS = [
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'nucleo.usuario_igreja.ler'),
    ('+', 'nucleo.comunicado*')]),
  ('SECRETARIO', 'IGREJA', 'Secretário(a) da igreja: livro de membros, reuniões, votos, transferências, disciplina', [
-   ('+', 'secretaria.*'), ('+', 'actividades.escala*'), ('+', 'actividades.santa_ceia*'), ('+', 'escola_sabatina.*.ler'),
+   ('+', 'secretaria.*'), ('+', 'actividades.escala*'), ('+', 'actividades.santa_ceia*'), ('+', 'actividades.programa*'), ('+', 'escola_sabatina.*.ler'),
    ('+', 'organizacao.igreja.ler'), ('+', 'organizacao.igreja_departamento.ler'), ('+', 'nucleo.comunicado*')]),
  ('TESOUREIRO', 'IGREJA', 'Tesoureiro(a): movimentos, recibos, contagens, despesas, remessas (não aprova o que regista)', [
    ('+', 'tesouraria.*'), ('-', '*.aprovar'), ('-', 'tesouraria.remessa.confirmar'), ('-', 'tesouraria.fecho_periodo.terminar'),
