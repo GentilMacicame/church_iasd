@@ -298,7 +298,7 @@ function DialogoPesos({ id, trimestreId, base, aoFechar }: { id?: number; trimes
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <DialogHeader>
             <DialogTitle>{trimestreId ? 'Pesos deste trimestre' : 'Pesos por defeito'}</DialogTitle>
-            <DialogDescription>Em percentagem; os quatro somam 100%. O limite das ofertas é até onde conta passar o alvo.</DialogDescription>
+            <DialogDescription>Em percentagem; os quatro somam 100%.</DialogDescription>
           </DialogHeader>
           <ErroFormulario mensagem={erro} />
           <div className="grid grid-cols-2 gap-4">

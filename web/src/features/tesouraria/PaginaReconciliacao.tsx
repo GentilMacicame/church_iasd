@@ -5,7 +5,7 @@
  * valor e direcção, até 5 dias de diferença; a escolha é sempre do tesoureiro.
  */
 import { useMemo, useRef, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, FileCheck2, Link2, Upload } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Download, FileCheck2, Link2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -21,6 +21,15 @@ import { cn } from '@/lib/utils'
 import { Exportar } from '@/components/comum/Exportar'
 import { useContasIgreja, useExtractosMut, useMovimentos, usePorReconciliar, type PorReconciliar, type Transacao } from './api'
 import { Paginada } from '@/components/comum/Paginacao'
+
+/** Descarrega um ficheiro-modelo do extracto, para preencher ou comparar com o do banco. */
+function descarregarModelo() {
+  const texto = ['data;descricao;referencia;valor', '02/11/2026;Depósito numerário;004512;12500,00', '05/11/2026;Comissão de manutenção;;-150,00', ''].join('\r\n')
+  const url = URL.createObjectURL(new Blob(['﻿' + texto], { type: 'text/csv;charset=utf-8' }))
+  const a = document.createElement('a')
+  a.href = url; a.download = 'modelo-extracto.csv'; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 
 const DIA = 86_400_000
 const somarDias = (iso: string, n: number) => new Date(Date.parse(iso + 'T12:00:00Z') + n * DIA).toISOString().slice(0, 10)
@@ -78,12 +87,38 @@ export default function PaginaReconciliacao() {
       {linhas.isPending ? <Barra className="h-64 w-full" />
         : linhas.isError ? <EstadoErro erro={linhas.error} aoTentar={() => linhas.refetch()} />
         : !lista.length ? (
-          <Cartao>
-            <EstadoVazio icone={FileCheck2} titulo="Nada por reconciliar"
-              accao={pode('tesouraria.extrato_linha.criar') && <Button variant="outline" className="alvo" onClick={() => setImportar(true)}><Upload className="size-4" />Importar o extracto do mês</Button>}>
-              Todas as linhas importadas estão ligadas a um movimento. Importe o extracto do banco ou do M-Pesa para conferir o mês.
-            </EstadoVazio>
-          </Cartao>
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+            <Cartao>
+              <EstadoVazio icone={FileCheck2} titulo="Nada por reconciliar"
+                accao={pode('tesouraria.extrato_linha.criar') && <Button className="alvo" onClick={() => setImportar(true)}><Upload className="size-4" />Importar extracto</Button>}>
+                Todas as linhas importadas estão ligadas a um movimento.
+              </EstadoVazio>
+            </Cartao>
+            <Cartao titulo="Como funciona" icone={Link2}
+              accoes={<Button variant="outline" size="sm" className="alvo" onClick={descarregarModelo}><Download className="size-4" />Modelo CSV</Button>}>
+              <ol className="grid gap-3 text-sm">
+                {[['Exporte o extracto', 'do banco ou do M-Pesa, em CSV (Excel: "Guardar como CSV").'],
+                  ['Importe-o aqui', 'escolhendo a conta. Linhas repetidas são ignoradas.'],
+                  ['Ligue cada linha', 'ao movimento da tesouraria (sugerido pelo valor e pela data). O que sobra é o que falta registar.']].map(([t1, t2], i) => (
+                  <li key={t1} className="flex gap-3">
+                    <span className="flex size-6 flex-none items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{i + 1}</span>
+                    <span><span className="font-medium">{t1}</span> <span className="text-muted-foreground">{t2}</span></span>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-5 mb-2 text-xs font-medium text-muted-foreground">Colunas do ficheiro (separadas por ponto e vírgula)</p>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/60 text-muted-foreground"><tr>{['data', 'descricao', 'referencia', 'valor'].map((c) => <th key={c} className="px-3 py-1.5 text-left font-mono font-medium">{c}</th>)}</tr></thead>
+                  <tbody className="font-mono">
+                    <tr className="border-t"><td className="px-3 py-1.5">02/11/2026</td><td className="px-3 py-1.5">Depósito numerário</td><td className="px-3 py-1.5">004512</td><td className="px-3 py-1.5 text-right">12 500,00</td></tr>
+                    <tr className="border-t"><td className="px-3 py-1.5">05/11/2026</td><td className="px-3 py-1.5">Comissão</td><td className="px-3 py-1.5" /><td className="px-3 py-1.5 text-right text-destructive-text">-150,00</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Entradas com valor positivo; saídas com valor negativo.</p>
+            </Cartao>
+          </div>
         ) : (
           <div className="grid gap-6">
             <div className="grid gap-3 sm:grid-cols-3">

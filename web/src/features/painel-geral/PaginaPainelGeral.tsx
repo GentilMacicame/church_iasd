@@ -148,6 +148,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
   const [distrito, setDistrito] = useState(distritoFixo ? String(distritoFixo) : '')
   const [texto, setTexto] = useState('')
   const [medida, setMedida] = useState<Medida>('membros')
+  const [todasComp, setTodasComp] = useState(false)
   const [ordem, setOrdem] = useState<{ k: Coluna; desc: boolean }>({ k: 'membros', desc: true })
 
   const todas: Linha[] = useMemo(() => {
@@ -267,7 +268,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
       </div>
 
       {!aCarregar && !todas.length ? (
-        <Cartao><EstadoVazio icone={Church} titulo="Sem igrejas a seu cargo">O painel geral mostra as igrejas da sua Associação ou do seu distrito pastoral.</EstadoVazio></Cartao>
+        <Cartao><EstadoVazio icone={Church} titulo="Sem igrejas a seu cargo">Mostra as igrejas da sua Associação ou distrito.</EstadoVazio></Cartao>
       ) : (
         <div className="grid gap-6">
           <section aria-label="Membros" className="grid gap-3">
@@ -352,19 +353,30 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
                 {MEDIDAS.map((x) => <option key={x.k} value={x.k}>{x.rotulo}</option>)}
               </Seleccao></div>}>
               {aCarregar ? <LinhasACarregar linhas={5} /> : !comparativo.length ? <EstadoVazio>Sem dados para comparar.</EstadoVazio> : (
-                <ol className="grid max-h-80 gap-2 overflow-y-auto pr-1">
-                  {comparativo.map(({ l, v }, i) => (
-                    <li key={l.id} className="grid grid-cols-[1.5rem_minmax(0,9rem)_1fr_auto] items-center gap-2 text-sm">
-                      <span className="text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
-                      <span className="truncate" title={l.nome}>{l.nome}</span>
-                      <span className="relative h-5 rounded-sm bg-muted">
-                        <span className={cn('absolute inset-y-0 left-0 rounded-sm', v >= mediaComp ? 'bg-primary' : 'bg-primary/45')} style={{ width: `${maxComp ? (v / maxComp) * 100 : 0}%` }} />
-                        {maxComp > 0 && <span aria-hidden className="absolute inset-y-[-3px] w-0.5 bg-foreground/50" style={{ left: `${(mediaComp / maxComp) * 100}%` }} />}
-                      </span>
-                      <span className="w-24 text-right font-medium tabular-nums">{formatar(v)}</span>
-                    </li>
-                  ))}
-                </ol>
+                <>
+                  <ol className="grid gap-3">
+                    {(todasComp ? comparativo : comparativo.slice(0, 8)).map(({ l, v }, i) => (
+                      <li key={l.id} className="grid gap-1.5">
+                        <div className="flex items-baseline justify-between gap-3 text-sm">
+                          <span className="flex min-w-0 items-baseline gap-2">
+                            <span className="w-5 flex-none text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+                            <span className="truncate font-medium" title={l.nome}>{l.nome}</span>
+                          </span>
+                          <span className={cn('flex-none font-semibold tabular-nums', v >= mediaComp ? 'text-foreground' : 'text-muted-foreground')}>{formatar(v)}</span>
+                        </div>
+                        <div className="relative ml-7 h-2 rounded-full bg-muted">
+                          <div className={cn('h-full rounded-full transition-[width]', v >= mediaComp ? 'bg-primary' : 'bg-primary/40')} style={{ width: `${maxComp ? Math.max(2, (v / maxComp) * 100) : 0}%` }} />
+                          {maxComp > 0 && <span aria-hidden title="Média" className="absolute -top-1 h-4 w-0.5 rounded-full bg-foreground/60" style={{ left: `${(mediaComp / maxComp) * 100}%` }} />}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  {comparativo.length > 8 && (
+                    <Button type="button" variant="ghost" size="sm" className="mt-3 w-full print:hidden" onClick={() => setTodasComp((x) => !x)}>
+                      {todasComp ? 'Mostrar menos' : `Ver todas (${comparativo.length})`}
+                    </Button>
+                  )}
+                </>
               )}
             </Cartao>
           </div>

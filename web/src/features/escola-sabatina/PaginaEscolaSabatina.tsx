@@ -90,7 +90,7 @@ export default function PaginaEscolaSabatina() {
 
       {trimestres.isError ? <EstadoErro erro={trimestres.error} aoTentar={() => trimestres.refetch()} />
         : !trimestres.isPending && !trimestre ? (
-          <Cartao><EstadoVazio icone={GraduationCap} titulo="Ainda não há trimestres">A Associação cria os trimestres e os sábados da lição; depois aparece aqui o painel.</EstadoVazio></Cartao>
+          <Cartao><EstadoVazio icone={GraduationCap} titulo="Ainda não há trimestres">A Associação cria os trimestres e os sábados.</EstadoVazio></Cartao>
         ) : (
           <div className="grid gap-6">
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

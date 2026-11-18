@@ -57,7 +57,8 @@ export function DialogoRegistarMembro({ aberto, aoFechar }: { aberto: boolean; a
   const provaveis = (lista ?? []).filter((p) => !p.existe && p.pontos >= 70)
   const parecidos = (lista ?? []).filter((p) => !p.existe && p.pontos < 70)
   const podeContinuar = !!lista && existentes.length === 0 && (provaveis.length === 0 || conferiu)
-  const continuar = () => { navigate(caminhoDaFicha(d, provaveis.length > 0 && conferiu)); aoFechar() }
+  // sem aoFechar(): fechar mexe no endereço da lista e desfazia a navegação para a ficha
+  const continuar = () => navigate(caminhoDaFicha(d, provaveis.length > 0 && conferiu))
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => !v && aoFechar()}>

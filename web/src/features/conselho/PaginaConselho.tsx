@@ -101,12 +101,13 @@ export default function PaginaConselho() {
           </EstadoVazio>
         </section>
       ) : (
-        <div className="grid gap-6">
-          <LinhaMandatos mandatos={listaMandatos} porMandato={porMandato} semMandato={semMandato.length} escolhido={escolhido} aoEscolher={escolher}
-            aoNovo={pode('secretaria.mandato.criar') ? () => setNovoMandato(true) : undefined} />
-          {mandato
-            ? <PainelMandato key={mandato.id} mandato={mandato} oficiais={porMandato.get(mandato.id) ?? []} aoEditar={() => setEditar(mandato)} />
-            : <PainelSemMandato oficiais={semMandato} mandatos={listaMandatos} />}
+        <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <LinhaMandatos mandatos={listaMandatos} porMandato={porMandato} semMandato={semMandato.length} escolhido={escolhido} aoEscolher={escolher} />
+          <div className="grid min-w-0 gap-6">
+            {mandato
+              ? <PainelMandato key={mandato.id} mandato={mandato} oficiais={porMandato.get(mandato.id) ?? []} aoEditar={() => setEditar(mandato)} />
+              : <PainelSemMandato oficiais={semMandato} mandatos={listaMandatos} />}
+          </div>
         </div>
       )}
 
@@ -118,13 +119,14 @@ export default function PaginaConselho() {
 
 /* ------------------------------------------------------------------ linha do tempo dos mandatos */
 
-function LinhaMandatos({ mandatos, porMandato, semMandato, escolhido, aoEscolher, aoNovo }: {
+function LinhaMandatos({ mandatos, porMandato, semMandato, escolhido, aoEscolher }: {
   mandatos: Mandato[]; porMandato: Map<number, Oficial[]>; semMandato: number; escolhido: number | string
-  aoEscolher: (v: number | typeof SEM_MANDATO) => void; aoNovo?: () => void
+  aoEscolher: (v: number | typeof SEM_MANDATO) => void
 }) {
   return (
-    <nav aria-label="Mandatos" className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-      <ol className="flex min-w-max gap-3">
+    <nav aria-label="Mandatos" className="overflow-hidden rounded-xl border bg-card shadow-card lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
+      <p className="border-b px-4 py-3 text-sm font-semibold">Mandatos</p>
+      <ol className="max-h-[60dvh] divide-y overflow-y-auto">
         {mandatos.map((m) => {
           const v = vigencia(m)
           const n = (porMandato.get(m.id) ?? []).filter((o) => o.estadoMandato !== 'TERMINADO' || v === 'TERMINADO').length
@@ -132,12 +134,13 @@ function LinhaMandatos({ mandatos, porMandato, semMandato, escolhido, aoEscolher
           return (
             <li key={m.id}>
               <button type="button" onClick={() => aoEscolher(m.id)} aria-current={activo ? 'true' : undefined}
-                className={cn('alvo flex w-60 flex-col items-start gap-1 rounded-xl border bg-card p-4 text-left shadow-card transition hover:border-primary/40',
-                  activo && 'border-primary ring-1 ring-primary', v === 'TERMINADO' && !activo && 'opacity-75')}>
-                <Pilula variante={VARIANTE_MANDATO[v]}>{v === 'ACTIVO' ? 'Actual' : ROTULO_MANDATO[v]}</Pilula>
-                <span className="mt-1 font-semibold">{m.nome}</span>
-                <span className="text-xs text-muted-foreground tabular-nums">{data(m.dataInicio)} → {data(m.dataFim)}</span>
-                <span className="text-xs text-muted-foreground">{duracaoTexto(m.dataInicio, m.dataFim)} · {n} {n === 1 ? 'oficial' : 'oficiais'}</span>
+                className={cn('alvo flex w-full items-center justify-between gap-3 border-l-[3px] px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                  activo ? 'border-l-primary bg-primary/5' : 'border-l-transparent', v === 'TERMINADO' && !activo && 'text-muted-foreground')}>
+                <span className="grid min-w-0 gap-1">
+                  <span className="truncate font-medium">{m.nome}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{data(m.dataInicio)} → {data(m.dataFim)}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground"><Pilula variante={VARIANTE_MANDATO[v]}>{v === 'ACTIVO' ? 'Actual' : ROTULO_MANDATO[v]}</Pilula>{n} {n === 1 ? 'oficial' : 'oficiais'}</span>
+                </span>
               </button>
             </li>
           )
@@ -145,18 +148,10 @@ function LinhaMandatos({ mandatos, porMandato, semMandato, escolhido, aoEscolher
         {semMandato > 0 && (
           <li>
             <button type="button" onClick={() => aoEscolher(SEM_MANDATO)} aria-current={escolhido === SEM_MANDATO ? 'true' : undefined}
-              className={cn('alvo flex h-full w-60 flex-col gap-1.5 rounded-xl border border-dashed border-warning/60 bg-tint-warning/40 p-4 text-left transition',
-                escolhido === SEM_MANDATO && 'ring-1 ring-warning')}>
-              <span className="font-semibold">Sem mandato</span>
-              <span className="text-xs text-warning-text">{semMandato} {semMandato === 1 ? 'oficial por associar' : 'oficiais por associar'}</span>
-            </button>
-          </li>
-        )}
-        {aoNovo && (
-          <li>
-            <button type="button" onClick={aoNovo}
-              className="alvo flex h-full w-44 flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-4 text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-primary">
-              <Plus className="size-5" />Novo mandato
+              className={cn('alvo flex w-full items-center justify-between gap-3 border-l-[3px] px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                escolhido === SEM_MANDATO ? 'border-l-warning bg-tint-warning/50' : 'border-l-transparent')}>
+              <span className="font-medium">Sem mandato</span>
+              <Pilula variante="warning">{semMandato}</Pilula>
             </button>
           </li>
         )}

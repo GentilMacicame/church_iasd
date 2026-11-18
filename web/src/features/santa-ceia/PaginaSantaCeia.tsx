@@ -23,6 +23,7 @@ import { t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { ROTULO_ESTADO, lerSantaCeia, useHistoricoSantaCeia, useSantaCeiaMut, type SantaCeia } from './api'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const VARIANTE = { AGENDADA: 'info', REALIZADA: 'success', CANCELADA: 'secondary' } as const
 
@@ -190,7 +191,7 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
           <div className="grid gap-1.5"><label htmlFor="stc-data" className="text-sm font-medium">Data <span className="text-destructive-text">*</span></label><CampoData id="stc-data" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium"><Clock className="mr-1 inline size-3.5" />Hora</label><Input id="stc-hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo num" /></div>
+          <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium"><Clock className="mr-1 inline size-3.5" />Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo num" /></div>
           <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-local" className="text-sm font-medium"><MapPin className="mr-1 inline size-3.5" />Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
           <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Responsável (quem oficia)</label>
             <CampoMembro id="stc-resp" valor={responsavel} aoMudar={setResponsavel} nomeDe={nomeDe} /></div>

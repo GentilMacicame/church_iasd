@@ -141,7 +141,7 @@ function DialogoDia({ dia, plano, aoFechar, outros, nomeDe }: { dia: Dia | null;
       <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="first-letter:uppercase">{dataPorExtenso(dia.data)}</DialogTitle>
-          <DialogDescription>Um dia especial substitui a escala desse sábado e não gera lembretes.</DialogDescription>
+          <DialogDescription>Substitui a escala desse sábado.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />

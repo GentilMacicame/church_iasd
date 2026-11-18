@@ -252,7 +252,22 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
   const [comAdmin, setComAdmin] = useState(true)
   const [admin, setAdmin] = useState<NovoAdministrador>(ADMIN_VAZIO)
   const [erro, setErro] = useState<string | null>(null)
+  const [passo, setPasso] = useState(0)
   const ent = entidadeId || String(campos[0]?.id ?? '')
+  // o que falta em cada passo, para avançar
+  const faltaNoPasso = (n: number): string | null => {
+    if (n === 0) {
+      if (nome.trim().length < 3) return 'Escreva o nome da igreja.'
+      if (!ent) return 'Escolha a Associação/Missão.'
+      if (tipo !== 'IGREJA_ORGANIZADA' && !maeId) return 'Um grupo ou filial precisa da igreja-mãe.'
+    }
+    if (n === 1) {
+      if (!prvId || !dadId) return 'Indique a província e o distrito.'
+      if (localidade.trim().length < 2) return 'Indique a localidade (ou o bairro).'
+    }
+    return null
+  }
+  const seguinte = () => { const e = faltaNoPasso(passo); setErro(e); if (!e) setPasso((x) => x + 1) }
   const dstDaEnt = (distritos.data ?? []).filter((d) => String(d.entidadeId) === ent && !d.endDate)
   const maes = (igrejas.data ?? []).filter((i) => !i.endDate && String(i.entidadeId) === ent && i.tipo === 'IGREJA_ORGANIZADA')
 
@@ -284,15 +299,22 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
 
   return (
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Registar igreja</DialogTitle>
-          <DialogDescription>A igreja passa a usar a plataforma; o administrador gere depois os utilizadores dela.</DialogDescription>
+          <DialogDescription className="sr-only">Registar uma igreja nova</DialogDescription>
+          <ol className="mt-3 grid grid-cols-3 gap-2" aria-label="Passos">
+            {['A igreja', 'Onde fica', 'Administrador'].map((r, i) => (
+              <li key={r} aria-current={i === passo ? 'step' : undefined} className="grid gap-1.5">
+                <span className={cn('h-1 rounded-full', i <= passo ? 'bg-primary' : 'bg-muted')} />
+                <span className={cn('text-xs font-medium', i === passo ? 'text-foreground' : 'text-muted-foreground')}>{i + 1}. {r}</span>
+              </li>
+            ))}
+          </ol>
         </DialogHeader>
         <div className="grid gap-5">
           <ErroFormulario mensagem={erro} />
-          <fieldset className="grid gap-3">
-            <legend className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">1. A igreja</legend>
+          <fieldset className={cn('grid gap-3', passo !== 0 && 'hidden')}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5 sm:col-span-2">
                 <label htmlFor="igr-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
@@ -332,8 +354,7 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
               </div>
             </div>
           </fieldset>
-          <fieldset className="grid gap-3">
-            <legend className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">2. Onde fica</legend>
+          <fieldset className={cn('grid gap-3', passo !== 1 && 'hidden')}>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
                 <label htmlFor="igr-prv" className="text-sm font-medium">Província <span className="text-destructive-text">*</span></label>
@@ -356,18 +377,21 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
               </div>
             </div>
           </fieldset>
-          <fieldset className="grid gap-3 rounded-lg border p-4">
-            <legend className="px-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">3. O administrador da igreja</legend>
+          <fieldset className={cn('grid gap-3', passo !== 2 && 'hidden')}>
             <label className="alvo flex items-center gap-2 text-sm">
               <input type="checkbox" checked={comAdmin} onChange={(e) => setComAdmin(e.target.checked)} className="size-4 accent-[var(--primary)]" />
-              Criar já o administrador (perfil ADMIN nesta igreja)
+              Criar já o administrador da igreja
             </label>
             {comAdmin && <CamposAdministrador v={admin} set={setAdmin} prefixo="nova" />}
           </fieldset>
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
-          <Button type="button" className="alvo" disabled={registar.isPending} onClick={submeter}>{registar.isPending ? t.comum.aGravar : 'Registar igreja'}</Button>
+          {passo === 0
+            ? <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
+            : <Button type="button" variant="outline" className="alvo" onClick={() => { setErro(null); setPasso((x) => x - 1) }}>Anterior</Button>}
+          {passo < 2
+            ? <Button type="button" className="alvo" onClick={seguinte}>Seguinte</Button>
+            : <Button type="button" className="alvo" disabled={registar.isPending} onClick={submeter}>{registar.isPending ? t.comum.aGravar : 'Registar igreja'}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -395,7 +419,7 @@ function DialogoAdministrador({ igreja, aoFechar }: { igreja: Igreja; aoFechar: 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Administrador de {igreja.nome}</DialogTitle>
-          <DialogDescription>Recebe o perfil ADMIN nesta igreja: regista os utilizadores e gere a igreja.</DialogDescription>
+          <DialogDescription>Gere os utilizadores desta igreja.</DialogDescription>
         </DialogHeader>
         <div className={cn('grid gap-4')}>
           <ErroFormulario mensagem={erro} />
@@ -476,7 +500,7 @@ function DialogoEntidade({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Registar Associação / Missão</DialogTitle>
-          <DialogDescription>O campo a que as igrejas pertencem e para onde vão o dízimo e a parte da Missão nas ofertas.</DialogDescription>
+          <DialogDescription>O campo a que as igrejas pertencem.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
@@ -590,7 +614,7 @@ function DialogoDistrito({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Registar distrito pastoral</DialogTitle>
-          <DialogDescription>Um grupo de igrejas acompanhadas pelo mesmo pastor, dentro da Associação/Missão.</DialogDescription>
+          <DialogDescription>Igrejas acompanhadas pelo mesmo pastor.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

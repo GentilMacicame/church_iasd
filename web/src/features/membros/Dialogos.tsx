@@ -127,7 +127,7 @@ export function DialogoBaptismo({ membroId, gatilho }: { membroId: number; gatil
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t.baptismo.registar}</DialogTitle>
-          <DialogDescription>A entrada no livro de membros faz-se depois, com o voto que a autoriza.</DialogDescription>
+          <DialogDescription>A entrada no livro faz-se depois, com o voto.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>

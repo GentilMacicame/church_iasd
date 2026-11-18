@@ -139,7 +139,7 @@ function DialogoOferta({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Nova oferta da igreja</DialogTitle>
-          <DialogDescription>Uma oferta que a igreja recolhe para si. Fica 100% na igreja (não vai à Missão).</DialogDescription>
+          <DialogDescription>Fica 100% na igreja.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

@@ -131,6 +131,27 @@ export function useCategorias() {
   })
 }
 
+/** Registar, renomear e retirar categorias do plano de contas (receitas e despesas). */
+export function useCategoriasMut() {
+  const qc = useQueryClient()
+  const aoMudar = () => qc.invalidateQueries({ queryKey: ['tesouraria', 'categorias'] })
+  return {
+    criar: useMutation({
+      mutationFn: (corpo: { codigo: string; nome: string; tipo: 'RECEITA' | 'DESPESA' }) =>
+        dados(api.POST('/v1/tesouraria/categorias', { body: corpo as never, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } as never })),
+      onSuccess: aoMudar,
+    }),
+    renomear: useMutation({
+      mutationFn: ({ id, nome }: { id: number; nome: string }) => dados(api.PATCH('/v1/tesouraria/categorias/{id}', { params: { path: { id } }, body: { nome } as never })),
+      onSuccess: aoMudar,
+    }),
+    terminar: useMutation({
+      mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/categorias/{id}/terminar', { params: { path: { id } } })),
+      onSuccess: aoMudar,
+    }),
+  }
+}
+
 export function useSaldosContas() {
   const igreja = useIgreja()
   return useQuery({

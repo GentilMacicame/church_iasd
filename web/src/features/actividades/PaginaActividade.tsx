@@ -94,7 +94,7 @@ function Ficha({ a }: { a: Actividade }) {
               {a.distritoId && <Pilula variante="info">Área pastoral</Pilula>}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><CalendarRange className="size-4" /><span className="capitalize">{dataPorExtenso(a.dataInicio)}</span>{!mesmoDia && a.dataFim && ` a ${data(a.dataFim)}`}</span>
+              <span className="inline-flex items-center gap-1.5"><CalendarRange className="size-4" /><span className="first-letter:uppercase">{dataPorExtenso(a.dataInicio)}</span>{!mesmoDia && a.dataFim && ` a ${data(a.dataFim)}`}</span>
               <span className="inline-flex items-center gap-1.5"><Clock className="size-4" />{hora(a.dataInicio)}{a.dataFim ? `–${hora(a.dataFim)}` : ''}</span>
               {a.local && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" />{a.local}</span>}
               {departamento && <span>{departamento}</span>}
@@ -113,16 +113,18 @@ function Ficha({ a }: { a: Actividade }) {
 
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid gap-6 lg:col-span-7">
-          <Cartao titulo="Objectivos e descrição" icone={Target}>
-            <dl className="grid gap-4">
-              <Campo rotulo="Objectivos">{a.objectivos && <span className="whitespace-pre-line">{a.objectivos}</span>}</Campo>
-              <Campo rotulo="Descrição">{a.descricao && <span className="whitespace-pre-line">{a.descricao}</span>}</Campo>
-            </dl>
-          </Cartao>
           <Orcamento a={a} />
         </div>
         <div className="grid gap-6 lg:col-span-5">
           <Responsaveis a={a} principal={responsavel ? `${responsavel.nome} ${responsavel.apelido}` : undefined} />
+          <Cartao titulo="Objectivos e descrição" icone={Target}>
+            {a.objectivos || a.descricao ? (
+              <dl className="grid gap-4">
+                {a.objectivos && <Campo rotulo="Objectivos"><span className="whitespace-pre-line">{a.objectivos}</span></Campo>}
+                {a.descricao && <Campo rotulo="Descrição"><span className="whitespace-pre-line">{a.descricao}</span></Campo>}
+              </dl>
+            ) : <p className="text-sm text-muted-foreground">Sem objectivos nem descrição.</p>}
+          </Cartao>
         </div>
       </div>
 
@@ -134,7 +136,7 @@ function Ficha({ a }: { a: Actividade }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Cancelar «{a.nome}»?</DialogTitle>
-            <DialogDescription>Fica no histórico com o motivo; deixa de contar nos conflitos e no orçamento do programa.</DialogDescription>
+            <DialogDescription>Fica no histórico com o motivo.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-1.5">
             <label htmlFor="act-motivo" className="text-sm font-medium">Motivo <span className="text-destructive-text">*</span></label>
@@ -222,6 +224,7 @@ function Orcamento({ a }: { a: Actividade }) {
   const despesas = useDespesasActividade(a.id, veDespesas)
   const { juntarMaterial, tirarMaterial } = useActividadesMut()
   const [descricao, setDescricao] = useState('')
+  const [verJuntar, setVerJuntar] = useState(false)
   const [qtd, setQtd] = useState('1')
   const [preco, setPreco] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -256,7 +259,10 @@ function Orcamento({ a }: { a: Actividade }) {
         </div>
       )}
 
-      <h3 className="flex items-center gap-2 border-t px-5 pt-4 text-sm font-semibold sm:px-6"><Package className="size-4" />Material</h3>
+      <div className="flex items-center justify-between gap-3 border-t px-5 pt-4 sm:px-6">
+        <h3 className="flex items-center gap-2 text-sm font-semibold"><Package className="size-4" />Material</h3>
+        {pode('actividades.material.criar') && !verJuntar && <Button variant="outline" size="sm" className="alvo" onClick={() => setVerJuntar(true)}><Plus className="size-4" />Material</Button>}
+      </div>
       {lista.length ? (
         <Tabela className="mt-2">
           <thead><tr><th className="sm:pl-6">Descrição</th><th className="num">Qtd.</th><th className="num">Preço</th><th className="num">Total</th><th className="w-10 sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
@@ -278,14 +284,17 @@ function Orcamento({ a }: { a: Actividade }) {
           </tbody>
         </Tabela>
       ) : <p className="px-5 py-3 text-sm text-muted-foreground sm:px-6">Ainda sem material.</p>}
-      {pode('actividades.material.criar') && (
-        <div className="grid gap-2 px-5 pb-4 sm:px-6">
+      {pode('actividades.material.criar') && verJuntar && (
+        <div className="mx-5 mb-4 grid gap-2 rounded-xl border bg-muted/30 p-3 sm:mx-6">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-2 sm:grid-cols-[1fr_5rem_8rem_auto]">
-            <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Material (ex.: cadeiras)" aria-label="Material" className="alvo h-9" maxLength={255} />
-            <Input value={qtd} onChange={(e) => setQtd(e.target.value)} inputMode="decimal" aria-label="Quantidade" className="alvo num h-9" />
-            <CampoDinheiro value={preco} onChange={setPreco} aria-label="Preço unitário" className="alvo h-9" />
-            <Button size="sm" className="alvo h-9" disabled={juntarMaterial.isPending} onClick={juntar}><Plus className="size-4" />Juntar</Button>
+          <div className="grid gap-2 sm:grid-cols-[1fr_5.5rem_9rem]">
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">Material<Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="ex.: cadeiras" className="alvo h-9" maxLength={255} autoFocus /></label>
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">Quantidade<Input value={qtd} onChange={(e) => setQtd(e.target.value)} inputMode="decimal" className="alvo num h-9" /></label>
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">Preço unitário<CampoDinheiro value={preco} onChange={setPreco} className="alvo h-9" /></label>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" className="alvo" onClick={() => setVerJuntar(false)}>{t.comum.cancelar}</Button>
+            <Button size="sm" className="alvo" disabled={juntarMaterial.isPending} onClick={juntar}><Plus className="size-4" />Juntar</Button>
           </div>
         </div>
       )}

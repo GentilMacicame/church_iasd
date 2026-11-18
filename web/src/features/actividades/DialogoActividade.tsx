@@ -25,6 +25,7 @@ import { data, dataPorExtenso, hora, isoMaputo, partesMaputo } from '@/lib/forma
 import { useMembrosBasicos } from '@/features/membros/api'
 import { cn } from '@/lib/utils'
 import { ROTULO_ESTADO, procurarConflitos, useActividadesMut, useDepartamentosIgreja, useDistritoDaIgreja, type Actividade, type Conflitos } from './api'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
 const esquema = z.object({
@@ -151,7 +152,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{actividade ? 'Editar actividade' : 'Nova actividade'}</DialogTitle>
-          <DialogDescription>Antes de gravar confirma-se se há outra actividade da igreja à mesma hora.</DialogDescription>
+          <DialogDescription>Avisa se houver outra actividade à mesma hora.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />
@@ -202,7 +203,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
                 {(p) => <Controller control={form.control} name="dataInicio" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
               </CampoFormulario>
               <CampoFormulario rotulo="Início" erro={e.horaInicio?.message} obrigatorio>
-                {(p) => <Input {...p} type="time" {...form.register('horaInicio')} className="alvo num" />}
+                {(p) => <CampoHora {...p} {...form.register('horaInicio')} className="alvo num" />}
               </CampoFormulario>
             </div>
             <div className="grid grid-cols-[1fr_7rem] gap-3">
@@ -210,7 +211,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
                 {(p) => <Controller control={form.control} name="dataFim" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
               </CampoFormulario>
               <CampoFormulario rotulo="Fim" erro={e.horaFim?.message}>
-                {(p) => <Input {...p} type="time" {...form.register('horaFim')} className="alvo num" />}
+                {(p) => <CampoHora {...p} {...form.register('horaFim')} className="alvo num" />}
               </CampoFormulario>
             </div>
             <CampoFormulario rotulo="Local" erro={e.local?.message}>

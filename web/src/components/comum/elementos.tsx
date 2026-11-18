@@ -138,10 +138,10 @@ export function Pilula({ variante = 'secondary', children, className }: { varian
 }
 
 /** Pessoa: iniciais sobre um tom estável. */
-export function Avatar({ id, nome, apelido, tamanho = 32 }: { id: number; nome: string; apelido?: string | null; tamanho?: number }) {
+export function Avatar({ id, nome, apelido, tamanho = 32, className }: { id: number; nome: string; apelido?: string | null; tamanho?: number; className?: string }) {
   const tom = tomPessoa(id)
   return (
-    <span aria-hidden className="inline-flex flex-none items-center justify-center rounded-full font-semibold"
+    <span aria-hidden className={cn('inline-flex flex-none items-center justify-center rounded-full font-semibold', className)}
       style={{ width: tamanho, height: tamanho, background: tom.fundo, color: tom.tinta, fontSize: tamanho * 0.36 }}>
       {iniciais(nome, apelido)}
     </span>

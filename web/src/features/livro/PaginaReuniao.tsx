@@ -33,6 +33,7 @@ import { useCriarVoto, usePontos, usePresencas, useReuniao, useReuniaoMut, useVo
 import { PilulaEstadoReuniao } from './PaginaReunioes'
 import { CartaoDevocional } from './Devocional'
 import { Paginada } from '@/components/comum/Paginacao'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const n = z.string().regex(/^\d*$/, 'Só algarismos')
 const esquema = z.object({
@@ -78,7 +79,7 @@ function DialogoVoto({ reuniao, votos, aberto, aoMudar }: { reuniao: Reuniao; vo
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Registar voto</DialogTitle>
-          <DialogDescription>Como ficou na acta. Para uma admissão, ponha no assunto o nome da pessoa.</DialogDescription>
+          <DialogDescription>Como ficou na acta.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
@@ -188,7 +189,7 @@ export default function PaginaReuniao() {
             accoes={pode('secretaria.reuniao_ponto.criar') && !fechada && <Button size="sm" className="alvo" onClick={() => setPonto('novo')}><Plus className="size-4" />Acrescentar ponto</Button>}>
             {pontos.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
               : pontos.isError ? <EstadoErro erro={pontos.error} aoTentar={() => pontos.refetch()} className="mx-6 mb-6" />
-              : !listaPontos.length ? <EstadoVazio icone={ListChecks} titulo="Sem pontos na agenda">Acrescente os assuntos a tratar: o que se discutiu, se foi votado e o que se decidiu.</EstadoVazio>
+              : !listaPontos.length ? <EstadoVazio icone={ListChecks} titulo="Sem pontos na agenda">Acrescente os assuntos a tratar.</EstadoVazio>
               : (
                 <Paginada itens={listaPontos}>{(vis, ini) => (
                 <ol className="divide-y border-t">
@@ -219,7 +220,7 @@ export default function PaginaReuniao() {
             accoes={pode('secretaria.voto.criar') && !fechada && <Button size="sm" variant="outline" className="alvo" onClick={() => setNovoVoto(true)}><Plus className="size-4" />Registar voto</Button>}>
             {votos.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
               : votos.isError ? <EstadoErro erro={votos.error} aoTentar={() => votos.refetch()} className="mx-6 mb-6" />
-              : daReuniao.length === 0 ? <EstadoVazio icone={Vote} titulo="Sem votos formais">Só para os actos que o livro de membros exige (admissões, transferências, remoções, eleições).</EstadoVazio>
+              : daReuniao.length === 0 ? <EstadoVazio icone={Vote} titulo="Sem votos formais">Admissões, transferências, remoções e eleições.</EstadoVazio>
               : (
                 <Tabela>
                   <thead><tr><th className="sm:pl-6">N.º</th><th>Assunto</th><th className="hidden md:table-cell">Tipo</th><th className="num hidden sm:table-cell">Votação</th><th className="sm:pr-6">Resultado</th></tr></thead>
@@ -352,7 +353,7 @@ function Encerramento({ reuniao, fechada }: { reuniao: Reuniao; fechada: boolean
       <div className="grid gap-3">
         <div className="grid gap-1.5">
           <label htmlFor="enc-hora" className="text-sm font-medium">Hora do encerramento</label>
-          <Input id="enc-hora" type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} disabled={fechada} className="alvo num w-36" />
+          <CampoHora id="enc-hora" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} disabled={fechada} className="alvo" />
         </div>
         <div className="grid gap-1.5">
           <label htmlFor="enc-texto" className="text-sm font-medium">Registo</label>
@@ -490,7 +491,7 @@ function DialogoEditarReuniao({ reuniao, aoFechar }: { reuniao: Reuniao; aoFecha
           <div className="grid gap-1.5"><label htmlFor="ed-tipo" className="text-sm font-medium">Tipo</label>
             <Seleccao id="ed-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>{Object.entries(rotulos.tipoReuniao).map(([k, r]) => <option key={k} value={k}>{r}</option>)}</Seleccao></div>
           <div className="grid gap-1.5"><label htmlFor="ed-dia" className="text-sm font-medium">Data</label><CampoData id="ed-dia" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-hora" className="text-sm font-medium">Hora</label><Input id="ed-hora" type="time" value={h} onChange={(e) => setH(e.target.value)} className="alvo num" /></div>
+          <div className="grid gap-1.5"><label htmlFor="ed-hora" className="text-sm font-medium">Hora</label><CampoHora id="ed-hora" value={h} onChange={(e) => setH(e.target.value)} className="alvo num" /></div>
           <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="ed-local" className="text-sm font-medium">Local</label><Input id="ed-local" value={local} onChange={(e) => setLocal(e.target.value)} className="alvo" /></div>
           <div className="grid gap-1.5"><label htmlFor="ed-pres" className="text-sm font-medium">Presidida por</label><EscolherDoConselho id="ed-pres" valor={pres} aoMudar={setPres} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>
           <div className="grid gap-1.5"><label htmlFor="ed-sec" className="text-sm font-medium">Secretário(a)</label><EscolherDoConselho id="ed-sec" valor={sec} aoMudar={setSec} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>

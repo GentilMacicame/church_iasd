@@ -24,6 +24,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { qtd } from '@/lib/formatos'
+import { DialogoNovoUtilizador } from './DialogoNovoUtilizador'
 import {
   ACCOES, MODULOS, ROTULO_ACCAO, nomeDoRecurso, useEnviarCodigo, usePerfis, usePerfisDaIgreja, usePerfisMut, usePerfisPermissoes,
   usePermissoes, useUsuarios, type Perfil, type Permissao, type Usuario,
@@ -65,7 +66,7 @@ export default function PaginaAcessos() {
       <>
         <TituloPagina icone={KeyRound} titulo="Utilizadores e perfis" />
         <div className="rounded-xl border bg-card shadow-card">
-          <EstadoVazio icone={Lock} titulo="Sem acesso a esta página">A gestão de utilizadores e perfis é do administrador da igreja. Peça-lhe o que precisa.</EstadoVazio>
+          <EstadoVazio icone={Lock} titulo="Sem acesso a esta página">É do administrador da igreja.</EstadoVazio>
         </div>
       </>
     )
@@ -107,6 +108,7 @@ function AbaUtilizadores() {
   const enviar = useEnviarCodigo()
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [q, setQ] = useState('')
+  const [novoU, setNovoU] = useState(false)
   const perfilPorId = useMemo(() => new Map((perfis.data ?? []).map((p) => [p.id, p])), [perfis.data])
   const nomesMembros = useMemo(() => new Map((basicos.data ?? []).map((m) => [m.id, `${m.nome} ${m.apelido}`])), [basicos.data])
   const perfisDe = (uid: number) => (ligacoes.data ?? []).filter((l) => l.usuarioId === uid && !l.endDate).map((l) => perfilPorId.get(l.perfilId)).filter(Boolean) as Perfil[]
@@ -153,7 +155,7 @@ function AbaUtilizadores() {
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Pesquisar utilizador…" className="alvo pl-9" />
             </label>
-            {pode('nucleo.usuario.criar') && <Button asChild className="alvo"><Link to="/acessos/utilizadores/novo"><Plus className="size-4" />Novo utilizador</Link></Button>}
+            {pode('nucleo.usuario.criar') && <Button className="alvo" onClick={() => setNovoU(true)}><Plus className="size-4" />Novo utilizador</Button>}
           </div>
         </div>
         {usuarios.isPending || ligacoes.isPending ? <LinhasACarregar linhas={4} />
@@ -198,6 +200,7 @@ function AbaUtilizadores() {
             </Tabela>
           )}
       </div>
+      {novoU && <DialogoNovoUtilizador aoFechar={() => setNovoU(false)} />}
     </div>
   )
 }

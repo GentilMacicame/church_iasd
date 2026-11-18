@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CircleCheck, ClipboardList, Printer, Plus, Save } from 'lucide-react'
+import { CircleCheck, ClipboardList, Pencil, Printer, Plus, Save, Tags, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -13,6 +13,8 @@ import { Cartao, Dinheiro, Indicador, Pilula, Segmentos, Tabela, TituloPagina } 
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
+import { Seleccao } from '@/components/comum/Seleccao'
+import { Input } from '@/components/ui/input'
 import { mensagemDe } from '@/api/erros'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
@@ -21,7 +23,7 @@ import { cn } from '@/lib/utils'
 import { imprimirComo } from '@/lib/documentos'
 import { Exportar } from '@/components/comum/Exportar'
 import { CampoVoto } from '@/features/livro/CampoVoto'
-import { useCategorias, useExecucaoOrcamento, useLinhasOrcamento, useOrcamentoMut, useOrcamentos, type Categoria, type Orcamento } from './api'
+import { useCategorias, useCategoriasMut, useExecucaoOrcamento, useLinhasOrcamento, useOrcamentoMut, useOrcamentos, type Categoria, type Orcamento } from './api'
 
 const ESTADO = { RASCUNHO: { r: 'Em preparação', v: 'warning' as const }, APROVADO: { r: 'Aprovado', v: 'success' as const }, ENCERRADO: { r: 'Encerrado', v: 'secondary' as const } }
 const mt = (c: number) => deCentimos(c)
@@ -86,6 +88,8 @@ function Detalhe({ o }: { o: Orcamento }) {
   const [valores, setValores] = useState<Record<number, string>>({})
   const [aprovar, setAprovar] = useState(false)
   const [aGravar, setAGravar] = useState(false)
+  const [extra, setExtra] = useState<Set<number>>(new Set())
+  const [categoriasAberto, setCategoriasAberto] = useState(false)
   const editavel = o.estado === 'RASCUNHO' && pode('tesouraria.orcamento_linha.criar')
   const activas = useMemo(() => (linhas.data ?? []).filter((l) => !l.endDate), [linhas.data])
   const porCat = useMemo(() => new Map(activas.map((l) => [l.categoriaId, l])), [activas])
@@ -95,7 +99,10 @@ function Detalhe({ o }: { o: Orcamento }) {
   if (categorias.isPending || linhas.isPending) return <Barra className="h-64 w-full" />
   if (linhas.isError) return <EstadoErro erro={linhas.error} aoTentar={() => linhas.refetch()} />
   const cats = (categorias.data ?? []).filter((c) => !c.endDate)
-  const visiveis = (tipo: 'RECEITA' | 'DESPESA') => cats.filter((c) => c.tipo === tipo && (editavel || porCat.has(c.id))).sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt', { numeric: true }))
+  const visiveis = (tipo: 'RECEITA' | 'DESPESA') => cats.filter((c) => c.tipo === tipo && (porCat.has(c.id) || (editavel && extra.has(c.id)))).sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt', { numeric: true }))
+  const livres = (tipo: 'RECEITA' | 'DESPESA') => cats.filter((c) => c.tipo === tipo && !porCat.has(c.id) && !extra.has(c.id))
+  const juntar = (id: string) => id && setExtra((x) => new Set(x).add(Number(id)))
+  const retirar = (c: Categoria) => { setValores((x) => ({ ...x, [c.id]: '' })); setExtra((x) => { const n = new Set(x); n.delete(c.id); return n }) }
   const previsto = (c: Categoria) => centimos(valores[c.id] || '0')
   const total = (tipo: 'RECEITA' | 'DESPESA') => visiveis(tipo).reduce((s, c) => s + (editavel ? previsto(c) : centimos(porCat.get(c.id)?.valorPrevisto ?? '0')), 0)
   const totalReal = (tipo: 'RECEITA' | 'DESPESA') => visiveis(tipo).reduce((s, c) => s + centimos(realizado.get(c.codigo)?.realizado ?? '0'), 0)
@@ -115,6 +122,7 @@ function Detalhe({ o }: { o: Orcamento }) {
         else if (l) await mudarLinha.mutateAsync({ id: l.id, valorPrevisto: v })
         else if (centimos(v || '0') > 0) await linha.mutateAsync({ orcamentoId: o.id, categoriaId: c.id, valorPrevisto: v })
       }
+      setExtra(new Set())
       toast.success('Orçamento gravado.')
     } catch (e) {
       toast.error(mensagemDe(e))
@@ -136,10 +144,15 @@ function Detalhe({ o }: { o: Orcamento }) {
             const pct = r?.pctExecucao != null ? Number(r.pctExecucao) : null
             return (
               <tr key={c.id}>
-                <td className="sm:pl-6"><span className="mr-2 text-xs text-muted-foreground tabular-nums">{c.codigo}</span>{c.nome}</td>
+                <td className="sm:pl-6">{c.nome}</td>
                 <td className={cn('num', o.estado === 'RASCUNHO' && 'sm:pr-6')}>
                   {editavel
-                    ? <CampoDinheiro aria-label={`Previsto para ${c.nome}`} value={valores[c.id] ?? ''} onChange={(v) => setValores((x) => ({ ...x, [c.id]: v }))} className="alvo ml-auto w-36 text-right" />
+                    ? (
+                      <span className="flex items-center justify-end gap-1">
+                        <CampoDinheiro aria-label={`Previsto para ${c.nome}`} value={valores[c.id] ?? ''} onChange={(v) => setValores((x) => ({ ...x, [c.id]: v }))} className="alvo w-36 text-right" />
+                        <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Retirar ${c.nome}`} onClick={() => retirar(c)}><X className="size-4" /></Button>
+                      </span>
+                    )
                     : <Dinheiro valor={porCat.get(c.id)?.valorPrevisto ?? '0.00'} />}
                 </td>
                 {o.estado !== 'RASCUNHO' && (
@@ -151,6 +164,18 @@ function Detalhe({ o }: { o: Orcamento }) {
               </tr>
             )
           })}
+          {editavel && (
+            <tr className="hover:bg-transparent!">
+              <td colSpan={2} className="sm:px-6">
+                {livres(tipo).length ? (
+                  <Seleccao aria-label={`Acrescentar categoria de ${tipo === 'RECEITA' ? 'receita' : 'despesa'}`} value="" onChange={(e) => juntar(e.target.value)} className="sm:w-80">
+                    <option value="">+ Acrescentar {tipo === 'RECEITA' ? 'receita' : 'despesa'}…</option>
+                    {livres(tipo).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </Seleccao>
+                ) : <span className="text-sm text-muted-foreground">Todas as categorias já estão no orçamento.</span>}
+              </td>
+            </tr>
+          )}
           <tr className="bg-muted/30 font-semibold">
             <td className="sm:pl-6">Total</td>
             <td className={cn('num', o.estado === 'RASCUNHO' && 'sm:pr-6')}><Dinheiro valor={mt(tipo === 'RECEITA' ? receitas : despesas)} /></td>
@@ -171,6 +196,7 @@ function Detalhe({ o }: { o: Orcamento }) {
         </div>
         <div className="flex flex-wrap gap-2 print:hidden">
           {editavel && <Button variant={mudancas.length ? 'default' : 'outline'} className="alvo" disabled={!mudancas.length || aGravar} onClick={gravar}><Save className="size-4" />{aGravar ? t.comum.aGravar : `Gravar${mudancas.length ? ` (${mudancas.length})` : ''}`}</Button>}
+          {pode('tesouraria.categoria.criar') && <Button variant="outline" className="alvo" onClick={() => setCategoriasAberto(true)}><Tags className="size-4" />Categorias</Button>}
           {o.estado === 'RASCUNHO' && pode('tesouraria.orcamento.aprovar') && (
             <Button className="alvo" variant="outline" disabled={!activas.length || mudancas.length > 0} onClick={() => setAprovar(true)}><CircleCheck className="size-4" />Aprovar com o voto da igreja</Button>
           )}
@@ -183,8 +209,7 @@ function Detalhe({ o }: { o: Orcamento }) {
       </div>
       {o.estado === 'RASCUNHO' && (
         <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground print:hidden">
-          {editavel ? 'Escreva o previsto em cada categoria e grave. Categorias a zero ficam fora do orçamento. ' : ''}
-          Depois de votado na reunião da igreja, aprove-o aqui com o voto: a partir daí não se muda e mostra o realizado.
+          Depois de votado pela igreja, aprove-o com o voto: a partir daí mostra o realizado.
         </p>
       )}
       <div className="grid items-start gap-6 xl:grid-cols-2">
@@ -192,6 +217,7 @@ function Detalhe({ o }: { o: Orcamento }) {
         {tabela('DESPESA')}
       </div>
       {aprovar && <DialogoAprovar o={o} aoFechar={() => setAprovar(false)} />}
+      {categoriasAberto && <DialogoCategorias aoFechar={() => setCategoriasAberto(false)} />}
     </div>
   )
 }
@@ -212,7 +238,7 @@ function DialogoAprovar({ o, aoFechar }: { o: Orcamento; aoFechar: () => void })
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Aprovar o orçamento de {o.ano}</DialogTitle>
-          <DialogDescription>Indique o voto da igreja que aprovou o orçamento. Depois de aprovado, o previsto não se muda.</DialogDescription>
+          <DialogDescription>O voto da igreja que aprovou o orçamento.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
           <ErroFormulario mensagem={erro} />
@@ -223,6 +249,67 @@ function DialogoAprovar({ o, aoFechar }: { o: Orcamento; aoFechar: () => void })
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
           <Button type="button" className="alvo" disabled={aprovar.isPending} onClick={submeter}>{aprovar.isPending ? t.comum.aGravar : 'Aprovar'}</Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/** As categorias de receita e de despesa (plano de contas): registar, mudar o nome e retirar. */
+function DialogoCategorias({ aoFechar }: { aoFechar: () => void }) {
+  const categorias = useCategorias()
+  const { criar, renomear, terminar } = useCategoriasMut()
+  const [tipo, setTipo] = useState<'RECEITA' | 'DESPESA'>('DESPESA')
+  const [nome, setNome] = useState('')
+  const [aEditar, setAEditar] = useState<{ id: number; nome: string } | null>(null)
+  const todas = (categorias.data ?? []).filter((c) => !c.endDate)
+  const lista = todas.filter((c) => c.tipo === tipo).sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
+  // código seguinte: R10, R11… ou D10, D11… (o código é interno; o que se vê é o nome)
+  const proximoCodigo = () => {
+    const p = tipo === 'RECEITA' ? 'R' : 'D'
+    const usados = (categorias.data ?? []).map((c) => c.codigo).filter((c) => c.startsWith(p)).map((c) => Number(c.slice(1)) || 0)
+    return `${p}${Math.max(9, ...usados) + 1}`
+  }
+  const registar = () => {
+    if (!nome.trim()) return
+    criar.mutate({ codigo: proximoCodigo(), nome: nome.trim(), tipo }, {
+      onSuccess: () => { setNome(''); toast.success('Categoria registada.') }, onError: (e) => toast.error(mensagemDe(e)),
+    })
+  }
+  return (
+    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Categorias</DialogTitle>
+          <DialogDescription>Receitas e despesas do orçamento e dos movimentos.</DialogDescription>
+        </DialogHeader>
+        <Segmentos rotulo="Tipo" valor={tipo} aoMudar={setTipo} className="justify-self-start"
+          opcoes={[{ valor: 'RECEITA', rotulo: 'Receitas', contagem: todas.filter((c) => c.tipo === 'RECEITA').length }, { valor: 'DESPESA', rotulo: 'Despesas', contagem: todas.filter((c) => c.tipo === 'DESPESA').length }] as const} />
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); registar() }}>
+          <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder={tipo === 'RECEITA' ? 'Nova receita (ex.: Aluguer do salão)' : 'Nova despesa (ex.: Limpeza)'} maxLength={100} className="alvo" />
+          <Button type="submit" className="alvo" disabled={!nome.trim() || criar.isPending}><Plus className="size-4" />Registar</Button>
+        </form>
+        <ul className="divide-y rounded-xl border">
+          {categorias.isPending ? <li className="p-4"><Barra className="h-6 w-full" /></li> : lista.map((c) => (
+            <li key={c.id} className="flex items-center gap-2 px-3 py-2">
+              {aEditar?.id === c.id ? (
+                <form className="flex flex-1 gap-2" onSubmit={(e) => { e.preventDefault(); if (aEditar.nome.trim()) renomear.mutate({ id: c.id, nome: aEditar.nome.trim() }, { onSuccess: () => setAEditar(null), onError: (er) => toast.error(mensagemDe(er)) }) }}>
+                  <Input autoFocus value={aEditar.nome} onChange={(e) => setAEditar({ id: c.id, nome: e.target.value })} maxLength={100} className="alvo h-8" />
+                  <Button type="submit" size="sm" disabled={renomear.isPending}>Guardar</Button>
+                </form>
+              ) : (
+                <>
+                  <span className="flex-1 text-sm">{c.nome}{c.eRemessa && <span className="ml-2 text-xs text-muted-foreground">(depósitos à Missão)</span>}</span>
+                  <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Mudar o nome de ${c.nome}`} onClick={() => setAEditar({ id: c.id, nome: c.nome })}><Pencil className="size-4" /></Button>
+                  {!c.eRemessa && (
+                    <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive-text" aria-label={`Retirar ${c.nome}`} disabled={terminar.isPending}
+                      onClick={() => terminar.mutate(c.id, { onSuccess: () => toast.success('Categoria retirada.'), onError: (e) => toast.error(mensagemDe(e)) })}><X className="size-4" /></Button>
+                  )}
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+        <DialogFooter><Button type="button" variant="outline" className="alvo" onClick={aoFechar}>Fechar</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -44,11 +44,13 @@ type Valores = z.infer<typeof esquema>
 
 function Seccao({ titulo, descricao, children }: { titulo: string; descricao?: string; children: React.ReactNode }) {
   return (
-    <fieldset className="grid gap-4 rounded-lg border p-4">
-      <legend className="px-1 text-sm font-semibold">{titulo}</legend>
-      {descricao && <p className="-mt-2 text-xs text-muted-foreground">{descricao}</p>}
+    <section className="grid gap-3 border-t pt-4 first-of-type:border-t-0 first-of-type:pt-0">
+      <div>
+        <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{titulo}</h3>
+        {descricao && <p className="text-xs text-muted-foreground">{descricao}</p>}
+      </div>
       {children}
-    </fieldset>
+    </section>
   )
 }
 
@@ -75,7 +77,6 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
     },
   })
   const e = form.formState.errors
-  const activa = form.watch('activa')
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
@@ -129,7 +130,7 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
         <form onSubmit={submeter} noValidate className="grid gap-5">
           <DialogHeader>
             <DialogTitle>{classe ? `Classe ${numero ? `n.º ${numero} · ` : ''}${classe.nome}` : 'Registar classe'}</DialogTitle>
-            <DialogDescription>{trimestre ? `Dados da classe e alvos para o ${nomeTrimestre(trimestre)}.` : 'Dados da classe.'}</DialogDescription>
+            <DialogDescription>{trimestre ? nomeTrimestre(trimestre) : 'Dados da classe'}</DialogDescription>
           </DialogHeader>
           <ErroFormulario mensagem={erro} />
 
@@ -149,7 +150,7 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
 
           {trimestre && (
             <fieldset disabled={!podeTrimestre} className="contents">
-              <Seccao titulo="Liderança" descricao="Quem dirige a classe neste trimestre">
+              <Seccao titulo="Liderança">
                 <div className="grid gap-4 sm:grid-cols-3">
                   {membro('professor', 'Professor / líder')}
                   {membro('auxiliar', 'Auxiliar')}
@@ -157,7 +158,7 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
                 </div>
               </Seccao>
 
-              <Seccao titulo="Alvos do trimestre" descricao="Servem para a % do alvo e para a pontuação da classe">
+              <Seccao titulo="Alvos do trimestre">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {numero_('alvoMembros', 'Alvo de membros')}
                   {numero_('alvoEstudo', 'Alvo de E.D.', '%')}
@@ -166,20 +167,7 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
                     {(p) => <Controller control={form.control} name="alvoOferta" render={({ field }) => <CampoDinheiro {...p} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />} />}
                   </CampoFormulario>
                   {numero_('alvoBaptismos', 'Alvo de baptismos')}
-                  <div className="grid content-start gap-2">
-                    <span className="text-sm font-medium">Estado</span>
-                    <div role="radiogroup" aria-label="Estado da classe no trimestre" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-                      {([[true, 'Activo'], [false, 'Desactivado']] as const).map(([v, r]) => (
-                        <button key={r} type="button" role="radio" aria-checked={activa === v} onClick={() => form.setValue('activa', v, { shouldDirty: true })}
-                          className={cn('h-8 rounded-md text-sm font-medium transition-colors',
-                            activa === v ? (v ? 'bg-card text-success-text shadow-sm' : 'bg-card text-foreground shadow-sm') : 'text-muted-foreground hover:text-foreground')}>
-                          {r}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
-                {!activa && <p className="text-xs text-muted-foreground">Desactivada: aparece a cinzento e fica fora das médias, da classificação e dos relatórios em falta.</p>}
               </Seccao>
             </fieldset>
           )}

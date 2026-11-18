@@ -4,24 +4,23 @@
  */
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Home, Pencil, Plus, Search, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ChevronRight, Home, Pencil, Plus, Search, UserMinus, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { Avatar, Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Seleccao } from '@/components/comum/Seleccao'
-import { idade } from '@/lib/formatos'
+import { idade, qtd } from '@/lib/formatos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { ListaMembros } from '@/components/comum/EscolherMembro'
 import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamilias, useFamiliasMut, useFamiliasResumo, type Familia } from './api'
-import { Paginada } from '@/components/comum/Paginacao'
 
 const normal = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -51,48 +50,57 @@ export default function PaginaFamilias() {
             <Indicador rotulo="Membros activos em famílias" valor={String((resumo.data ?? []).reduce((s, r) => s + Number(r.membrosActivos), 0))} icone={Users} tom="success" />
             <Indicador rotulo="Membros activos sem família" valor={String(semFamilia)} icone={UserPlus} tom="warning" destaque={semFamilia > 0} />
           </div>
-          <div className="grid items-start gap-6 lg:grid-cols-12">
-            <Cartao semMargem className="lg:col-span-5">
-              <div className="border-b p-3">
-                <div className="relative">
-                  <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} placeholder="Pesquisar família…" aria-label="Pesquisar família" className="alvo pl-9" />
-                </div>
+          <Cartao semMargem>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
+              <div className="relative w-full sm:w-80">
+                <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input value={pesquisa} onChange={(e) => setPesquisa(e.target.value)} placeholder="Pesquisar família…" aria-label="Pesquisar família" className="alvo pl-9" />
               </div>
-              {!lista.length ? (
-                <EstadoVazio icone={Home} titulo={pesquisa ? 'Nenhuma família com esse nome' : 'Ainda não há famílias'}>
-                  {pesquisa ? 'Experimente outro nome.' : 'Crie uma família (ex.: "Família Chirindza") e junte-lhe os membros da casa.'}
-                </EstadoVazio>
-              ) : (
-                <Paginada itens={lista}>{(vis) => (
-                <ul className="max-h-[60dvh] divide-y overflow-y-auto">
-                  {vis.map((f) => {
-                    const r = res.get(f.id)
+              <span className="text-sm text-muted-foreground">{qtd(lista.length, 'família(s)')}</span>
+            </div>
+            {!lista.length ? (
+              <EstadoVazio icone={Home} titulo={pesquisa ? 'Nenhuma família com esse nome' : 'Ainda não há famílias'}>
+                {pesquisa ? 'Experimente outro nome.' : 'Crie uma família e junte-lhe os membros da casa.'}
+              </EstadoVazio>
+            ) : (
+              <Tabela porPagina={15}>
+                <thead><tr><th className="sm:pl-6">Família</th><th className="hidden md:table-cell">Chefe</th><th>Membros</th><th className="w-10 sm:pr-6"><span className="sr-only">Abrir</span></th></tr></thead>
+                <tbody>
+                  {lista.map((f) => {
+                    const da = (membros.data ?? []).filter((m) => m.familiaId === f.id)
+                    const chefe = da.find((m) => m.parentesco === 'CHEFE')
                     return (
-                      <li key={f.id}>
-                        <button type="button" onClick={() => escolher(f.id)} aria-current={f.id === selId}
-                          className={cn('alvo flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-muted/50', f.id === selId && 'bg-primary/5')}>
-                          <span className="min-w-0">
-                            <span className="block truncate font-medium">{f.nome}</span>
-                            {f.morada && <span className="block truncate text-xs text-muted-foreground">{f.morada}</span>}
+                      <tr key={f.id} onClick={() => escolher(f.id)} className="cursor-pointer">
+                        <td className="sm:pl-6">
+                          <span className="block font-medium">{f.nome}</span>
+                          {f.morada && <span className="block text-xs text-muted-foreground">{f.morada}</span>}
+                        </td>
+                        <td className="hidden md:table-cell">{chefe ? `${chefe.nome} ${chefe.apelido}` : <span className="text-muted-foreground">—</span>}</td>
+                        <td>
+                          <span className="flex items-center gap-2">
+                            <span className="flex -space-x-2">
+                              {da.slice(0, 4).map((m) => <Avatar key={m.id} id={m.id} nome={m.nome} apelido={m.apelido} tamanho={28} className="ring-2 ring-card" />)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">{res.get(f.id)?.membrosActivos ?? da.length}</span>
                           </span>
-                          <Pilula variante="secondary">{r?.membrosActivos ?? 0} membro{Number(r?.membrosActivos) === 1 ? '' : 's'}</Pilula>
-                        </button>
-                      </li>
+                        </td>
+                        <td className="text-right text-muted-foreground sm:pr-6"><ChevronRight className="ml-auto size-4" /></td>
+                      </tr>
                     )
                   })}
-                </ul>
-                )}</Paginada>
-              )}
-            </Cartao>
-            <div className="lg:col-span-7">
-              {sel ? <DetalheFamilia f={sel} aoEditar={() => setEditar(sel)} /> : (
-                <Cartao><EstadoVazio icone={Users} titulo="Escolha uma família">Veja e altere quem faz parte de cada família.</EstadoVazio></Cartao>
-              )}
-            </div>
-          </div>
+                </tbody>
+              </Tabela>
+            )}
+          </Cartao>
         </div>
       )}
+      <Sheet open={!!sel} onOpenChange={(v) => !v && escolher(null)}>
+        <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-2xl">
+          <SheetTitle className="sr-only">{sel?.nome ?? 'Família'}</SheetTitle>
+          <SheetDescription className="sr-only">Membros da família</SheetDescription>
+          {sel && <div className="p-4 pt-12 sm:p-6 sm:pt-12"><DetalheFamilia f={sel} aoEditar={() => setEditar(sel)} /></div>}
+        </SheetContent>
+      </Sheet>
       {editar && <DialogoFamilia f={editar === 'nova' ? null : editar} aoFechar={(id) => { setEditar(null); if (id) escolher(id) }} />}
     </>
   )

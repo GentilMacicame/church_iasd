@@ -60,7 +60,7 @@
   --info-text: oklch(0.488 0.217 264.376);
 
   --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.05);
-  --sidebar-width: 16rem;
+  --sidebar-width: 17.5rem;
   --sidebar-collapsed-width: 4.25rem;
   --header-height: 3.75rem;
   color-scheme: light;

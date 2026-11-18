@@ -18,7 +18,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Banknote, Home, Paperclip, ChevronDown, FileCheck2, HandCoins, HandHeart, Landmark, Plus, Receipt, Smartphone, UserRound, Users, Wallet } from 'lucide-react'
+import { ArrowLeft, Banknote, Home, Paperclip, ChevronDown, FileCheck2, HandCoins, HandHeart, Landmark, Plus, Receipt, Smartphone, UserRound, Users, Wallet, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils'
 import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, fundosDaIgreja, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, type Conta } from './api'
 import { CampoComprovativo } from './Comprovativos'
 import { parteDoFundo } from './comum'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const valorApi = /^\d{1,14}(\.\d{1,2})?$/
 const esquema = z.object({
@@ -64,7 +65,8 @@ const SO_NA_MISSAO = ['ES_13_SABADO', 'OFERTA_MISSIONARIA']
 /** Os fundos das ofertas especiais: escolhem-se em cada linha de oferta especial, com a designação. */
 const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO', 'CONSTRUCAO']
 interface Especial { fundoId: string; designacao: string; valor: string }
-const especiaisVazias = (): Especial[] => [0, 1, 2].map(() => ({ fundoId: '', designacao: '', valor: '' }))
+const especiaisVazias = (): Especial[] => []
+const novaEspecial = (): Especial => ({ fundoId: '', designacao: '', valor: '' })
 
 /** Como o membro entregou, dito pela conta onde o dinheiro está. */
 function comoEntregou(c: Conta) {
@@ -168,6 +170,8 @@ export default function PaginaEntrada() {
   // quanto vai para a Missão (percentagem de cada fundo) e quanto fica na igreja
   const paraMissao = linhas.reduce((s, l) => s + (valido(l.valor) && fundoVisivel(l.fundoId) ? parteMissao(l.fundoId, l.valor) : 0), 0)
     + especiaisComValor.reduce((s, x) => s + (x.fundoId ? parteMissao(Number(x.fundoId), x.valor) : 0), 0)
+  const juntarEspecial = () => setEspeciais((l) => (l.length < 3 ? [...l, novaEspecial()] : l))
+  const tirarEspecial = (i: number) => setEspeciais((l) => l.filter((_, j) => j !== i))
   const mudarEspecial = (i: number, campo: keyof Especial, v: string) => {
     setEspeciais((l) => l.map((x, j) => (j === i ? { ...x, [campo]: v } : x)))
     setErroEspeciais(null)
@@ -319,8 +323,8 @@ export default function PaginaEntrada() {
         icone={HandCoins} titulo={t.tesouraria.entrada}
         descricao="Dízimos e ofertas por membro, família ou salva"
       />
-      <div className="grid items-start gap-6 lg:grid-cols-12">
-        <div className="grid min-w-0 gap-6 lg:col-span-8">
+      <div className="mx-auto grid w-full max-w-5xl items-start gap-6">
+        <div className="grid min-w-0 gap-6">
           <ErroFormulario mensagem={erro} />
           {avisoSobreposto.length > 0 && (
             <section role="alert" className="rounded-xl border border-warning/50 bg-tint-warning p-4 text-sm">
@@ -423,7 +427,7 @@ export default function PaginaEntrada() {
                     {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                   </CampoFormulario>
                   <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
+                    {(p) => <CampoHora {...p} {...form.register('hora')} className="alvo" />}
                   </CampoFormulario>
                 </div>
                 <CampoFormulario rotulo="Descrição" erro={e.descricao?.message} className="sm:col-span-2" ajuda="O que o membro escreveu no comprovativo (ex.: dízimo de Outubro)">
@@ -469,27 +473,39 @@ export default function PaginaEntrada() {
               </div>
             )}
             {!naMissao && (
-              <div className="mt-4 rounded-lg border">
-                <p className="border-b px-4 py-2.5 text-sm font-medium">Ofertas especiais <span className="font-normal text-muted-foreground">(até três, com a designação do envelope)</span></p>
+              <div className="mt-4 rounded-xl border">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+                  <p className="text-sm font-medium">Ofertas especiais</p>
+                  {fundosEspeciais.length > 0 && especiais.length < 3 && (
+                    <Button type="button" variant="outline" size="sm" className="alvo" onClick={juntarEspecial}><Plus className="size-4" />Oferta especial</Button>
+                  )}
+                </div>
                 {fundosEspeciais.length === 0 ? (
-                  <p className="px-4 py-3 text-sm text-muted-foreground">
-                    Não há fundos de oferta especial, construção, projecto ou reavivamento.{' '}
-                    {pode('tesouraria.fundo.criar') && <Link to="/tesouraria/fundos" className="font-medium text-primary hover:underline">Criar o fundo</Link>}
+                  <p className="border-t px-4 py-3 text-sm text-muted-foreground">
+                    Ainda não há fundos de oferta especial.{' '}
+                    {pode('tesouraria.fundo.criar') && <Link to="/tesouraria/fundos" className="font-medium text-primary hover:underline">Criar fundo</Link>}
                   </p>
-                ) : (
-                  <ul className="divide-y">
+                ) : especiais.length > 0 && (
+                  <ul className="divide-y border-t">
+                    <li className="hidden gap-2 bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_2rem]">
+                      <span>Fundo</span><span>Designação no envelope</span><span className="text-right">Valor</span><span />
+                    </li>
                     {especiais.map((x, i) => (
-                      <li key={i} className="grid gap-2 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_160px]">
+                      <li key={i} className="grid grid-cols-[minmax(0,1fr)_2rem] gap-2 px-4 py-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_150px_2rem]">
                         <Seleccao aria-label={`Fundo da oferta especial ${i + 1}`} value={x.fundoId} onChange={(ev) => mudarEspecial(i, 'fundoId', ev.target.value)}>
-                          <option value="">Fundo…</option>
+                          <option value="">Escolher fundo…</option>
                           {fundosEspeciais.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
                         </Seleccao>
                         <Input aria-label={`Designação da oferta especial ${i + 1}`} value={x.designacao} onChange={(ev) => mudarEspecial(i, 'designacao', ev.target.value)}
-                          placeholder="Designação (ex.: Construção)" maxLength={255} className="alvo" />
-                        <CampoDinheiro aria-label={`Valor da oferta especial ${i + 1}`} value={x.valor} onChange={(v) => mudarEspecial(i, 'valor', v)} className="alvo" />
+                          placeholder="ex.: Telhado do templo" maxLength={255} className="alvo col-start-1 sm:col-start-auto" />
+                        <CampoDinheiro aria-label={`Valor da oferta especial ${i + 1}`} value={x.valor} onChange={(v) => mudarEspecial(i, 'valor', v)} className="alvo col-start-1 sm:col-start-auto" />
+                        <Button type="button" variant="ghost" size="icon" className="alvo col-start-2 row-start-1 size-9 text-muted-foreground sm:col-start-auto sm:row-start-auto" aria-label={`Retirar a oferta especial ${i + 1}`} onClick={() => tirarEspecial(i)}><X className="size-4" /></Button>
                       </li>
                     ))}
                   </ul>
+                )}
+                {fundosEspeciais.length > 0 && pode('tesouraria.fundo.criar') && especiais.length > 0 && (
+                  <p className="border-t px-4 py-2 text-xs text-muted-foreground">Outro fundo? <Link to="/tesouraria/fundos" className="font-medium text-primary hover:underline">Criar em Fundos e ofertas</Link></p>
                 )}
                 {erroEspeciais && <p className="border-t px-4 py-2 text-sm font-medium text-destructive-text">{erroEspeciais}</p>}
               </div>
@@ -502,7 +518,7 @@ export default function PaginaEntrada() {
                     {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                   </CampoFormulario>
                   <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                    {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
+                    {(p) => <CampoHora {...p} {...form.register('hora')} className="alvo" />}
                   </CampoFormulario>
                 </div>
                 {contagensAbertas.length > 0 && (
@@ -520,53 +536,37 @@ export default function PaginaEntrada() {
           </Cartao>
         </div>
 
-        <aside className="hidden lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4 lg:grid lg:gap-6">
-          <Cartao titulo="Resumo">
-            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
-            <p className="num mt-1 text-3xl font-bold tracking-tight"><Dinheiro valor={deCentimos(total)} /></p>
-            <p className="mt-1 truncate text-sm text-muted-foreground">{anonimo ? 'Ofertas da salva' : contribuinte ?? (porFamilia ? 'Escolha a família' : 'Escolha o membro')}</p>
-            {conta && <p className="truncate text-sm text-muted-foreground">{anonimo ? 'Em numerário' : comoEntregou(conta).titulo}</p>}
-            {total > 0 && (
-              <div className="mt-4 grid gap-1.5 text-sm">
-                <div className="flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-                  <div className="h-full bg-[var(--serie-1)]" style={{ width: `${(paraMissao / total) * 100}%` }} />
-                  <div className="h-full bg-[var(--serie-3)]" style={{ width: `${((total - paraMissao) / total) * 100}%` }} />
-                </div>
-                <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-1)]" />Para a Missão</span><span className="num">{dinheiro(deCentimos(paraMissao))}</span></p>
-                <p className="flex justify-between"><span className="flex items-center gap-1.5 text-muted-foreground"><span className="size-2 rounded-[2px] bg-[var(--serie-3)]" />Fica na igreja</span><span className="num">{dinheiro(deCentimos(total - paraMissao))}</span></p>
-                {naMissao && <p className="text-xs text-muted-foreground">Já está na Missão: não entra no depósito do fim do mês.</p>}
-              </div>
-            )}
-            <label className={cn('alvo mt-4 flex items-center gap-2 text-sm', (anonimo || !contribuinte) && 'opacity-50')}>
-              <input type="checkbox" disabled={anonimo || !contribuinte} checked={form.watch('recibo') && !anonimo} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />
-              Emitir recibo numerado
-            </label>
-            <Button type="submit" disabled={form.formState.isSubmitting || total <= 0} className="alvo mt-4 h-11 w-full text-base">
-              {form.formState.isSubmitting ? t.comum.aGravar : 'Gravar entrada'}
-            </Button>
-            <Button type="button" variant="ghost" className="alvo mt-2 w-full" onClick={() => navigate('/tesouraria')}>{sessao.length ? 'Terminar' : t.comum.cancelar}</Button>
-          </Cartao>
-          {sessao.length > 0 && <ListaSessao sessao={sessao} total={totalSessao} />}
-        </aside>
       </div>
-      {/* telemóvel: o que se lançou nesta sessão, e o total e o botão sempre à vista no fundo do ecrã */}
-      {sessao.length > 0 && <div className="mt-6 lg:hidden"><ListaSessao sessao={sessao.slice(0, 5)} total={totalSessao} n={sessao.length} /></div>}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold tracking-wider text-muted-foreground uppercase">Total</p>
-            <p className="num truncate text-xl font-bold"><Dinheiro valor={deCentimos(total)} /></p>
-            {total > 0 && paraMissao > 0 && <p className="num truncate text-[12px] text-muted-foreground">Missão {dinheiro(deCentimos(paraMissao))} · igreja {dinheiro(deCentimos(total - paraMissao))}</p>}
+      {sessao.length > 0 && <div className="mx-auto mt-6 w-full max-w-5xl"><ListaSessao sessao={sessao} total={totalSessao} /></div>}
+      {/* o total, o recibo e o botão sempre à vista no fundo do ecrã */}
+      <div className="sticky bottom-0 z-20 mx-auto mt-6 w-full max-w-5xl print:hidden">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-t-2xl border border-b-0 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">Total{anonimo ? ' · ofertas da salva' : contribuinte ? ` · ${contribuinte}` : ''}</p>
+            <p className="num text-2xl font-bold tracking-tight"><Dinheiro valor={deCentimos(total)} /></p>
           </div>
-          {contribuinte && !anonimo && (
-            <label className="alvo flex items-center gap-1.5 text-xs">
-              <input type="checkbox" checked={form.watch('recibo')} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />Recibo
-            </label>
+          {total > 0 && (
+            <div className="hidden min-w-48 flex-1 gap-1.5 text-xs sm:grid">
+              <div className="flex h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                <div className="h-full bg-[var(--serie-1)]" style={{ width: `${(paraMissao / total) * 100}%` }} />
+                <div className="h-full bg-[var(--serie-3)]" style={{ width: `${((total - paraMissao) / total) * 100}%` }} />
+              </div>
+              <div className="flex justify-between gap-3 text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="size-2 rounded-[2px] bg-[var(--serie-1)]" />Missão <span className="num text-foreground">{dinheiro(deCentimos(paraMissao))}</span></span>
+                <span className="flex items-center gap-1.5"><span className="size-2 rounded-[2px] bg-[var(--serie-3)]" />Igreja <span className="num text-foreground">{dinheiro(deCentimos(total - paraMissao))}</span></span>
+              </div>
+            </div>
           )}
-          <Button type="submit" disabled={form.formState.isSubmitting || total <= 0} className="alvo h-11 px-5">{form.formState.isSubmitting ? t.comum.aGravar : 'Gravar'}</Button>
+          <div className="ml-auto flex items-center gap-3">
+            <label className={cn('alvo flex items-center gap-2 text-sm', (anonimo || !contribuinte) && 'opacity-50')}>
+              <input type="checkbox" disabled={anonimo || !contribuinte} checked={form.watch('recibo') && !anonimo} onChange={(ev) => form.setValue('recibo', ev.target.checked)} className="size-4 accent-[var(--primary)]" />
+              Recibo
+            </label>
+            <Button type="button" variant="ghost" className="alvo hidden sm:inline-flex" onClick={() => navigate('/tesouraria')}>{sessao.length ? 'Terminar' : t.comum.cancelar}</Button>
+            <Button type="submit" disabled={form.formState.isSubmitting || total <= 0} className="alvo h-11 px-6 text-base">{form.formState.isSubmitting ? t.comum.aGravar : 'Gravar entrada'}</Button>
+          </div>
         </div>
       </div>
-      <div className="h-24 lg:hidden" aria-hidden />
     </form>
   )
 }

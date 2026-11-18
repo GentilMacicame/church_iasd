@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Archive, Megaphone, MoreHorizontal, Pencil, Plus, Send, Trash2 } from 'lucide-react'
+import { Archive, Megaphone, MoreHorizontal, Pencil, Plus, Search, Send, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoData } from '@/components/comum/CampoData'
@@ -24,6 +24,7 @@ import { t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, hojeIso, hora, isoMaputo, partesMaputo } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useDistritoDaIgreja } from '@/features/actividades/api'
+import { CampoHora } from '@/components/comum/CampoHora'
 import {
   ROTULO_ESTADO, ROTULO_PUBLICO, emVigor, emissorDe, gravarDestinos, useComunicados, useComunicadosMut, useDestinos, useEntidadeDaIgreja,
   useIgrejasDaEntidade, type Comunicado, type Emissor,
@@ -205,12 +206,15 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
   const [todas, setTodas] = useState(true)
   const [escolhidas, setEscolhidas] = useState<number[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [busca, setBusca] = useState('')
   const igrejas = useIgrejasDaEntidade(emissor === 'IGREJA' ? null : emissores.entidade?.id)
   const candidatas = (igrejas.data ?? []).filter((i) => emissor === 'ASSOCIACAO' || i.distritoId === emissores.distrito?.id)
   // ao editar: as igrejas já escolhidas (sem linhas = todas)
   const actuais = (destinos.data ?? []).filter((d) => !d.endDate)
   const seleccao = escolhidas ?? actuais.map((d) => d.igrejaId)
   const todasEfectivo = escolhidas == null ? (comunicado ? actuais.length === 0 : todas) : todas
+  const sem = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const visiveis = candidatas.filter((i) => !busca || sem(i.nome).includes(sem(busca)))
 
   const gravar = async (estado: 'RASCUNHO' | 'PUBLICADO') => {
     setErro(null)
@@ -246,40 +250,57 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           {emissores.disponiveis.length > 1 && (
-            <fieldset className="grid gap-1.5">
-              <legend className="mb-1.5 text-sm font-medium">Quem publica</legend>
-              <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
-                {emissores.disponiveis.map((e) => (
-                  <button key={e} type="button" role="radio" aria-checked={emissor === e} disabled={!!comunicado}
-                    onClick={() => { setEmissor(e); setEscolhidas(null); setTodas(true) }}
-                    className={cn('alvo rounded-lg border px-3 py-2 text-left text-sm font-medium disabled:cursor-not-allowed disabled:opacity-70',
-                      emissor === e ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground hover:border-primary/40')}>
-                    {ROTULO_EMISSOR[e]}
-                    <span className="block text-xs font-normal">{e === 'IGREJA' ? igreja.nome : e === 'DISTRITO' ? emissores.distrito?.nome : emissores.entidade?.nome}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <div className="grid gap-1.5">
+              <span className="text-sm font-medium">Quem publica</span>
+              <Segmentos rotulo="Quem publica" valor={emissor} className="justify-self-start"
+                aoMudar={(e) => { if (!comunicado) { setEmissor(e); setEscolhidas(null); setTodas(true); setBusca('') } }}
+                opcoes={emissores.disponiveis.map((e) => ({ valor: e, rotulo: ROTULO_EMISSOR[e] }))} />
+              <span className="text-xs text-muted-foreground">{emissor === 'IGREJA' ? igreja.nome : emissor === 'DISTRITO' ? emissores.distrito?.nome : emissores.entidade?.nome}</span>
+            </div>
           )}
           {emissor !== 'IGREJA' && (
-            <fieldset className="grid gap-2">
-              <legend className="mb-1 text-sm font-medium">Para que igrejas</legend>
-              <label className="alvo flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={todasEfectivo} onChange={(ev) => { setTodas(ev.target.checked); setEscolhidas(ev.target.checked ? [] : seleccao) }} className="size-4 accent-[var(--primary)]" />
-                Todas as igrejas {emissor === 'DISTRITO' ? 'do distrito' : 'da Associação/Missão'}
-              </label>
+            <div className="grid gap-2">
+              <span className="text-sm font-medium">Para que igrejas</span>
+              <Segmentos rotulo="Para que igrejas" valor={todasEfectivo ? 'todas' : 'escolher'} className="justify-self-start"
+                aoMudar={(v) => { const tudo = v === 'todas'; setTodas(tudo); setEscolhidas(tudo ? [] : seleccao) }}
+                opcoes={[{ valor: 'todas', rotulo: `Todas (${candidatas.length})` }, { valor: 'escolher', rotulo: 'Escolher' }] as const} />
               {!todasEfectivo && (
-                <div className="grid max-h-48 gap-1 overflow-y-auto rounded-lg border p-2 sm:grid-cols-2">
-                  {igrejas.isPending ? <Barra className="h-8 w-full" /> : candidatas.map((i) => (
-                    <label key={i.id} className="alvo flex items-center gap-2 rounded px-1 text-sm hover:bg-muted/50">
-                      <input type="checkbox" checked={seleccao.includes(i.id)} className="size-4 accent-[var(--primary)]"
-                        onChange={(ev) => setEscolhidas(ev.target.checked ? [...seleccao, i.id] : seleccao.filter((x) => x !== i.id))} />
-                      {i.nome}
-                    </label>
-                  ))}
+                <div className="overflow-hidden rounded-xl border">
+                  <div className="flex flex-wrap items-center gap-2 border-b bg-muted/30 p-2">
+                    <div className="relative min-w-48 flex-1">
+                      <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar igreja…" aria-label="Pesquisar igreja" className="alvo h-9 pl-9" />
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">{seleccao.length} de {candidatas.length}</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setEscolhidas([...new Set([...seleccao, ...visiveis.map((i) => i.id)])])}>Marcar {busca ? 'estas' : 'todas'}</Button>
+                    {seleccao.length > 0 && <Button type="button" variant="ghost" size="sm" onClick={() => setEscolhidas([])}>Limpar</Button>}
+                  </div>
+                  {seleccao.length > 0 && (
+                    <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto border-b px-2 py-2">
+                      {seleccao.map((id) => (
+                        <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pr-1 pl-2.5 text-xs font-medium text-primary">
+                          {candidatas.find((i) => i.id === id)?.nome ?? `Igreja ${id}`}
+                          <button type="button" className="rounded-full p-0.5 hover:bg-primary/15" aria-label="Retirar" onClick={() => setEscolhidas(seleccao.filter((x) => x !== id))}><X className="size-3" /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <ul className="max-h-56 overflow-y-auto p-1">
+                    {igrejas.isPending ? <li className="p-2"><Barra className="h-8 w-full" /></li>
+                      : !visiveis.length ? <li className="px-3 py-4 text-center text-sm text-muted-foreground">Nenhuma igreja com esse nome</li>
+                      : visiveis.map((i) => (
+                        <li key={i.id}>
+                          <label className="alvo flex cursor-pointer items-center gap-2.5 rounded-md px-2 text-sm hover:bg-muted/60">
+                            <input type="checkbox" checked={seleccao.includes(i.id)} className="size-4 accent-[var(--primary)]"
+                              onChange={(ev) => setEscolhidas(ev.target.checked ? [...seleccao, i.id] : seleccao.filter((x) => x !== i.id))} />
+                            {i.nome}
+                          </label>
+                        </li>
+                      ))}
+                  </ul>
                 </div>
               )}
-            </fieldset>
+            </div>
           )}
           <div className="grid gap-1.5">
             <label htmlFor="cmc-titulo" className="text-sm font-medium">Título <span className="text-destructive-text">*</span></label>
@@ -289,20 +310,14 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
             <label htmlFor="cmc-conteudo" className="text-sm font-medium">Comunicado <span className="text-destructive-text">*</span></label>
             <Textarea id="cmc-conteudo" value={conteudo} onChange={(e) => setConteudo(e.target.value)} rows={6} />
           </div>
-          <fieldset className="grid gap-1.5">
-            <legend className="mb-1.5 text-sm font-medium">Público</legend>
-            <div role="radiogroup" className="grid grid-cols-2 gap-2">
-              {(['MEMBROS', 'LIDERANCA'] as const).map((p) => (
-                <button key={p} type="button" role="radio" aria-checked={publico === p} onClick={() => setPublico(p)}
-                  className={cn('alvo rounded-lg border px-3 py-2 text-left text-sm font-medium', publico === p ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground hover:border-primary/40')}>
-                  {ROTULO_PUBLICO[p]}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">Público</span>
+            <Segmentos rotulo="Público" valor={publico} aoMudar={setPublico} className="justify-self-start"
+              opcoes={(['MEMBROS', 'LIDERANCA'] as const).map((x) => ({ valor: x, rotulo: ROTULO_PUBLICO[x] }))} />
+          </div>
           <div className="grid gap-3 sm:grid-cols-[1fr_7rem_1fr]">
             <div className="grid gap-1.5"><label htmlFor="cmc-data" className="text-sm font-medium">Publicar em</label><CampoData id="cmc-data" value={dataPub} onChange={setDataPub} className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="cmc-hora" className="text-sm font-medium">Hora</label><Input id="cmc-hora" type="time" value={horaPub} onChange={(e) => setHoraPub(e.target.value)} className="alvo num" /></div>
+            <div className="grid gap-1.5"><label htmlFor="cmc-hora" className="text-sm font-medium">Hora</label><CampoHora id="cmc-hora" value={horaPub} onChange={(e) => setHoraPub(e.target.value)} className="alvo num" /></div>
             <div className="grid gap-1.5"><label htmlFor="cmc-ate" className="text-sm font-medium">Válido até</label><CampoData id="cmc-ate" value={validoAte} onChange={setValidoAte} className="alvo" /></div>
           </div>
         </div>

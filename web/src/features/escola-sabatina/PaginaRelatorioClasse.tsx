@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  AlertTriangle, ArrowLeft, BarChart3, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Plus, Save, Table2, Trash2,
+  AlertTriangle, ArrowLeft, BookOpen, Check, CheckCheck, Coins, Landmark, Lock, LockOpen, Plus, Save, Table2, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -50,8 +50,7 @@ function Numero({ sigla, rotulo, valor, aoMudar, so, ajuda }: {
   return (
     <div className="grid min-w-0 content-start gap-1.5">
       <label htmlFor={id} className="min-w-0">
-        <span className="block text-xs font-bold tracking-wide text-primary">{sigla}</span>
-        <span className="block truncate text-sm font-medium">{rotulo}</span>
+        <span className="block truncate text-sm font-medium">{rotulo} <span className="font-normal text-muted-foreground">({sigla})</span></span>
       </label>
       {so || !aoMudar ? (
         <div id={id} className="flex h-12 items-center justify-center rounded-md border bg-muted/50 text-2xl font-bold tabular-nums text-foreground/80">{valor}</div>
@@ -198,19 +197,9 @@ export default function PaginaRelatorioClasse() {
   const totalOfertas = ['oferta', 'oferta13Sabado', 'ofertaDespesas'].reduce((s, k) => s + (centimos(r.numeros[k as 'oferta'] || '0') || 0), 0)
 
   const alvo = Number(p.classeTrimestre.alvoOfertaSabado ?? 0)
-  const oferta = (centimos(r.numeros.oferta || '0') || 0) / 100
   const pctPres = matriculados ? presentes / matriculados : null
   const pctEd = presentes ? estudaram / presentes : null
   const porGuardar = alterado || r.porEnviar
-  const resumo: [string, ReactNode][] = [
-    ['M.M. · membros matriculados', matriculados],
-    ['M.P. · membros presentes', presentes],
-    ['% Presença', <PctPilula key="p" v={pctPres} />],
-    ['E.D. · estudo diário', estudaram],
-    ['% E.D.', <PctPilula key="e" v={pctEd} />],
-    ['Visitantes', r.numeros.visitantes],
-    ['Filiais', r.numeros.filiais],
-  ]
   const botaoGuardar = (classe?: string) => (
     <Button type="button" className={cn('alvo h-11', classe)} disabled={aEnviar} onClick={() => void guardar()}>
       <Save className="size-4" />{aEnviar ? t.comum.aGravar : emLinha ? 'Guardar relatório' : 'Guardar no telemóvel'}
@@ -218,7 +207,7 @@ export default function PaginaRelatorioClasse() {
   )
 
   return (
-    <div className="pb-24 lg:pb-6">
+    <div>
       <TituloPagina
         antes={<Link to={`/escola-sabatina/sabado?trimestre=${p.trimestre.id}&sabado=${p.sabado.id}`} className="alvo mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t.es.sabado}</Link>}
         icone={BookOpen}
@@ -253,9 +242,9 @@ export default function PaginaRelatorioClasse() {
         )}
       </div>
 
-      <div className="mt-4 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="mx-auto mt-4 grid w-full max-w-5xl items-start gap-5">
         <div className="grid min-w-0 gap-5">
-          <Cartao titulo={<Passo n={1}>Números do sábado</Passo>} descricao={chamada ? 'M.P. e E.D. contam-se pela chamada nominal (passo 2).' : 'Quantos estavam matriculados, presentes, estudaram a lição todos os dias, visitantes e filiais.'}>
+          <Cartao titulo={<Passo n={1}>Números do sábado</Passo>} descricao={chamada ? 'M.P. e E.D. vêm da chamada' : undefined}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-5">
               <Numero sigla="M.M." rotulo="Membros matriculados" valor={matriculados} so={fechado || r.numeros.membrosMatriculados == null}
                 aoMudar={(v) => mudarNumero('membrosMatriculados', v)}
@@ -279,10 +268,10 @@ export default function PaginaRelatorioClasse() {
 
           <Chamada p={p} r={r} fechado={fechado} mudar={mudar} />
 
-          <Cartao titulo={<Passo n={3}>Ofertas</Passo>} descricao={t.es.separadas}>
+          <Cartao titulo={<Passo n={3}>Ofertas</Passo>}>
             {p.sabado.decimoTerceiro && !fechado && (
               <p className="mb-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-2.5 text-sm text-warning-text">
-                Hoje é o 13.º sábado: anote a oferta do 13.º sábado separada da oferta missionária.
+                13.º sábado: anote esta oferta à parte da missionária.
               </p>
             )}
             <div className="grid gap-4 sm:grid-cols-3">
@@ -304,43 +293,26 @@ export default function PaginaRelatorioClasse() {
           </Cartao>
 
           <Visitantes p={p} r={r} fechado={fechado} mudar={mudar} />
+          {rel && <Tesouraria rel={rel} emLinha={emLinha} porGuardar={porGuardar} />}
         </div>
 
-        <aside className="grid gap-5 lg:sticky lg:top-[calc(var(--header-height)+1rem)]">
-          <Cartao titulo="Resumo do sábado" icone={BarChart3} semMargem>
-            <dl className="divide-y border-t text-sm">
-              {resumo.map(([rot, v]) => (
-                <div key={rot} className="flex items-center justify-between gap-3 px-5 py-2">
-                  <dt className="text-muted-foreground">{rot}</dt><dd className="font-semibold tabular-nums">{v}</dd>
-                </div>
-              ))}
-              <div className="flex items-center justify-between gap-3 bg-muted/30 px-5 py-2">
-                <dt className="text-muted-foreground">Oferta missionária</dt>
-                <dd className="flex items-center gap-2 font-semibold tabular-nums">{alvo > 0 && <PctPilula v={oferta / alvo} tipo="alvo" />}{textoMT(oferta)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 px-5 py-2.5">
-                <dt className="font-medium">Total das ofertas</dt><dd className="text-base font-bold tabular-nums"><Dinheiro valor={deCentimos(totalOfertas)} /></dd>
-              </div>
-            </dl>
-            {!fechado && (
-              <div className="hidden gap-2 border-t p-4 lg:grid">
-                {botaoGuardar('w-full')}
-                {porGuardar && <Button type="button" variant="ghost" size="sm" onClick={() => void desfazer()}>Desfazer alterações</Button>}
-              </div>
-            )}
-          </Cartao>
-          {rel && <Tesouraria rel={rel} emLinha={emLinha} porGuardar={porGuardar} />}
-        </aside>
       </div>
 
-      {!fechado && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
-          <div className="flex items-center justify-end gap-2">
-            {porGuardar && <Button type="button" variant="ghost" className="alvo mr-auto" onClick={() => void desfazer()}>Desfazer</Button>}
-            {botaoGuardar('min-w-40')}
-          </div>
+      <div className="sticky bottom-0 z-20 mx-auto mt-6 w-full max-w-5xl print:hidden">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-t-2xl border border-b-0 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
+          <dl className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+            <div className="flex items-center gap-2"><dt className="text-muted-foreground">Presença</dt><dd><PctPilula v={pctPres} /></dd></div>
+            <div className="flex items-center gap-2"><dt className="text-muted-foreground">E.D.</dt><dd><PctPilula v={pctEd} /></dd></div>
+            <div className="flex items-center gap-2"><dt className="text-muted-foreground">Ofertas</dt><dd className="font-semibold tabular-nums"><Dinheiro valor={deCentimos(totalOfertas)} /></dd></div>
+          </dl>
+          {!fechado && (
+            <div className="ml-auto flex items-center gap-2">
+              {porGuardar && <Button type="button" variant="ghost" className="alvo" onClick={() => void desfazer()}>Desfazer</Button>}
+              {botaoGuardar('min-w-44')}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

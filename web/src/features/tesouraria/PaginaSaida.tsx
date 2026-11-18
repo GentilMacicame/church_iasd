@@ -26,6 +26,7 @@ import { dinheiro, hojeIso } from '@/lib/formatos'
 import { METODO_DA_CONTA } from './PaginaEntrada'
 import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useFundos, useSaldosFundos } from './api'
 import { parteDoFundo } from './comum'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const esquema = z.object({
   contaId: z.string().min(1, t.comum.obrigatorio),
@@ -102,10 +103,10 @@ export default function PaginaSaida() {
         antes={<Link to="/tesouraria" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.tesouraria.titulo}</Link>}
         icone={Banknote} titulo={t.tesouraria.saida} descricao="Outra pessoa aprova antes de o dinheiro sair"
       />
-      <div className="grid items-start gap-6 lg:grid-cols-12">
-        <div className="grid gap-6 lg:col-span-8">
+      <div className="mx-auto grid w-full max-w-4xl items-start gap-6">
+        <div className="grid gap-6">
           <ErroFormulario mensagem={erro} />
-          <Cartao titulo="Pagamento" descricao="A quem se paga, quanto e para quê" icone={Banknote}>
+          <Cartao titulo="Pagamento" icone={Banknote}>
             <div className="grid gap-4 sm:grid-cols-2">
               <CampoFormulario rotulo={doManeio ? 'Quem fez a despesa' : 'Pago a'} erro={e.beneficiario?.message} obrigatorio
                 ajuda={doManeio ? 'O responsável que gastou o dinheiro do fundo de maneio (e a quem pagou)' : undefined}>
@@ -125,7 +126,7 @@ export default function PaginaSaida() {
               </CampoFormulario>
             </div>
           </Cartao>
-          <Cartao titulo="De onde sai" descricao="A conta e a forma de pagamento" icone={Wallet}>
+          <Cartao titulo="De onde sai" icone={Wallet}>
             <div className="grid gap-4 sm:grid-cols-2">
               <CampoFormulario rotulo="Conta" erro={e.contaId?.message} obrigatorio>
                 {(p) => (
@@ -144,7 +145,7 @@ export default function PaginaSaida() {
                   {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
                 </CampoFormulario>
                 <CampoFormulario rotulo="Hora" erro={e.hora?.message}>
-                  {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num w-32" />}
+                  {(p) => <CampoHora {...p} {...form.register('hora')} className="alvo" />}
                 </CampoFormulario>
               </div>
               <CampoFormulario rotulo="Referência" erro={e.referencia?.message} ajuda="N.º da factura, do recibo ou da transacção">
@@ -153,15 +154,19 @@ export default function PaginaSaida() {
             </div>
           </Cartao>
         </div>
-        <aside className="lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4">
-          <Cartao titulo="Aprovação" icone={ShieldCheck}>
-            <p className="text-sm text-muted-foreground">Fica <strong className="text-foreground">pendente</strong> até outra pessoa (ancião ou pastor) a aprovar.</p>
-            <Button type="submit" disabled={form.formState.isSubmitting} className="alvo mt-5 h-11 w-full text-base">
-              {form.formState.isSubmitting ? t.comum.aGravar : 'Registar saída'}
-            </Button>
-            <Button type="button" variant="ghost" className="alvo mt-2 w-full" onClick={() => navigate('/tesouraria')}>{t.comum.cancelar}</Button>
-          </Cartao>
-        </aside>
+      </div>
+      <div className="sticky bottom-0 z-20 mx-auto mt-6 w-full max-w-4xl print:hidden">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-t-2xl border border-b-0 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">Valor a pagar</p>
+            <p className="num text-2xl font-bold tracking-tight">{dinheiro(form.watch('valor') || '0')}</p>
+          </div>
+          <p className="hidden items-center gap-1.5 text-sm text-muted-foreground md:flex"><ShieldCheck className="size-4" />Fica pendente até outra pessoa aprovar</p>
+          <div className="ml-auto flex items-center gap-2">
+            <Button type="button" variant="ghost" className="alvo" onClick={() => navigate('/tesouraria')}>{t.comum.cancelar}</Button>
+            <Button type="submit" disabled={form.formState.isSubmitting} className="alvo h-11 px-6 text-base">{form.formState.isSubmitting ? t.comum.aGravar : 'Registar saída'}</Button>
+          </div>
+        </div>
       </div>
     </form>
   )

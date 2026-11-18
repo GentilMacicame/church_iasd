@@ -21,6 +21,7 @@ import { useMembrosBasicos } from '@/features/membros/api'
 import { useConselho, secretarioOficial } from '@/features/conselho/api'
 import { EscolherDoConselho } from '@/features/conselho/EscolherDoConselho'
 import { useCriarReuniao, useReunioes, useVotos, type Reuniao, type TipoReuniao } from './api'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const ESTADOS_REUNIAO: Record<string, { r: string; v: 'secondary' | 'info' | 'success' | 'destructive' }> = {
   CONVOCADA: { r: 'Convocada', v: 'secondary' }, REALIZADA: { r: 'Realizada', v: 'info' }, ACTA_APROVADA: { r: 'Acta aprovada', v: 'success' }, CANCELADA: { r: 'Cancelada', v: 'destructive' },
@@ -101,7 +102,7 @@ function DialogoNovaReuniao({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v:
             {(p) => <Controller control={form.control} name="data" render={({ field }) => <CampoData {...p} {...field} className="alvo" />} />}
           </CampoFormulario>
           <CampoFormulario rotulo="Hora" erro={e.hora?.message} obrigatorio>
-            {(p) => <Input {...p} {...form.register('hora')} type="time" className="alvo num" />}
+            {(p) => <CampoHora {...p} {...form.register('hora')} className="alvo num" />}
           </CampoFormulario>
           <CampoFormulario rotulo="Local" erro={e.local?.message}>
             {(p) => <Input {...p} {...form.register('local')} placeholder="ex.: Templo" className="alvo" />}

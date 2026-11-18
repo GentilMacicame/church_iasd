@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Cartao, Dinheiro, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { ErroFormulario } from '@/components/comum/formulario'
-import { CampoDinheiro } from '@/components/comum/CampoDinheiro'
 import { CampoData } from '@/components/comum/CampoData'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
@@ -55,7 +54,9 @@ export default function PaginaRemessas() {
   /** Meses com valor em falta, o mais antigo primeiro (é o que se paga primeiro). */
   const porEnviar = useMemo(() => {
     const m = new Map<string, Periodo>()
+    const tipoDe = (id: number) => fundos.data?.find((f) => f.id === id)?.tipo ?? ''
     for (const d of devidas.data ?? []) {
+      if (FORA_DO_DEPOSITO.includes(tipoDe(d.fundoId))) continue
       const chave = `${d.ano}-${String(d.mes).padStart(2, '0')}-${d.entidadeId}`
       const p = m.get(chave) ?? { chave, ano: d.ano, mes: d.mes, entidadeId: d.entidadeId, linhas: [], emFalta: '0.00' }
       p.linhas.push(d)
@@ -70,7 +71,7 @@ export default function PaginaRemessas() {
       }))
       .filter((p) => centimos(p.emFalta) > 0)
       .sort((a, b) => a.chave.localeCompare(b.chave))
-  }, [devidas.data, remessas.data])
+  }, [devidas.data, remessas.data, fundos.data])
 
   const lista = (remessas.data ?? []).filter((r) => !r.endDate)
   const emFaltaTotal = deCentimos(porEnviar.reduce((s, p) => s + centimos(p.emFalta), 0))
@@ -180,11 +181,14 @@ export default function PaginaRemessas() {
   )
 }
 
+/** Fundos que não entram no depósito mensal à Missão. */
+const FORA_DO_DEPOSITO = ['ES_MISSOES', 'ES_13_SABADO']
+
 function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome: string; aoFechar: () => void }) {
   const contas = useContas()
   const categorias = useCategorias()
   const enviar = useEnviarRemessa()
-  const [valores, setValores] = useState<Record<number, string>>(() =>
+  const [valores] = useState<Record<number, string>>(() =>
     Object.fromEntries(p.remessa ? p.remessa.linhas.map((l) => [l.fundoId, l.valor]) : p.linhas.filter((l) => centimos(l.emFalta) > 0).map((l) => [l.fundoId, l.emFalta])))
   const [contaId, setContaId] = useState('')
   const [metodo, setMetodo] = useState('')
@@ -196,9 +200,13 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
   const met = metodo || (conta?.tipo === 'MPESA' || conta?.tipo === 'EMOLA' ? METODO_DA_CONTA[conta.tipo] : 'BANCO')
   const categoria = categorias.data?.find((c) => c.eRemessa)
   const c = (v?: string) => (!v ? 0 : /^\d{1,14}(\.\d{1,2})?$/.test(v) ? centimos(v) : -1)
-  const fundosLinhas = p.remessa ? p.remessa.linhas.map((l) => ({ fundoId: l.fundoId, nome: p.linhas.find((d) => d.fundoId === l.fundoId)?.fundoNome ?? `Fundo ${l.fundoId}`, emFalta: l.valor }))
-    : p.linhas.filter((l) => centimos(l.emFalta) > 0).map((l) => ({ fundoId: l.fundoId, nome: l.fundoNome, emFalta: l.emFalta }))
-  const total = fundosLinhas.reduce((s, l) => s + Math.max(0, c(valores[l.fundoId])), 0)
+  // as ofertas da Escola Sabatina (missionárias e 13.º sábado) não entram neste depósito
+  const fundos = useFundos()
+  const foraDoDeposito = (id: number) => FORA_DO_DEPOSITO.includes(fundos.data?.find((f) => f.id === id)?.tipo ?? '')
+  const fundosLinhas = (p.remessa ? p.remessa.linhas.map((l) => ({ fundoId: l.fundoId, nome: p.linhas.find((d) => d.fundoId === l.fundoId)?.fundoNome ?? `Fundo ${l.fundoId}`, emFalta: l.valor }))
+    : p.linhas.filter((l) => centimos(l.emFalta) > 0).map((l) => ({ fundoId: l.fundoId, nome: l.fundoNome, emFalta: l.emFalta })))
+    .filter((l) => p.remessa || !foraDoDeposito(l.fundoId))
+  const total = fundosLinhas.reduce((s, l) => s + Math.max(0, c(valores[l.fundoId] ?? l.emFalta)), 0)
 
   const submeter = async () => {
     setErro(null)
@@ -210,7 +218,7 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
     try {
       await enviar.mutateAsync({
         remessa: p.remessa, entidadeId: p.entidadeId, entidadeNome, ano: p.ano, mes: p.mes, complementar: p.complementar,
-        linhas: fundosLinhas.filter((l) => c(valores[l.fundoId]) > 0).map((l) => ({ fundoId: l.fundoId, valor: valores[l.fundoId] })),
+        linhas: fundosLinhas.filter((l) => c(valores[l.fundoId] ?? l.emFalta) > 0).map((l) => ({ fundoId: l.fundoId, valor: valores[l.fundoId] ?? l.emFalta })),
         contaId: conta.id, metodo: met, data: dia, categoriaRemessaId: categoria.id, referencia: referencia.trim(),
       })
       toast.success(`Depósito de ${nomeMes(p.ano, p.mes)} registado: ${dinheiro(deCentimos(total))}.`)
@@ -226,24 +234,22 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
         <DialogHeader>
           <DialogTitle className="first-letter:uppercase">Depósito à Missão {p.complementar ? '(complementar) ' : ''}de {nomeMes(p.ano, p.mes)}</DialogTitle>
           <DialogDescription>
-            Depósito na conta de {entidadeNome}. Regista a saída do dinheiro da Missão (não precisa de outra aprovação) e marca o depósito como feito.
+            Paga tudo o que está em falta, na conta de {entidadeNome}.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-3">
-            {fundosLinhas.map((l) => (
-              <div key={l.fundoId} className="grid grid-cols-[1fr_9rem] items-center gap-3">
-                <label htmlFor={`rem-${l.fundoId}`} className="text-sm">
+          <div className="overflow-hidden rounded-xl border">
+            <ul className="divide-y">
+              {fundosLinhas.map((l) => (
+                <li key={l.fundoId} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                   <span className="font-medium">{l.nome}</span>
-                  <span className="block text-xs text-muted-foreground">{p.remessa ? 'preparado' : 'em falta'} {dinheiro(l.emFalta)}</span>
-                </label>
-                <CampoDinheiro id={`rem-${l.fundoId}`} value={valores[l.fundoId] ?? ''} disabled={!!p.remessa}
-                  onChange={(v) => setValores((x) => ({ ...x, [l.fundoId]: v }))} className="alvo" />
-              </div>
-            ))}
-            <div className="flex items-center justify-between border-t pt-3 text-sm">
-              <span className="font-medium">Total a enviar</span><span className="num font-semibold">{dinheiro(deCentimos(total))}</span>
+                  <span className="num">{dinheiro(valores[l.fundoId] ?? l.emFalta)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center justify-between gap-3 border-t bg-muted/40 px-4 py-3">
+              <span className="text-sm font-medium">Total a depositar</span><span className="num text-lg font-semibold">{dinheiro(deCentimos(total))}</span>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">

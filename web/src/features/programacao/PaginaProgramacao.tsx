@@ -27,6 +27,7 @@ import { useDepartamentosIgreja } from '@/features/actividades/api'
 import { useColunas, type Coluna } from '@/features/escalas/api'
 import { ESCALA, tituloDoDia, useProgramacao, useProgramacaoMut, type Item, type Parte } from './api'
 import { qtd } from '@/lib/formatos'
+import { CampoHora } from '@/components/comum/CampoHora'
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
 type Tipo = 'membro' | 'familia' | 'departamento' | 'texto' | 'nenhum'
@@ -279,8 +280,8 @@ function DialogoItem({ item, parte, ordem, programaId, nomes, aoFechar }: {
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid grid-cols-[1fr_1fr_5rem] gap-3">
-            <div className="grid gap-1.5"><label htmlFor="pi-ini" className="text-sm font-medium">Início</label><Input id="pi-ini" type="time" value={ini} onChange={(e) => setIni(e.target.value)} className="alvo num" /></div>
-            <div className="grid gap-1.5"><label htmlFor="pi-fim" className="text-sm font-medium">Fim</label><Input id="pi-fim" type="time" value={fim} onChange={(e) => setFim(e.target.value)} className="alvo num" /></div>
+            <div className="grid gap-1.5"><label htmlFor="pi-ini" className="text-sm font-medium">Início</label><CampoHora id="pi-ini" value={ini} onChange={(e) => setIni(e.target.value)} className="alvo num" /></div>
+            <div className="grid gap-1.5"><label htmlFor="pi-fim" className="text-sm font-medium">Fim</label><CampoHora id="pi-fim" value={fim} onChange={(e) => setFim(e.target.value)} className="alvo num" /></div>
             <div className="grid gap-1.5"><label htmlFor="pi-ord" className="text-sm font-medium">Ordem</label><Input id="pi-ord" inputMode="numeric" value={pos} onChange={(e) => setPos(e.target.value.replace(/\D/g, ''))} className="alvo num" /></div>
           </div>
           <div className="grid gap-1.5"><label htmlFor="pi-act" className="text-sm font-medium">Actividade <span className="text-destructive-text">*</span></label>

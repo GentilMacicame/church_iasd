@@ -136,7 +136,7 @@ function ListaAtencao() {
       {aCarregar && !alertas.length ? (
         <div className="grid gap-3 px-5 pb-5 sm:px-6" aria-busy="true" aria-label="A carregar">{[0, 1, 2].map((i) => <Barra key={i} className="h-12 w-full" />)}</div>
       ) : !alertas.length ? (
-        <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Não há registos por aprovar, movimentos por confirmar, despesas por decidir nem relatórios por fechar.</EstadoVazio>
+        <EstadoVazio icone={CircleCheck} titulo="Tudo em dia">Nada à espera de uma acção.</EstadoVazio>
       ) : (
         <>
         <ul className="divide-y border-t">

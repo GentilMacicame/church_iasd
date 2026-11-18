@@ -23,15 +23,17 @@ import { nomeMes } from './PaginaRemessas'
 import type { RemessaComLinhas } from './api'
 
 /** Um depósito do mês na conta da Missão, com o talão (a referência da saída). */
-function Deposito({ remessa, entidade, complementar }: { remessa: RemessaComLinhas; entidade: string; complementar: boolean }) {
+function Deposito({ remessa, complementar }: { remessa: RemessaComLinhas; complementar: boolean }) {
   const tr = useTransacao(remessa.transacaoId ?? 0)
   const total = deCentimos(remessa.linhas.filter((l) => !l.endDate).reduce((s, l) => s + centimos(l.valor), 0))
   return (
-    <p className="mb-1">
-      {complementar ? 'Depósito complementar' : 'Depositado'} em {data(remessa.enviadaEm)} na conta de {entidade}: <strong className="num">{dinheiro(total)}</strong>
-      {tr.data?.referencia ? <> · talão n.º <strong className="num">{tr.data.referencia}</strong></> : null}
-      {' '}<Pilula variante={remessa.estado === 'CONFIRMADA' ? 'success' : 'info'} className="ml-1 print:hidden">{remessa.estado === 'CONFIRMADA' ? 'Confirmado pela Missão' : 'Depositado'}</Pilula>
-    </p>
+    <tr className="border-t">
+      <td className="py-2 pr-3 tabular-nums">{data(remessa.enviadaEm)}</td>
+      <td className="py-2 pr-3">{complementar ? 'Complementar' : 'Depósito'}</td>
+      <td className="py-2 pr-3 tabular-nums text-muted-foreground">{tr.data?.referencia ?? '—'}</td>
+      <td className="py-2 pr-3 text-right font-semibold tabular-nums">{dinheiro(total)}</td>
+      <td className="py-2 text-right"><Pilula variante={remessa.estado === 'CONFIRMADA' ? 'success' : 'info'}>{remessa.estado === 'CONFIRMADA' ? 'Confirmado' : 'Depositado'}</Pilula></td>
+    </tr>
   )
 }
 
@@ -140,9 +142,15 @@ export default function PaginaRelatorioMensal() {
                 </tbody>
               </Tabela>
               <div className="border-t px-4 py-3 text-sm sm:px-6">
-                {depositos.length ? depositos.map((r, i) => (
-                  <Deposito key={r.id} remessa={r} entidade={entidadeNome} complementar={i > 0} />
-                )) : (
+                {depositos.length ? (
+                  <>
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">Depósitos na conta de {entidadeNome}</p>
+                    <table className="w-full text-sm">
+                      <thead><tr className="text-xs text-muted-foreground"><th className="pb-1 text-left font-medium">Data</th><th className="pb-1 text-left font-medium">Tipo</th><th className="pb-1 text-left font-medium">Talão</th><th className="pb-1 text-right font-medium">Valor</th><th className="pb-1"><span className="sr-only">Estado</span></th></tr></thead>
+                      <tbody>{depositos.map((r, i) => <Deposito key={r.id} remessa={r} complementar={i > 0} />)}</tbody>
+                    </table>
+                  </>
+                ) : (
                   <p className="text-warning-text">Ainda não foi feito o depósito à Missão deste mês. <Link to="/tesouraria/remessas" className="font-medium text-primary hover:underline print:hidden">Fazer o depósito</Link></p>
                 )}
                 {centimos(soma('emFalta')) < 0 && <p className="mt-1 text-info-text">Os membros pagaram na Missão mais do que lhe cabia: a diferença é da igreja.</p>}
