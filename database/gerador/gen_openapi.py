@@ -287,7 +287,7 @@ rel('/v1/organizacao/directorio-igrejas', 'organizacao.vw_directorio_igrejas', T
     [{'name': 'entidadeId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas desta Associação/Missão'}])
 PAINEL = [{'name': 'entidadeId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas desta Associação/Missão'},
           {'name': 'distritoId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só as igrejas deste distrito pastoral'}]
-for p_, v_ in [('painel-igrejas', 'vw_painel_igrejas'), ('painel-igrejas-mensal', 'vw_painel_igrejas_mensal')]:
+for p_, v_ in [('painel-igrejas', 'vw_painel_igrejas'), ('painel-igrejas-mensal', 'vw_painel_igrejas_mensal'), ('painel-membros', 'vw_painel_membros')]:
     rel(f'/v1/organizacao/{p_}', 'organizacao.' + v_, TITULO['organizacao'],
         'qualquer utilizador com sessão: só as igrejas a que tem acesso (pastor do distrito: as do seu distrito)', PAINEL)
 for p_, v_ in [('classificacao', 'vw_classificacao'), ('painel', 'vw_painel'), ('evolucao', 'vw_evolucao_sabado'),

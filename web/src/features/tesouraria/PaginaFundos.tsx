@@ -151,7 +151,7 @@ function DialogoOferta({ aoFechar }: { aoFechar: () => void }) {
             {[{ v: 'OFERTA_ESPECIAL' as const, r: 'Oferta especial', d: 'Gratidão, Dorcas, assistência: gasta-se nas despesas da igreja' },
               { v: 'CONSTRUCAO' as const, r: 'Fundo de construção', d: 'Obras e construção: conta à parte na contagem do numerário' },
               { v: 'PROJECTO' as const, r: 'Projecto', d: 'Viatura, instrumentos, outro fim: só se gasta nesse fim' },
-              { v: 'REAVIVAMENTO' as const, r: 'Obra de reavivamento', d: 'Contribuições mensais para o reavivamento; meta anual com +5% (Alvos)' }].map((o) => (
+              { v: 'REAVIVAMENTO' as const, r: 'Reavivamento', d: 'Contribuições mensais para o reavivamento; meta anual com +5% (Alvos)' }].map((o) => (
               <button key={o.v} type="button" role="radio" aria-checked={tipo === o.v} onClick={() => setTipo(o.v)}
                 className={cn('alvo rounded-lg border px-3 py-2.5 text-left', tipo === o.v ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
                 <span className="block text-sm font-medium">{o.r}</span>

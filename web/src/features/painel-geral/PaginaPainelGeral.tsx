@@ -6,7 +6,7 @@
  *
  *  1. Período: este mês, este ano, o ano anterior ou um intervalo de datas.
  *  2. Indicadores do período: membros, activos e inactivos (sem participação há 6 meses), fidelidade contributiva
- *     (contribuintes / membros), dízimos com as ofertas, obra de reavivamento; e, à data de hoje, saldo e depósitos em falta.
+ *     (contribuintes / membros), dízimos com as ofertas, reavivamento; e, à data de hoje, saldo e depósitos em falta.
  *  3. Gráficos dos últimos 12 meses: dízimos e ofertas, entradas e saídas, movimento de membros; comparativo de uma medida.
  *  4. Quadro comparativo das igrejas (ordenável) com as colunas do período.
  */
@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowDown, ArrowUp, ArrowUpDown, Building2, ChartColumn, Church, Flame, Wine, HandCoins, HeartHandshake, Landmark, Printer, Search, UserCheck, Users, Wallet,
+  ArrowDown, ArrowUp, ArrowUpDown, Building2, UserPlus, UserX, ChartColumn, Church, Flame, Wine, HandCoins, HeartHandshake, Landmark, Printer, Search, UserCheck, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,10 +43,16 @@ interface LinhaPeriodo {
 /** Linha de GET /v1/organizacao/painel-igrejas-mensal (últimos 12 meses). */
 interface LinhaMes {
   id: number; ano: number; mes: number; entradas: string; saidas: string; dizimos: string; ofertas: string; reavivamento: string
-  admissoes: number; transfEntrada: number; transfSaida: number
+  admissoes: number; transfEntrada: number; transfSaida: number; outrasSaidas?: number
+}
+/** Linha de GET /v1/organizacao/painel-membros (V46): a composição dos membros (no livro como activos) de cada igreja. */
+interface LinhaMembros {
+  id: number; membros: number; interessados: number; homens: number; mulheres: number; activosSemFamilia: number
+  menores: number; jovens: number; adultos: number; idosos: number; idadeDesconhecida: number
+  casados: number; uniaoFacto: number; solteiros: number; viuvos: number; viuvas: number; divorciados: number; noivos: number; estadoCivilVazio: number
 }
 /** Uma igreja no quadro: o período e a situação de hoje. */
-type Linha = LinhaPeriodo & { saldo: number; porRemeter: number; provincia: string | null; pctActivos: number | null; fidelidade: number | null }
+type Linha = LinhaPeriodo & { saldo: number; porRemeter: number; provincia: string | null; pctActivos: number | null; fidelidade: number | null; semFamilia: number }
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 const n = (v?: string | number | null) => Number(v ?? 0) || 0
@@ -72,13 +78,13 @@ const MEDIDAS: { k: Medida; rotulo: string; dinheiro?: boolean; pct?: boolean; t
   { k: 'fidelidade', rotulo: 'Fidelidade contributiva', pct: true, tesouraria: true },
   { k: 'dizimos', rotulo: 'Dízimos', dinheiro: true, tesouraria: true },
   { k: 'ofertas', rotulo: 'Ofertas', dinheiro: true, tesouraria: true },
-  { k: 'reavivamento', rotulo: 'Obra de reavivamento', dinheiro: true, tesouraria: true },
+  { k: 'reavivamento', rotulo: 'Reavivamento', dinheiro: true, tesouraria: true },
   { k: 'saldo', rotulo: 'Saldo nas contas (hoje)', dinheiro: true, tesouraria: true },
   { k: 'porRemeter', rotulo: 'Por depositar à Missão (hoje)', dinheiro: true, tesouraria: true },
 ]
 
 type Coluna = 'nome' | 'membros' | 'activos' | 'inactivos' | 'pctActivos' | 'dizimos' | 'ofertas' | 'reavivamento' | 'fidelidade'
-  | 'entradasMembros' | 'perdasMembros' | 'saldo' | 'porRemeter'
+  | 'semFamilia' | 'entradasMembros' | 'perdasMembros' | 'saldo' | 'porRemeter'
 const COLUNAS: { k: Coluna; rotulo: string; tipo: 'texto' | 'int' | 'mt' | 'pct'; area?: 'membros' | 'tesouraria' }[] = [
   { k: 'nome', rotulo: 'Igreja', tipo: 'texto' },
   { k: 'membros', rotulo: 'Membros', tipo: 'int', area: 'membros' },
@@ -89,6 +95,7 @@ const COLUNAS: { k: Coluna; rotulo: string; tipo: 'texto' | 'int' | 'mt' | 'pct'
   { k: 'ofertas', rotulo: 'Ofertas', tipo: 'mt', area: 'tesouraria' },
   { k: 'reavivamento', rotulo: 'Reavivamento', tipo: 'mt', area: 'tesouraria' },
   { k: 'fidelidade', rotulo: 'Fidelidade', tipo: 'pct', area: 'tesouraria' },
+  { k: 'semFamilia', rotulo: 'Sem família', tipo: 'int', area: 'membros' },
   { k: 'entradasMembros', rotulo: 'Entradas de membros', tipo: 'int', area: 'membros' },
   { k: 'perdasMembros', rotulo: 'Perdas de membros', tipo: 'int', area: 'membros' },
   { k: 'saldo', rotulo: 'Saldo (hoje)', tipo: 'mt', area: 'tesouraria' },
@@ -107,6 +114,13 @@ function usePainelPeriodo(de: string, ate: string) {
     enabled: /^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate) && de <= ate,
     queryKey: ['painel-geral', 'periodo', de, ate],
     queryFn: async () => (await dados(api.GET('/v1/organizacao/painel-periodo', { params: { query: { inicio: de, fim: ate } } }))) as unknown as LinhaPeriodo[],
+    staleTime: 2 * 60_000,
+  })
+}
+function usePainelMembros() {
+  return useQuery({
+    queryKey: ['painel-geral', 'membros'],
+    queryFn: async () => (await dados(api.GET('/v1/organizacao/painel-membros', {}))) as unknown as LinhaMembros[],
     staleTime: 2 * 60_000,
   })
 }
@@ -129,6 +143,7 @@ export default function PaginaPainelGeral() {
   const qh = usePainelHoje()
   const qm = usePainelMensal()
   const qs = useHistoricoSantaCeia(true)
+  const qc = usePainelMembros()
   const [entidade, setEntidade] = useState('')
   const [distrito, setDistrito] = useState('')
   const [texto, setTexto] = useState('')
@@ -137,12 +152,13 @@ export default function PaginaPainelGeral() {
 
   const todas: Linha[] = useMemo(() => {
     const hoje = new Map((qh.data ?? []).map((h) => [h.id, h]))
+    const comp = new Map((qc.data ?? []).map((c) => [c.id, c]))
     return (qp.data ?? []).map((p) => {
       const h = hoje.get(p.id)
       return { ...p, saldo: n(h?.saldo), porRemeter: n(h?.porRemeter), provincia: h?.provincia ?? null,
-        pctActivos: razao(p.activos, p.membros), fidelidade: razao(p.contribuintes, p.membros) }
+        pctActivos: razao(p.activos, p.membros), fidelidade: razao(p.contribuintes, p.membros), semFamilia: comp.get(p.id)?.activosSemFamilia ?? 0 }
     })
-  }, [qp.data, qh.data])
+  }, [qp.data, qh.data, qc.data])
   const entidades = useMemo(() => [...new Map(todas.map((l) => [l.entidadeId, l.entidade])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt')), [todas])
   const distritos = useMemo(() => [...new Map(todas.filter((l) => l.distritoPastoralId && (!entidade || String(l.entidadeId) === entidade))
     .map((l) => [l.distritoPastoralId!, l.distritoPastoral!])).entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt')), [todas, entidade])
@@ -160,16 +176,21 @@ export default function PaginaPainelGeral() {
   // V39: Santa Ceia realizada no período, nas igrejas filtradas
   const ceias = (qs.data ?? []).filter((s) => s.estado === 'REALIZADA' && ids.has(s.igrejaId) && s.data >= intervalo.de && s.data <= intervalo.ate)
   const participantesCeia = ceias.reduce((s, x) => s + x.total, 0)
+  // V46: composição dos membros das igrejas filtradas (só as que o utilizador vê)
+  const composicao = (qc.data ?? []).filter((c) => ids.has(c.id))
+  const C = (f: (c: LinhaMembros) => number) => composicao.reduce((s, c) => s + f(c), 0)
+  const semFamilia = C((c) => c.activosSemFamilia)
+  const entradasM = S(comMem, (l) => l.entradasMembros), perdasM = S(comMem, (l) => l.perdasMembros)
 
   // séries dos últimos 12 meses (soma das igrejas filtradas)
   const meses = useMemo(() => {
-    const m = new Map<string, { ano: number; mes: number; entradas: number; saidas: number; dizimos: number; ofertas: number; reav: number; admissoes: number; te: number; ts: number }>()
+    const m = new Map<string, { ano: number; mes: number; entradas: number; saidas: number; dizimos: number; ofertas: number; reav: number; admissoes: number; te: number; ts: number; os: number }>()
     for (const r of qm.data ?? []) {
       if (!ids.has(r.id)) continue
       const k = `${r.ano}-${String(r.mes).padStart(2, '0')}`
-      const x = m.get(k) ?? { ano: r.ano, mes: r.mes, entradas: 0, saidas: 0, dizimos: 0, ofertas: 0, reav: 0, admissoes: 0, te: 0, ts: 0 }
+      const x = m.get(k) ?? { ano: r.ano, mes: r.mes, entradas: 0, saidas: 0, dizimos: 0, ofertas: 0, reav: 0, admissoes: 0, te: 0, ts: 0, os: 0 }
       x.entradas += n(r.entradas); x.saidas += n(r.saidas); x.dizimos += n(r.dizimos); x.ofertas += n(r.ofertas); x.reav += n(r.reavivamento)
-      x.admissoes += r.admissoes; x.te += r.transfEntrada; x.ts += r.transfSaida
+      x.admissoes += r.admissoes; x.te += r.transfEntrada; x.ts += r.transfSaida; x.os += r.outrasSaidas ?? 0
       m.set(k, x)
     }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, v]) => v)
@@ -251,12 +272,18 @@ export default function PaginaPainelGeral() {
         <div className="grid gap-6">
           <section aria-label="Membros" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros</h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <Indicador rotulo="Igrejas" valor={linhas.length} nota={`${new Set(linhas.map((l) => l.distritoPastoralId).filter(Boolean)).size} distrito(s) pastoral(is)`} icone={Building2} aCarregar={aCarregar} />
               <Indicador rotulo="Total de membros" valor={inteiro(membros)} icone={Users} aCarregar={aCarregar}
-                nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados · +${inteiro(S(comMem, (l) => l.entradasMembros))} / −${inteiro(S(comMem, (l) => l.perdasMembros))} no período`} />
+                nota={`${inteiro(S(comMem, (l) => l.interessados))} interessados a preparar`} />
               <Indicador rotulo="Membros activos" valor={inteiro(activos)} icone={UserCheck} tom="success" aCarregar={aCarregar}
-                nota={`${textoPct(razao(activos, membros))} dos membros · ${inteiro(inactivos)} inactivos`} />
+                nota={`${textoPct(razao(activos, membros))} de ${inteiro(membros)} membros`} />
+              <Indicador rotulo="Membros inactivos" valor={inteiro(inactivos)} icone={UserX} tom="warning" aCarregar={aCarregar}
+                nota={`${textoPct(razao(inactivos, membros))} · sem participação há 6 meses`} />
+              <Indicador rotulo="Sem família" valor={inteiro(semFamilia)} icone={UserPlus} tom={semFamilia ? 'destructive' : 'success'} destaque={semFamilia > 0}
+                aCarregar={qc.isPending} nota={`${textoPct(razao(semFamilia, C((c) => c.membros)))} dos membros sem família associada`} />
+              <Indicador rotulo="Entradas e perdas" valor={`+${inteiro(entradasM)} / −${inteiro(perdasM)}`} icone={ArrowUpDown} aCarregar={aCarregar}
+                nota={`membros no período · saldo ${entradasM - perdasM >= 0 ? '+' : ''}${inteiro(entradasM - perdasM)}`} />
               <Indicador rotulo="Santa Ceia" valor={ceias.length} icone={Wine} aCarregar={aCarregar || qs.isPending}
                 nota={ceias.length ? `${inteiro(participantesCeia)} participantes · média ${inteiro(Math.round(participantesCeia / ceias.length))}` : `nenhuma registada · ${intervalo.rotulo}`} />
               <Indicador rotulo="Fidelidade contributiva" valor={textoPct(razao(contribuintes, membrosComTes))} icone={HeartHandshake} tom="info" aCarregar={aCarregar}
@@ -264,11 +291,33 @@ export default function PaginaPainelGeral() {
             </div>
           </section>
 
+          {composicao.length > 0 && (
+            <section aria-label="Composição dos membros" className="grid gap-3">
+              <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Composição dos membros</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Cartao titulo="Sexo" descricao="Membros, hoje">
+                  <Barras itens={[{ r: 'Mulheres', v: C((c) => c.mulheres) }, { r: 'Homens', v: C((c) => c.homens) }]} />
+                </Cartao>
+                <Cartao titulo="Idades" descricao="Membros, hoje">
+                  <Barras itens={[{ r: 'Menores (até 17)', v: C((c) => c.menores) }, { r: 'Jovens (18–35)', v: C((c) => c.jovens) },
+                    { r: 'Adultos (36–59)', v: C((c) => c.adultos) }, { r: 'Idosos (60 ou mais)', v: C((c) => c.idosos) },
+                    { r: 'Sem data de nascimento', v: C((c) => c.idadeDesconhecida), fraco: true }]} />
+                </Cartao>
+                <Cartao titulo="Estado civil" descricao="Membros, hoje">
+                  <Barras itens={[{ r: 'Casados', v: C((c) => c.casados) }, { r: 'União de facto', v: C((c) => c.uniaoFacto) },
+                    { r: 'Solteiros', v: C((c) => c.solteiros) }, { r: 'Noivos', v: C((c) => c.noivos) }, { r: 'Viúvos', v: C((c) => c.viuvos) },
+                    { r: 'Viúvas', v: C((c) => c.viuvas) }, { r: 'Divorciados', v: C((c) => c.divorciados) },
+                    { r: 'Sem estado civil', v: C((c) => c.estadoCivilVazio), fraco: true }]} />
+                </Cartao>
+              </div>
+            </section>
+          )}
+
           <section aria-label="Situação financeira" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Contribuições e finanças {comTes.length < linhas.length && <span className="font-normal normal-case">· {comTes.length} de {linhas.length} igrejas com acesso à tesouraria</span>}</h2>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <Indicador rotulo="Dízimos" valor={mtCurto(dizimos)} nota={`ofertas: ${mtCurto(ofertas)} · ${intervalo.rotulo}`} icone={HandCoins} tom="info" aCarregar={aCarregar} />
-              <Indicador rotulo="Obra de reavivamento" valor={mtCurto(reavivamento)} nota={`${comTes.filter((l) => n(l.reavivamento) > 0).length} igreja(s) contribuíram · ${intervalo.rotulo}`} icone={Flame} tom="warning" aCarregar={aCarregar} />
+              <Indicador rotulo="Reavivamento" valor={mtCurto(reavivamento)} nota={`${comTes.filter((l) => n(l.reavivamento) > 0).length} igreja(s) contribuíram · ${intervalo.rotulo}`} icone={Flame} tom="warning" aCarregar={aCarregar} />
               <Indicador rotulo="Saldo nas contas" valor={mtCurto(S(comTes, (l) => l.saldo))} nota="hoje: caixa, M-Pesa e bancos das igrejas" icone={Wallet} aCarregar={aCarregar || qh.isPending} />
               <Indicador rotulo="Por depositar à Missão" valor={mtCurto(S(comTes, (l) => l.porRemeter))} icone={Landmark} aCarregar={aCarregar || qh.isPending}
                 tom={S(comTes, (l) => l.porRemeter) > 0 ? 'destructive' : 'primary'}
@@ -284,11 +333,11 @@ export default function PaginaPainelGeral() {
                     { nome: 'Reavivamento', slot: 2, valores: meses.map((m) => m.reav) }]} formatar={(v) => textoMT(v)} />
               )}
             </Cartao>
-            <Cartao titulo="Entradas e saídas de membros" descricao="Admissões (baptismo, profissão de fé) e transferências, últimos 12 meses">
+            <Cartao titulo="Entradas e saídas de membros" descricao="Admissões, transferências e outras saídas (falecimento, remoção), últimos 12 meses">
               {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} /> : (
                 <GraficoBarras rotulo="Movimento de membros por mês" categorias={categorias} destaque={categorias.length - 1} inteiros
                   series={[{ nome: 'Admissões', slot: 1, valores: meses.map((m) => m.admissoes) }, { nome: 'Transf. entradas', slot: 3, valores: meses.map((m) => m.te) },
-                    { nome: 'Transf. saídas', slot: 2, valores: meses.map((m) => m.ts) }]} formatar={(v) => inteiro(v)} />
+                    { nome: 'Transf. saídas', slot: 2, valores: meses.map((m) => m.ts) }, { nome: 'Outras saídas', slot: 'neutra', valores: meses.map((m) => m.os) }]} formatar={(v) => inteiro(v)} />
               )}
             </Cartao>
             <Cartao titulo="Entradas e saídas de dinheiro" descricao="Últimos 12 meses, contas das igrejas filtradas">
@@ -385,5 +434,26 @@ export default function PaginaPainelGeral() {
         </div>
       )}
     </>
+  )
+}
+
+/** Uma lista de quantidades com a barra proporcional e a percentagem (composição dos membros). */
+function Barras({ itens }: { itens: { r: string; v: number; fraco?: boolean }[] }) {
+  const total = itens.reduce((s, x) => s + x.v, 0)
+  const maior = Math.max(1, ...itens.map((x) => x.v))
+  return (
+    <ul className="grid gap-2.5">
+      {itens.map((x) => (
+        <li key={x.r} className={cn('grid gap-1 text-sm', x.fraco && 'text-muted-foreground')}>
+          <div className="flex items-baseline justify-between gap-3">
+            <span>{x.r}</span>
+            <span className="tabular-nums"><strong className="font-semibold">{inteiro(x.v)}</strong> <span className="text-xs text-muted-foreground">{textoPct(razao(x.v, total))}</span></span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+            <div className={cn('h-full rounded-full', x.fraco ? 'bg-muted-foreground/40' : 'bg-[var(--serie-1)]')} style={{ width: `${(x.v / maior) * 100}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
   )
 }

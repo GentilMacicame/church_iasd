@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, Flame, HandCoins, HeartHandshake,
-  LayoutDashboard, Megaphone, Mic, Plus, Wine, Sprout, UserPlus, Users, Wallet,
+  LayoutDashboard, Megaphone, Mic, Plus, Wine, UserCheck, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -266,22 +266,12 @@ function useContribuicoesIgreja(activo: boolean) {
   return { mes, ano, mensal }
 }
 
-function ContribuicoesIgreja() {
-  const { mes, ano, mensal } = useContribuicoesIgreja(true)
-  if (mes.isError || ano.isError || (mes.isSuccess && (!mes.data || !mes.data.veTesouraria))) return null
-  const m = mes.data, a = ano.data
-  const fidelidade = a && a.membros ? Math.round((a.contribuintes / a.membros) * 100) : null
+function EvolucaoContribuicoes() {
+  const { mes, mensal } = useContribuicoesIgreja(true)
+  if (mes.isError || (mes.isSuccess && (!mes.data || !mes.data.veTesouraria))) return null
   const linhas = mensal.data ?? []
   return (
     <>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-span-12">
-        <Indicador rotulo="Dízimos do mês" valor={mt(num(m?.dizimos))} icone={HandCoins} tom="success" aCarregar={mes.isPending}
-          nota={<>Ofertas: <strong className="font-semibold text-foreground">{mt(num(m?.ofertas))}</strong> · no ano {mt(num(a?.dizimos))}</>} />
-        <Indicador rotulo="Obra de reavivamento" valor={mt(num(a?.reavivamento))} icone={Flame} tom="warning" aCarregar={ano.isPending}
-          nota={`no ano · este mês ${mt(num(m?.reavivamento))}`} />
-        <Indicador rotulo="Fidelidade contributiva" valor={fidelidade == null ? '—' : `${fidelidade}%`} icone={HeartHandshake} tom="info" aCarregar={ano.isPending}
-          nota={a ? `${a.contribuintes} de ${a.membros} membros contribuíram no ano` : undefined} />
-      </div>
       <Cartao titulo="Evolução das contribuições" descricao="Dízimos, ofertas e reavivamento nos últimos 12 meses" icone={BarChart3} className="lg:col-span-12">
         {mensal.isPending ? <Barra className="h-56 w-full" />
           : mensal.isError ? <EstadoErro erro={mensal.error} />
@@ -374,10 +364,6 @@ function Composicao({ className }: { className?: string }) {
   const activos = conta((m) => m.estado === 'ACTIVO'), interessados = conta((m) => m.estado === 'INTERESSADO')
   const outros = l.length - activos - interessados
   const mulheres = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'F'), homens = conta((m) => m.estado === 'ACTIVO' && m.sexo === 'M')
-  const semFamilia = conta((m) => m.estado === 'ACTIVO' && !m.familiaId)
-  // V36: activos no livro sem presença na ES nem contribuição há 6 meses
-  const participacao = useParticipacao()
-  const inactivos = (participacao.data ?? []).filter((p) => p.inactivo).length
   // situação civil dos activos (V33: a vista básica traz o estado civil); viúvos e viúvas pelo sexo
   const civil = (e: string, s?: 'M' | 'F') => conta((m) => m.estado === 'ACTIVO' && m.estadoCivil === e && (!s || m.sexo === s))
   const situacao = [
@@ -407,13 +393,13 @@ function Composicao({ className }: { className?: string }) {
                 <div style={{ width: pct(interessados, l.length), background: 'var(--serie-3)' }} />
               </div>
               <ul className="mt-3 grid gap-2">
-                <Linha cor="var(--serie-1)" rotulo="Activos" v={activos} de={l.length} />
+                <Linha cor="var(--serie-1)" rotulo="Membros" v={activos} de={l.length} />
                 <Linha cor="var(--serie-3)" rotulo="Interessados" v={interessados} de={l.length} />
                 <Linha cor="var(--muted-foreground)" rotulo="Outros (saídas)" v={outros} de={l.length} />
               </ul>
             </div>
             <div className="border-t pt-4">
-              <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Activos por sexo</p>
+              <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros por sexo</p>
               <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${mulheres} mulheres e ${homens} homens`}>
                 <div style={{ width: pct(mulheres, activos), background: 'var(--serie-4, var(--serie-2))' }} />
                 <div style={{ width: pct(homens, activos), background: 'var(--serie-5, var(--serie-1))' }} />
@@ -425,7 +411,7 @@ function Composicao({ className }: { className?: string }) {
             </div>
             {situacao.length > 0 && (
               <div className="border-t pt-4">
-                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Activos por estado civil</p>
+                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Membros por estado civil</p>
                 <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                   {situacao.map((x) => (
                     <li key={x.rotulo}>
@@ -436,24 +422,6 @@ function Composicao({ className }: { className?: string }) {
                   ))}
                 </ul>
               </div>
-            )}
-            {participacao.data && activos > 0 && (
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span>Activos que participam <span className="text-xs text-muted-foreground">(ES ou contribuição, 6 meses)</span></span>
-                  <strong className="font-semibold tabular-nums">{activos - inactivos} <span className="text-xs font-normal text-muted-foreground">{pct(activos - inactivos, activos)}</span></strong>
-                </div>
-                <div className="mt-1 flex items-center justify-between gap-3 text-sm">
-                  <span>Inactivos</span>
-                  <strong className="font-semibold tabular-nums">{inactivos} <span className="text-xs font-normal text-muted-foreground">{pct(inactivos, activos)}</span></strong>
-                </div>
-              </div>
-            )}
-            {semFamilia > 0 && (
-              <Link to="/familias" className="alvo flex items-center justify-between gap-3 rounded-lg border border-warning/50 bg-tint-warning px-3 py-2.5 text-sm text-warning-text hover:border-warning">
-                <span className="flex items-center gap-2"><UserPlus className="size-4" aria-hidden />Activos sem família</span>
-                <strong className="text-base font-semibold tabular-nums">{semFamilia}</strong>
-              </Link>
             )}
           </div>
         )}
@@ -506,36 +474,66 @@ function SantaCeiaResumo() {
 }
 
 /* ===================================================================== página */
+/** Indicadores do topo (ponto 9): os membros (total, activos e inactivos, sem família, por aprovar) e a tesouraria. */
 function Indicadores({ comTesouraria }: { comTesouraria: boolean }) {
   const { pode } = useSessao()
   const basicos = useMembrosBasicos()
   const porAprovar = useContagemPorAprovar()
-  const { doDia, q: escala } = useEscalaDoSabado()
-  const n = (e: string) => (basicos.data ?? []).filter((m) => m.estado === e).length
   const podeMembros = pode('secretaria.membro.ler')
+  const participacao = useParticipacao(podeMembros)
+  const { doDia, q: escala } = useEscalaDoSabado()
+  const lista = basicos.data ?? []
+  const membros = lista.filter((m) => m.estado === 'ACTIVO').length
+  const interessados = lista.filter((m) => m.estado === 'INTERESSADO').length
+  const inactivos = (participacao.data ?? []).filter((x) => x.inactivo).length
+  const activos = membros - inactivos
+  const semFamilia = lista.filter((m) => m.estado === 'ACTIVO' && !m.familiaId).length
+  const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—')
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-      {podeMembros && <Indicador rotulo="Membros activos" valor={n('ACTIVO')} nota={`${n('INTERESSADO')} interessado(s) a preparar`} icone={Users} para="/membros?estado=ACTIVO" aCarregar={basicos.isPending} />}
-      {comTesouraria ? <IndicadoresTesouraria /> : (
-        <>
-          {podeMembros && <Indicador rotulo="Interessados" valor={n('INTERESSADO')} nota="a preparar para o baptismo" icone={Sprout} tom="info" para="/membros?estado=INTERESSADO" aCarregar={basicos.isPending} />}
-          {podeMembros && <Indicador rotulo="Por aprovar" valor={porAprovar ?? 0} nota="registos à espera do secretário" icone={ClipboardCheck} tom="warning" para="/membros?validacao=PENDENTE" aCarregar={basicos.isPending} />}
-        </>
+    <div className="grid gap-3 sm:gap-4">
+      {podeMembros && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <Indicador rotulo="Total de membros" valor={membros} icone={Users} para="/membros?estado=ACTIVO" aCarregar={basicos.isPending}
+            nota={`${interessados} interessado(s) · ${lista.length} registos no livro`} />
+          <Indicador rotulo="Membros activos" valor={activos} icone={UserCheck} tom="success" aCarregar={basicos.isPending || participacao.isPending}
+            nota={<>{pct(activos, membros)} de {membros} membros · {inactivos} inactivo(s)</>} />
+          <Indicador rotulo="Sem família" valor={semFamilia} icone={UserPlus} tom={semFamilia ? 'destructive' : 'success'} para="/familias" aCarregar={basicos.isPending}
+            destaque={semFamilia > 0} nota={semFamilia ? 'membros activos sem família associada' : 'todos os membros têm família'} />
+          <Indicador rotulo="Por aprovar" valor={porAprovar ?? 0} nota="registos à espera do secretário" icone={ClipboardCheck} tom="warning" para="/membros?validacao=PENDENTE" aCarregar={basicos.isPending} />
+        </div>
       )}
-      <Indicador rotulo="Escalados no sábado" valor={doDia.length} nota="pessoas com uma função" icone={CalendarDays} tom="success" aCarregar={escala.isPending && escala.fetchStatus !== 'idle'} />
+      {comTesouraria && <IndicadoresTesouraria />}
+      {!podeMembros && !comTesouraria && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <Indicador rotulo="Escalados no sábado" valor={doDia.length} nota="pessoas com uma função" icone={CalendarDays} tom="success" aCarregar={escala.isPending && escala.fetchStatus !== 'idle'} />
+        </div>
+      )}
     </div>
   )
 }
 
 function IndicadoresTesouraria() {
-  const { resumo, saldos, total, entradasMes, entradasAntes, saidasMes } = useFinancas()
-  const variacao = entradasAntes ? Math.round(((entradasMes - entradasAntes) / entradasAntes) * 100) : null
+  const { pode } = useSessao()
+  const { resumo, saldos, total, entradasMes, saidasMes } = useFinancas()
+  const { mes, ano } = useContribuicoesIgreja(pode('organizacao.igreja.ler'))
+  const m = mes.data, a = ano.data
+  const comPainel = !!m?.veTesouraria
+  const fidelidade = a && a.membros ? Math.round((a.contribuintes / a.membros) * 100) : null
   return (
-    <>
-      <Indicador rotulo="Saldo da igreja" valor={<Dinheiro valor={deCentimos(total)} />} nota="em todas as contas da igreja" icone={Wallet} tom="info" para="/tesouraria" aCarregar={saldos.isPending} />
-      <Indicador rotulo="Entradas do mês" valor={mt(entradasMes)} icone={HandCoins} tom="success" para="/tesouraria/movimentos?ver=entradas" aCarregar={resumo.aCarregar}
-        nota={variacao == null ? <>saídas: {mt(saidasMes)}</> : <>{variacao >= 0 ? '+' : ''}{variacao}% face ao mês passado · saídas {mt(saidasMes)}</>} />
-    </>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      {comPainel && (
+        <>
+          <Indicador rotulo="Dízimos do mês" valor={mt(num(m?.dizimos))} icone={HandCoins} tom="success" aCarregar={mes.isPending}
+            nota={<>Ofertas: <strong className="font-semibold text-foreground">{mt(num(m?.ofertas))}</strong> · no ano {mt(num(a?.dizimos))}</>} />
+          <Indicador rotulo="Reavivamento" valor={mt(num(a?.reavivamento))} icone={Flame} tom="warning" aCarregar={ano.isPending}
+            nota={`no ano · este mês ${mt(num(m?.reavivamento))}`} />
+          <Indicador rotulo="Fidelidade contributiva" valor={fidelidade == null ? '—' : `${fidelidade}%`} icone={HeartHandshake} tom="info" aCarregar={ano.isPending}
+            nota={a ? `${a.contribuintes} de ${a.membros} membros contribuíram no ano` : undefined} />
+        </>
+      )}
+      <Indicador rotulo="Saldo da igreja" valor={<Dinheiro valor={deCentimos(total)} />} icone={Wallet} tom="info" para="/tesouraria" aCarregar={saldos.isPending || resumo.aCarregar}
+        nota={<>entradas do mês {mt(entradasMes)} · saídas {mt(saidasMes)}</>} />
+    </div>
   )
 }
 
@@ -578,7 +576,7 @@ export default function PaginaInicio() {
           <section aria-label="Tesouraria" className="grid gap-3">
             <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Tesouraria</h2>
             <div className="grid items-stretch gap-6 lg:grid-cols-12">
-              {pode('organizacao.igreja.ler') && <ContribuicoesIgreja />}
+              {pode('organizacao.igreja.ler') && <EvolucaoContribuicoes />}
               <Financas />
             </div>
           </section>

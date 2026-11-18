@@ -148,6 +148,8 @@ public final class Rotas {
         /** RelatoriosOrganizacaoController · GET /v1/organizacao/painel-igrejas e painel-igrejas-mensal (V30) */
         public static final String PAINEL_IGREJAS = "painel-igrejas";
         public static final String PAINEL_IGREJAS_MENSAL = "painel-igrejas-mensal";
+        /** GET /v1/organizacao/painel-membros?entidadeId=&amp;distritoId=  (V46: composição dos membros por igreja) */
+        public static final String PAINEL_MEMBROS = "painel-membros";
         /** GET /v1/organizacao/painel-periodo?inicio=&amp;fim=&amp;entidadeId=&amp;distritoId=  (V38: dashboard por período) */
         public static final String PAINEL_PERIODO = "painel-periodo";
 

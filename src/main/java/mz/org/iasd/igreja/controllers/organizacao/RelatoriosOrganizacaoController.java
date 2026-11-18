@@ -25,6 +25,7 @@ import mz.org.iasd.igreja.repositories.organizacao.PainelRepository;
  *   GET /v1/organizacao/directorio-igrejas   ?entidadeId=   qualquer utilizador com sessão (V27)
  *   GET /v1/organizacao/painel-igrejas       ?igrejaId= ?entidadeId= ?distritoId=   painel geral (V30)
  *   GET /v1/organizacao/painel-igrejas-mensal ?igrejaId= ?entidadeId= ?distritoId=  últimos 12 meses (V30)
+ *   GET /v1/organizacao/painel-membros       ?igrejaId= ?entidadeId= ?distritoId=   composição dos membros (V46)
  * </pre>
  *
  * O painel geral não precisa de igrejaId: cada utilizador recebe só as igrejas a que tem acesso (vistas
@@ -45,6 +46,16 @@ public class RelatoriosOrganizacaoController extends BaseRelatoriosController {
     /** V30: os últimos 12 meses de cada igreja visível (entradas, saídas, dízimos, dizimistas, admissões, transferências). */
     public static final Relatorio PAINEL_IGREJAS_MENSAL = Relatorio.porIgreja("organizacao.vw_painel_igrejas_mensal", "igr_id = ?", "ano, mes, nome, igr_id")
             .comFiltro("entidadeId", "entidade_id").comFiltro("distritoId", "distrito_pastoral_id");
+
+    /** V46: sexo, idades, estado civil e sem família dos membros de cada igreja visível. */
+    public static final Relatorio PAINEL_MEMBROS = Relatorio.porIgreja("organizacao.vw_painel_membros", "igr_id = ?", "nome, igr_id")
+            .comFiltro("entidadeId", "entidade_id").comFiltro("distritoId", "distrito_pastoral_id");
+
+    @GET
+    @Path(Rotas.Organizacao.PAINEL_MEMBROS)
+    public Response painelMembros() throws SQLException {
+        return responder(PAINEL_MEMBROS);
+    }
 
     @GET
     @Path(Rotas.Organizacao.PAINEL_IGREJAS)

@@ -1,0 +1,12 @@
+1. o secretário da igreja 1: só a sua igreja, com o sexo, as idades, o estado civil e os sem família
+ igr_id | soma_sexo | soma_idades | soma_civil | sem_familia_ok 
+--------+-----------+-------------+------------+----------------
+      1 | t         | t           | t          | t
+(1 row)
+
+2. o tesoureiro de outra igreja não vê os membros da igreja 1
+ igrejas_da_1 
+--------------
+            0
+(1 row)
+

@@ -231,7 +231,7 @@ src/
 - **Decisões do plano** (V36): Início com os activos que participam e os **inactivos** (sem presença na ES nem
   contribuição há 6 meses) e os **noivos**; a ficha do membro mostra a última participação. Lançar entrada avisa quando o
   **dízimo do mês já foi lançado** em nome da família do membro (ou de um membro da família) e pede "Conferi: não é o
-  mesmo dízimo". Novo alvo sugere a **meta do ano anterior + 5%** (ex.: obra de reavivamento, um fundo da igreja), ajustável.
+  mesmo dízimo". Novo alvo sugere a **meta do ano anterior + 5%** (ex.: reavivamento, um fundo da igreja), ajustável.
 
 - **Comunicados** (V37, menu Comunicados, `features/comunicados/`): mural com os comunicados em vigor para o utilizador
   (da igreja, do distrito pastoral e da Missão; os 3 mais recentes também no Início); Gerir (quem publica): rascunhos,
@@ -241,10 +241,10 @@ src/
 
 - **Painel geral por período** (V38): este mês, este ano, o ano anterior ou um intervalo. Indicadores: total de membros
   (com as entradas e perdas no período), membros activos e % (e os inactivos), fidelidade contributiva, dízimos (com as
-  ofertas no mesmo cartão), obra de reavivamento, saldo e depósitos em falta (hoje). Gráficos: evolução das contribuições
+  ofertas no mesmo cartão), reavivamento, saldo e depósitos em falta (hoje). Gráficos: evolução das contribuições
   (dízimos, ofertas, reavivamento), entradas e saídas de membros e de dinheiro, comparativo de uma medida. Quadro
   comparativo: membros, activos, inactivos, % activos, dízimos, ofertas, reavivamento, fidelidade, entradas e perdas de
-  membros, saldo e por depositar. Fundos da igreja: novo tipo "Obra de reavivamento".
+  membros, saldo e por depositar. Fundos da igreja: novo tipo "Reavivamento".
 
 - **Santa Ceia** (V39, menu Actividades › Santa Ceia, `features/santa-ceia/`): a próxima celebração, celebrações e média
   de participantes no ano, a última comparada com a anterior, aviso das que falta registar, gráfico dos participantes
@@ -288,6 +288,10 @@ src/
   escrever, em todas as igrejas (nome como se ouve e trocado, data, documento, telemóvel); "Já está registada" não deixa
   continuar, "Pode ser" pede "Conferi: é outra pessoa". **Lançar entrada**: sem "Outros fundos" na igreja local.
   **Fundos**: tipo "Fundo de construção". **Contagem**: parte "Fundo de construção".
+- **Painéis** (V46): o Início de cada igreja tem duas filas — Membros (total, activos com a % e os inactivos, sem família
+  em destaque, por aprovar) e Tesouraria (dízimos do mês com as ofertas, reavivamento, fidelidade, saldo) — e a evolução
+  das contribuições. O Painel geral ganha os inactivos, os sem família, as entradas e perdas, a composição dos membros
+  (sexo, idades, estado civil) e a coluna "Sem família" no quadro comparativo.
 
 ## Por fazer (próximas iterações)
 
