@@ -35,4 +35,13 @@ SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 SELECT count(*) AS tesoureiro_1 FROM actividades.vw_santa_ceia;
 SELECT set_config('app.usuario_id', '4', false) \g /dev/null
 SELECT count(*) AS tesoureiro_2 FROM actividades.vw_santa_ceia;
+
+\echo '6. V51: acompanhantes (diáconos) da Santa Ceia agendada; repetido e de outra igreja recusados'
+SELECT set_config('app.usuario_id', '1', false) \g /dev/null
+INSERT INTO actividades.santa_ceia_acompanhante (sca_stc_id, sca_igr_id, sca_mem_id)
+SELECT stc_id, 999, 960 FROM actividades.santa_ceia WHERE stc_igr_id = 1 AND stc_estado = 'AGENDADA' ORDER BY stc_id LIMIT 1 RETURNING sca_igr_id AS igreja_copiada;
+INSERT INTO actividades.santa_ceia_acompanhante (sca_stc_id, sca_igr_id, sca_mem_id)
+SELECT stc_id, 1, 960 FROM actividades.santa_ceia WHERE stc_igr_id = 1 AND stc_estado = 'AGENDADA' ORDER BY stc_id LIMIT 1;
+INSERT INTO actividades.santa_ceia_acompanhante (sca_stc_id, sca_igr_id, sca_mem_id)
+SELECT stc_id, 1, (SELECT mem_id FROM secretaria.membro WHERE mem_igr_id <> 1 ORDER BY mem_id LIMIT 1) FROM actividades.santa_ceia WHERE stc_igr_id = 1 AND stc_estado = 'AGENDADA' ORDER BY stc_id LIMIT 1;
 RESET ROLE;

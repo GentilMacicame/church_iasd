@@ -6,19 +6,19 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, School, Table2, Target, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, School, Search, Table2, Target, UserMinus, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Avatar, Cartao, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { Avatar, Cartao, Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Input } from '@/components/ui/input'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
-import { CampoFormulario, ErroFormulario } from '@/components/comum/formulario'
+import { ErroFormulario } from '@/components/comum/formulario'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
-import { Paginada } from '@/components/comum/Paginacao'
 import { useSessao } from '@/auth/sessao'
 import { ErroApi, mensagemDe } from '@/api/erros'
 import { rotulos, t } from '@/i18n/pt-MZ'
-import { data, qtd } from '@/lib/formatos'
+import { data, idade } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import {
@@ -119,7 +119,7 @@ export default function PaginaClasse() {
           !trimestre || !ct ? <Cartao><EstadoVazio icone={Target}>Configure a classe para o trimestre para definir as metas.</EstadoVazio></Cartao>
             : <MetasDaClasse trimestre={trimestre} classeTrimestre={ct.id} />
         ) : (
-          <div className="max-w-3xl"><Matriculas classe={classe} /></div>
+          <Matriculas classe={classe} />
         )}
       </div>
       {editar && <DialogoClasse classe={classe} ct={ct} trimestre={trimestre} aoFechar={() => setEditar(false)} />}
@@ -142,6 +142,7 @@ function Matriculas({ classe }: { classe: Classe }) {
   const [novo, setNovo] = useState<number | null>(null)
   const [aTirar, setATirar] = useState<number | null>(null)
   const [historico, setHistorico] = useState(false)
+  const [busca, setBusca] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [mudar, setMudar] = useState<{ membroId: number; anterior: number; classeId: number; desde: string } | null>(null)
   const mudarDeClasse = useMudarDeClasse(classe.id)
@@ -185,18 +186,30 @@ function Matriculas({ classe }: { classe: Classe }) {
   }
 
   return (
-    <Cartao titulo="Matrículas" icone={Users} descricao={`${qtd(activas.length, 'aluno(s)')} na classe`}
-      accoes={antigas.length > 0 && <Button variant="ghost" size="sm" onClick={() => setHistorico((x) => !x)}>{historico ? 'Ocultar saídas' : `Saídas (${antigas.length})`}</Button>}>
-      <div className="grid gap-3">
-        <ErroFormulario mensagem={erro} />
-        {mudar && (
-          <div role="alert" className="grid gap-3 rounded-lg border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
-            <p>
-              <strong className="font-medium">{nomeDe(mudar.membroId) ?? 'Este membro'}</strong> está na classe{' '}
-              <strong className="font-medium">{todasClasses.data?.find((c) => c.id === mudar.classeId)?.nome ?? 'outra classe'}</strong> desde {data(mudar.desde)}.
-              Cada pessoa só está numa classe de cada vez.
-            </p>
-            <div className="flex flex-wrap gap-2">
+    <Cartao semMargem>
+      <div className="flex flex-wrap items-center gap-3 border-b px-5 pb-4 sm:px-6">
+        <Segmentos rotulo="Matrículas" valor={historico ? 'sairam' : 'classe'} aoMudar={(v) => setHistorico(v === 'sairam')}
+          opcoes={[{ valor: 'classe', rotulo: 'Na classe', contagem: activas.length }, { valor: 'sairam', rotulo: 'Saíram', contagem: antigas.length }] as const} />
+        <div className="relative w-full sm:w-56">
+          <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar aluno…" aria-label="Pesquisar aluno" className="alvo pl-9" />
+        </div>
+        {pode('escola_sabatina.matricula.criar') && (
+          <div className="w-full sm:ml-auto sm:w-80">
+            <CampoMembro id="matricular" valor={novo} aoMudar={setNovo} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']}
+              excluir={activas.map((m) => m.membroId)} vazio={matricular.isPending ? 'A matricular…' : '+ Matricular membro ou interessado'} />
+          </div>
+        )}
+      </div>
+      {(erro || mudar) && (
+        <div className="grid gap-3 px-5 pt-4 sm:px-6">
+          <ErroFormulario mensagem={erro} />
+          {mudar && (
+            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-tint-warning px-4 py-3 text-sm text-warning-text">
+              <p className="flex-1">
+                <strong className="font-medium">{nomeDe(mudar.membroId) ?? 'Este membro'}</strong> está na classe{' '}
+                <strong className="font-medium">{todasClasses.data?.find((c) => c.id === mudar.classeId)?.nome ?? 'outra classe'}</strong> desde {data(mudar.desde)}.
+              </p>
               {pode('escola_sabatina.matricula.alterar') && (
                 <Button size="sm" className="alvo" disabled={mudarDeClasse.isPending} onClick={() => void confirmarMudanca()}>
                   {mudarDeClasse.isPending ? 'A mudar…' : `Mudar para ${classe.nome}`}
@@ -204,44 +217,46 @@ function Matriculas({ classe }: { classe: Classe }) {
               )}
               <Button size="sm" variant="outline" className="alvo" onClick={() => setMudar(null)}>{t.comum.cancelar}</Button>
             </div>
-          </div>
-        )}
-        {pode('escola_sabatina.matricula.criar') && (
-          <CampoFormulario rotulo="Matricular" ajuda="Quem está noutra classe sai dela primeiro.">
-            {(p) => <CampoMembro id={p.id} valor={novo} aoMudar={setNovo} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']}
-              excluir={activas.map((m) => m.membroId)} vazio={matricular.isPending ? 'A matricular…' : 'Escolher membro ou interessado…'} />}
-          </CampoFormulario>
-        )}
-        {q.isPending ? <LinhasACarregar linhas={3} />
-          : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
-          : activas.length === 0 ? <EstadoVazio icone={UserPlus}>Ainda ninguém matriculado nesta classe.</EstadoVazio>
-          : (
-            <Paginada itens={activas}>
-              {(visiveis) => <div className="-mx-5 divide-y border-y sm:-mx-6">{visiveis.map((m) => {
-                const b = membros.get(m.membroId)
-                return (
-                  <div key={m.id} className="flex items-center gap-3 px-5 py-2.5 sm:px-6">
-                    <Avatar id={m.membroId} nome={b?.nome ?? '?'} apelido={b?.apelido} tamanho={30} />
-                    <span className="min-w-0 flex-1">
-                      <Link to={`/membros/${m.membroId}`} className="block truncate text-sm font-medium hover:text-primary">{nomeDe(m.membroId) ?? `Membro n.º ${m.membroId}`}</Link>
-                      <span className="block text-xs text-muted-foreground">desde {data(m.dataEntrada)}{b?.estado === 'INTERESSADO' && ' · interessado'}</span>
-                    </span>
-                    {pode('escola_sabatina.matricula.alterar') && (
-                      <Button variant="ghost" size="icon" className="size-11" aria-label={`Tirar ${nomeDe(m.membroId) ?? ''} da classe`} onClick={() => setATirar(m.id)}>
-                        <UserMinus className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                )
-              })}</div>}
-            </Paginada>
           )}
-        {historico && antigas.length > 0 && (
-          <ul className="grid gap-1 text-sm text-muted-foreground">
-            {antigas.map((m) => <li key={m.id}>{nomeDe(m.membroId) ?? `Membro n.º ${m.membroId}`} · {data(m.dataEntrada)} – {data(m.dataSaida)} <Pilula variante="secondary">Saiu</Pilula></li>)}
-          </ul>
-        )}
-      </div>
+        </div>
+      )}
+      {q.isPending ? <LinhasACarregar linhas={4} />
+        : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="m-4" />
+        : (() => {
+          const lista = (historico ? antigas : activas).filter((m) => !busca || (nomeDe(m.membroId) ?? '').toLowerCase().includes(busca.toLowerCase()))
+          if (!lista.length) return <EstadoVazio icone={UserPlus}>{historico ? 'Ninguém saiu desta classe.' : busca ? 'Nenhum aluno com esse nome.' : 'Ainda ninguém matriculado nesta classe.'}</EstadoVazio>
+          return (
+            <Tabela porPagina={15}>
+              <thead><tr><th className="sm:pl-6">Aluno</th><th>Situação</th><th className="num hidden sm:table-cell">Idade</th><th className="hidden md:table-cell">{historico ? 'Período' : 'Desde'}</th><th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
+              <tbody>
+                {lista.map((m) => {
+                  const b = membros.get(m.membroId)
+                  const anos = idade(b?.dataNascimento)
+                  return (
+                    <tr key={m.id}>
+                      <td className="sm:pl-6">
+                        <Link to={`/membros/${m.membroId}`} className="flex items-center gap-3 font-medium hover:text-primary">
+                          <Avatar id={m.membroId} nome={b?.nome ?? '?'} apelido={b?.apelido} tamanho={32} />
+                          {nomeDe(m.membroId) ?? `Membro n.º ${m.membroId}`}
+                        </Link>
+                      </td>
+                      <td><Pilula variante={b?.estado === 'INTERESSADO' ? 'info' : 'success'}>{b?.estado === 'INTERESSADO' ? 'Interessado' : 'Membro'}</Pilula></td>
+                      <td className="num hidden text-muted-foreground sm:table-cell">{anos ?? '—'}</td>
+                      <td className="hidden tabular-nums text-muted-foreground md:table-cell">{historico ? `${data(m.dataEntrada)} – ${data(m.dataSaida)}` : data(m.dataEntrada)}</td>
+                      <td className="sm:pr-6">
+                        {!historico && pode('escola_sabatina.matricula.alterar') && (
+                          <Button variant="ghost" size="icon" className="alvo size-9 text-muted-foreground hover:text-destructive-text" aria-label={`Tirar ${nomeDe(m.membroId) ?? ''} da classe`} title="Tirar da classe" onClick={() => setATirar(m.id)}>
+                            <UserMinus className="size-4" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </Tabela>
+          )
+        })()}
       <DialogoConfirmar aberto={aTirar != null} aoMudar={(v) => !v && setATirar(null)} titulo="Tirar da classe?"
         texto="A matrícula termina hoje e fica no histórico; os relatórios anteriores não mudam." accao="Tirar da classe"
         aCorrer={tirar.isPending}

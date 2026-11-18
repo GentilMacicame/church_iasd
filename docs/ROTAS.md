@@ -1,12 +1,18 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 565 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 577 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
 
 | Método | Caminho | Classe · método | Permissão |
 | --- | --- | --- | --- |
+| GET | `/v1/actividades/acompanhantes-santa-ceia` | AcompanhantesSantaCeiaController · listar | `actividades.santa_ceia_acompanhante.ler` |
+| POST | `/v1/actividades/acompanhantes-santa-ceia` | AcompanhantesSantaCeiaController · criar | `actividades.santa_ceia_acompanhante.criar` |
+| GET | `/v1/actividades/acompanhantes-santa-ceia/{id}` | AcompanhantesSantaCeiaController · obter | `actividades.santa_ceia_acompanhante.ler` |
+| PATCH | `/v1/actividades/acompanhantes-santa-ceia/{id}` | AcompanhantesSantaCeiaController · alterar | `actividades.santa_ceia_acompanhante.alterar` |
+| POST | `/v1/actividades/acompanhantes-santa-ceia/{id}/reactivar` | AcompanhantesSantaCeiaController · reactivar | `actividades.santa_ceia_acompanhante.terminar` |
+| POST | `/v1/actividades/acompanhantes-santa-ceia/{id}/terminar` | AcompanhantesSantaCeiaController · terminar | `actividades.santa_ceia_acompanhante.terminar` |
 | GET | `/v1/actividades/actividades` | ActividadesController · listar | `actividades.actividade.ler` |
 | POST | `/v1/actividades/actividades` | ActividadesController · criar | `actividades.actividade.criar` |
 | GET | `/v1/actividades/actividades/{id}` | ActividadesController · obter | `actividades.actividade.ler` |
@@ -561,6 +567,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/percentagens-departamento/{id}/reactivar` | PercentagensDepartamentoController · reactivar | `tesouraria.percentagem_departamento.terminar` |
 | POST | `/v1/tesouraria/percentagens-departamento/{id}/terminar` | PercentagensDepartamentoController · terminar | `tesouraria.percentagem_departamento.terminar` |
 | GET | `/v1/tesouraria/progresso-alvos` | RelatoriosTesourariaController · progressoAlvos | `tesouraria.alvo.ler` |
+| GET | `/v1/tesouraria/quotas-escalao-reavivamento` | QuotasEscalaoReavivamentoController · listar | `tesouraria.quota_escalao_reavivamento.ler` |
+| POST | `/v1/tesouraria/quotas-escalao-reavivamento` | QuotasEscalaoReavivamentoController · criar | `tesouraria.quota_escalao_reavivamento.criar` |
+| GET | `/v1/tesouraria/quotas-escalao-reavivamento/{id}` | QuotasEscalaoReavivamentoController · obter | `tesouraria.quota_escalao_reavivamento.ler` |
+| PATCH | `/v1/tesouraria/quotas-escalao-reavivamento/{id}` | QuotasEscalaoReavivamentoController · alterar | `tesouraria.quota_escalao_reavivamento.alterar` |
+| POST | `/v1/tesouraria/quotas-escalao-reavivamento/{id}/reactivar` | QuotasEscalaoReavivamentoController · reactivar | `tesouraria.quota_escalao_reavivamento.terminar` |
+| POST | `/v1/tesouraria/quotas-escalao-reavivamento/{id}/terminar` | QuotasEscalaoReavivamentoController · terminar | `tesouraria.quota_escalao_reavivamento.terminar` |
 | GET | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · listar | `tesouraria.quota_reavivamento.ler` |
 | POST | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · criar | `tesouraria.quota_reavivamento.criar` |
 | GET | `/v1/tesouraria/quotas-reavivamento/{id}` | QuotasReavivamentoController · obter | `tesouraria.quota_reavivamento.ler` |

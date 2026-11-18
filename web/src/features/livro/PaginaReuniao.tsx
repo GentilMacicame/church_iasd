@@ -349,7 +349,7 @@ function Encerramento({ reuniao, fechada }: { reuniao: Reuniao; fechada: boolean
       { onSuccess: () => toast.success('Encerramento guardado.'), onError: (e) => toast.error(mensagemDe(e)) })
   }
   return (
-    <Cartao titulo="Encerramento" icone={Clock}>
+    <Cartao titulo="Encerramento" icone={Clock} recolhivel abertoInicial={!!(reuniao.encerradaEm || reuniao.encerramento)}>
       <div className="grid gap-3">
         <div className="grid gap-1.5">
           <label htmlFor="enc-hora" className="text-sm font-medium">Hora do encerramento</label>

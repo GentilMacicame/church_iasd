@@ -14,6 +14,7 @@ import mz.org.iasd.igreja.models.actividades.ProgramaDia;
 import mz.org.iasd.igreja.models.actividades.ProgramaItem;
 import mz.org.iasd.igreja.models.actividades.ProgramaParte;
 import mz.org.iasd.igreja.models.actividades.SantaCeia;
+import mz.org.iasd.igreja.models.actividades.SantaCeiaAcompanhante;
 import mz.org.iasd.igreja.models.escolasabatina.Classe;
 import mz.org.iasd.igreja.models.escolasabatina.ClasseTrimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Matricula;
@@ -76,6 +77,7 @@ import mz.org.iasd.igreja.models.tesouraria.OrcamentoLinha;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoBancario;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoMpesa;
 import mz.org.iasd.igreja.models.tesouraria.PercentagemDepartamento;
+import mz.org.iasd.igreja.models.tesouraria.QuotaEscalaoReavivamento;
 import mz.org.iasd.igreja.models.tesouraria.QuotaReavivamento;
 import mz.org.iasd.igreja.models.tesouraria.Recibo;
 import mz.org.iasd.igreja.models.tesouraria.Remessa;
@@ -214,6 +216,7 @@ public final class CatalogoGerado {
             EscalaPlano.class,
             EscalaDia.class,
             SantaCeia.class,
+            SantaCeiaAcompanhante.class,
             ProgramaDia.class,
             ProgramaParte.class,
             ProgramaItem.class,
@@ -234,6 +237,7 @@ public final class CatalogoGerado {
             Categoria.class,
             Alvo.class,
             QuotaReavivamento.class,
+            QuotaEscalaoReavivamento.class,
             PercentagemDepartamento.class,
             TransferenciaDepartamento.class,
             Adiantamento.class,

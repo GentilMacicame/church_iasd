@@ -305,6 +305,8 @@ src/
   ajustável, contribuído e falta; na entrada, o campo Reavivamento mostra a quota do membro.
 - **Extractos** (Tesouraria › Extractos; V50): por departamento e por fundo, no mês, trimestre, semestre ou ano;
   percentagens dos departamentos, transferências entre eles e adiantamentos com prestação de contas.
+- **Reavivamento por escalão** (V51): quota fixa para adultos e/ou crianças; **Santa Ceia** com oficiante (pastor ou
+  ancião) e acompanhantes (diáconos). Painel geral com "Igrejas lado a lado"; quadro comparativo da ES com gráficos.
 
 ## Por fazer (próximas iterações)
 

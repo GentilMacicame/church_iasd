@@ -17,10 +17,12 @@ export function PilulaEstado({ tr }: { tr: Transacao }) {
 
 /** Valor com sinal: entradas "+1 500,00 MT" em verde, saídas "−650,00 MT" na cor do texto. */
 export function Valor({ tr, className }: { tr: Transacao; className?: string }) {
-  const entrada = tr.tipo === 'ENTRADA'
+  // sem sinal: o sentido vê-se pela cor (entrada a verde, saída a vermelho); anulado, riscado e a cinzento
+  const anulada = tr.estado === 'ANULADA'
   return (
-    <span className={cn('num font-semibold whitespace-nowrap', entrada ? 'text-success-text' : tr.tipo === 'SAIDA' ? 'text-foreground' : 'text-muted-foreground', className)}>
-      {entrada ? '+' : tr.tipo === 'SAIDA' ? '−' : ''}{dinheiro(tr.valorTotal)}
+    <span className={cn('num font-semibold whitespace-nowrap',
+      anulada ? 'text-muted-foreground line-through' : tr.tipo === 'ENTRADA' ? 'text-success-text' : tr.tipo === 'SAIDA' ? 'text-destructive-text' : 'text-muted-foreground', className)}>
+      {dinheiro(tr.valorTotal)}
     </span>
   )
 }

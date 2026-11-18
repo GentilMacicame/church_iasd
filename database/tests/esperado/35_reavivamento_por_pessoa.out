@@ -46,3 +46,24 @@ psql:database/tests/35_reavivamento_por_pessoa.sql:29: ERROR:  A pessoa não exi
              0
 (1 row)
 
+5. V51: adultos com quota fixa de 400; as crianças (automáticas) repartem o resto do alvo; o Paulo continua ajustado
+ rqe_quota_adulto | rqe_quota_crianca 
+------------------+-------------------
+           400.00 |                  
+(1 row)
+
+   origem   | menor | ha | quotas_diferentes | adulto_400 
+------------+-------+----+-------------------+------------
+ AJUSTADA   | f     | t  |                 1 | t
+ AUTOMATICA | t     | t  |                 1 | t
+ ESCALAO    | f     | t  |                 1 | t
+(3 rows)
+
+   as crianças também fixas (100): ninguém fica automático; repetir o ano e valor negativo recusados
+ automaticas 
+-------------
+           0
+(1 row)
+
+psql:database/tests/35_reavivamento_por_pessoa.sql:45: ERROR:  duplicate key value violates unique constraint "uq_rqe_igr_id_ano"
+psql:database/tests/35_reavivamento_por_pessoa.sql:46: ERROR:  new row for relation "quota_escalao_reavivamento" violates check constraint "chk_rqe_valores"

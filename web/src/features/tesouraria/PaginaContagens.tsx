@@ -9,7 +9,7 @@
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calculator, Check, CircleCheck, HandCoins, Landmark, Plus, Scale, UserPlus, Users, X } from 'lucide-react'
+import { Calculator, Check, ChevronDown, CircleCheck, HandCoins, Landmark, Plus, Scale, UserPlus, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,6 +118,8 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
   const contagens = useContagens()
   const participantes = useParticipantesContagem(c.id)
   const [depositar, setDepositar] = useState(false)
+  // abre e fecha: as que estão por conferir começam abertas; as conferidas, fechadas
+  const [expandido, setExpandido] = useState(c.estado === 'ABERTA')
   const activos = (participantes.data ?? []).filter((x) => !x.endDate)
   const faltam = participantes.isPending ? [] : MINIMO_CONTAGEM.filter((f) => !activos.some((x) => x.funcao === f.funcao))
   const caixaId = contagens.data?.find((x) => x.id === c.id)?.contaId
@@ -150,22 +152,32 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
     : 'Está tudo lançado: pode conferir.'
 
   return (
-    <section className={cn('min-w-0 overflow-hidden rounded-xl border bg-card shadow-card', !aberta && 'border-success/40')}>
-      <header className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</h3>
+    <section className={cn('relative min-w-0 overflow-hidden rounded-2xl border bg-card shadow-card transition-shadow hover:shadow-[0_6px_20px_-8px_rgb(15_23_42/0.18)]',
+      'before:absolute before:inset-y-0 before:left-0 before:w-1', aberta ? 'before:bg-warning' : 'before:bg-success')}>
+      <button type="button" onClick={() => setExpandido((x) => !x)} aria-expanded={expandido}
+        className="alvo flex w-full flex-wrap items-center justify-between gap-3 px-5 py-4 text-left sm:px-6">
+        <span className="min-w-0">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-base font-semibold"><span className="tabular-nums">{data(c.data)}</span> · {c.ocasiao ?? 'Culto'}</span>
             <Pilula variante={est.v}>{est.r}</Pilula>
-          </div>
-          {contadores && !activos.length && !participantes.isPending && <p className="text-sm text-muted-foreground">Contado por {contadores}</p>}
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Contado</p>
-          <p className="num text-xl font-semibold tracking-tight"><Dinheiro valor={c.totalContado} /></p>
-        </div>
-      </header>
+          </span>
+          <span className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="flex gap-1" aria-hidden>{passos.map((x, i) => <span key={x.r} className={cn('h-1.5 w-6 rounded-full', x.ok ? 'bg-success' : i + 1 === passo ? 'bg-primary' : 'bg-muted')} />)}</span>
+            {passo <= 4 && !passos[3].ok ? `Passo ${passo} de 4 · ${passos[passo - 1].r}` : 'Concluída'}
+          </span>
+        </span>
+        <span className="flex items-center gap-4">
+          <span className="text-right">
+            <span className="block text-xs text-muted-foreground">Contado</span>
+            <span className="num block text-xl font-semibold tracking-tight"><Dinheiro valor={c.totalContado} /></span>
+          </span>
+          <ChevronDown className={cn('size-5 text-muted-foreground transition-transform duration-200', expandido && 'rotate-180')} aria-hidden />
+        </span>
+      </button>
 
-      <ol className="mx-4 mt-4 grid grid-cols-2 gap-2 sm:mx-6 sm:grid-cols-4" aria-label="Passos da contagem">
+      {expandido && contadores && !activos.length && !participantes.isPending && <p className="-mt-2 px-5 text-sm text-muted-foreground sm:px-6">Contado por {contadores}</p>}
+      {expandido && (
+      <ol className="mx-5 mt-2 grid grid-cols-2 gap-2 sm:mx-6 sm:grid-cols-4" aria-label="Passos da contagem">
         {passos.map((x, i) => {
           const n = i + 1, actual = n === passo
           return (
@@ -183,8 +195,9 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
           )
         })}
       </ol>
+      )}
 
-      {aberta && (
+      {aberta && expandido && (
         <div className="grid gap-4 px-4 py-4 sm:px-6 lg:grid-cols-2">
           <Participantes contagemId={c.id} aberta={aberta} nomeDe={nomeDe} lista={activos} aCarregar={participantes.isPending} />
           <div className="rounded-lg border">
@@ -214,7 +227,7 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
         </div>
       )}
 
-      <footer className={cn('mt-4 flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 sm:px-6', aberta && 'mt-0')}>
+      <footer className={cn('flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-5 py-3 sm:px-6', expandido && !aberta && 'mt-4')}>
         <p className="text-sm text-muted-foreground">{dica}</p>
         <div className="flex flex-wrap gap-2">
           {aberta && passo === 2 && falta > 0 && pode('tesouraria.transacao.criar') && (

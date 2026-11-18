@@ -47,3 +47,16 @@ export function useSantaCeiaMut() {
 export async function lerSantaCeia(id: number) {
   return dados(api.GET('/v1/actividades/santas-ceias/{id}', { params: { path: { id } } }))
 }
+
+/** V51 · Os acompanhantes (diáconos) de uma Santa Ceia. */
+export async function lerAcompanhantes(stcId: number) {
+  const r = (await dados(api.GET('/v1/actividades/acompanhantes-santa-ceia' as never, { params: { query: { santaCeiaId: stcId, limite: 50 } } } as never))) as { dados: { id: number; santaCeiaId: number; membroId: number; endDate?: string | null }[] }
+  return r.dados.filter((a) => !a.endDate && a.santaCeiaId === stcId)
+}
+
+/** Grava os acompanhantes: junta os novos e retira os que saíram (fica no histórico). */
+export async function gravarAcompanhantes(stcId: number, igrejaId: number, membros: number[]) {
+  const actuais = await lerAcompanhantes(stcId)
+  for (const a of actuais) if (!membros.includes(a.membroId)) await dados(api.POST('/v1/actividades/acompanhantes-santa-ceia/{id}/terminar' as never, { params: { path: { id: a.id } } } as never))
+  for (const m of membros) if (!actuais.some((a) => a.membroId === m)) await dados(api.POST('/v1/actividades/acompanhantes-santa-ceia' as never, { body: { santaCeiaId: stcId, igrejaId, membroId: m } } as never))
+}

@@ -2,8 +2,9 @@
  * Componentes partilhados do Design System (equivalentes aos x-ui.* do SGMS): cabeçalho de página,
  * indicador (stat), cartão, pílula, avatar, dinheiro e par rótulo/valor.
  */
-import { Children, Fragment, cloneElement, isValidElement, type ComponentType, type ReactElement, type ReactNode } from 'react'
+import { Children, Fragment, cloneElement, isValidElement, type ComponentType, type ReactElement, type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { dinheiro, iniciais, tomPessoa } from '@/lib/formatos'
 import { t } from '@/i18n/pt-MZ'
@@ -88,31 +89,48 @@ export function Indicador({ rotulo, valor, nota, icone, tom = 'primary', para, a
 }
 
 /** Cartão: título, descrição, ícone e acções no cabeçalho; conteúdo com ou sem margem interior. */
-export function Cartao({ titulo, descricao, icone, accoes, children, className, semMargem }: {
+/**
+ * Cartão com título, descrição, ícone e acções. Com recolhivel, o cabeçalho abre e fecha o conteúdo (aberto ao início,
+ * salvo abertoInicial={false}).
+ */
+export function Cartao({ titulo, descricao, icone, accoes, children, className, semMargem, recolhivel, abertoInicial = true }: {
   titulo?: ReactNode; descricao?: ReactNode; icone?: Icone; accoes?: ReactNode; children: ReactNode; className?: string; semMargem?: boolean
+  recolhivel?: boolean; abertoInicial?: boolean
 }) {
+  const [aberto, setAberto] = useState(abertoInicial)
   const temCabeca = titulo || accoes
+  const mostra = !recolhivel || aberto
+  const textoCabeca = (
+    <div className="flex min-w-[10rem] flex-1 basis-0 items-start gap-3">
+      {icone && (
+        <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" aria-hidden>
+          {(() => { const I = icone; return <I className="size-4" /> })()}
+        </span>
+      )}
+      <div className="min-w-0">
+        <h2 className="text-base leading-6 font-semibold tracking-tight">{titulo}</h2>
+        {descricao && <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>}
+      </div>
+    </div>
+  )
   return (
     <section className={cn('flex min-w-0 flex-col rounded-xl border bg-card text-card-foreground shadow-card', className)}>
       {temCabeca && (
-        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 px-5 pt-5 sm:px-6">
-          <div className="flex min-w-[10rem] flex-1 basis-0 items-start gap-3">
-            {icone && (
-              <span className="mt-0.5 flex size-8 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground" aria-hidden>
-                {(() => { const I = icone; return <I className="size-4" /> })()}
-              </span>
-            )}
-            <div className="min-w-0">
-              <h2 className="text-base leading-6 font-semibold tracking-tight">{titulo}</h2>
-              {descricao && <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>}
-            </div>
-          </div>
-          {accoes && <div className="ml-auto flex flex-wrap items-center gap-2">{accoes}</div>}
+        <header className={cn('flex flex-wrap items-start justify-between gap-x-4 gap-y-3 px-5 pt-5 sm:px-6', recolhivel && !aberto && 'pb-5')}>
+          {recolhivel ? (
+            <button type="button" onClick={() => setAberto((x) => !x)} aria-expanded={aberto} className="alvo flex min-w-[10rem] flex-1 basis-0 items-start gap-2 text-left">
+              {textoCabeca}
+              <ChevronDown className={cn('mt-1 size-5 flex-none text-muted-foreground transition-transform duration-200', aberto && 'rotate-180')} aria-hidden />
+            </button>
+          ) : textoCabeca}
+          {accoes && mostra && <div className="ml-auto flex flex-wrap items-center gap-2">{accoes}</div>}
         </header>
       )}
-      <div className={cn('flex min-w-0 flex-1 flex-col', !semMargem && 'p-5 sm:p-6', !semMargem && temCabeca && 'pt-4 sm:pt-4', semMargem && temCabeca && 'mt-4')}>
-        {children}
-      </div>
+      {mostra && (
+        <div className={cn('flex min-w-0 flex-1 flex-col', !semMargem && 'p-5 sm:p-6', !semMargem && temCabeca && 'pt-4 sm:pt-4', semMargem && temCabeca && 'mt-4')}>
+          {children}
+        </div>
+      )}
     </section>
   )
 }

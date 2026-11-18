@@ -4,7 +4,7 @@
  * participantes; agendar, registar os participantes depois de realizada, editar e cancelar.
  */
 import { useEffect, useState } from 'react'
-import { CalendarCheck, CalendarPlus, MoreHorizontal, Pencil, Users, Wine, XCircle } from 'lucide-react'
+import { CalendarCheck, CalendarPlus, Check, MoreHorizontal, Pencil, Users, Wine, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,7 +22,10 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { data, dataPorExtenso, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { ROTULO_ESTADO, lerSantaCeia, useHistoricoSantaCeia, useSantaCeiaMut, type SantaCeia } from './api'
+import { ROTULO_ESTADO, gravarAcompanhantes, lerAcompanhantes, lerSantaCeia, useHistoricoSantaCeia, useSantaCeiaMut, type SantaCeia } from './api'
+import { useConselho } from '@/features/conselho/api'
+import { Seleccao } from '@/components/comum/Seleccao'
+import { cn } from '@/lib/utils'
 import { CampoHora } from '@/components/comum/CampoHora'
 
 const VARIANTE = { AGENDADA: 'info', REALIZADA: 'success', CANCELADA: 'secondary' } as const
@@ -155,6 +158,14 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
   const [local, setLocal] = useState(santaCeia?.local ?? '')
   const [responsavel, setResponsavel] = useState<number | null>(null)
   const [observacoes, setObservacoes] = useState('')
+  const [acompanhantes, setAcompanhantes] = useState<number[]>([])
+  // quem oficia: o pastor ou um ancião; quem acompanha: os diáconos e as diaconisas (oficiais em exercício)
+  const conselho = useConselho()
+  const activos = (conselho.data ?? []).filter((o) => o.estadoMandato === 'ACTIVO' || o.estadoMandato === 'A_TERMINAR')
+  const unicos = (l: typeof activos) => [...new Map(l.map((o) => [o.membroId, o])).values()]
+  const oficiantes = unicos(activos.filter((o) => /anci[aã]o|pastor/i.test(o.cargo)))
+  const diaconos = unicos(activos.filter((o) => /di[aá]con/i.test(o.cargo)))
+  const trocarAcompanhante = (m: number) => setAcompanhantes((l) => (l.includes(m) ? l.filter((x) => x !== m) : [...l, m]))
   const [erro, setErro] = useState<string | null>(null)
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
   // ao editar: o responsável e as observações vêm da ficha (a vista só tem o nome)
@@ -168,6 +179,7 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
       setResponsavel(x.responsavelMembroId ?? null)
       setObservacoes(x.observacoes ?? '')
     }).catch(() => undefined)
+    lerAcompanhantes(id).then((l) => { if (vivo) setAcompanhantes(l.map((a) => a.membroId)) }).catch(() => undefined)
     return () => { vivo = false }
   }, [id])
   const gravar = async () => {
@@ -175,8 +187,10 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) return setErro('Escreva a data como dd/mm/aaaa.')
     const corpo = { data: dia, hora: hora || null, local: local.trim() || null, responsavelMembroId: responsavel, observacoes: observacoes.trim() || null }
     try {
+      let stcId = santaCeia?.stcId
       if (santaCeia) await alterar.mutateAsync({ id: santaCeia.stcId, ...corpo })
-      else await criar.mutateAsync({ igrejaId: igreja.id, ...corpo })
+      else stcId = ((await criar.mutateAsync({ igrejaId: igreja.id, ...corpo })) as { id: number }).id
+      if (stcId) await gravarAcompanhantes(stcId, igreja.id, acompanhantes)
       toast.success(santaCeia ? 'Santa Ceia actualizada.' : 'Santa Ceia agendada.')
       aoFechar()
     } catch (e) { setErro(mensagemDe(e)) }
@@ -195,8 +209,31 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
             <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium">Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo w-full" /></div>
           </div>
           <div className="grid gap-1.5"><label htmlFor="stc-local" className="text-sm font-medium">Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Quem oficia</label>
-            <CampoMembro id="stc-resp" valor={responsavel} aoMudar={setResponsavel} nomeDe={nomeDe} /></div>
+          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Oficiante <span className="font-normal text-muted-foreground">(pastor ou ancião)</span></label>
+            {oficiantes.length ? (
+              <Seleccao id="stc-resp" value={responsavel ? String(responsavel) : ''} onChange={(e) => setResponsavel(e.target.value ? Number(e.target.value) : null)}>
+                <option value="">Escolher…</option>
+                {oficiantes.map((o) => <option key={o.membroId} value={o.membroId}>{o.membro} · {o.cargo}</option>)}
+                {responsavel && !oficiantes.some((o) => o.membroId === responsavel) && <option value={responsavel}>{nomeDe(responsavel) ?? 'Outro'}</option>}
+              </Seleccao>
+            ) : <CampoMembro id="stc-resp" valor={responsavel} aoMudar={setResponsavel} nomeDe={nomeDe} />}
+          </div>
+          <div className="grid gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium">Acompanhantes <span className="font-normal text-muted-foreground">(diáconos)</span></span>
+            {diaconos.length ? (
+              <div className="flex flex-wrap gap-2">
+                {diaconos.map((o) => {
+                  const sim = acompanhantes.includes(o.membroId)
+                  return (
+                    <button key={o.membroId} type="button" aria-pressed={sim} onClick={() => trocarAcompanhante(o.membroId)}
+                      className={cn('alvo inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors', sim ? 'border-primary bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:border-foreground/30 hover:text-foreground')}>
+                      {sim && <Check className="size-3.5" />}{o.membro}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : <p className="text-sm text-muted-foreground">Sem diáconos no mandato em exercício.</p>}
+          </div>
           <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-obs" className="text-sm font-medium">Observações</label><Textarea id="stc-obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} maxLength={500} placeholder="Opcional" /></div>
         </div>
         <DialogFooter>

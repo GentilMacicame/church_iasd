@@ -21,7 +21,7 @@ import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
-import { useFundos, useFundosMut, useQuotasReavivamentoMut, useReavivamentoPessoas, type PessoaReavivamento } from './api'
+import { useFundos, useFundosMut, useQuotaEscalao, useQuotaEscalaoMut, useQuotasReavivamentoMut, useReavivamentoPessoas, type PessoaReavivamento } from './api'
 
 const sem = (x: string) => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -40,7 +40,8 @@ export default function PaginaReavivamento() {
   const alvo = centimos(lista[0]?.alvoIgreja ?? '0')
   const contribuido = lista.reduce((s, p) => s + centimos(p.contribuido), 0)
   const criancas = lista.filter((p) => p.menor).length
-  const quotaIgual = lista.find((p) => p.quotaId == null)?.quota
+  // a quota de cada escalão (a de quem não tem ajuste individual)
+  const quotaDe = (menor: boolean) => lista.find((p) => p.menor === menor && p.origem !== 'AJUSTADA')?.quota
   const visiveis = lista.filter((p) => (quem === 'todos' || (quem === 'adultos' ? !p.menor : quem === 'criancas' ? p.menor : centimos(p.falta) > 0))
     && (!busca || sem(`${p.nome} ${p.apelido}`).includes(sem(busca))))
   const pct = (a: number, b: number) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0)
@@ -74,8 +75,10 @@ export default function PaginaReavivamento() {
               <Indicador rotulo={`Alvo de ${ano}`} valor={<Dinheiro valor={deCentimos(alvo)} />} nota={`${pct(contribuido, alvo)}% já contribuído`} icone={Target} tom="primary" />
               <Indicador rotulo="Contribuído" valor={<Dinheiro valor={deCentimos(contribuido)} />} nota={`falta ${dinheiro(deCentimos(Math.max(0, alvo - contribuido)))}`} icone={Flame} tom="success" />
               <Indicador rotulo="Pessoas" valor={lista.length} nota={`${lista.length - criancas} adultos · ${criancas} crianças`} icone={Users} />
-              <Indicador rotulo="Quota de cada um" valor={quotaIgual ? <Dinheiro valor={quotaIgual} /> : '—'} nota={quotaIgual ? `${dinheiro(deCentimos(Math.round(centimos(quotaIgual) / 12)))} por mês` : 'todas ajustadas'} icone={Users} tom="info" />
+              <Indicador rotulo="Quota adulto · criança" valor={<span className="text-xl">{quotaDe(false) ? dinheiro(quotaDe(false)!) : '—'} · {quotaDe(true) ? dinheiro(quotaDe(true)!) : '—'}</span>} nota="por ano" icone={Users} tom="info" />
             </div>
+
+            <QuotasPorEscalao ano={ano} quotaAdulto={quotaDe(false)} quotaCrianca={quotaDe(true)} />
 
             <Cartao semMargem>
               <div className="flex flex-wrap items-center gap-3 border-b px-5 py-4 sm:px-6">
@@ -99,7 +102,7 @@ export default function PaginaReavivamento() {
                             <Avatar id={p.membroId} nome={p.nome} apelido={p.apelido} tamanho={32} />
                             <span className="min-w-0">
                               <Link to={`/membros/${p.membroId}`} className="block truncate font-medium hover:text-primary">{p.nome} {p.apelido}</Link>
-                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">{p.menor ? 'Criança' : 'Adulto'}{p.quotaId != null && <Pilula variante="info">ajustada</Pilula>}</span>
+                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">{p.menor ? 'Criança' : 'Adulto'}{p.origem === 'AJUSTADA' ? <Pilula variante="info">ajustada</Pilula> : p.origem === 'ESCALAO' ? <Pilula variante="secondary">fixa</Pilula> : null}</span>
                             </span>
                           </span>
                         </td>
@@ -165,5 +168,37 @@ function DialogoAjustar({ p, ano, aoFechar }: { p: PessoaReavivamento; ano: numb
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** Quotas por escalão: um valor para todos os adultos e outro para todas as crianças; vazio = automático. */
+function QuotasPorEscalao({ ano, quotaAdulto, quotaCrianca }: { ano: number; quotaAdulto?: string; quotaCrianca?: string }) {
+  const { pode } = useSessao()
+  const q = useQuotaEscalao(ano)
+  const gravar = useQuotaEscalaoMut()
+  const [adulto, setAdulto] = useState<string | null>(null)
+  const [crianca, setCrianca] = useState<string | null>(null)
+  const a = adulto ?? q.data?.quotaAdulto ?? ''
+  const c = crianca ?? q.data?.quotaCrianca ?? ''
+  const mudou = adulto != null || crianca != null
+  const podeGravar = pode(q.data ? 'tesouraria.quota_escalao_reavivamento.alterar' : 'tesouraria.quota_escalao_reavivamento.criar')
+  const guardar = () => gravar.mutate({ id: q.data?.id, ano, quotaAdulto: a || null, quotaCrianca: c || null }, {
+    onSuccess: () => { setAdulto(null); setCrianca(null); toast.success('Quotas guardadas.') }, onError: (e) => toast.error(mensagemDe(e)),
+  })
+  const campo = (rotulo: string, valor: string, mudar: (v: string) => void, actual?: string, fixa?: boolean) => (
+    <div className="grid gap-1.5">
+      <span className="text-sm font-medium">{rotulo}</span>
+      <CampoDinheiro aria-label={rotulo} value={valor} onChange={mudar} placeholder="Automático" disabled={!podeGravar} className="alvo" />
+      <span className="text-xs text-muted-foreground">{fixa ? 'Fixa para todos' : `Automática${actual ? `: ${dinheiro(actual)}` : ''}`}{actual ? ` · ${dinheiro(deCentimos(Math.round(centimos(actual) / 12)))} por mês` : ''}</span>
+    </div>
+  )
+  return (
+    <Cartao titulo="Quotas por escalão" descricao="Vazio = automático: reparte o resto do alvo" icone={Users}
+      accoes={podeGravar && mudou && <Button size="sm" className="alvo" disabled={gravar.isPending} onClick={guardar}>{gravar.isPending ? t.comum.aGravar : t.comum.guardar}</Button>}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {campo('Adultos', a, setAdulto, quotaAdulto, !!q.data?.quotaAdulto)}
+        {campo('Crianças', c, setCrianca, quotaCrianca, !!q.data?.quotaCrianca)}
+      </div>
+    </Cartao>
   )
 }

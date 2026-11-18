@@ -381,6 +381,39 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
             </Cartao>
           </div>
 
+          {!aCarregar && comMem.length >= 2 && (() => {
+            // igrejas lado a lado: as mais relevantes (até 12, pela medida dos membros), com nomes curtos no eixo
+            const sel = [...comMem].sort((x, y) => y.membros - x.membros).slice(0, 12)
+            const nomes = sel.map((l) => l.nome.replace(/^Igreja (de |da |do )?/i, '').slice(0, 14))
+            const selTes = sel.filter((l) => l.veTesouraria)
+            return (
+              <>
+                <h2 className="mt-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Igrejas lado a lado</h2>
+                <div className="grid items-stretch gap-6 lg:grid-cols-2">
+                  <Cartao titulo="Membros activos e inactivos" descricao={sel.length < comMem.length ? `As ${sel.length} maiores igrejas` : 'Hoje'}>
+                    <GraficoBarras rotulo="Membros activos e inactivos por igreja" categorias={nomes} inteiros
+                      series={[{ nome: 'Activos', slot: 1, valores: sel.map((l) => l.activos) }, { nome: 'Inactivos', slot: 2, valores: sel.map((l) => l.inactivos) }]}
+                      formatar={(v) => inteiro(v)} />
+                  </Cartao>
+                  <Cartao titulo="% de activos e fidelidade" descricao="Quanto mais alto, melhor">
+                    <GraficoBarras rotulo="Percentagem de activos e fidelidade por igreja" categorias={nomes}
+                      series={[{ nome: '% activos', slot: 1, valores: sel.map((l) => (razao(l.activos, l.membros) ?? 0) * 100) },
+                        { nome: 'Fidelidade', slot: 3, valores: sel.map((l) => (l.veTesouraria ? (razao(l.contribuintes, l.membros) ?? 0) * 100 : 0)) }]}
+                      formatar={(v) => `${Math.round(v)}%`} />
+                  </Cartao>
+                  {selTes.length >= 2 && (
+                    <Cartao titulo="Contribuições por igreja" descricao={intervalo.rotulo} className="lg:col-span-2">
+                      <GraficoBarras rotulo="Dízimos, ofertas e reavivamento por igreja" categorias={selTes.map((l) => l.nome.replace(/^Igreja (de |da |do )?/i, '').slice(0, 14))}
+                        series={[{ nome: 'Dízimos', slot: 1, valores: selTes.map((l) => n(l.dizimos)) }, { nome: 'Ofertas', slot: 2, valores: selTes.map((l) => n(l.ofertas)) },
+                          { nome: 'Reavivamento', slot: 3, valores: selTes.map((l) => n(l.reavivamento)) }]}
+                        formatar={(v) => textoMT(v)} />
+                    </Cartao>
+                  )}
+                </div>
+              </>
+            )
+          })()}
+
           <Cartao titulo="Quadro comparativo das igrejas" descricao={`${intervalo.rotulo} · clique numa coluna para ordenar`}>
             {aCarregar ? <LinhasACarregar linhas={6} /> : !linhas.length ? <EstadoVazio>Nenhuma igreja com esse filtro.</EstadoVazio> : (
               <Folha minimo="min-w-[86rem]">

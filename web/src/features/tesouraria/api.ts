@@ -851,6 +851,7 @@ export function useAlvosMut() {
 export interface PessoaReavivamento {
   igrejaId: number; ano: number; membroId: number; nome: string; apelido: string; dataNascimento: string | null; menor: boolean
   alvoIgreja: string; quotaId: number | null; quotaAjustada: string | null; motivo: string | null; quota: string; contribuido: string; falta: string
+  origem: 'AJUSTADA' | 'ESCALAO' | 'AUTOMATICA'
 }
 
 export function useReavivamentoPessoas(ano: number) {
@@ -951,4 +952,27 @@ export function useDepartamentosTesourariaMut() {
     onSuccess: () => invalidar(),
   })
   return { gravarPercentagem, transferir, adiantar, prestarContas }
+}
+
+/** V51 · Quota fixada no ano para todos os adultos e/ou todas as crianças (vazio = automático). */
+export interface QuotaEscalao { id: number; ano: number; quotaAdulto: string | null; quotaCrianca: string | null; endDate?: string | null }
+
+export function useQuotaEscalao(ano: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'quotas-escalao', ano],
+    queryFn: async () => ((await dados(api.GET('/v1/tesouraria/quotas-escalao-reavivamento' as never, { params: { query: { igrejaId: igreja.id, limite: 50 } } } as never))) as { dados: QuotaEscalao[] })
+      .dados.find((q) => !q.endDate && q.ano === ano) ?? null,
+  })
+}
+
+export function useQuotaEscalaoMut() {
+  const invalidar = useInvalidar()
+  const igreja = useIgreja()
+  return useMutation({
+    mutationFn: ({ id, ano, quotaAdulto, quotaCrianca }: { id?: number; ano: number; quotaAdulto: string | null; quotaCrianca: string | null }) => id
+      ? dados(api.PATCH('/v1/tesouraria/quotas-escalao-reavivamento/{id}' as never, { params: { path: { id } }, body: { quotaAdulto, quotaCrianca } } as never))
+      : dados(api.POST('/v1/tesouraria/quotas-escalao-reavivamento' as never, { body: { igrejaId: igreja.id, ano, quotaAdulto, quotaCrianca }, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } } as never)),
+    onSuccess: () => invalidar(),
+  })
 }

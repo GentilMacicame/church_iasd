@@ -14,7 +14,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, CalendarRange, FileBarChart, Layers, Printer, Scale, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Cartao, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Pilula, TituloPagina } from '@/components/comum/elementos'
+import { GraficoBarras } from '@/components/comum/graficos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { Exportar } from '@/components/comum/Exportar'
 import { useIgreja } from '@/auth/sessao'
@@ -255,48 +256,73 @@ function Classificacao({ trimestre }: { trimestre: Trimestre }) {
 /* ===================================================================== 3. quadro comparativo */
 function Comparativo({ trimestre }: { trimestre: Trimestre }) {
   const { linhas, q, aCarregar } = useClassificacaoCompleta(trimestre)
-  const activas = linhas.filter(({ r, c }) => r.activa && c)
-  const mediaOf = media(activas.map(({ r }) => Number(r.ofertas)))
+  const activas = linhas.filter(({ r, c }) => r.activa && c).sort((x, y) => (x.c!.lugar ?? 99) - (y.c!.lugar ?? 99))
+  const mPres = media(activas.map(({ r }) => Number(r.pctPresenca ?? 0)))
+  const mEst = media(activas.map(({ r }) => Number(r.pctEstudoDiario ?? 0)))
+  const mOf = media(activas.map(({ r }) => Number(r.ofertas)))
+  // uma métrica: o valor, a barra (com a marca da média) e a diferença para a média por baixo
+  const metrica = (valor: number | null, med: number | null, dif: string | number | null | undefined, tipo: 'pp' | 'mt') => (
+    <div className="grid min-w-32 gap-1">
+      <span className="flex items-baseline justify-between gap-2"><span className="font-semibold tabular-nums">{tipo === 'pp' ? textoPct(valor) : textoMT(valor)}</span><span className="text-xs"><Diferenca v={dif} tipo={tipo} /></span></span>
+      {tipo === 'pp' && (
+        <span className="relative h-1.5 rounded-full bg-muted print:hidden" aria-hidden>
+          <span className={cn('block h-full rounded-full', (valor ?? 0) >= (med ?? 0) ? 'bg-success' : 'bg-warning')} style={{ width: `${Math.min(100, (valor ?? 0) * 100)}%` }} />
+          {med != null && <span className="absolute -top-0.5 h-2.5 w-0.5 rounded-full bg-foreground/60" style={{ left: `${Math.min(100, med * 100)}%` }} title="Média" />}
+        </span>
+      )}
+    </div>
+  )
   return (
     <Cartao>
-      <Cabeca titulo="Quadro comparativo" nota="Cada classe comparada com a média das classes activas" />
+      <Cabeca titulo="Quadro comparativo" nota="Cada classe face à média das classes activas: o traço na barra marca a média" />
       {aCarregar ? <LinhasACarregar linhas={6} /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
         : !activas.length ? <EstadoVazio icone={Scale}>As classes aparecem aqui depois do primeiro relatório do sábado.</EstadoVazio> : (
-          <Folha minimo="min-w-[60rem]">
-            <thead>
-              <tr>
-                <th className="min-w-44 text-left">Classe</th><th className="num">% Presença</th><th className="num">Diferença vs. média</th><th className="num">% Estudo diário</th>
-                <th className="num">Diferença vs. média</th><th className="num">Ofertas (MT)</th><th className="num">Diferença vs. média (MT)</th><th className="num">Pontos atrás do 1.º</th><th className="text-left">Situação geral</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activas.map(({ r, c }) => {
-                const acima = c!.situacao === 'Acima da média'
-                const atras = Number(c!.pontosAtrasDo1o)
-                return (
-                  <tr key={r.id}>
-                    <td className="font-semibold">{r.classe}</td>
-                    <td className="num tabular-nums">{textoPct(r.pctPresenca)}</td>
-                    <td className="num"><Diferenca v={c!.difPresencaMedia} tipo="pp" /></td>
-                    <td className="num tabular-nums">{textoPct(r.pctEstudoDiario)}</td>
-                    <td className="num"><Diferenca v={c!.difEstudoMedia} tipo="pp" /></td>
-                    <td className="num tabular-nums">{textoMT(r.ofertas)}</td>
-                    <td className="num"><Diferenca v={c!.difOfertasMedia} tipo="mt" /></td>
-                    <td className="num tabular-nums">{atras === 0 ? '—' : textoNum(atras)}</td>
-                    <td className={cn('font-semibold whitespace-nowrap', acima ? 'text-success-text' : 'text-destructive-text')}>{acima ? '▲' : '▼'} {c!.situacao}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Média das classes activas</td>
-                <td className="num tabular-nums">{textoPct(media(activas.map(({ r }) => Number(r.pctPresenca ?? 0))))}</td><td />
-                <td className="num tabular-nums">{textoPct(media(activas.map(({ r }) => Number(r.pctEstudoDiario ?? 0))))}</td><td />
-                <td className="num tabular-nums">{textoMT(mediaOf)}</td><td /><td /><td />
-              </tr>
-            </tfoot>
-          </Folha>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-3 gap-3">
+              {([['Presença média', textoPct(mPres)], ['Estudo diário médio', textoPct(mEst)], ['Ofertas médias', textoMT(mOf)]] as const).map(([r, x]) => (
+                <div key={r} className="rounded-xl border bg-muted/30 px-4 py-3"><p className="text-xs text-muted-foreground">{r}</p><p className="text-lg font-semibold tabular-nums">{x}</p></div>
+              ))}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2 print:hidden">
+              <div className="rounded-xl border p-4">
+                <p className="mb-2 text-sm font-medium">Presença e estudo diário</p>
+                <GraficoBarras rotulo="Presença e estudo diário por classe" categorias={[...activas.map(({ r }) => r.classe.slice(0, 16)), 'Média']} destaque={activas.length}
+                  series={[{ nome: 'Presença', slot: 1, valores: [...activas.map(({ r }) => (fr(r.pctPresenca) ?? 0) * 100), (mPres ?? 0) * 100] },
+                    { nome: 'Estudo diário', slot: 3, valores: [...activas.map(({ r }) => (fr(r.pctEstudoDiario) ?? 0) * 100), (mEst ?? 0) * 100] }]}
+                  formatar={(v) => `${Math.round(v)}%`} altura={200} />
+              </div>
+              <div className="rounded-xl border p-4">
+                <p className="mb-2 text-sm font-medium">Ofertas e pontuação</p>
+                <GraficoBarras rotulo="Ofertas por classe" categorias={[...activas.map(({ r }) => r.classe.slice(0, 16)), 'Média']} destaque={activas.length}
+                  series={[{ nome: 'Ofertas (MT)', slot: 2, valores: [...activas.map(({ r }) => fr(r.ofertas) ?? 0), mOf ?? 0] },
+                    { nome: 'Pontos', slot: 'neutra', valores: [...activas.map(({ c }) => Number(c!.pontuacao) || 0), media(activas.map(({ c }) => Number(c!.pontuacao) || 0)) ?? 0] }]}
+                  formatar={(v) => textoNum(v)} altura={200} />
+              </div>
+            </div>
+            <Folha minimo="min-w-[56rem]">
+              <thead>
+                <tr><th className="w-24 text-left">Lugar</th><th className="min-w-40 text-left">Classe</th><th className="text-left">Presença</th><th className="text-left">Estudo diário</th>
+                  <th className="text-left">Ofertas</th><th className="num">Atrás do 1.º</th><th className="text-left">Situação</th></tr>
+              </thead>
+              <tbody>
+                {activas.map(({ r, c }) => {
+                  const acima = c!.situacao === 'Acima da média'
+                  const atras = Number(c!.pontosAtrasDo1o)
+                  return (
+                    <tr key={r.id}>
+                      <td><Lugar n={c!.lugar} /></td>
+                      <td><span className="block font-semibold">{r.classe}</span><span className="text-xs text-muted-foreground">{textoNum(Number(c!.pontuacao))} pontos</span></td>
+                      <td>{metrica(fr(r.pctPresenca), mPres, c!.difPresencaMedia, 'pp')}</td>
+                      <td>{metrica(fr(r.pctEstudoDiario), mEst, c!.difEstudoMedia, 'pp')}</td>
+                      <td>{metrica(fr(r.ofertas), mOf, c!.difOfertasMedia, 'mt')}</td>
+                      <td className="num tabular-nums text-muted-foreground">{atras === 0 ? 'líder' : `${textoNum(atras)} pts`}</td>
+                      <td><Pilula variante={acima ? 'success' : 'warning'}>{acima ? '▲' : '▼'} {c!.situacao}</Pilula></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </Folha>
+          </div>
         )}
     </Cartao>
   )
@@ -405,7 +431,7 @@ function PorDivisao({ trimestre }: { trimestre: Trimestre }) {
         : !l.length ? <EstadoVazio icone={Layers}>Sem relatórios neste trimestre.</EstadoVazio> : (
           <Folha minimo="min-w-[48rem]">
             <thead>
-              <tr><th className="text-left">Divisão</th><th className="num">Igrejas</th><th className="num">Classes</th><th className="num">Matriculados</th><th className="num">Presentes</th><th className="num">% Presença</th><th className="num">Ofertas missionárias</th><th className="num">13.º sábado</th><th className="num">Baptismos</th></tr>
+              <tr><th className="text-left">Divisão</th><th className="num">Igrejas</th><th className="num">Classes</th><th className="num">Matriculados</th><th className="num">Presentes</th><th className="num">% Presença</th><th className="num">Baptismos</th></tr>
             </thead>
             <tbody>
               {l.map((x) => (
@@ -414,7 +440,6 @@ function PorDivisao({ trimestre }: { trimestre: Trimestre }) {
                   <td className="num tabular-nums">{x.igrejas}</td><td className="num tabular-nums">{x.classes}</td>
                   <td className="num tabular-nums">{textoNum(x.matriculados)}</td><td className="num tabular-nums">{textoNum(x.presentes)}</td>
                   <CelulaPct v={Number(x.matriculados) ? Number(x.presentes) / Number(x.matriculados) : null} />
-                  <td className="num tabular-nums">{textoMT(x.ofertasMissionarias)}</td><td className="num tabular-nums">{textoMT(x.oferta13Sabado)}</td>
                   <td className="num tabular-nums">{Number(x.baptismos)}</td>
                 </tr>
               ))}
@@ -424,7 +449,6 @@ function PorDivisao({ trimestre }: { trimestre: Trimestre }) {
                 <td>Total</td><td /><td className="num tabular-nums">{S((x) => x.classes)}</td>
                 <td className="num tabular-nums">{textoNum(S((x) => Number(x.matriculados)))}</td><td className="num tabular-nums">{textoNum(S((x) => Number(x.presentes)))}</td>
                 <CelulaPct v={S((x) => Number(x.matriculados)) ? S((x) => Number(x.presentes)) / S((x) => Number(x.matriculados)) : null} />
-                <td className="num tabular-nums">{textoMT(S((x) => Number(x.ofertasMissionarias)))}</td><td className="num tabular-nums">{textoMT(S((x) => Number(x.oferta13Sabado)))}</td>
                 <td className="num tabular-nums">{S((x) => Number(x.baptismos))}</td>
               </tr>
             </tfoot>

@@ -33,4 +33,15 @@ SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 UPDATE tesouraria.quota_reavivamento SET qrv_valor = 50 WHERE qrv_mem_id = 960 RETURNING qrv_valor;
 SELECT set_config('app.usuario_id', '7', false) \g /dev/null
 SELECT count(*) AS quotas_que_ve FROM tesouraria.quota_reavivamento;
+
+\echo '5. V51: adultos com quota fixa de 400; as crianças (automáticas) repartem o resto do alvo; o Paulo continua ajustado'
+SELECT set_config('app.usuario_id', '1', false) \g /dev/null
+INSERT INTO tesouraria.quota_escalao_reavivamento (rqe_igr_id, rqe_ano, rqe_quota_adulto) VALUES (1, 2026, 400) RETURNING rqe_quota_adulto, rqe_quota_crianca;
+SELECT origem, menor, count(*) > 0 AS ha, count(DISTINCT quota) AS quotas_diferentes, min(quota) = 400 OR origem <> 'ESCALAO' AS adulto_400
+  FROM tesouraria.vw_reavivamento_pessoas WHERE igreja_id = 1 AND ano = 2026 GROUP BY origem, menor ORDER BY origem, menor;
+\echo '   as crianças também fixas (100): ninguém fica automático; repetir o ano e valor negativo recusados'
+UPDATE tesouraria.quota_escalao_reavivamento SET rqe_quota_crianca = 100 WHERE rqe_igr_id = 1 AND rqe_ano = 2026;
+SELECT count(*) FILTER (WHERE origem = 'AUTOMATICA') AS automaticas FROM tesouraria.vw_reavivamento_pessoas WHERE igreja_id = 1 AND ano = 2026;
+INSERT INTO tesouraria.quota_escalao_reavivamento (rqe_igr_id, rqe_ano, rqe_quota_adulto) VALUES (1, 2026, 10);
+UPDATE tesouraria.quota_escalao_reavivamento SET rqe_quota_adulto = -1 WHERE rqe_igr_id = 1;
 RESET ROLE;

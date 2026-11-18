@@ -40,3 +40,11 @@ psql:database/tests/25_santa_ceia.sql:31: ERROR:  new row violates row-level sec
             0
 (1 row)
 
+6. V51: acompanhantes (diáconos) da Santa Ceia agendada; repetido e de outra igreja recusados
+ igreja_copiada 
+----------------
+              1
+(1 row)
+
+psql:database/tests/25_santa_ceia.sql:44: ERROR:  duplicate key value violates unique constraint "uq_sca_stc_id_mem_id"
+psql:database/tests/25_santa_ceia.sql:46: ERROR:  O acompanhante tem de ser membro desta igreja

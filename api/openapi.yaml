@@ -30,6 +30,224 @@ tags:
 - name: Comunicação
   description: Fila de SMS, WhatsApp e e-mail (parte do núcleo).
 paths:
+  /v1/actividades/acompanhantes-santa-ceia:
+    get:
+      summary: 'Acompanhantes santa ceia: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.ler
+      operationId: listarSantaCeiaAcompanhante
+      description: 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: santaCeiaId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SantaCeiaAcompanhante'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Acompanhantes santa ceia: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.criar
+      operationId: criarSantaCeiaAcompanhante
+      description: 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/SantaCeiaAcompanhante'
+              required:
+              - santaCeiaId
+              - igrejaId
+              - membroId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaAcompanhante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/acompanhantes-santa-ceia/{id}:
+    get:
+      summary: 'Acompanhantes santa ceia: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.ler
+      operationId: lerSantaCeiaAcompanhante
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaAcompanhante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Acompanhantes santa ceia: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.alterar
+      operationId: alterarSantaCeiaAcompanhante
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SantaCeiaAcompanhante'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaAcompanhante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/acompanhantes-santa-ceia/{id}/reactivar:
+    post:
+      summary: 'Acompanhantes santa ceia: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.terminar
+      operationId: reactivarSantaCeiaAcompanhante
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaAcompanhante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/acompanhantes-santa-ceia/{id}/terminar:
+    post:
+      summary: 'Acompanhantes santa ceia: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_acompanhante.terminar
+      operationId: terminarSantaCeiaAcompanhante
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaAcompanhante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/actividades/actividades:
     get:
       summary: 'Actividades: listar'
@@ -19940,6 +20158,216 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-escalao-reavivamento:
+    get:
+      summary: 'Quotas escalao reavivamento: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.ler
+      operationId: listarQuotaEscalaoReavivamento
+      description: Quota do reavivamento fixada para todos os adultos e/ou todas as crianças no ano (V51)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Quotas escalao reavivamento: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.criar
+      operationId: criarQuotaEscalaoReavivamento
+      description: Quota do reavivamento fixada para todos os adultos e/ou todas as crianças no ano (V51)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+              required:
+              - igrejaId
+              - ano
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-escalao-reavivamento/{id}:
+    get:
+      summary: 'Quotas escalao reavivamento: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.ler
+      operationId: lerQuotaEscalaoReavivamento
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Quotas escalao reavivamento: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.alterar
+      operationId: alterarQuotaEscalaoReavivamento
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-escalao-reavivamento/{id}/reactivar:
+    post:
+      summary: 'Quotas escalao reavivamento: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.terminar
+      operationId: reactivarQuotaEscalaoReavivamento
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-escalao-reavivamento/{id}/terminar:
+    post:
+      summary: 'Quotas escalao reavivamento: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_escalao_reavivamento.terminar
+      operationId: terminarQuotaEscalaoReavivamento
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaEscalaoReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/quotas-reavivamento:
     get:
       summary: 'Quotas reavivamento: listar'
@@ -25805,6 +26233,58 @@ components:
           nullable: true
       x-obrigatorios-ao-criar:
       - nome
+    QuotaEscalaoReavivamento:
+      type: object
+      description: Quota do reavivamento fixada para todos os adultos e/ou todas as crianças no ano (V51)
+      x-tabela: tesouraria.quota_escalao_reavivamento
+      x-prefixo: rqe
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        ano:
+          type: integer
+        quotaAdulto:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Vazio = automático (reparte o resto do alvo)
+        quotaCrianca:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Vazio = automático (reparte o resto do alvo)
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - ano
     QuotaReavivamento:
       type: object
       description: Quota do reavivamento de uma pessoa no ano, ajustada à mão (as outras repartem o alvo; V49)
@@ -26558,6 +27038,55 @@ components:
       x-obrigatorios-ao-criar:
       - igrejaId
       - data
+    SantaCeiaAcompanhante:
+      type: object
+      description: 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)'
+      x-tabela: actividades.santa_ceia_acompanhante
+      x-prefixo: sca
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        santaCeiaId:
+          type: integer
+          format: int32
+          description: → actividades.santa_ceia
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado da Santa Ceia
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - santaCeiaId
+      - igrejaId
+      - membroId
     SemanaEspecial:
       type: object
       description: Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)

@@ -77,7 +77,10 @@ export default function PaginaMovimento() {
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{quando.charAt(0).toUpperCase() + quando.slice(1)} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
             </div>
-            <Valor tr={tr} className="text-3xl tracking-tight" />
+            <div className="text-right">
+              <p className="text-xs font-medium text-muted-foreground">{tr.estado === 'ANULADA' ? 'Anulada · não conta no saldo' : rotulos.tipoTransacao[tr.tipo]}</p>
+              <Valor tr={tr} className="text-3xl tracking-tight" />
+            </div>
           </div>
           {(podeConfirmar || podeAprovar || podeRecibo || recibo.data || podeEstornar || (pendente && pode('tesouraria.transacao.terminar'))) && (
             <div className="mt-5 flex flex-wrap gap-2 border-t pt-5">

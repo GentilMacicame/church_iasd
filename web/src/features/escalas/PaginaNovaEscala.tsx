@@ -2,7 +2,7 @@
  * Nova escala: título, período e quem assina. Ao gravar, a base de dados gera um dia por sábado do período
  * (actividades.fn_gerar_dias_escala) e abre-se o editor.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,11 +15,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Cartao, TituloPagina } from '@/components/comum/elementos'
 import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/comum/formulario'
 import { CampoData } from '@/components/comum/CampoData'
-import { CampoMembro } from '@/components/comum/EscolherMembro'
+import { Seleccao } from '@/components/comum/Seleccao'
+import { secretarioOficial, useConselho } from '@/features/conselho/api'
 import { useIgreja } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { hojeIso } from '@/lib/formatos'
-import { useMembrosBasicos } from '@/features/membros/api'
 import { TIPOS_ESCALA, useCriarPlano, type TipoEscala } from './api'
 import { cn } from '@/lib/utils'
 
@@ -53,14 +53,24 @@ export default function PaginaNovaEscala() {
   const igreja = useIgreja()
   const navigate = useNavigate()
   const criar = useCriarPlano()
-  const basicos = useMembrosBasicos()
   const [erro, setErro] = useState<string | null>(null)
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
     defaultValues: { titulo: 'Escala do Culto Divino', dataInicio: '', dataFim: '', localEmissao: '', anciao: null, secretario: null, observacoes: '', tipo: 'CULTO' },
   })
   const e = form.formState.errors
-  const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
+  // quem assina: os oficiais em exercício (anciãos e secretários); por defeito, o primeiro ancião e o secretário oficial
+  const conselho = useConselho()
+  const activos = (conselho.data ?? []).filter((o) => o.estadoMandato === 'ACTIVO' || o.estadoMandato === 'A_TERMINAR')
+  const anciaos = activos.filter((o) => /anci[aã]o/i.test(o.cargo))
+  const secretarios = activos.filter((o) => /secret[aá]rio/i.test(o.cargo))
+  useEffect(() => {
+    if (!conselho.data) return
+    if (form.getValues('anciao') == null && anciaos[0]) form.setValue('anciao', anciaos[0].membroId)
+    const sec = secretarioOficial(conselho.data) ?? secretarios[0]
+    if (form.getValues('secretario') == null && sec) form.setValue('secretario', sec.membroId)
+  }, [conselho.data])  // eslint-disable-line react-hooks/exhaustive-deps
+  const opcoesOficiais = (lista: typeof activos) => [...new Map(lista.map((o) => [o.membroId, o])).values()]
   const usar = (d: number) => {
     const tr = trimestre(d)
     form.setValue('dataInicio', tr.inicio, { shouldValidate: true })
@@ -135,10 +145,20 @@ export default function PaginaNovaEscala() {
               </CampoFormulario>
               <div className="hidden sm:block" />
               <CampoFormulario rotulo="Ancião">
-                {(p) => <Controller control={form.control} name="anciao" render={({ field }) => <CampoMembro id={p.id} valor={field.value} aoMudar={field.onChange} nomeDe={nomeDe} />} />}
+                {(p) => <Controller control={form.control} name="anciao" render={({ field }) => (
+                  <Seleccao id={p.id} value={field.value ? String(field.value) : ''} onChange={(ev) => field.onChange(ev.target.value ? Number(ev.target.value) : null)}>
+                    <option value="">{anciaos.length ? 'Escolher o ancião…' : 'Sem anciãos no mandato'}</option>
+                    {opcoesOficiais(anciaos).map((o) => <option key={o.membroId} value={o.membroId}>{o.membro}</option>)}
+                  </Seleccao>
+                )} />}
               </CampoFormulario>
               <CampoFormulario rotulo="Secretário(a)">
-                {(p) => <Controller control={form.control} name="secretario" render={({ field }) => <CampoMembro id={p.id} valor={field.value} aoMudar={field.onChange} nomeDe={nomeDe} />} />}
+                {(p) => <Controller control={form.control} name="secretario" render={({ field }) => (
+                  <Seleccao id={p.id} value={field.value ? String(field.value) : ''} onChange={(ev) => field.onChange(ev.target.value ? Number(ev.target.value) : null)}>
+                    <option value="">{secretarios.length ? 'Escolher o secretário…' : 'Sem secretário no mandato'}</option>
+                    {opcoesOficiais(secretarios).map((o) => <option key={o.membroId} value={o.membroId}>{o.membro} · {o.cargo}</option>)}
+                  </Seleccao>
+                )} />}
               </CampoFormulario>
               <CampoFormulario rotulo="Observações" erro={e.observacoes?.message} className="sm:col-span-2">
                 {(p) => <Textarea {...p} {...form.register('observacoes')} rows={2} />}

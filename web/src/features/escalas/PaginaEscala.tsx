@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Cartao, Indicador, Pilula } from '@/components/comum/elementos'
+import { Cartao, Indicador, Pilula, Segmentos } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
 import { DialogoConfirmar } from '@/components/comum/confirmar'
 import { CampoFormulario, ErroFormulario, aplicarErroApi } from '@/components/comum/formulario'
@@ -217,40 +217,62 @@ function DialogoColunas({ tipo, colunas, aoFechar }: { tipo: TipoEscala; colunas
       onSuccess: () => { setNome(''); toast.success('Coluna acrescentada.') }, onError: falhou,
     })
   }
+  const sugestoes = (tipo === 'JA' ? ['Apresentador', 'Oração inicial', 'Meditação', 'Hino especial', 'Oração final'] : ['Apresentador', 'Oração inicial', 'Informativo missionário', 'Leitura bíblica', 'Oração final'])
+    .filter((x) => !colunas.some((c) => c.nome.toLowerCase() === x.toLowerCase()))
+  const juntarSugestao = (x: string) => gravar.mutate({ tipo, nome: x, responsavel: 'MEMBRO', ordem: Math.max(0, ...colunas.map((c) => c.ordem)) + 1 }, { onError: falhou })
   return (
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
-      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Colunas da escala da {TIPOS_ESCALA[tipo]}</DialogTitle>
-          <DialogDescription>Cada igreja organiza a sua: o nome de cada coluna e se nela se escala um membro ou uma família. Valem para todas as escalas da {TIPOS_ESCALA[tipo]} desta igreja.</DialogDescription>
+          <DialogDescription>Valem para todas as escalas da {TIPOS_ESCALA[tipo]} desta igreja.</DialogDescription>
         </DialogHeader>
-        <ul className="grid gap-2">
-          {colunas.length === 0 && <li className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">Ainda sem colunas. Acrescente, por exemplo: Apresentador, Oração, Carta missionária.</li>}
-          {colunas.map((c, i) => (
-            <li key={c.id} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-              <span className="min-w-0 flex-1"><span className="font-medium">{c.nome}</span> <span className="text-xs text-muted-foreground">· {c.responsavel === 'FAMILIA' ? 'uma família' : 'um membro'}</span></span>
-              {pode('actividades.escala_coluna.alterar') && (
-                <>
-                  <Button type="button" variant="ghost" size="icon" className="size-8" disabled={i === 0 || gravar.isPending} aria-label={`Subir ${c.nome}`} onClick={() => mover(c, -1)}><ArrowUp className="size-4" /></Button>
-                  <Button type="button" variant="ghost" size="icon" className="size-8" disabled={i === colunas.length - 1 || gravar.isPending} aria-label={`Descer ${c.nome}`} onClick={() => mover(c, 1)}><ArrowDown className="size-4" /></Button>
-                </>
-              )}
-              {pode('actividades.escala_coluna.terminar') && (
-                <Button type="button" variant="ghost" size="icon" className="size-8" disabled={tirar.isPending} aria-label={`Retirar ${c.nome}`}
-                  onClick={() => tirar.mutate(c.id, { onSuccess: () => toast.success('Coluna retirada (o que já estava escalado fica no histórico).'), onError: falhou })}>
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
-        {pode('actividades.escala_coluna.criar') && (
-          <div className="grid gap-2 rounded-lg bg-muted/40 p-3 sm:grid-cols-[1fr_9rem_auto]">
-            <Input aria-label="Nome da coluna" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={80} placeholder="ex.: Apresentador" className="alvo" />
-            <Seleccao aria-label="Quem se escala" value={responsavel} onChange={(e) => setResponsavel(e.target.value as 'MEMBRO' | 'FAMILIA')}>
-              <option value="MEMBRO">Um membro</option><option value="FAMILIA">Uma família</option>
-            </Seleccao>
-            <Button type="button" className="alvo" disabled={gravar.isPending} onClick={acrescentar}><Plus className="size-4" />Acrescentar</Button>
+        <div className="overflow-hidden rounded-xl border">
+          {colunas.length === 0 ? (
+            <p className="px-4 py-6 text-center text-sm text-muted-foreground">Ainda sem colunas.</p>
+          ) : (
+            <ul className="divide-y">
+              {colunas.map((c, i) => (
+                <li key={c.id} className="group flex min-h-12 items-center gap-3 px-4 py-2 transition-colors hover:bg-muted/40">
+                  <span className="flex size-6 flex-none items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{c.nome}</span>
+                  <Pilula variante="secondary">{c.responsavel === 'FAMILIA' ? 'Família' : 'Membro'}</Pilula>
+                  <span className="flex gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+                    {pode('actividades.escala_coluna.alterar') && (
+                      <>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" disabled={i === 0 || gravar.isPending} aria-label={`Subir ${c.nome}`} onClick={() => mover(c, -1)}><ArrowUp className="size-4" /></Button>
+                        <Button type="button" variant="ghost" size="icon" className="size-8" disabled={i === colunas.length - 1 || gravar.isPending} aria-label={`Descer ${c.nome}`} onClick={() => mover(c, 1)}><ArrowDown className="size-4" /></Button>
+                      </>
+                    )}
+                    {pode('actividades.escala_coluna.terminar') && (
+                      <Button type="button" variant="ghost" size="icon" className="size-8 hover:text-destructive-text" disabled={tirar.isPending} aria-label={`Retirar ${c.nome}`}
+                        onClick={() => tirar.mutate(c.id, { onSuccess: () => toast.success('Coluna retirada.'), onError: falhou })}>
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {pode('actividades.escala_coluna.criar') && (
+            <form className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3" onSubmit={(e) => { e.preventDefault(); acrescentar() }}>
+              <Input aria-label="Nome da coluna" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={80} placeholder="Nova coluna (ex.: Apresentador)" className="alvo min-w-48 flex-1" />
+              <Segmentos rotulo="Quem se escala" valor={responsavel} aoMudar={setResponsavel}
+                opcoes={[{ valor: 'MEMBRO', rotulo: 'Membro' }, { valor: 'FAMILIA', rotulo: 'Família' }] as const} />
+              <Button type="submit" className="alvo" disabled={gravar.isPending || !nome.trim()}><Plus className="size-4" />Acrescentar</Button>
+            </form>
+          )}
+        </div>
+        {pode('actividades.escala_coluna.criar') && sugestoes.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">Sugestões:</span>
+            {sugestoes.map((x) => (
+              <button key={x} type="button" disabled={gravar.isPending} onClick={() => juntarSugestao(x)}
+                className="alvo inline-flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                <Plus className="size-3" />{x}
+              </button>
+            ))}
           </div>
         )}
         <DialogFooter><Button type="button" variant="outline" onClick={aoFechar}>Fechar</Button></DialogFooter>

@@ -338,7 +338,7 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
   const contagem = chamada ? contarChamada(chamada) : null
 
   return (
-    <Cartao titulo={<Passo n={2}>Chamada nominal <span className="text-sm font-normal text-muted-foreground">(opcional)</span></Passo>} semMargem
+    <Cartao titulo={<Passo n={2}>Chamada nominal <span className="text-sm font-normal text-muted-foreground">(opcional)</span></Passo>} semMargem recolhivel abertoInicial={!!chamada}
       descricao={chamada ? `${contagem!.presentes} de ${p.alunos.length} presentes · ${contagem!.estudaram} estudaram a lição` : 'Opcional: marque quem veio e quem estudou; M.P. e E.D. contam-se sozinhos.'}
       accoes={!fechado && chamada && (
         <span className="flex gap-1">
@@ -437,7 +437,7 @@ function Visitantes({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho;
   }
 
   return (
-    <Cartao titulo={<Passo n={4}>Visitantes</Passo>} semMargem
+    <Cartao titulo={<Passo n={4}>Visitantes</Passo>} semMargem recolhivel abertoInicial={total > 0}
       descricao={`${total} com nome e contacto · para o seguimento (anonimizados ao fim de 12 meses se não se tornarem membros)`}>
       {total > 0 && (
         <table className="w-full border-t text-sm">

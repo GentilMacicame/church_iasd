@@ -376,6 +376,9 @@ public final class Rotas {
         /** QuotasReavivamentoController · rotas-padrão (V49: quota do reavivamento ajustada à mão) */
         public static final String QUOTAS_REAVIVAMENTO = "/v1/tesouraria/quotas-reavivamento";
 
+        /** QuotasEscalaoReavivamentoController · rotas-padrão (V51: quota fixada para adultos e crianças no ano) */
+        public static final String QUOTAS_ESCALAO_REAVIVAMENTO = "/v1/tesouraria/quotas-escalao-reavivamento";
+
         /** PercentagensDepartamentoController · rotas-padrão (V50: parte de cada departamento no ano) */
         public static final String PERCENTAGENS_DEPARTAMENTO = "/v1/tesouraria/percentagens-departamento";
 
@@ -571,6 +574,9 @@ public final class Rotas {
 
         /** SantasCeiasController · rotas-padrão (V39): Santa Ceia, agendamento e participantes */
         public static final String SANTAS_CEIAS = "/v1/actividades/santas-ceias";
+
+        /** AcompanhantesSantaCeiaController · rotas-padrão (V51: os diáconos que acompanham o oficiante) */
+        public static final String ACOMPANHANTES_SANTA_CEIA = "/v1/actividades/acompanhantes-santa-ceia";
         /** ProgramasDiaController · rotas-padrão (V44): programação do dia (folha do sábado) */
         public static final String PROGRAMAS_DIA = "/v1/actividades/programas-dia";
         /** ColunasEscalaController · rotas-padrão (V45): colunas da escala da Escola Sabatina e da JA */

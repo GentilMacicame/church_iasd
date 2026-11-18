@@ -31,7 +31,7 @@ export function CartaoDevocional({ reuniao: r, fechada, nomeDe }: { reuniao: Reu
   ]
   const vazio = linhas.every((l) => !l.v)
   return (
-    <Cartao titulo="Abertura e encerramento" descricao="Orações, hino e meditação" icone={BookOpenText} semMargem
+    <Cartao titulo="Abertura e encerramento" descricao="Orações, hino e meditação" icone={BookOpenText} semMargem recolhivel
       accoes={!fechada && <Button size="sm" variant="ghost" className="alvo" onClick={() => setEditar(true)}><Pencil className="size-4" />{vazio ? 'Registar' : 'Editar'}</Button>}>
       <dl className="divide-y">
         {linhas.map((l) => (
