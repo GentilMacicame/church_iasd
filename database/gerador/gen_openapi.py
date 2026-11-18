@@ -315,7 +315,8 @@ PARECIDO = obj(['membroId', 'igrejaId', 'nome', 'pontos', 'existe', 'motivos'],
                existe={'type': 'boolean', 'description': 'O mesmo membro já registado; registar outra vez é recusado (V43)'},
                dataNascimento={**D, 'nullable': True}, naturalidade={**STR, 'nullable': True},
                numeroIdentificacao={**STR, 'nullable': True}, estado=ref('EnumEstadoMembro'),
-               pontos={'type': 'integer', 'description': 'Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável'},
+               pontos={'type': 'integer', 'description': 'Documento 100, nome 40 (parecido 20; como se ouve, também trocado), data de nascimento 30, '
+                                                         'mesmo apelido com a mesma data 20, telemóvel 40, local 10; 70 ou mais = provável'},
                motivos={'type': 'array', 'items': STR})
 paths['/v1/secretaria/membros-parecidos'] = {'get': op(
     'Membros parecidos (possíveis duplicados)', SEC,
@@ -330,7 +331,8 @@ paths['/v1/secretaria/membros-parecidos'] = {'get': op(
                 {'name': 'dataNascimento', 'in': 'query', 'schema': D},
                 {'name': 'naturalidade', 'in': 'query', 'schema': STR},
                 {'name': 'numeroIdentificacao', 'in': 'query', 'schema': STR},
-                {'name': 'excluirId', 'in': 'query', 'description': 'O próprio membro, ao editar', 'schema': I}],
+                {'name': 'excluirId', 'in': 'query', 'description': 'O próprio membro, ao editar', 'schema': I},
+                {'name': 'telefone', 'in': 'query', 'description': 'Telemóvel (os 9 últimos algarismos; V45)', 'schema': STR}],
     responses=resp('200', {'type': 'array', 'items': PARECIDO}))}
 rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
 rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')

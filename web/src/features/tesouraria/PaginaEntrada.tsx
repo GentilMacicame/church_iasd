@@ -62,7 +62,7 @@ const PRINCIPAIS = ['DIZIMO', 'OFERTA_COMBINADA']
 /** Não se lançam no envelope da igreja local (vêm do relatório da Escola Sabatina); só na conta da Missão. */
 const SO_NA_MISSAO = ['ES_13_SABADO', 'OFERTA_MISSIONARIA']
 /** Os fundos das ofertas especiais: escolhem-se em cada linha de oferta especial, com a designação. */
-const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO']
+const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO', 'CONSTRUCAO']
 interface Especial { fundoId: string; designacao: string; valor: string }
 const especiaisVazias = (): Especial[] => [0, 1, 2].map(() => ({ fundoId: '', designacao: '', valor: '' }))
 
@@ -177,6 +177,8 @@ export default function PaginaEntrada() {
   const outros = indices.filter((x) => !PRINCIPAIS.includes(x.fundo?.tipo ?? ''))
   const outrosComValor = outros.filter((x) => valido(linhas[x.i]?.valor ?? '') && centimos(linhas[x.i].valor) > 0).length
   const abertosOutros = verOutros || outrosComValor > 0 || principais.length === 0
+  // na igreja local lançam-se só o dízimo, a oferta e as ofertas especiais; os outros fundos só na conta da Missão
+  const mostraOutros = naMissao && outros.length > 0
 
   // o que o membro escolhido já deu este ano
   const doMembro = (contribuicoes.data ?? []).filter((c) => (familiaId != null ? c.familiaId === familiaId : membro != null && c.membroId === membro))
@@ -215,7 +217,7 @@ export default function PaginaEntrada() {
     const preenchidas = v.linhas.filter((l) => l.valor && centimos(l.valor) > 0 && fundoVisivel(l.fundoId))
     if (!naMissao && especiais.some((x) => x.valor && !valido(x.valor))) { setErroEspeciais('Valor inválido numa oferta especial'); return }
     if (especiaisComValor.some((x) => !x.fundoId)) { setErroEspeciais('Escolha o fundo de cada oferta especial'); return }
-    if (especiaisComValor.some((x) => !x.designacao.trim())) { setErroEspeciais('Escreva a designação de cada oferta especial (ex.: Construção do templo)'); return }
+    if (especiaisComValor.some((x) => !x.designacao.trim())) { setErroEspeciais('Escreva a designação de cada oferta especial (ex.: Construção)'); return }
     if (!preenchidas.length && !especiaisComValor.length) { form.setError('linhas', { message: 'Escreva o valor de pelo menos um fundo' }); return }
     if (porFamilia && familiaId == null) {
       setErroFamilia('Escolha a família (ex.: Família Macicame)')
@@ -447,7 +449,7 @@ export default function PaginaEntrada() {
                 ))}
               </div>
             )}
-            {outros.length > 0 && (
+            {mostraOutros && (
               <div className={cn('rounded-lg border', principais.length > 0 && 'mt-4')}>
                 <button type="button" aria-expanded={abertosOutros} onClick={() => setVerOutros((v) => !v)}
                   className="alvo flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm font-medium">
@@ -471,7 +473,7 @@ export default function PaginaEntrada() {
                 <p className="border-b px-4 py-2.5 text-sm font-medium">Ofertas especiais <span className="font-normal text-muted-foreground">(até três, com a designação do envelope)</span></p>
                 {fundosEspeciais.length === 0 ? (
                   <p className="px-4 py-3 text-sm text-muted-foreground">
-                    Não há fundos de oferta especial, projecto ou reavivamento.{' '}
+                    Não há fundos de oferta especial, construção, projecto ou reavivamento.{' '}
                     {pode('tesouraria.fundo.criar') && <Link to="/tesouraria/fundos" className="font-medium text-primary hover:underline">Criar o fundo</Link>}
                   </p>
                 ) : (
@@ -483,7 +485,7 @@ export default function PaginaEntrada() {
                           {fundosEspeciais.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
                         </Seleccao>
                         <Input aria-label={`Designação da oferta especial ${i + 1}`} value={x.designacao} onChange={(ev) => mudarEspecial(i, 'designacao', ev.target.value)}
-                          placeholder="Designação (ex.: Construção do templo)" maxLength={255} className="alvo" />
+                          placeholder="Designação (ex.: Construção)" maxLength={255} className="alvo" />
                         <CampoDinheiro aria-label={`Valor da oferta especial ${i + 1}`} value={x.valor} onChange={(v) => mudarEspecial(i, 'valor', v)} className="alvo" />
                       </li>
                     ))}

@@ -15,6 +15,7 @@ import { Seleccao } from '@/components/comum/Seleccao'
 import { Exportar } from '@/components/comum/Exportar'
 import { f, rotulos, t } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
+import { DialogoRegistarMembro } from './DialogoRegistarMembro'
 import { useContagemPorAprovar, useListaMembros, useMembrosBasicos, type EstadoMembro, type FiltrosMembros, type Membro } from './api'
 import { ControlosPaginacao, usePaginacao } from '@/components/comum/Paginacao'
 
@@ -92,6 +93,9 @@ export default function PaginaMembros() {
   const { pode } = useSessao()
   const igreja = useIgreja()
   const [params, setParams] = useSearchParams()
+  // ?registar=1: a janela "Registar membro" (procurar primeiro)
+  const registar = params.get('registar') === '1'
+  const abrirRegisto = (v: boolean) => setParams((p) => { const n = new URLSearchParams(p); if (v) n.set('registar', '1'); else n.delete('registar'); return n })
   const estado = (params.get('estado') as EstadoMembro | null) ?? undefined
   const soPorAprovar = params.get('validacao') === 'PENDENTE'
   const [texto, setTexto] = useState(params.get('q') ?? '')
@@ -152,7 +156,7 @@ export default function PaginaMembros() {
           <>
             <Exportar caminho="/v1/secretaria/membros-lista" query={{ igrejaId: igreja.id }} nome={`membros-${igreja.nome}`} />
             {pode('secretaria.membro.criar') && (
-              <Button asChild className="alvo"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
+              <Button className="alvo" onClick={() => abrirRegisto(true)}><Plus className="size-4" />{t.membros.registar}</Button>
             )}
           </>
         }
@@ -214,7 +218,7 @@ export default function PaginaMembros() {
           : membros.length === 0 ? (
             <EstadoVazio icone={Users} titulo={comFiltros ? 'Sem resultados' : 'Sem membros'}
               accao={!comFiltros && pode('secretaria.membro.criar') && (
-                <Button asChild size="sm"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
+                <Button size="sm" onClick={() => abrirRegisto(true)}><Plus className="size-4" />{t.membros.registar}</Button>
               )}>
               {comFiltros ? t.membros.nenhumFiltro : t.membros.nenhum}
             </EstadoVazio>
@@ -247,6 +251,7 @@ export default function PaginaMembros() {
             </>
           )}
       </section>
+      {pode('secretaria.membro.criar') && <DialogoRegistarMembro aberto={registar} aoFechar={() => abrirRegisto(false)} />}
     </>
   )
 }

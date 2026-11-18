@@ -8,7 +8,7 @@ RES = {  # nome do recurso na API (plural, com hífen)
  'familia':'familias','membro':'membros','contacto':'contactos','consentimento':'consentimentos','reuniao':'reunioes',
  'voto':'votos','reuniao_presenca':'presencas-reuniao','reuniao_ponto':'pontos-agenda','mandato':'mandatos','movimento_membro':'movimentos-membro','transferencia_membro':'transferencias','disciplina':'disciplinas',
  'oficial':'oficiais','baptismo':'baptismos',
- 'actividade':'actividades','material':'materiais','actividade_responsavel':'responsaveis-actividade','escala':'escalas','escala_plano':'planos-escala','escala_dia':'dias-escala','santa_ceia':'santas-ceias','programa_dia':'programas-dia','programa_parte':'partes-programa','programa_item':'itens-programa',
+ 'actividade':'actividades','material':'materiais','actividade_responsavel':'responsaveis-actividade','escala':'escalas','escala_plano':'planos-escala','escala_dia':'dias-escala','escala_coluna':'colunas-escala','santa_ceia':'santas-ceias','programa_dia':'programas-dia','programa_parte':'partes-programa','programa_item':'itens-programa',
  'trimestre':'trimestres','sabado':'sabados','classe':'classes','classe_trimestre':'classes-trimestre','matricula':'matriculas',
  'relatorio_sabado':'relatorios-sabado','presenca':'presencas','visitante':'visitantes','pontuacao_config':'pesos-pontuacao',
  'conta_financeira':'contas','fundo':'fundos','calendario_oferta':'calendario-ofertas','categoria':'categorias','alvo':'alvos',

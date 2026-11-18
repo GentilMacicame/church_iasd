@@ -25,6 +25,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param trimestreId Trimestre (opcional)
  * @param localEmissao Ex.: Matola
  * @param dataEmissao coluna {@code epl_data_emissao}
+ * @param tipo CULTO (Culto Divino), ESCOLA_SABATINA ou JA (V45)
  * @param anciaoMembroId Ancião que assina
  * @param secretarioMembroId Secretário que assina
  * @param publicada Só as escalas publicadas são vistas pelos membros e geram lembretes
@@ -54,6 +55,8 @@ public record EscalaPlano(
         String localEmissao,
         @ColunaBd(value = "epl_data_emissao", tipo = Tipo.DATA)
         LocalDate dataEmissao,
+        @ColunaBd(value = "epl_tipo", tipo = Tipo.TEXTO, naoNula = true)
+        String tipo,
         @ColunaBd(value = "epl_anciao_mem_id", tipo = Tipo.INT)
         Integer anciaoMembroId,
         @ColunaBd(value = "epl_secretario_mem_id", tipo = Tipo.INT)

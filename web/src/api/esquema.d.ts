@@ -89,6 +89,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/actividades/colunas-escala": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Colunas escala: listar
+         * @description Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)
+         */
+        get: operations["listarEscalaColuna"];
+        put?: never;
+        /**
+         * Colunas escala: criar
+         * @description Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)
+         */
+        post: operations["criarEscalaColuna"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/colunas-escala/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Colunas escala: ler um */
+        get: operations["lerEscalaColuna"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Colunas escala: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarEscalaColuna"];
+        trace?: never;
+    };
+    "/v1/actividades/colunas-escala/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Colunas escala: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarEscalaColuna"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/actividades/colunas-escala/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Colunas escala: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarEscalaColuna"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/actividades/conflitos": {
         parameters: {
             query?: never;
@@ -8242,6 +8327,11 @@ export interface components {
              * @example 650.00
              */
             outras?: string;
+            /**
+             * @description Parte do contado: fundo de construção (V45)
+             * @example 650.00
+             */
+            construcao?: string;
             estado?: components["schemas"]["EnumEstadoContagem"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -8574,7 +8664,7 @@ export interface components {
         /** @enum {string} */
         EnumTipoEntidade: "CONFERENCIA_GERAL" | "DIVISAO" | "UNIAO" | "ASSOCIACAO" | "MISSAO" | "CAMPO";
         /** @enum {string} */
-        EnumTipoFundo: "DIZIMO" | "OFERTA_MISSIONARIA" | "ES_MISSOES" | "ES_13_SABADO" | "ES_DESPESAS" | "OFERTA_COMBINADA" | "OFERTA_ESPECIAL" | "ORCAMENTO_LOCAL" | "PROJECTO" | "REAVIVAMENTO";
+        EnumTipoFundo: "DIZIMO" | "OFERTA_MISSIONARIA" | "ES_MISSOES" | "ES_13_SABADO" | "ES_DESPESAS" | "OFERTA_COMBINADA" | "OFERTA_ESPECIAL" | "ORCAMENTO_LOCAL" | "PROJECTO" | "REAVIVAMENTO" | "CONSTRUCAO";
         /** @enum {string} */
         EnumTipoIdentificacao: "BI" | "PASSAPORTE" | "DIRE" | "CEDULA" | "CARTA_CONDUCAO" | "OUTRO";
         /** @enum {string} */
@@ -8610,7 +8700,7 @@ export interface components {
             funcao?: components["schemas"]["EnumFuncaoEscala"];
             /**
              * Format: int32
-             * @description → secretaria.membro
+             * @description → secretaria.membro · Membro escalado (ou a família, nas colunas por família)
              */
             membroId?: number;
             /**
@@ -8629,7 +8719,43 @@ export interface components {
              * @description → actividades.escala_dia · Dia da escala (plano) a que pertence; a data e a igreja vêm do dia
              */
             escalaDiaId?: number;
+            /**
+             * Format: int32
+             * @description → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA (definida pela igreja) (V45)
+             */
+            escalaColunaId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.familia · Família escalada, nas colunas por família (V45)
+             */
+            familiaId?: number;
             estado?: components["schemas"]["EnumEstadoEscala"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45) */
+        EscalaColuna: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /** @description ESCOLA_SABATINA ou JA */
+            tipo?: string;
+            ordem?: number;
+            /** @description Ex.: Apresentador, Oração, Carta missionária */
+            nome?: string;
+            /** @description Quem se escala nesta coluna: MEMBRO ou FAMILIA */
+            responsavel?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -8698,6 +8824,8 @@ export interface components {
             localEmissao?: string;
             /** Format: date */
             dataEmissao?: string;
+            /** @description CULTO (Culto Divino), ESCOLA_SABATINA ou JA (V45) */
+            tipo?: string;
             /**
              * Format: int32
              * @description → secretaria.membro · Ancião que assina
@@ -9535,6 +9663,11 @@ export interface components {
             escala?: string;
             /** @description Linha em destaque na folha (ex.: Sermão principal) */
             destaque?: boolean;
+            /**
+             * Format: int32
+             * @description → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA que preenche o responsável (V45)
+             */
+            escalaColunaId?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -9573,6 +9706,11 @@ export interface components {
             apresentadorTexto?: string;
             /** @description Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES) */
             escala?: string;
+            /**
+             * Format: int32
+             * @description → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA que preenche o apresentador (V45)
+             */
+            escalaColunaId?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -10611,6 +10749,190 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarEscalaColuna: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["EscalaColuna"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarEscalaColuna: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["EscalaColuna"], "igrejaId" | "tipo" | "nome">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalaColuna"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerEscalaColuna: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalaColuna"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarEscalaColuna: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EscalaColuna"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalaColuna"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarEscalaColuna: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalaColuna"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarEscalaColuna: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EscalaColuna"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     conflitosActividade: {
         parameters: {
             query: {
@@ -10894,6 +11216,8 @@ export interface operations {
                 actividadeId?: number;
                 substitutoMembroId?: number;
                 escalaDiaId?: number;
+                escalaColunaId?: number;
+                familiaId?: number;
                 estado?: components["schemas"]["EnumEstadoEscala"];
                 desde?: string;
                 ate?: string;
@@ -10933,7 +11257,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": WithRequired<components["schemas"]["Escala"], "funcao" | "membroId">;
+                "application/json": WithRequired<components["schemas"]["Escala"], "funcao">;
             };
         };
         responses: {
@@ -11113,6 +11437,7 @@ export interface operations {
                 responsavelMembroId?: number;
                 responsavelFamiliaId?: number;
                 responsavelDepartamentoIgrejaId?: number;
+                escalaColunaId?: number;
                 estado?: components["schemas"]["EnumEstadoRegisto"];
             };
             header?: never;
@@ -11483,6 +11808,7 @@ export interface operations {
                 programaDiaId?: number;
                 apresentadorMembroId?: number;
                 apresentadorFamiliaId?: number;
+                escalaColunaId?: number;
                 estado?: components["schemas"]["EnumEstadoRegisto"];
             };
             header?: never;
@@ -19823,6 +20149,8 @@ export interface operations {
                 numeroIdentificacao?: string;
                 /** @description O próprio membro, ao editar */
                 excluirId?: number;
+                /** @description Telemóvel (os 9 últimos algarismos; V45) */
+                telefone?: string;
             };
             header?: never;
             path?: never;
@@ -19850,7 +20178,7 @@ export interface operations {
                         naturalidade?: string | null;
                         numeroIdentificacao?: string | null;
                         estado?: components["schemas"]["EnumEstadoMembro"];
-                        /** @description Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável */
+                        /** @description Documento 100, nome 40 (parecido 20; como se ouve, também trocado), data de nascimento 30, mesmo apelido com a mesma data 20, telemóvel 40, local 10; 70 ou mais = provável */
                         pontos: number;
                         motivos: string[];
                     }[];

@@ -41,7 +41,14 @@ public final class Nomes {
             Map.entry("pba", "pagamento_bancario"), Map.entry("ntf", "notificacao"),
             // tabelas do sistema (V14)
             Map.entry("ses", "sessao"), Map.entry("rsn", "recuperacao_senha"), Map.entry("blq", "bloqueio_login"),
-            Map.entry("pid", "pedido_idempotente"));
+            Map.entry("pid", "pedido_idempotente"),
+            // tabelas acrescentadas depois (V20–V45)
+            Map.entry("prv", "provincia"), Map.entry("dad", "distrito_administrativo"), Map.entry("rpr", "reuniao_presenca"),
+            Map.entry("rpt", "reuniao_ponto"), Map.entry("mdt", "mandato"), Map.entry("acr", "actividade_responsavel"),
+            Map.entry("epl", "escala_plano"), Map.entry("eds", "escala_dia"), Map.entry("ecn", "escala_coluna"),
+            Map.entry("stc", "santa_ceia"), Map.entry("pgd", "programa_dia"), Map.entry("ppa", "programa_parte"),
+            Map.entry("pit", "programa_item"), Map.entry("cpa", "contagem_participante"), Map.entry("cmc", "comunicado"),
+            Map.entry("cmi", "comunicado_igreja"), Map.entry("aco", "acesso_confidencial"));
 
     /** Nomes curtos de entidades (ALIAS do gerador). */
     private static final Map<String, String> ALIAS = Map.of(

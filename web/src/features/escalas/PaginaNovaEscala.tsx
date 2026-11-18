@@ -20,7 +20,8 @@ import { useIgreja } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useCriarPlano } from './api'
+import { TIPOS_ESCALA, useCriarPlano, type TipoEscala } from './api'
+import { cn } from '@/lib/utils'
 
 const dataIso = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Escreva a data como dd/mm/aaaa')
 const esquema = z.object({
@@ -31,8 +32,11 @@ const esquema = z.object({
   anciao: z.number().nullable(),
   secretario: z.number().nullable(),
   observacoes: z.string().trim().max(255),
+  tipo: z.enum(['CULTO', 'ESCOLA_SABATINA', 'JA']),
 }).refine((v) => v.dataFim >= v.dataInicio, { path: ['dataFim'], message: 'O fim tem de ser depois do início' })
 type Valores = z.infer<typeof esquema>
+
+const TITULO: Record<TipoEscala, string> = { CULTO: 'Escala do Culto Divino', ESCOLA_SABATINA: 'Escala da Escola Sabatina', JA: 'Escala da JA' }
 
 /** Trimestre civil (o da Escola Sabatina segue o mesmo calendário): início e fim em ISO. */
 function trimestre(desloca: number): { inicio: string; fim: string; nome: string } {
@@ -53,7 +57,7 @@ export default function PaginaNovaEscala() {
   const [erro, setErro] = useState<string | null>(null)
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
-    defaultValues: { titulo: 'Escala de Pregação', dataInicio: '', dataFim: '', localEmissao: '', anciao: null, secretario: null, observacoes: '' },
+    defaultValues: { titulo: 'Escala do Culto Divino', dataInicio: '', dataFim: '', localEmissao: '', anciao: null, secretario: null, observacoes: '', tipo: 'CULTO' },
   })
   const e = form.formState.errors
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
@@ -61,14 +65,15 @@ export default function PaginaNovaEscala() {
     const tr = trimestre(d)
     form.setValue('dataInicio', tr.inicio, { shouldValidate: true })
     form.setValue('dataFim', tr.fim, { shouldValidate: true })
-    if (form.getValues('titulo') === 'Escala de Pregação') form.setValue('titulo', `Escala de Pregação · ${tr.nome}`)
+    const base = TITULO[form.getValues('tipo')]
+    if (form.getValues('titulo') === base) form.setValue('titulo', `${base} · ${tr.nome}`)
   }
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     try {
       const p = await criar.mutateAsync({
-        igrejaId: igreja.id, titulo: v.titulo, dataInicio: v.dataInicio, dataFim: v.dataFim,
+        igrejaId: igreja.id, titulo: v.titulo, tipo: v.tipo, dataInicio: v.dataInicio, dataFim: v.dataFim,
         localEmissao: v.localEmissao || undefined, dataEmissao: hojeIso(),
         anciaoMembroId: v.anciao ?? undefined, secretarioMembroId: v.secretario ?? undefined, observacoes: v.observacoes || undefined,
       })
@@ -85,13 +90,27 @@ export default function PaginaNovaEscala() {
         antes={<Link to="/escalas" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.escalas.titulo}</Link>}
         icone={CalendarPlus}
         titulo={t.escalas.nova}
-        descricao="Os sábados do período são preparados automaticamente; depois escala-se quem prega e quem serve."
+        descricao="Do Culto Divino, da Escola Sabatina ou da JA. Os sábados do período são preparados automaticamente; depois escala-se quem serve."
       />
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="grid gap-6 lg:col-span-8">
           <ErroFormulario mensagem={erro} />
           <Cartao titulo="Período" descricao="Normalmente um trimestre" icone={CalendarPlus}>
             <div className="grid gap-4">
+              <div role="radiogroup" aria-label="Escala de" className="grid gap-2 sm:grid-cols-3">
+                {(Object.keys(TIPOS_ESCALA) as TipoEscala[]).map((k) => (
+                  <button key={k} type="button" role="radio" aria-checked={form.watch('tipo') === k}
+                    onClick={() => {
+                      const antes = TITULO[form.getValues('tipo')]
+                      form.setValue('tipo', k)
+                      if (form.getValues('titulo').startsWith(antes)) form.setValue('titulo', form.getValues('titulo').replace(antes, TITULO[k]))
+                    }}
+                    className={cn('alvo rounded-lg border px-3 py-2.5 text-left', form.watch('tipo') === k ? 'border-primary bg-primary/5' : 'hover:bg-muted/50')}>
+                    <span className="block text-sm font-medium">{TIPOS_ESCALA[k]}</span>
+                    <span className="block text-xs text-muted-foreground">{k === 'CULTO' ? 'Apresentador, Sermão principal, tradutor…' : 'Com as colunas que a igreja define'}</span>
+                  </button>
+                ))}
+              </div>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => usar(0)}>Este trimestre ({trimestre(0).nome})</Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => usar(1)}>Próximo trimestre ({trimestre(1).nome})</Button>
@@ -131,7 +150,7 @@ export default function PaginaNovaEscala() {
           <Cartao titulo="Como funciona">
             <ol className="grid list-decimal gap-2 pl-4 text-sm text-muted-foreground">
               <li>Grave a escala: aparecem todos os sábados do período.</li>
-              <li>Em cada sábado, escale quem prega, traduz e acompanha.</li>
+              <li>Em cada sábado, escale quem serve (na Escola Sabatina e na JA, nas colunas que a igreja define).</li>
               <li>Marque os dias especiais (Simpósio, 13.º sábado).</li>
               <li>Publique: os membros vêem-na e os escalados recebem SMS à quarta e à sexta.</li>
             </ol>

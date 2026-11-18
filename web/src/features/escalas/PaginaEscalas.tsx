@@ -7,7 +7,7 @@ import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/est
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { data } from '@/lib/formatos'
-import { emVigor, usePlanos, type Plano } from './api'
+import { TIPOS_ESCALA, emVigor, usePlanos, type Plano } from './api'
 
 export function EstadoPlano({ p }: { p: Plano }) {
   return (
@@ -60,6 +60,7 @@ export default function PaginaEscalas() {
                     <tr key={p.id} onClick={() => navigate(`/escalas/${p.id}`)} className="group cursor-pointer">
                       <td className="sm:pl-6">
                         <Link to={`/escalas/${p.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{p.titulo}</Link>
+                        <span className="ml-2 text-xs text-muted-foreground">{TIPOS_ESCALA[p.tipo ?? 'CULTO']}</span>
                         <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:hidden">{data(p.dataInicio)} – {data(p.dataFim)}</span>
                       </td>
                       <td className="hidden whitespace-nowrap tabular-nums text-muted-foreground sm:table-cell">{data(p.dataInicio)} – {data(p.dataFim)}</td>

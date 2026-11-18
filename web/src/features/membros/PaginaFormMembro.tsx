@@ -8,7 +8,7 @@
  * Campos condicionais (casamento, baptismo anterior) escondem-se mas não se apagam: o que já estava gravado fica.
  * Registos parecidos (mesmo documento, nome e data de nascimento) aparecem como aviso: quem regista confirma que é
  * outra pessoa; não há bloqueio automático só pelo nome.
- * V43: o registo novo começa pela procura (/membros/novo → PaginaProcurarMembro): esta ficha só abre depois dela e vem
+ * V43/V45: o registo novo começa pela procura (janela DialogoRegistarMembro, /membros?registar=1): esta ficha só abre depois dela e vem
  * com o que se procurou. O mesmo membro já registado (existe = true: mesmo documento, ou mesmo nome e data de
  * nascimento, em qualquer igreja) não se grava outra vez — a base de dados também o recusa.
  */
@@ -356,7 +356,7 @@ export default function PaginaFormMembro() {
   // registo novo: só depois da procura (V43), com o que se procurou
   const procurado = qs.get('procurado') === '1'
   const daProcura = { nome: qs.get('nome') ?? '', apelido: qs.get('apelido') ?? '', dataNascimento: qs.get('dataNascimento') ?? '',
-    naturalidade: qs.get('naturalidade') ?? '', numeroIdentificacao: qs.get('numeroIdentificacao') ?? '' }
+    naturalidade: qs.get('naturalidade') ?? '', numeroIdentificacao: qs.get('numeroIdentificacao') ?? '', telemovel: qs.get('telefone') ?? '' }
   const confirmadoNaProcura = qs.get('confirmado') === '1'
   const existente = useMembro(id ?? 0)
   const contactos = useContactos(id ?? 0)
@@ -449,6 +449,11 @@ export default function PaginaFormMembro() {
 
   const submeter = form.handleSubmit(async (x) => {
     setErroTopo(null)
+    if (!id && !x.dataNascimento) {
+      form.setError('dataNascimento', { message: 'A data de nascimento é obrigatória no registo' })
+      irPara(0)
+      return
+    }
     if (jaExiste) {
       setErroTopo('Este membro já existe (veja a lista em "Dados pessoais"): abra o registo existente em vez de criar outro.')
       irPara(0)
@@ -496,10 +501,10 @@ export default function PaginaFormMembro() {
     void submeter(ev)
   }
 
-  const voltarPara = id ? `/membros/${id}` : '/membros/novo'
+  const voltarPara = id ? `/membros/${id}` : '/membros?registar=1'
   const titulo = id ? t.membros.editarTitulo : t.membros.novo
 
-  if (!id && !procurado) return <Navigate to="/membros/novo" replace />
+  if (!id && !procurado) return <Navigate to="/membros?registar=1" replace />
   if (id && (existente.isPending || contactos.isPending || baptismos.isPending)) {
     return <div className="grid gap-4" aria-busy="true" aria-label="A carregar"><Barra className="h-8 w-64" /><Barra className="h-64 w-full" /></div>
   }

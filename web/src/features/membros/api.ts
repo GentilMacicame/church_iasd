@@ -182,7 +182,7 @@ export function useCriarBaptismo(membroId: number) {
  * V33: membros parecidos (mesmo documento, ou nome parecido com a mesma data/local de nascimento). Só avisa; a
  * base de dados compara apenas com os membros que o utilizador vê. Procura quando há nome e apelido.
  */
-export function useParecidos(p: { nome: string; apelido: string; dataNascimento?: string; naturalidade?: string; numeroIdentificacao?: string; excluirId?: number | null }) {
+export function useParecidos(p: { nome: string; apelido: string; dataNascimento?: string; naturalidade?: string; numeroIdentificacao?: string; telefone?: string; excluirId?: number | null }, activo = true) {
   const nome = p.nome.trim()
   const apelido = p.apelido.trim()
   const query = {
@@ -190,10 +190,11 @@ export function useParecidos(p: { nome: string; apelido: string; dataNascimento?
     dataNascimento: /^\d{4}-\d{2}-\d{2}$/.test(p.dataNascimento ?? '') ? p.dataNascimento : undefined,
     naturalidade: p.naturalidade?.trim() || undefined,
     numeroIdentificacao: p.numeroIdentificacao?.trim() || undefined,
+    telefone: p.telefone?.trim() || undefined,
     excluirId: p.excluirId ?? undefined,
   }
   return useQuery({
-    enabled: nome.length >= 2 && apelido.length >= 2,
+    enabled: activo && nome.length >= 2 && apelido.length >= 2,
     queryKey: ['membros', 'parecidos', query],
     queryFn: async () => (await dados(api.GET('/v1/secretaria/membros-parecidos', { params: { query } }))) as MembroParecido[],
     staleTime: 30_000,

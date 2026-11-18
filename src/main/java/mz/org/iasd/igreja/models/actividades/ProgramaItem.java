@@ -29,6 +29,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param responsavelTexto Responsável escrito (ex.: Todos, Diáconos, Monitores, um visitante)
  * @param escala Função da escala que preenche o responsável (ex.: PREGADOR, TRADUTOR, FAMILIA_ES)
  * @param destaque Linha em destaque na folha (ex.: Sermão principal)
+ * @param escalaColunaId Coluna da escala da Escola Sabatina ou da JA que preenche o responsável (V45)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -64,6 +65,8 @@ public record ProgramaItem(
         String escala,
         @ColunaBd(value = "pit_destaque", tipo = Tipo.BOOLEANO, naoNula = true)
         Boolean destaque,
+        @ColunaBd(value = "pit_ecn_id", tipo = Tipo.INT)
+        Integer escalaColunaId,
         @ColunaBd(value = "pit_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "pit_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

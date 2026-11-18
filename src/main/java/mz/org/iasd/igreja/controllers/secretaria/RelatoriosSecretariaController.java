@@ -143,7 +143,8 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
                                      @QueryParam("dataNascimento") String dataNascimento,
                                      @QueryParam("naturalidade") String naturalidade,
                                      @QueryParam("numeroIdentificacao") String numeroIdentificacao,
-                                     @QueryParam("excluirId") String excluirId) throws SQLException {
+                                     @QueryParam("excluirId") String excluirId,
+                                     @QueryParam("telefone") String telefone) throws SQLException {
         if (nome == null || nome.isBlank()) {
             throw ApiException.pedidoInvalido("Indique o nome", "nome");
         }
@@ -167,7 +168,8 @@ public class RelatoriosSecretariaController extends BaseRelatoriosController {
             }
         }
         return Response.ok(MembrosParecidosRepository.procurar(unidade.ligacao(), new MembrosParecidosRepository.Pedido(
-                nome.trim(), apelido.trim(), nascimento, vazioNulo(naturalidade), vazioNulo(numeroIdentificacao), excluir)))
+                nome.trim(), apelido.trim(), nascimento, vazioNulo(naturalidade), vazioNulo(numeroIdentificacao), excluir,
+                vazioNulo(telefone))))
                 .build();
     }
 

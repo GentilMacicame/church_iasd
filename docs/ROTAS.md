@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 517 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 523 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -13,6 +13,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/actividades/{id}` | ActividadesController · alterar | `actividades.actividade.alterar` |
 | POST | `/v1/actividades/actividades/{id}/reactivar` | ActividadesController · reactivar | `actividades.actividade.terminar` |
 | POST | `/v1/actividades/actividades/{id}/terminar` | ActividadesController · terminar | `actividades.actividade.terminar` |
+| GET | `/v1/actividades/colunas-escala` | ColunasEscalaController · listar | `actividades.escala_coluna.ler` |
+| POST | `/v1/actividades/colunas-escala` | ColunasEscalaController · criar | `actividades.escala_coluna.criar` |
+| GET | `/v1/actividades/colunas-escala/{id}` | ColunasEscalaController · obter | `actividades.escala_coluna.ler` |
+| PATCH | `/v1/actividades/colunas-escala/{id}` | ColunasEscalaController · alterar | `actividades.escala_coluna.alterar` |
+| POST | `/v1/actividades/colunas-escala/{id}/reactivar` | ColunasEscalaController · reactivar | `actividades.escala_coluna.terminar` |
+| POST | `/v1/actividades/colunas-escala/{id}/terminar` | ColunasEscalaController · terminar | `actividades.escala_coluna.terminar` |
 | GET | `/v1/actividades/conflitos` | RelatoriosActividadesController · conflitos | `actividades.actividade.ler` |
 | GET | `/v1/actividades/dias-escala` | DiasEscalaController · listar | `actividades.escala_dia.ler` |
 | POST | `/v1/actividades/dias-escala` | DiasEscalaController · criar | `actividades.escala_dia.criar` |

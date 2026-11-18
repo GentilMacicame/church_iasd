@@ -21,7 +21,6 @@ const PaginaInicio = pagina(() => import('@/features/inicio/PaginaInicio'))
 const PaginaMembros = pagina(() => import('@/features/membros/PaginaMembros'))
 const PaginaMembro = pagina(() => import('@/features/membros/PaginaMembro'))
 const PaginaFormMembro = pagina(() => import('@/features/membros/PaginaFormMembro'))
-const PaginaProcurarMembro = pagina(() => import('@/features/membros/PaginaProcurarMembro'))
 const PaginaLivro = pagina(() => import('@/features/livro/PaginaLivro'))
 const PaginaReunioes = pagina(() => import('@/features/livro/PaginaReunioes'))
 const PaginaReuniao = pagina(() => import('@/features/livro/PaginaReuniao'))
@@ -150,7 +149,7 @@ export default function App() {
                   <Route index element={<PaginaInicio />} />
                   <Route path="painel-geral" element={<Exige permissao="organizacao.igreja.ler"><PaginaPainelGeral /></Exige>} />
                   <Route path="membros" element={<Exige permissao="secretaria.membro.ler"><PaginaMembros /></Exige>} />
-                  <Route path="membros/novo" element={<Exige permissao="secretaria.membro.criar"><PaginaProcurarMembro /></Exige>} />
+                  <Route path="membros/novo" element={<Navigate to="/membros?registar=1" replace />} />
                   <Route path="membros/novo/ficha" element={<Exige permissao="secretaria.membro.criar"><PaginaFormMembro /></Exige>} />
                   <Route path="membros/:id" element={<Exige permissao="secretaria.membro.ler"><PaginaMembro /></Exige>} />
                   <Route path="membros/:id/editar" element={<Exige permissao="secretaria.membro.alterar"><PaginaFormMembro /></Exige>} />

@@ -256,6 +256,216 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/colunas-escala:
+    get:
+      summary: 'Colunas escala: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.ler
+      operationId: listarEscalaColuna
+      description: 'Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EscalaColuna'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Colunas escala: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.criar
+      operationId: criarEscalaColuna
+      description: 'Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/EscalaColuna'
+              required:
+              - igrejaId
+              - tipo
+              - nome
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalaColuna'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/colunas-escala/{id}:
+    get:
+      summary: 'Colunas escala: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.ler
+      operationId: lerEscalaColuna
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalaColuna'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Colunas escala: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.alterar
+      operationId: alterarEscalaColuna
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscalaColuna'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalaColuna'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/colunas-escala/{id}/reactivar:
+    post:
+      summary: 'Colunas escala: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.terminar
+      operationId: reactivarEscalaColuna
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalaColuna'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/colunas-escala/{id}/terminar:
+    post:
+      summary: 'Colunas escala: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.escala_coluna.terminar
+      operationId: terminarEscalaColuna
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalaColuna'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/actividades/conflitos:
     get:
       summary: Conflitos de calendário de uma actividade
@@ -664,6 +874,14 @@ paths:
         in: query
         schema:
           type: integer
+      - name: escalaColunaId
+        in: query
+        schema:
+          type: integer
+      - name: familiaId
+        in: query
+        schema:
+          type: integer
       - name: estado
         in: query
         schema:
@@ -725,7 +943,6 @@ paths:
               - $ref: '#/components/schemas/Escala'
               required:
               - funcao
-              - membroId
       responses:
         '201':
           description: Criado
@@ -939,6 +1156,10 @@ paths:
         schema:
           type: integer
       - name: responsavelDepartamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: escalaColunaId
         in: query
         schema:
           type: integer
@@ -1364,6 +1585,10 @@ paths:
         schema:
           type: integer
       - name: apresentadorFamiliaId
+        in: query
+        schema:
+          type: integer
+      - name: escalaColunaId
         in: query
         schema:
           type: integer
@@ -11419,6 +11644,11 @@ paths:
         description: O próprio membro, ao editar
         schema:
           type: integer
+      - name: telefone
+        in: query
+        description: Telemóvel (os 9 últimos algarismos; V45)
+        schema:
+          type: string
       responses:
         '200':
           description: OK
@@ -11464,7 +11694,8 @@ paths:
                       $ref: '#/components/schemas/EnumEstadoMembro'
                     pontos:
                       type: integer
-                      description: Documento 100, nome 40 (parecido 20), data de nascimento 30, local 10; 70 ou mais = provável
+                      description: Documento 100, nome 40 (parecido 20; como se ouve, também trocado), data de nascimento 30, mesmo apelido com
+                        a mesma data 20, telemóvel 40, local 10; 70 ou mais = provável
                     motivos:
                       type: array
                       items:
@@ -20838,6 +21069,11 @@ components:
           pattern: ^-?\d{1,14}(\.\d{1,2})?$
           example: '650.00'
           description: 'Parte do contado: outras ofertas (especiais, projectos da igreja)'
+        construcao:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Parte do contado: fundo de construção (V45)'
         estado:
           $ref: '#/components/schemas/EnumEstadoContagem'
         criadoEm:
@@ -21603,6 +21839,7 @@ components:
       - ORCAMENTO_LOCAL
       - PROJECTO
       - REAVIVAMENTO
+      - CONSTRUCAO
     EnumTipoIdentificacao:
       type: string
       enum:
@@ -21710,7 +21947,7 @@ components:
         membroId:
           type: integer
           format: int32
-          description: → secretaria.membro
+          description: → secretaria.membro · Membro escalado (ou a família, nas colunas por família)
         actividadeId:
           type: integer
           format: int32
@@ -21726,6 +21963,14 @@ components:
           type: integer
           format: int32
           description: → actividades.escala_dia · Dia da escala (plano) a que pertence; a data e a igreja vêm do dia
+        escalaColunaId:
+          type: integer
+          format: int32
+          description: → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA (definida pela igreja) (V45)
+        familiaId:
+          type: integer
+          format: int32
+          description: → secretaria.familia · Família escalada, nas colunas por família (V45)
         estado:
           $ref: '#/components/schemas/EnumEstadoEscala'
         criadoEm:
@@ -21751,7 +21996,61 @@ components:
           nullable: true
       x-obrigatorios-ao-criar:
       - funcao
-      - membroId
+    EscalaColuna:
+      type: object
+      description: 'Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)'
+      x-tabela: actividades.escala_coluna
+      x-prefixo: ecn
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        tipo:
+          type: string
+          maxLength: 20
+          description: ESCOLA_SABATINA ou JA
+        ordem:
+          type: integer
+        nome:
+          type: string
+          maxLength: 80
+          description: 'Ex.: Apresentador, Oração, Carta missionária'
+        responsavel:
+          type: string
+          maxLength: 10
+          description: 'Quem se escala nesta coluna: MEMBRO ou FAMILIA'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - tipo
+      - nome
     EscalaDia:
       type: object
       description: 'Um dia (culto) da escala: grupo coral, departamento ou evento especial'
@@ -21848,6 +22147,10 @@ components:
         dataEmissao:
           type: string
           format: date
+        tipo:
+          type: string
+          maxLength: 20
+          description: CULTO (Culto Divino), ESCOLA_SABATINA ou JA (V45)
         anciaoMembroId:
           type: integer
           format: int32
@@ -23424,6 +23727,10 @@ components:
         destaque:
           type: boolean
           description: 'Linha em destaque na folha (ex.: Sermão principal)'
+        escalaColunaId:
+          type: integer
+          format: int32
+          description: → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA que preenche o responsável (V45)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -23491,6 +23798,10 @@ components:
           type: string
           maxLength: 20
           description: 'Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES)'
+        escalaColunaId:
+          type: integer
+          format: int32
+          description: → actividades.escala_coluna · Coluna da escala da Escola Sabatina ou da JA que preenche o apresentador (V45)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:

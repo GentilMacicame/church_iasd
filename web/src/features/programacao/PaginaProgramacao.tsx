@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
 import { useDepartamentosIgreja } from '@/features/actividades/api'
+import { useColunas, type Coluna } from '@/features/escalas/api'
 import { ESCALA, tituloDoDia, useProgramacao, useProgramacaoMut, type Item, type Parte } from './api'
 
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -34,6 +35,8 @@ function useNomes() {
   const basicos = useMembrosBasicos()
   const familias = useFamiliasResumo()
   const deps = useDepartamentosIgreja()
+  const colES = useColunas('ESCOLA_SABATINA')
+  const colJA = useColunas('JA')
   return useMemo(() => {
     const m = new Map((basicos.data ?? []).map((x) => [x.id, `${x.nome} ${x.apelido}`]))
     const f = new Map((familias.data ?? []).map((x) => [x.id, x.nome]))
@@ -44,14 +47,36 @@ function useNomes() {
       departamento: (id?: number | null) => (id ? d.get(id) : undefined),
       familias: familias.data ?? [],
       departamentos: deps.data?.daIgreja ?? [],
+      colunasES: colES.data ?? [] as Coluna[],
+      colunasJA: colJA.data ?? [] as Coluna[],
+      coluna: (id?: number | null) => (id ? [...(colES.data ?? []), ...(colJA.data ?? [])].find((c) => c.id === id) : undefined),
     }
-  }, [basicos.data, familias.data, deps.data])
+  }, [basicos.data, familias.data, deps.data, colES.data, colJA.data])
 }
 type Nomes = ReturnType<typeof useNomes>
 
 const responsavel = (i: Item, n: Nomes) =>
   n.membro(i.responsavelMembroId) ?? n.familia(i.responsavelFamiliaId) ?? n.departamento(i.responsavelDepartamentoIgrejaId) ?? i.responsavelTexto ?? ''
 const apresentador = (p: Parte, n: Nomes) => n.membro(p.apresentadorMembroId) ?? n.familia(p.apresentadorFamiliaId) ?? p.apresentadorTexto ?? ''
+/** De onde vem o nome: uma função do culto ou uma coluna da escala da ES/JA. */
+const ligacao = (escala: string | null | undefined, coluna: number | null | undefined, n: Nomes) => {
+  const c = n.coluna(coluna)
+  return c ? `${c.tipo === 'JA' ? 'JA' : 'Escola Sabatina'}: ${c.nome}` : escala ? ESCALA[escala] : undefined
+}
+const valorLigacao = (escala?: string | null, coluna?: number | null) => (coluna ? `c:${coluna}` : escala ? `f:${escala}` : '')
+const daLigacao = (v: string) => ({ escala: v.startsWith('f:') ? v.slice(2) : null, escalaColunaId: v.startsWith('c:') ? Number(v.slice(2)) : null })
+
+/** Escolha da ligação à escala: as funções do culto e as colunas da ES e da JA que a igreja definiu. */
+function CampoLigacao({ id, valor, aoMudar, nomes }: { id: string; valor: string; aoMudar: (v: string) => void; nomes: Nomes }) {
+  return (
+    <Seleccao id={id} value={valor} onChange={(e) => aoMudar(e.target.value)}>
+      <option value="">Não (escreve-se aqui)</option>
+      <optgroup label="Escala do Culto Divino">{Object.entries(ESCALA).map(([k, r]) => <option key={k} value={`f:${k}`}>{r}</option>)}</optgroup>
+      {nomes.colunasES.length > 0 && <optgroup label="Escala da Escola Sabatina">{nomes.colunasES.map((c) => <option key={c.id} value={`c:${c.id}`}>{c.nome}</option>)}</optgroup>}
+      {nomes.colunasJA.length > 0 && <optgroup label="Escala da JA">{nomes.colunasJA.map((c) => <option key={c.id} value={`c:${c.id}`}>{c.nome}</option>)}</optgroup>}
+    </Seleccao>
+  )
+}
 const horas = (i: Item) => [i.horaInicio, i.horaFim].filter(Boolean).join(' – ')
 
 export default function PaginaProgramacao() {
@@ -140,13 +165,13 @@ export default function PaginaProgramacao() {
                               podeAlterar && 'cursor-pointer hover:bg-neutral-100 print:hover:bg-transparent')}>
                             {idx === 0 && (
                               <td rowSpan={daParte.length} className="border border-neutral-500 bg-white px-2 py-1 text-center align-middle font-medium">
-                                {quem || <span className="text-neutral-400 print:hidden">{pt.escala ? `(${ESCALA[pt.escala]})` : '—'}</span>}
+                                {quem || <span className="text-neutral-400 print:hidden">{ligacao(pt.escala, pt.escalaColunaId, n) ? `(${ligacao(pt.escala, pt.escalaColunaId, n)})` : '—'}</span>}
                               </td>
                             )}
                             <td className="border border-neutral-500 px-2 py-0.5 whitespace-nowrap tabular-nums">{horas(i)}</td>
                             <td className="border border-neutral-500 px-2 py-0.5">{i.actividade}</td>
                             <td className="border border-neutral-500 px-2 py-0.5">
-                              {nome || (i.escala ? <span className="font-normal text-neutral-400 print:invisible">({ESCALA[i.escala]})</span> : '')}
+                              {nome || (ligacao(i.escala, i.escalaColunaId, n) ? <span className="font-normal text-neutral-400 print:invisible">({ligacao(i.escala, i.escalaColunaId, n)})</span> : '')}
                             </td>
                           </tr>
                         )
@@ -222,7 +247,7 @@ function DialogoItem({ item, parte, ordem, programaId, nomes, aoFechar }: {
   const [t0, v0] = tipoInicial(item?.responsavelMembroId, item?.responsavelFamiliaId, item?.responsavelDepartamentoIgrejaId, item?.responsavelTexto)
   const [tipo, setTipo] = useState<Tipo>(t0)
   const [valor, setValor] = useState(v0)
-  const [escala, setEscala] = useState(item?.escala ?? '')
+  const [escala, setEscala] = useState(valorLigacao(item?.escala, item?.escalaColunaId))
   const [destaque, setDestaque] = useState(item?.destaque ?? false)
   const [pos, setPos] = useState(String(item?.ordem ?? ordem))
   const [erro, setErro] = useState<string | null>(null)
@@ -234,7 +259,7 @@ function DialogoItem({ item, parte, ordem, programaId, nomes, aoFechar }: {
     try {
       await mut.gravarItem.mutateAsync({
         id: item?.id, programaParteId: parte.id, ordem: Number(pos) || ordem, horaInicio: ini || null, horaFim: fim || null,
-        actividade: actividade.trim(), escala: escala || null, destaque,
+        actividade: actividade.trim(), ...daLigacao(escala), destaque,
         responsavelMembroId: tipo === 'membro' ? Number(valor) : null, responsavelFamiliaId: tipo === 'familia' ? Number(valor) : null,
         responsavelDepartamentoIgrejaId: tipo === 'departamento' ? Number(valor) : null, responsavelTexto: tipo === 'texto' ? valor.trim() : null,
       } as never)
@@ -262,10 +287,7 @@ function DialogoItem({ item, parte, ordem, programaId, nomes, aoFechar }: {
           <div className="grid gap-1.5"><span className="text-sm font-medium">Responsável</span>
             <CampoQuem id="pi-resp" tipo={tipo} setTipo={setTipo} valor={valor} setValor={setValor} nomes={nomes} /></div>
           <div className="grid gap-1.5"><label htmlFor="pi-esc" className="text-sm font-medium">Vem da escala</label>
-            <Seleccao id="pi-esc" value={escala} onChange={(e) => setEscala(e.target.value)}>
-              <option value="">Não (escreve-se aqui)</option>
-              {Object.entries(ESCALA).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
-            </Seleccao>
+            <CampoLigacao id="pi-esc" valor={escala} aoMudar={setEscala} nomes={nomes} />
             <p className="text-xs text-muted-foreground">Ligado à escala, "Preencher pela escala" põe aqui quem está escalado nesse dia.</p></div>
           <label className="alvo flex items-center gap-2 text-sm"><input type="checkbox" checked={destaque} onChange={(e) => setDestaque(e.target.checked)} className="size-4 accent-[var(--primary)]" />Linha em destaque na folha</label>
         </div>
@@ -291,7 +313,7 @@ function DialogoParte({ parte, ordem, programaId, nomes, aoFechar }: { parte: Pa
   const [t0, v0] = tipoInicial(parte?.apresentadorMembroId, parte?.apresentadorFamiliaId, null, parte?.apresentadorTexto)
   const [tipo, setTipo] = useState<Tipo>(t0)
   const [valor, setValor] = useState(v0)
-  const [escala, setEscala] = useState(parte?.escala ?? '')
+  const [escala, setEscala] = useState(valorLigacao(parte?.escala, parte?.escalaColunaId))
   const [pos, setPos] = useState(String(parte?.ordem ?? ordem))
   const [erro, setErro] = useState<string | null>(null)
   const gravar = async () => {
@@ -300,7 +322,7 @@ function DialogoParte({ parte, ordem, programaId, nomes, aoFechar }: { parte: Pa
     if (tipo !== 'nenhum' && !valor.trim()) return setErro('Escolha o apresentador (ou "Ninguém").')
     try {
       await mut.gravarParte.mutateAsync({
-        id: parte?.id, titulo: titulo.trim(), rotulo: rotulo.trim() || 'Apresentador', ordem: Number(pos) || ordem, escala: escala || null,
+        id: parte?.id, titulo: titulo.trim(), rotulo: rotulo.trim() || 'Apresentador', ordem: Number(pos) || ordem, ...daLigacao(escala),
         apresentadorMembroId: tipo === 'membro' ? Number(valor) : null, apresentadorFamiliaId: tipo === 'familia' ? Number(valor) : null,
         apresentadorTexto: tipo === 'texto' ? valor.trim() : null,
       } as never)
@@ -329,10 +351,7 @@ function DialogoParte({ parte, ordem, programaId, nomes, aoFechar }: { parte: Pa
           <div className="grid gap-1.5"><span className="text-sm font-medium">Apresentador</span>
             <CampoQuem id="pp-apr" tipo={tipo} setTipo={setTipo} valor={valor} setValor={setValor} nomes={nomes} departamentos={false} /></div>
           <div className="grid gap-1.5"><label htmlFor="pp-esc" className="text-sm font-medium">Vem da escala</label>
-            <Seleccao id="pp-esc" value={escala} onChange={(e) => setEscala(e.target.value)}>
-              <option value="">Não (escreve-se aqui)</option>
-              {Object.entries(ESCALA).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
-            </Seleccao></div>
+            <CampoLigacao id="pp-esc" valor={escala} aoMudar={setEscala} nomes={nomes} /></div>
         </div>
         <DialogFooter className="gap-2 sm:justify-between">
           {parte && pode('actividades.programa_parte.terminar')

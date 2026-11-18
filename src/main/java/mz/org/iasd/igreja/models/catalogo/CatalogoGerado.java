@@ -6,6 +6,7 @@ import java.util.Map;
 import mz.org.iasd.igreja.models.actividades.Actividade;
 import mz.org.iasd.igreja.models.actividades.ActividadeResponsavel;
 import mz.org.iasd.igreja.models.actividades.Escala;
+import mz.org.iasd.igreja.models.actividades.EscalaColuna;
 import mz.org.iasd.igreja.models.actividades.EscalaDia;
 import mz.org.iasd.igreja.models.actividades.EscalaPlano;
 import mz.org.iasd.igreja.models.actividades.Material;
@@ -203,6 +204,7 @@ public final class CatalogoGerado {
             Material.class,
             ActividadeResponsavel.class,
             Escala.class,
+            EscalaColuna.class,
             EscalaPlano.class,
             EscalaDia.class,
             SantaCeia.class,

@@ -33,6 +33,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoContagem;
  * @param ofertas Parte do contado: ofertas (oferta combinada, missionárias) — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param escolaSabatina Parte do contado: ofertas da Escola Sabatina — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param outras Parte do contado: outras ofertas (especiais, projectos da igreja) — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
+ * @param construcao Parte do contado: fundo de construção (V45) — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -68,6 +69,8 @@ public record ContagemNumerario(
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal escolaSabatina,
         @ColunaBd(value = "cnu_outras", tipo = Tipo.DINHEIRO)
         @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal outras,
+        @ColunaBd(value = "cnu_construcao", tipo = Tipo.DINHEIRO)
+        @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal construcao,
         @ColunaBd(value = "cnu_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoContagem estado,
         @ColunaBd(value = "cnu_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

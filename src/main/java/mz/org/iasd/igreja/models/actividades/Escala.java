@@ -22,11 +22,13 @@ import mz.org.iasd.igreja.models.tipos.FuncaoEscala;
  * @param igrejaId Referência a organizacao.igreja
  * @param data coluna {@code esc_data}
  * @param funcao coluna {@code esc_funcao} — obrigatório ao criar
- * @param membroId Referência a secretaria.membro — obrigatório ao criar
+ * @param membroId Membro escalado (ou a família, nas colunas por família)
  * @param actividadeId Referência a actividades.actividade
  * @param substitutoMembroId Referência a secretaria.membro
  * @param observacoes coluna {@code esc_observacoes}
  * @param escalaDiaId Dia da escala (plano) a que pertence; a data e a igreja vêm do dia
+ * @param escalaColunaId Coluna da escala da Escola Sabatina ou da JA (definida pela igreja) (V45)
+ * @param familiaId Família escalada, nas colunas por família (V45)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -44,7 +46,7 @@ public record Escala(
         LocalDate data,
         @ColunaBd(value = "esc_funcao", tipo = Tipo.ENUM, obrigatoria = true, naoNula = true)
         FuncaoEscala funcao,
-        @ColunaBd(value = "esc_mem_id", tipo = Tipo.INT, obrigatoria = true, naoNula = true)
+        @ColunaBd(value = "esc_mem_id", tipo = Tipo.INT)
         Integer membroId,
         @ColunaBd(value = "esc_act_id", tipo = Tipo.INT)
         Integer actividadeId,
@@ -54,6 +56,10 @@ public record Escala(
         String observacoes,
         @ColunaBd(value = "esc_eds_id", tipo = Tipo.INT)
         Integer escalaDiaId,
+        @ColunaBd(value = "esc_ecn_id", tipo = Tipo.INT)
+        Integer escalaColunaId,
+        @ColunaBd(value = "esc_fam_id", tipo = Tipo.INT)
+        Integer familiaId,
         @ColunaBd(value = "esc_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoEscala estado,
         @ColunaBd(value = "esc_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

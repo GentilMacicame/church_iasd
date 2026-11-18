@@ -273,7 +273,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
   const [ocasiao, setOcasiao] = useState('Culto de sábado')
   // quem conta: tesoureiro, Escola Sabatina e diácono (obrigatórios) e o ancião (opcional)
   const [quem, setQuem] = useState<Record<string, number | null>>({ TESOUREIRO: null, ESCOLA_SABATINA: null, DIACONO: null, ANCIAO: null })
-  const [partes, setPartes] = useState<Record<string, string>>({ dizimos: '', ofertas: '', escolaSabatina: '', outras: '' })
+  const [partes, setPartes] = useState<Record<string, string>>({ dizimos: '', ofertas: '', escolaSabatina: '', construcao: '', outras: '' })
   const validoOuVazio = (v: string) => v === '' || /^\d{1,14}(\.\d{1,2})?$/.test(v)
   const total = Object.values(partes).reduce((s, v) => s + (v && validoOuVazio(v) ? centimos(v) : 0), 0)
   const [erro, setErro] = useState<string | null>(null)
@@ -292,7 +292,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
     try {
       const nova = await criar.mutateAsync({ igrejaId: igreja.id, contaId: conta!.id, data: dia, ocasiao: ocasiao.trim() || undefined,
         contador1MembroId: quem.TESOUREIRO, contador2MembroId: quem.ESCOLA_SABATINA,
-        totalContado: deCentimos(total), dizimos: parte(partes.dizimos), ofertas: parte(partes.ofertas), escolaSabatina: parte(partes.escolaSabatina), outras: parte(partes.outras) } as never)
+        totalContado: deCentimos(total), dizimos: parte(partes.dizimos), ofertas: parte(partes.ofertas), escolaSabatina: parte(partes.escolaSabatina), construcao: parte(partes.construcao), outras: parte(partes.outras) } as never)
       // os participantes com a função: se algum falhar, a contagem fica e junta-se no cartão
       const falhas: string[] = []
       for (const [funcao, membroId] of Object.entries(quem)) {

@@ -38,7 +38,7 @@ export interface SaldoFundo {
 
 /** Categoria sugerida para cada tipo de fundo (o tesoureiro pode mudar). */
 export const CATEGORIA_POR_FUNDO: Record<string, string> = {
-  DIZIMO: 'R1', OFERTA_MISSIONARIA: 'R2', OFERTA_COMBINADA: 'R2', OFERTA_ESPECIAL: 'R2', ORCAMENTO_LOCAL: 'R2', REAVIVAMENTO: 'R2',
+  DIZIMO: 'R1', OFERTA_MISSIONARIA: 'R2', OFERTA_COMBINADA: 'R2', OFERTA_ESPECIAL: 'R2', ORCAMENTO_LOCAL: 'R2', REAVIVAMENTO: 'R2', CONSTRUCAO: 'R4',
   ES_MISSOES: 'R3', ES_13_SABADO: 'R3', ES_DESPESAS: 'R3', PROJECTO: 'R4',
 }
 
@@ -103,7 +103,7 @@ export function useFundosMut() {
   const qc = useQueryClient()
   const depois = () => qc.invalidateQueries({ queryKey: ['tesouraria', 'fundos'] })
   const criar = useMutation({
-    mutationFn: (v: { nome: string; tipo: 'OFERTA_ESPECIAL' | 'PROJECTO' | 'REAVIVAMENTO'; restrito: boolean }) => {
+    mutationFn: (v: { nome: string; tipo: 'OFERTA_ESPECIAL' | 'PROJECTO' | 'REAVIVAMENTO' | 'CONSTRUCAO'; restrito: boolean }) => {
       // código único (o índice é de todas as igrejas): I<igreja>-<nome abreviado>-<sufixo>
       const base = v.nome.normalize('NFD').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'OFERTA'
       const codigo = `I${igreja.id}-${base}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`.slice(0, 20)
@@ -427,12 +427,15 @@ export interface Conferencia {
   /** V23: o contado por partes (null nas contagens antigas, só com o total) e o lançado por partes */
   dizimos: string | null; ofertas: string | null; escolaSabatina: string | null; outras: string | null
   dizimosLancado: string; ofertasLancado: string; escolaSabatinaLancado: string; outrasLancado: string
+  /** V45: o fundo de construção (null nas contagens anteriores) */
+  construcao: string | null; construcaoLancado: string
 }
 /** As partes da contagem: o contado (campo) e o lançado (campo + 'Lancado'), pela ordem do envelope. */
 export const PARTES_CONTAGEM = [
   { campo: 'dizimos', rotulo: 'Dízimos', ajuda: 'Envelopes e dízimos soltos' },
   { campo: 'ofertas', rotulo: 'Ofertas', ajuda: 'Oferta combinada e missionárias' },
   { campo: 'escolaSabatina', rotulo: 'Escola Sabatina', ajuda: 'Ofertas das classes' },
+  { campo: 'construcao', rotulo: 'Fundo de construção', ajuda: 'Obras e construção' },
   { campo: 'outras', rotulo: 'Outras ofertas', ajuda: 'Especiais e projectos da igreja' },
 ] as const
 

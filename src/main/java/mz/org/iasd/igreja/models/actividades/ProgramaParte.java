@@ -25,6 +25,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param apresentadorFamiliaId Apresentador (família, ex.: Família Magaia)
  * @param apresentadorTexto Apresentador escrito (visitante, grupo)
  * @param escala Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES)
+ * @param escalaColunaId Coluna da escala da Escola Sabatina ou da JA que preenche o apresentador (V45)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -52,6 +53,8 @@ public record ProgramaParte(
         String apresentadorTexto,
         @ColunaBd(value = "ppa_escala", tipo = Tipo.TEXTO)
         String escala,
+        @ColunaBd(value = "ppa_ecn_id", tipo = Tipo.INT)
+        Integer escalaColunaId,
         @ColunaBd(value = "ppa_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "ppa_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

@@ -1,0 +1,113 @@
+1. as colunas da escala da Escola Sabatina desta igreja: apresentador (membro) e família da programação
+    ecn_tipo     |        ecn_nome        | ecn_responsavel 
+-----------------+------------------------+-----------------
+ ESCOLA_SABATINA | Família da programação | FAMILIA
+ ESCOLA_SABATINA | Apresentador           | MEMBRO
+ JA              | Apresentador           | MEMBRO
+(3 rows)
+
+   a mesma coluna duas vezes, e um tipo desconhecido: recusados
+psql:database/tests/31_escalas_es_e_ja.sql:18: ERROR:  duplicate key value violates unique constraint "uq_ecn_igr_id_tipo_nome"
+psql:database/tests/31_escalas_es_e_ja.sql:19: ERROR:  new row for relation "escala_coluna" violates check constraint "chk_ecn_tipo"
+2. a escala da Escola Sabatina de janeiro (publicada) e o sábado 09/01
+        epl_titulo         |    epl_tipo     
+---------------------------+-----------------
+ Escala da Escola Sabatina | ESCOLA_SABATINA
+(1 row)
+
+  eds_data  
+------------
+ 2027-01-09
+(1 row)
+
+3. escalar: a família na coluna da família, o Tito na do apresentador
+  esc_data  | esc_fam_id 
+------------+------------
+ 2027-01-09 |       2201
+(1 row)
+
+  esc_data  | esc_mem_id 
+------------+------------
+ 2027-01-09 |        103
+(1 row)
+
+   recusados: sem coluna; um membro na coluna da família; a coluna da JA; uma família de outra igreja
+psql:database/tests/31_escalas_es_e_ja.sql:36: ERROR:  Na escala da Escola Sabatina ou da JA escolha a coluna
+psql:database/tests/31_escalas_es_e_ja.sql:39: ERROR:  Na coluna "Família da programação" escala-se uma família
+psql:database/tests/31_escalas_es_e_ja.sql:42: ERROR:  A coluna não é desta escala
+psql:database/tests/31_escalas_es_e_ja.sql:45: ERROR:  A família tem de ser desta igreja
+   na escala do culto não se escala uma família
+psql:database/tests/31_escalas_es_e_ja.sql:48: ERROR:  Na escala do culto escala-se um membro
+4. programação de 09/01: o modelo já não liga a ES; liga-se o apresentador da ES à coluna e preenche-se
+ preparada 
+-----------
+ t
+(1 row)
+
+           ppa_titulo           | ppa_escala | ppa_apresentador_fam_id 
+--------------------------------+------------+-------------------------
+ Programação da Escola Sabatina |            |                        
+ JA                             |            |                        
+(2 rows)
+
+ mudaram 
+---------
+       2
+(1 row)
+
+           ppa_titulo           | ppa_apresentador_fam_id | pit_actividade | pit_responsavel_mem_id 
+--------------------------------+-------------------------+----------------+------------------------
+ Programação da Escola Sabatina |                    2201 | Oração inicial |                    103
+(1 row)
+
+5. lembrete de quarta-feira: o Tito recebe o SMS com o nome da coluna (a família não recebe SMS)
+ criou 
+-------
+ t
+(1 row)
+
+ ntf_mem_id |                                               mensagem                                               
+------------+------------------------------------------------------------------------------------------------------
+        103 | lembrete - no sábado 09/01 está escalado(a) como apresentador da Escola Sabatina. Deus o(a) abençoe.
+(1 row)
+
+6. procurar antes de registar: o nome como se ouve, trocado, e o telemóvel
+        a        |        b        |       c        |       d        
+-----------------+-----------------+----------------+----------------
+ felisberto cosa | felisberto cosa | sacarias elder | sacarias elder
+(1 row)
+
+   o Paulo Mabjaia escrito "Mabjaya Paulo" (trocado e com y) e a mesma data: provável
+     nome      | provavel |                           motivos                           
+---------------+----------+-------------------------------------------------------------
+ Paulo Mabjaia | t        | {"Nome igual ou muito parecido","Mesma data de nascimento"}
+(1 row)
+
+   o mesmo telemóvel do Tito, com outro nome: aparece, como aviso
+    nome    |       motivos       
+------------+---------------------
+ Tito Langa | {"Mesmo telemóvel"}
+(1 row)
+
+7. fundo de construção: tipo próprio da igreja; a contagem tem a parte e confere-a à parte
+  fun_tipo  |  fun_nome  
+------------+------------
+ CONSTRUCAO | Construção
+(1 row)
+
+ fun_tipo | fun_nome 
+----------+----------
+(0 rows)
+
+ cnu_total_contado | cnu_construcao 
+-------------------+----------------
+           1500.00 |         200.00
+(1 row)
+
+   as partes têm de somar o total (com a construção)
+psql:database/tests/31_escalas_es_e_ja.sql:98: ERROR:  new row for relation "contagem_numerario" violates check constraint "chk_cnu_partes"
+ cnu_construcao | construcao_lancado | cnu_outras | outras_lancado 
+----------------+--------------------+------------+----------------
+         200.00 |                  0 |       0.00 |              0
+(1 row)
+

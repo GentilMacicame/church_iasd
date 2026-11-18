@@ -1338,6 +1338,40 @@ class BaseDadosTest {
         assertEquals(403, TradutorErrosSql.traduzir(naoPode).estadoHttp());
     }
 
+    // ------------------------------------------------------------------ V45: escalas da Escola Sabatina e da JA
+
+    @Test
+    void escalaDaEscolaSabatinaComColunasDaIgreja() throws Exception {
+        int secretario = criarUsuarioComDono("secretario.v45@teste.mz", null, "SECRETARIO");
+        var coluna = Catalogo.de(mz.org.iasd.igreja.models.actividades.EscalaColuna.class);
+        var escala = Catalogo.de(Escala.class);
+        JsonObject familiaCol = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, coluna, Json.createObjectBuilder()
+                .add("igrejaId", igrejaCentral).add("tipo", "ESCOLA_SABATINA").add("nome", "Família da programação V45").add("responsavel", "FAMILIA").build()));
+        assertEquals("FAMILIA", familiaCol.getString("responsavel"));
+        int familia;
+        long dia;
+        try (Connection dono = ligarComoDono()) {
+            familia = inserir(dono, "INSERT INTO secretaria.familia (fam_igr_id, fam_nome) VALUES (" + igrejaCentral + ", 'Família V45') RETURNING fam_id");
+            int plano = inserir(dono, "INSERT INTO actividades.escala_plano (epl_igr_id, epl_titulo, epl_tipo, epl_data_inicio, epl_data_fim) VALUES ("
+                    + igrejaCentral + ", 'Escala da ES V45', 'ESCOLA_SABATINA', '2027-02-01', '2027-02-28') RETURNING epl_id");
+            dia = inserir(dono, "INSERT INTO actividades.escala_dia (eds_epl_id, eds_data) VALUES (" + plano + ", '2027-02-06') RETURNING eds_id");
+        }
+        // a família na coluna da família, pela rota genérica das escalas
+        JsonObject escalada = ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c, escala, Json.createObjectBuilder()
+                .add("escalaDiaId", dia).add("funcao", "OUTRA").add("escalaColunaId", familiaCol.getInt("id")).add("familiaId", familia).build()));
+        assertEquals(familia, escalada.getInt("familiaId"));
+        assertTrue(escalada.isNull("membroId") || !escalada.containsKey("membroId"));
+        // sem coluna, numa escala da Escola Sabatina → 422 no campo da coluna
+        SQLException semColuna = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> TabelaRepository.criar(c,
+                escala, Json.createObjectBuilder().add("escalaDiaId", dia).add("funcao", "PREGADOR").add("familiaId", familia).build())));
+        assertEquals(422, TradutorErrosSql.traduzir(semColuna).estadoHttp());
+        assertEquals("escalaColunaId", TradutorErrosSql.traduzir(semColuna).campo());
+        // o tesoureiro não define colunas → 403
+        SQLException naoPode = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c,
+                coluna, Json.createObjectBuilder().add("igrejaId", igrejaCentral).add("tipo", "JA").add("nome", "Meditação").build())));
+        assertEquals(403, TradutorErrosSql.traduzir(naoPode).estadoHttp());
+    }
+
     // ------------------------------------------------------------------ V17: escalas e lembretes por SMS
 
     @Test

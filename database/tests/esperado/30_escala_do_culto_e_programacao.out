@@ -26,7 +26,7 @@ psql:database/tests/30_escala_do_culto_e_programacao.sql:20: ERROR:  A família 
 
  ppa_ordem |           ppa_titulo           | ppa_apresentador_mem_id | ppa_apresentador_fam_id | itens 
 -----------+--------------------------------+-------------------------+-------------------------+-------
-         1 | Programação da Escola Sabatina |                         |                    2201 |    10
+         1 | Programação da Escola Sabatina |                         |                         |    10
          2 | Transição                      |                         |                         |     3
          3 | Programação do Culto Divino    |                     961 |                         |    13
          4 | JA                             |                         |                         |    11

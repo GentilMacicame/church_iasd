@@ -217,8 +217,7 @@ function Caminho() {
   const partes: { rotulo: string; para?: string }[] = [{ rotulo: t.nav.inicio, para: '/' }]
   if (pathname.startsWith('/membros')) {
     partes.push({ rotulo: t.nav.secretaria }, { rotulo: t.nav.membros, para: '/membros' })
-    if (pathname === '/membros/novo') partes.push({ rotulo: t.membros.registar })
-    if (pathname === '/membros/novo/ficha') partes.push({ rotulo: t.membros.registar, para: '/membros/novo' }, { rotulo: 'Ficha' })
+    if (pathname === '/membros/novo/ficha') partes.push({ rotulo: t.membros.registar })
     else if (pathname.endsWith('/editar')) partes.push({ rotulo: t.ficha.titulo, para: pathname.replace(/\/editar$/, '') }, { rotulo: t.comum.editar })
     else if (/^\/membros\/\d+/.test(pathname)) partes.push({ rotulo: t.ficha.titulo })
   }

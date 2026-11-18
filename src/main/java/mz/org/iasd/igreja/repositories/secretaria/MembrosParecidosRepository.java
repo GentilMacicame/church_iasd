@@ -31,7 +31,12 @@ public final class MembrosParecidosRepository {
     }
 
     public record Pedido(String nome, String apelido, Date dataNascimento, String naturalidade,
-                         String numeroIdentificacao, Integer excluirId) {
+                         String numeroIdentificacao, Integer excluirId, String telefone) {
+
+        /** Sem telemóvel (como antes da V45). */
+        public Pedido(String nome, String apelido, Date dataNascimento, String naturalidade, String numeroIdentificacao, Integer excluirId) {
+            this(nome, apelido, dataNascimento, naturalidade, numeroIdentificacao, excluirId, null);
+        }
     }
 
     public static JsonArray procurar(Connection c, Pedido p) throws SQLException {
@@ -58,7 +63,7 @@ public final class MembrosParecidosRepository {
             }
         }
         String sql = "SELECT mem_id, mem_igr_id, nome, data_nascimento, naturalidade, numero_identificacao, estado::text, "
-                + "pontos, motivos FROM nucleo.fn_membros_parecidos(?, ?, ?, ?, ?, ?)";
+                + "pontos, motivos FROM nucleo.fn_membros_parecidos(?, ?, ?, ?, ?, ?, ?)";
         JsonArrayBuilder r = Json.createArrayBuilder();
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, p.nome());
@@ -67,6 +72,7 @@ public final class MembrosParecidosRepository {
             ps.setString(4, p.naturalidade());
             ps.setString(5, p.numeroIdentificacao());
             excluir(ps, 6, p.excluirId());
+            ps.setString(7, p.telefone());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String[] existe = existentes.remove(rs.getInt(1));

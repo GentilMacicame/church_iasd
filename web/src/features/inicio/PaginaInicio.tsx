@@ -501,7 +501,7 @@ export default function PaginaInicio() {
             <Button asChild variant="outline" className="alvo"><Link to="/tesouraria/entrada"><HandCoins className="size-4" />Lançar entrada</Link></Button>
           )}
           {pode('secretaria.membro.criar') && (
-            <Button asChild className="alvo"><Link to="/membros/novo"><Plus className="size-4" />{t.membros.registar}</Link></Button>
+            <Button asChild className="alvo"><Link to="/membros?registar=1"><Plus className="size-4" />{t.membros.registar}</Link></Button>
           )}
         </>}
       />

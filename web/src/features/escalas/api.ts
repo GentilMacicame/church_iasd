@@ -9,9 +9,13 @@ import type { paths } from '@/api/esquema'
 import { useIgreja } from '@/auth/sessao'
 import { hojeIso } from '@/lib/formatos'
 
-export type Plano = Esquema<'EscalaPlano'> & { id: number; titulo: string; dataInicio: string; dataFim: string }
+export type Plano = Esquema<'EscalaPlano'> & { id: number; titulo: string; dataInicio: string; dataFim: string; tipo: TipoEscala }
+export type TipoEscala = 'CULTO' | 'ESCOLA_SABATINA' | 'JA'
+export const TIPOS_ESCALA: Record<TipoEscala, string> = { CULTO: 'Culto Divino', ESCOLA_SABATINA: 'Escola Sabatina', JA: 'JA' }
+/** Coluna da escala da Escola Sabatina ou da JA, definida pela igreja (V45): escala-se um membro ou uma família. */
+export type Coluna = Esquema<'EscalaColuna'> & { id: number; nome: string; ordem: number; tipo: TipoEscala; responsavel: 'MEMBRO' | 'FAMILIA' }
 export type Dia = Esquema<'EscalaDia'> & { id: number; data: string; escalaPlanoId: number }
-export type Escalado = Esquema<'Escala'> & { id: number; funcao: FuncaoEscala; membroId: number }
+export type Escalado = Esquema<'Escala'> & { id: number; funcao: FuncaoEscala; membroId?: number | null; familiaId?: number | null; escalaColunaId?: number | null }
 export type FuncaoEscala = NonNullable<Esquema<'Escala'>['funcao']>
 type Corpo<P extends keyof paths, M extends 'post' | 'patch'> = paths[P][M] extends { requestBody?: { content: { 'application/json': infer C } } } ? C : never
 
@@ -22,20 +26,16 @@ export function emVigor(p: Plano) {
 }
 
 /**
- * As colunas da escala, pelas partes da programação do dia (V44). A Escola Sabatina tem ainda a família responsável
- * (no dia da escala). As outras funções (acompanhantes, diáconos…) escalam-se no dia, sem coluna própria.
+ * As colunas da escala do culto, com os nomes da programação do Culto Divino (V44/V45). A Escola Sabatina e a JA têm
+ * escalas próprias, com as colunas que cada igreja define. As outras funções (acompanhantes, diáconos…) escalam-se no
+ * dia, sem coluna própria.
  */
-export const GRUPOS: { titulo: string; familia?: boolean; funcoes: FuncaoEscala[] }[] = [
-  { titulo: 'Escola Sabatina', familia: true, funcoes: ['APRESENTADOR_ES'] },
-  { titulo: 'Culto Divino', funcoes: ['APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL'] },
-  { titulo: 'JA', funcoes: ['APRESENTADOR_JA', 'MEDITACAO_JA'] },
-]
-export const COLUNAS: FuncaoEscala[] = GRUPOS.flatMap((g) => g.funcoes)
-/** Nome curto na grelha (o grupo já diz de que parte é). */
+export const COLUNAS: FuncaoEscala[] = ['APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL']
+/** Funções que já não se usam na escala do culto (a ES e a JA têm as suas escalas). */
+export const FORA_DO_CULTO: FuncaoEscala[] = ['APRESENTADOR_ES', 'APRESENTADOR_JA', 'MEDITACAO_JA']
 export const CURTO: Record<string, string> = {
-  APRESENTADOR_ES: 'Apresentador', APRESENTADOR_CULTO: 'Apresentador', PREGADOR: 'Sermão principal', TRADUTOR: 'Tradutor',
+  APRESENTADOR_CULTO: 'Apresentador', PREGADOR: 'Sermão principal', TRADUTOR: 'Tradutor',
   SERMAO_CRIANCA: 'Sermão da criança', ORACAO_INICIAL: 'Oração inicial', ORACAO_FINAL: 'Oração final',
-  APRESENTADOR_JA: 'Apresentador', MEDITACAO_JA: 'Meditação',
 }
 
 const chaves = {
@@ -145,7 +145,7 @@ export function useAlterarDia(planoId: number) {
 export function useEscalar(planoId: number) {
   const invalidar = useInvalidar(planoId)
   return useMutation({
-    mutationFn: (corpo: { escalaDiaId: number; funcao: FuncaoEscala; membroId: number }) =>
+    mutationFn: (corpo: { escalaDiaId: number; funcao: FuncaoEscala; membroId?: number; familiaId?: number; escalaColunaId?: number }) =>
       dados(api.POST('/v1/actividades/escalas', { body: corpo as Corpo<'/v1/actividades/escalas', 'post'> })),
     onSuccess: invalidar,
   })
@@ -154,8 +154,8 @@ export function useEscalar(planoId: number) {
 export function useTrocar(planoId: number) {
   const invalidar = useInvalidar(planoId)
   return useMutation({
-    mutationFn: ({ id, membroId }: { id: number; membroId: number }) =>
-      dados(api.PATCH('/v1/actividades/escalas/{id}', { params: { path: { id } }, body: { membroId } })),
+    mutationFn: ({ id, membroId, familiaId }: { id: number; membroId?: number; familiaId?: number }) =>
+      dados(api.PATCH('/v1/actividades/escalas/{id}', { params: { path: { id } }, body: (familiaId ? { familiaId } : { membroId }) as never })),
     onSuccess: invalidar,
   })
 }
@@ -166,4 +166,28 @@ export function useRetirar(planoId: number) {
     mutationFn: (id: number) => dados(api.POST('/v1/actividades/escalas/{id}/terminar', { params: { path: { id } } })),
     onSuccess: invalidar,
   })
+}
+
+/* ---------------------------------------------------------------- colunas da escala da ES e da JA (V45) */
+export function useColunas(tipo: TipoEscala | undefined) {
+  const igreja = useIgreja()
+  return useQuery({
+    enabled: !!tipo && tipo !== 'CULTO',
+    queryKey: ['escalas', igreja.id, 'colunas', tipo],
+    queryFn: async () => ((await dados(api.GET('/v1/actividades/colunas-escala', { params: { query: { igrejaId: igreja.id, limite: 100 } } }))).dados as Coluna[])
+      .filter((c) => c.tipo === tipo && !c.endDate).sort((a, b) => a.ordem - b.ordem || a.id - b.id),
+  })
+}
+
+export function useColunasMut() {
+  const qc = useQueryClient()
+  const igreja = useIgreja()
+  const invalidar = () => qc.invalidateQueries({ queryKey: ['escalas', igreja.id, 'colunas'] })
+  return {
+    gravar: useMutation({ onSuccess: invalidar, mutationFn: ({ id, ...corpo }: Partial<Coluna>) => id
+      ? dados(api.PATCH('/v1/actividades/colunas-escala/{id}', { params: { path: { id } }, body: corpo as never }))
+      : dados(api.POST('/v1/actividades/colunas-escala', { body: { ...corpo, igrejaId: igreja.id } as never })) }),
+    tirar: useMutation({ onSuccess: invalidar, mutationFn: (id: number) =>
+      dados(api.POST('/v1/actividades/colunas-escala/{id}/terminar', { params: { path: { id } } })) }),
+  }
 }

@@ -282,6 +282,12 @@ src/
   igreja ou copiando outro dia, já com os nomes da escala); a folha como a da igreja (título, partes com o apresentador,
   horas, actividade, responsável, linhas em destaque, nota), editável linha a linha (membro, família, departamento ou
   texto; ligação à escala), "Preencher pela escala" e "Imprimir" (A4).
+- **Escalas** (V45): três tipos — Culto Divino (as colunas do culto e o grupo coral), Escola Sabatina e JA (as colunas que
+  a igreja define em "Colunas da escala": nome, ordem, um membro ou uma família). A programação liga-se também a elas.
+- **Registar membro** (V45): janela com nome, apelido e data de nascimento obrigatórios, local, BI e telemóvel; procura ao
+  escrever, em todas as igrejas (nome como se ouve e trocado, data, documento, telemóvel); "Já está registada" não deixa
+  continuar, "Pode ser" pede "Conferi: é outra pessoa". **Lançar entrada**: sem "Outros fundos" na igreja local.
+  **Fundos**: tipo "Fundo de construção". **Contagem**: parte "Fundo de construção".
 
 ## Por fazer (próximas iterações)
 

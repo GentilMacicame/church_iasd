@@ -11,11 +11,10 @@ export type Programa = Esquema<'ProgramaDia'> & { id: number; data: string }
 export type Parte = Esquema<'ProgramaParte'> & { id: number; programaDiaId: number; ordem: number; titulo: string; rotulo: string }
 export type Item = Esquema<'ProgramaItem'> & { id: number; programaDiaId: number; programaParteId: number; ordem: number; actividade: string; destaque: boolean }
 
-/** Funções da escala a que uma parte ou item se pode ligar (a escala do dia preenche o nome). */
+/** Funções da escala do culto a que uma parte ou item se pode ligar (a escala do dia preenche o nome). */
 export const ESCALA: Record<string, string> = {
-  FAMILIA_ES: 'Família da Escola Sabatina', APRESENTADOR_ES: 'Apresentador da Escola Sabatina', APRESENTADOR_CULTO: 'Apresentador do Culto Divino',
-  PREGADOR: 'Sermão principal', TRADUTOR: 'Tradutor', SERMAO_CRIANCA: 'Sermão da criança', ORACAO_INICIAL: 'Oração inicial (culto)',
-  ORACAO_FINAL: 'Oração final (culto)', APRESENTADOR_JA: 'Apresentador da JA', MEDITACAO_JA: 'Meditação da JA',
+  APRESENTADOR_CULTO: 'Apresentador do Culto Divino', PREGADOR: 'Sermão principal', TRADUTOR: 'Tradutor', SERMAO_CRIANCA: 'Sermão da criança',
+  ORACAO_INICIAL: 'Oração inicial (culto)', ORACAO_FINAL: 'Oração final (culto)',
 }
 
 const k = {

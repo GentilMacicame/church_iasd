@@ -542,6 +542,8 @@ public final class Rotas {
         public static final String SANTAS_CEIAS = "/v1/actividades/santas-ceias";
         /** ProgramasDiaController · rotas-padrão (V44): programação do dia (folha do sábado) */
         public static final String PROGRAMAS_DIA = "/v1/actividades/programas-dia";
+        /** ColunasEscalaController · rotas-padrão (V45): colunas da escala da Escola Sabatina e da JA */
+        public static final String COLUNAS_ESCALA = "/v1/actividades/colunas-escala";
         /** POST /v1/actividades/programas-dia/preparar  (ProgramasDiaController.preparar) */
         public static final String PROGRAMAS_DIA_PREPARAR = "preparar";
         /** POST /v1/actividades/programas-dia/{id}/preencher-escala  (ProgramasDiaController.preencherEscala) */
