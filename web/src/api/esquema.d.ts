@@ -8084,6 +8084,8 @@ export interface components {
              * @description → organizacao.distrito · Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)
              */
             distritoId?: number;
+            /** @description Porque foi cancelada (obrigatório ao cancelar; V48) */
+            motivoCancelamento?: string;
             estado?: components["schemas"]["EnumEstadoActividade"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -15941,6 +15943,12 @@ export interface operations {
                         permissoes: {
                             [key: string]: string[];
                         };
+                        /** @description Distritos pastorais de que é o pastor (contexto da área pastoral) */
+                        distritos?: {
+                            id: number;
+                            nome: string;
+                            igrejas: number[];
+                        }[];
                     };
                 };
             };

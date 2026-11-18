@@ -11,6 +11,9 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { t } from '@/i18n/pt-MZ'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Avatar, Campo, Cartao, Pilula, Tabela } from '@/components/comum/elementos'
 import { Barra, EstadoErro, EstadoVazio } from '@/components/comum/estados'
@@ -69,10 +72,14 @@ function Ficha({ a }: { a: Actividade }) {
     : deps.data?.daIgreja.find((d) => d.id === a.departamentoIgrejaId)?.nome
   const responsavel = a.responsavelMembroId ? basicos.data?.find((m) => m.id === a.responsavelMembroId) : undefined
   const podeAlterar = pode('actividades.actividade.alterar')
-  const mudarEstado = (e: EstadoActividade) => alterar.mutate({ id: a.id, estado: e } as never, {
-    onSuccess: () => { toast.success(`Actividade ${ROTULO_ESTADO[e].toLowerCase()}.`); setConfirmar(null) },
-    onError: (err) => { toast.error(mensagemDe(err)); setConfirmar(null) },
-  })
+  const [motivo, setMotivo] = useState('')
+  const mudarEstado = (e: EstadoActividade) => {
+    if (e === 'CANCELADA' && !motivo.trim()) { toast.error('Diga porque a actividade é cancelada.'); return }
+    alterar.mutate({ id: a.id, estado: e, ...(e === 'CANCELADA' ? { motivoCancelamento: motivo.trim() } : {}) } as never, {
+      onSuccess: () => { toast.success(`Actividade ${ROTULO_ESTADO[e].toLowerCase()}.`); setConfirmar(null); setMotivo('') },
+      onError: (err) => { toast.error(mensagemDe(err)); setConfirmar(null) },
+    })
+  }
   const mesmoDia = !a.dataFim || partesMaputo(a.dataFim).data === partesMaputo(a.dataInicio).data
 
   return (
@@ -120,11 +127,25 @@ function Ficha({ a }: { a: Actividade }) {
       </div>
 
       {editar && <DialogoActividade actividade={a} aoFechar={() => setEditar(false)} />}
-      <DialogoConfirmar aberto={confirmar != null} aoMudar={(v) => !v && setConfirmar(null)}
-        titulo={confirmar === 'CANCELADA' ? `Cancelar «${a.nome}»?` : `Marcar «${a.nome}» como concluída?`}
-        texto={confirmar === 'CANCELADA' ? 'Fica no histórico, mas deixa de contar nos conflitos de calendário e no orçamento do programa.' : 'Pode continuar a juntar as despesas que faltam.'}
-        accao={confirmar === 'CANCELADA' ? 'Cancelar actividade' : 'Concluir'} perigo={confirmar === 'CANCELADA'} aCorrer={alterar.isPending}
-        aoConfirmar={() => confirmar && mudarEstado(confirmar)} />
+      <DialogoConfirmar aberto={confirmar === 'CONCLUIDA'} aoMudar={(v) => !v && setConfirmar(null)}
+        titulo={`Marcar «${a.nome}» como concluída?`} texto="Pode continuar a juntar as despesas que faltam."
+        accao="Concluir" aCorrer={alterar.isPending} aoConfirmar={() => mudarEstado('CONCLUIDA')} />
+      <Dialog open={confirmar === 'CANCELADA'} onOpenChange={(v) => !v && setConfirmar(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar «{a.nome}»?</DialogTitle>
+            <DialogDescription>Fica no histórico com o motivo; deixa de contar nos conflitos e no orçamento do programa.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-1.5">
+            <label htmlFor="act-motivo" className="text-sm font-medium">Motivo <span className="text-destructive-text">*</span></label>
+            <Textarea id="act-motivo" rows={2} maxLength={255} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="ex.: chuvas fortes, falta de orçamento" autoFocus />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirmar(null)}>{t.comum.cancelar}</Button>
+            <Button type="button" variant="destructive" disabled={alterar.isPending || !motivo.trim()} onClick={() => mudarEstado('CANCELADA')}>Cancelar actividade</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

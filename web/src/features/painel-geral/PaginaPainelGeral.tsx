@@ -132,7 +132,7 @@ function usePainelMensal() {
   })
 }
 
-export default function PaginaPainelGeral() {
+export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: { distritoFixo?: number; titulo?: string } = {}) {
   const navigate = useNavigate()
   const { igrejas, escolherIgreja } = useSessao()
   const [periodo, setPeriodo] = useState<Periodo>('ano')
@@ -145,7 +145,7 @@ export default function PaginaPainelGeral() {
   const qs = useHistoricoSantaCeia(true)
   const qc = usePainelMembros()
   const [entidade, setEntidade] = useState('')
-  const [distrito, setDistrito] = useState('')
+  const [distrito, setDistrito] = useState(distritoFixo ? String(distritoFixo) : '')
   const [texto, setTexto] = useState('')
   const [medida, setMedida] = useState<Medida>('membros')
   const [ordem, setOrdem] = useState<{ k: Coluna; desc: boolean }>({ k: 'membros', desc: true })
@@ -223,7 +223,7 @@ export default function PaginaPainelGeral() {
     <>
       <TituloPagina
         icone={ChartColumn}
-        titulo="Painel geral das igrejas"
+        titulo={tituloFixo ?? 'Painel geral das igrejas'}
         descricao={aCarregar ? 'A carregar…' : `${linhas.length} igreja(s)${distrito ? ` do ${distritos.find(([id]) => String(id) === distrito)?.[1]}` : entidade ? ` da ${entidades.find(([id]) => String(id) === entidade)?.[1]}` : ' a seu cargo'} · ${intervalo.rotulo}`}
         accoes={<>
           <Exportar caminho="/v1/organizacao/painel-igrejas" query={{ entidadeId: entidade || undefined, distritoId: distrito || undefined }} nome="painel-geral-igrejas" />
@@ -250,7 +250,7 @@ export default function PaginaPainelGeral() {
             </div>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.2fr]">
+        <div className={cn('grid gap-3 sm:grid-cols-[1fr_1fr_1.2fr]', distritoFixo && 'hidden')}>
           <Seleccao aria-label="Associação / Missão" value={entidade} onChange={(e) => { setEntidade(e.target.value); setDistrito('') }} disabled={entidades.length < 2}>
             <option value="">{entidades.length === 1 ? entidades[0][1] : 'Todas as Associações / Missões'}</option>
             {entidades.length > 1 && entidades.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}

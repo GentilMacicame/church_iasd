@@ -11,6 +11,8 @@ import type { paths } from '@/api/esquema'
 
 type Eu = paths['/v1/eu']['get']['responses']['200']['content']['application/json']
 export type IgrejaDoUtilizador = Eu['igrejas'][number]
+/** Distrito pastoral de que o utilizador é o pastor: o contexto da área pastoral, fora da igreja local. */
+export type DistritoDoUtilizador = NonNullable<Eu['distritos']>[number]
 
 interface Sessao {
   estado: 'a-verificar' | 'anonimo' | 'autenticado'
@@ -18,6 +20,10 @@ interface Sessao {
   igrejas: IgrejaDoUtilizador[]
   igreja: IgrejaDoUtilizador | null
   escolherIgreja: (id: number) => void
+  /** os distritos de que é pastor e o escolhido (null = está numa igreja local) */
+  distritos: DistritoDoUtilizador[]
+  distrito: DistritoDoUtilizador | null
+  escolherDistrito: (id: number) => void
   pode: (codigo: string) => boolean
   entrar: (login: string, senha: string) => Promise<void>
   sair: () => Promise<void>
@@ -28,6 +34,17 @@ interface Sessao {
 
 const Contexto = createContext<Sessao | null>(null)
 const CHAVE_IGREJA = 'igreja.escolhida'
+/** 'igreja' ou o id do distrito pastoral escolhido (contexto da área pastoral) */
+const CHAVE_CONTEXTO = 'igreja.contexto'
+
+function lerContexto(): number | 'igreja' | null {
+  try {
+    const v = localStorage.getItem(CHAVE_CONTEXTO)
+    return v === 'igreja' ? 'igreja' : v ? Number(v) : null
+  } catch {
+    return null
+  }
+}
 /**
  * Cópia de GET /v1/eu (nome, igrejas, permissões) para a aplicação abrir sem rede (relatório do sábado da ES).
  * Serve só para mostrar menus e ecrãs: sem token, a API não responde a nada até a rede voltar e a sessão ser
@@ -58,6 +75,7 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<Sessao['estado']>('a-verificar')
   const [eu, setEu] = useState<Eu | null>(null)
   const [igrejaId, setIgrejaId] = useState<number | null>(lerIgrejaGuardada)
+  const [contexto, setContexto] = useState<number | 'igreja' | null>(lerContexto)
   const [terminadaPorExpirar, setTerminadaPorExpirar] = useState(false)
 
   const carregarEu = useCallback(async () => {
@@ -121,16 +139,34 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   const igrejas = useMemo(() => eu?.igrejas ?? [], [eu])
-  const igreja = useMemo(() => igrejas.find((i) => i.id === igrejaId) ?? igrejas[0] ?? null, [igrejas, igrejaId])
+  const distritos = useMemo(() => eu?.distritos ?? [], [eu])
+  // o distrito escolhido; sem escolha, o pastor que não tem perfil em nenhuma igreja entra no seu distrito
+  const distrito = useMemo(() => {
+    if (typeof contexto === 'number') return distritos.find((d) => d.id === contexto) ?? null
+    if (contexto === 'igreja') return null
+    return distritos.length && !igrejas.some((i) => i.perfis?.length) ? distritos[0] : null
+  }, [contexto, distritos, igrejas])
+  // no distrito, a igreja "por baixo" (para as consultas) é uma das do distrito
+  const igreja = useMemo(() => {
+    const lista = distrito ? igrejas.filter((i) => distrito.igrejas.includes(i.id)) : igrejas
+    return lista.find((i) => i.id === igrejaId) ?? lista[0] ?? igrejas[0] ?? null
+  }, [igrejas, igrejaId, distrito])
 
+  const guardar = (chave: string, valor: string) => { try { localStorage.setItem(chave, valor) } catch { /* sem armazenamento */ } }
   const escolherIgreja = useCallback(
     (id: number) => {
       setIgrejaId(id)
-      try {
-        localStorage.setItem(CHAVE_IGREJA, String(id))
-      } catch {
-        /* sem armazenamento: fica só nesta sessão */
-      }
+      setContexto('igreja')
+      guardar(CHAVE_IGREJA, String(id))
+      guardar(CHAVE_CONTEXTO, 'igreja')
+      queryClient.invalidateQueries()
+    },
+    [queryClient],
+  )
+  const escolherDistrito = useCallback(
+    (id: number) => {
+      setContexto(id)
+      guardar(CHAVE_CONTEXTO, String(id))
       queryClient.invalidateQueries()
     },
     [queryClient],
@@ -142,8 +178,8 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
   )
 
   const valor = useMemo<Sessao>(
-    () => ({ estado, usuario: eu?.usuario ?? null, igrejas, igreja, escolherIgreja, pode, entrar, sair, recarregar: carregarEu, terminadaPorExpirar }),
-    [estado, eu, igrejas, igreja, escolherIgreja, pode, entrar, sair, carregarEu, terminadaPorExpirar],
+    () => ({ estado, usuario: eu?.usuario ?? null, igrejas, igreja, escolherIgreja, distritos, distrito, escolherDistrito, pode, entrar, sair, recarregar: carregarEu, terminadaPorExpirar }),
+    [estado, eu, igrejas, igreja, escolherIgreja, distritos, distrito, escolherDistrito, pode, entrar, sair, carregarEu, terminadaPorExpirar],
   )
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
 }

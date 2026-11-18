@@ -296,6 +296,11 @@ src/
   compara-se com a oferta da classe); a ficha da classe tem o separador **Metas** (meta de cada aluno, "aplicar a todos",
   contribuído, presenças e cumprimento; a meta da classe é a soma); o painel da ES mostra as metas das classes e os
   **programas especiais** (semana de oração, da família, de evangelismo…), que geram alertas 14 dias antes.
+- **Área pastoral** (contexto próprio do pastor do distrito, no menu do utilizador): Painel do distrito (indicadores,
+  composição e comparação das igrejas; acompanhamento das actividades por igreja), Programa da área pastoral (com
+  Acompanhamento) e Comunicados. As actividades da área pastoral aparecem no Programa anual de cada igreja.
+- **Acompanhamento** (Programa anual › Acompanhamento; V48): realizadas, atrasadas, canceladas (com o motivo, obrigatório
+  ao cancelar), orçamento executado, mês a mês e a comparação por departamento.
 
 ## Por fazer (próximas iterações)
 

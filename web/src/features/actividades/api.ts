@@ -25,6 +25,8 @@ export interface LinhaPrograma {
   valorPrevisto: string; materialPrevisto: string; despesasPedidas: string; despesasAprovadas: string; executado: string
   /** V35: IGREJA (de um departamento) ou AREA_PASTORAL (do distrito, em todas as igrejas dele) */
   origem: 'IGREJA' | 'AREA_PASTORAL'; distritoId: number | null; distrito: string | null
+  /** V48: porque foi cancelada e quando mudou pela última vez */
+  motivoCancelamento: string | null; actualizadaEm: string | null
 }
 
 export const ROTULO_ESTADO: Record<EstadoActividade, string> = { PLANEADA: 'Planeada', EM_CURSO: 'Em curso', CONCLUIDA: 'Concluída', CANCELADA: 'Cancelada' }

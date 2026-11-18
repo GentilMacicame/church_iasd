@@ -23,7 +23,11 @@ public final class EuRepository {
     public record Igreja(int id, String nome, List<String> perfis) {
     }
 
-    public record Eu(Usuario usuario, List<Igreja> igrejas, Map<String, List<String>> permissoes) {
+    /** Distrito pastoral de que o utilizador é o pastor (contexto "área pastoral", fora da igreja local). */
+    public record Distrito(int id, String nome, List<Integer> igrejas) {
+    }
+
+    public record Eu(Usuario usuario, List<Igreja> igrejas, Map<String, List<String>> permissoes, List<Distrito> distritos) {
     }
 
     private EuRepository() {
@@ -48,7 +52,28 @@ public final class EuRepository {
         }
         Map<String, List<String>> porIgreja = new LinkedHashMap<>();
         permissoes.forEach((igr, codigos) -> porIgreja.put(igr.toString(), List.copyOf(codigos)));
-        return Optional.of(new Eu(usuario.get(), igrejas, porIgreja));
+        return Optional.of(new Eu(usuario.get(), igrejas, porIgreja, distritos(c)));
+    }
+
+    /** Os distritos pastorais de que o utilizador é o pastor, com as igrejas de cada um. */
+    static List<Distrito> distritos(Connection c) throws SQLException {
+        List<Distrito> r = new ArrayList<>();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT d.dst_id, d.dst_nome, COALESCE(array_agg(i.igr_id ORDER BY i.igr_nome) FILTER (WHERE i.igr_id IS NOT NULL), '{}') "
+                        + "FROM organizacao.distrito d "
+                        + "LEFT JOIN organizacao.igreja i ON i.igr_dst_id = d.dst_id AND i.igr_end_date IS NULL "
+                        + "WHERE d.dst_pastor_usu_id = nucleo.fn_usuario_sessao() AND d.dst_end_date IS NULL "
+                        + "GROUP BY d.dst_id, d.dst_nome ORDER BY d.dst_nome");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                List<Integer> igrejas = new ArrayList<>();
+                for (Object o : (Object[]) rs.getArray(3).getArray()) {
+                    igrejas.add(((Number) o).intValue());
+                }
+                r.add(new Distrito(rs.getInt(1), rs.getString(2), igrejas));
+            }
+        }
+        return r;
     }
 
     static Optional<Usuario> usuario(Connection c) throws SQLException {

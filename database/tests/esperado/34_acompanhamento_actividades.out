@@ -1,0 +1,19 @@
+1. uma actividade planeada da igreja 1
+      act_nome      | act_estado 
+--------------------+------------
+ Feira de saúde V48 | PLANEADA
+(1 row)
+
+2. cancelar sem motivo: recusado; com motivo: cancelada
+psql:database/tests/34_acompanhamento_actividades.sql:12: ERROR:  Diga porque a actividade é cancelada
+ act_estado | act_motivo_cancelamento 
+------------+-------------------------
+ CANCELADA  | Chuvas fortes
+(1 row)
+
+3. no programa, com o motivo
+        nome        |  estado   | motivo_cancelamento | com_data 
+--------------------+-----------+---------------------+----------
+ Feira de saúde V48 | CANCELADA | Chuvas fortes       | t
+(1 row)
+

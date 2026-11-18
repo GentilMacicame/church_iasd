@@ -6248,6 +6248,24 @@ paths:
                       items:
                         type: string
                     description: igrejaId → códigos de permissão
+                  distritos:
+                    type: array
+                    description: Distritos pastorais de que é o pastor (contexto da área pastoral)
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - nome
+                      - igrejas
+                      properties:
+                        id:
+                          type: integer
+                        nome:
+                          type: string
+                        igrejas:
+                          type: array
+                          items:
+                            type: integer
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -20853,6 +20871,10 @@ components:
           format: int32
           description: '→ organizacao.distrito · Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito
             (V35)'
+        motivoCancelamento:
+          type: string
+          maxLength: 255
+          description: Porque foi cancelada (obrigatório ao cancelar; V48)
         estado:
           $ref: '#/components/schemas/EnumEstadoActividade'
         criadoEm:

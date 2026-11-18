@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { CalendarPlus, CalendarRange, ChevronLeft, ChevronRight, Layers, Plus } from 'lucide-react'
+import { CalendarPlus, CalendarRange, ChevronLeft, ChevronRight, Layers, ListChecks, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,6 +18,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { centimos, deCentimos, dinheiro, hojeIso, hora } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { DialogoActividade } from './DialogoActividade'
+import { Acompanhamento } from './Acompanhamento'
 import { ROTULO_ESTADO, VARIANTE_ESTADO, useActividadesMut, useDepartamentosIgreja, usePrograma, type LinhaPrograma } from './api'
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
@@ -34,7 +35,7 @@ export default function PaginaActividades() {
   const ano = Number(params.get('ano')) || Number(hojeIso().slice(0, 4))
   const dep = params.get('departamento') ?? ''
   const estado = params.get('estado') ?? ''
-  const aba = params.get('ver') === 'departamentos' ? 'departamentos' : 'programa'
+  const aba = params.get('ver') === 'departamentos' ? 'departamentos' : params.get('ver') === 'acompanhamento' ? 'acompanhamento' : 'programa'
   const mudar = (k: string, v: string) => setParams((p) => { const n = new URLSearchParams(p); if (v) n.set(k, v); else n.delete(k); return n }, { replace: true })
   const [nova, setNova] = useState(false)
 
@@ -62,6 +63,7 @@ export default function PaginaActividades() {
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <TabsList>
             <TabsTrigger value="programa" className="alvo gap-1.5"><CalendarRange className="size-4" />Programa anual</TabsTrigger>
+            <TabsTrigger value="acompanhamento" className="alvo gap-1.5"><ListChecks className="size-4" />Acompanhamento</TabsTrigger>
             <TabsTrigger value="departamentos" className="alvo gap-1.5"><Layers className="size-4" />Por departamento</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-1 rounded-lg border bg-card p-0.5">
@@ -147,6 +149,10 @@ export default function PaginaActividades() {
                     })}
                   </div>
                 )}
+              </TabsContent>
+              <TabsContent value="acompanhamento" className="mt-0">
+                <Acompanhamento ano={ano} rotuloGrupo="departamento"
+                  linhas={(q.data ?? []).map((x) => ({ ...x, grupo: x.origem === 'AREA_PASTORAL' ? 'Área pastoral' : x.departamento }))} />
               </TabsContent>
               <TabsContent value="departamentos" className="mt-0">
                 <PorDepartamento linhas={q.data ?? []} aoVer={(id) => setParams((p) => { const n = new URLSearchParams(p); n.delete('ver'); n.set('departamento', String(id)); return n })} />

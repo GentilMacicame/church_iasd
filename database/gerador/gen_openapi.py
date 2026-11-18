@@ -188,7 +188,9 @@ acao('/v1/auth/redefinir', 'Definir senha nova com o código', A, None, obj(['lo
 paths['/v1/eu'] = {'get': op('Utilizador, igrejas e permissões', A, None, operationId='eu', **{'x-funcao-bd': 'nucleo.fn_minhas_permissoes'},
     responses=resp('200', obj(['usuario', 'igrejas', 'permissoes'], usuario=obj(['id'], id=I, nome=STR, membroId={'type': 'integer', 'nullable': True}),
         igrejas={'type': 'array', 'items': obj(['id', 'nome'], id=I, nome=STR, perfis={'type': 'array', 'items': STR})},
-        permissoes={'type': 'object', 'additionalProperties': {'type': 'array', 'items': STR}, 'description': 'igrejaId → códigos de permissão'})))}
+        permissoes={'type': 'object', 'additionalProperties': {'type': 'array', 'items': STR}, 'description': 'igrejaId → códigos de permissão'},
+        distritos={'type': 'array', 'description': 'Distritos pastorais de que é o pastor (contexto da área pastoral)',
+                   'items': obj(['id', 'nome', 'igrejas'], id=I, nome=STR, igrejas={'type': 'array', 'items': I})})))}
 
 TITULO = {m[1]: m[2] for m in reversed(MODULES)}   # título do módulo principal de cada schema
 SEC, ES, TES, PAG = 'Secretaria', 'Escola Sabatina', 'Tesouraria', 'Pagamentos electrónicos'

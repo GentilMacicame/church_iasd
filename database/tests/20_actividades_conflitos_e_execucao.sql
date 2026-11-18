@@ -42,7 +42,7 @@ VALUES (1, 'Ensaio do coro', '2026-12-05 10:00', '2026-12-05 11:00') RETURNING a
 SELECT nome FROM actividades.fn_conflitos_actividade(1, '2026-12-05 09:00', '2026-12-05 12:00',
        (SELECT act_id FROM actividades.actividade WHERE act_nome = 'Acampamento de jovens'));
 \echo '   cancelada deixa de contar'
-UPDATE actividades.actividade SET act_estado = 'CANCELADA' WHERE act_nome = 'Ensaio do coro';
+UPDATE actividades.actividade SET act_estado = 'CANCELADA', act_motivo_cancelamento = 'Coro em digressão' WHERE act_nome = 'Ensaio do coro';
 SELECT count(*) AS conflitos FROM actividades.fn_conflitos_actividade(1, '2026-12-05 10:00', '2026-12-05 11:00',
        (SELECT act_id FROM actividades.actividade WHERE act_nome = 'Acampamento de jovens'));
 

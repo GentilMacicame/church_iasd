@@ -6,7 +6,7 @@
  */
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Church, Network, Plus, UserRound } from 'lucide-react'
+import { CalendarRange, ChevronLeft, ChevronRight, Church, CircleCheck, Coins, ListChecks, Network, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
@@ -16,12 +16,14 @@ import { cn } from '@/lib/utils'
 import { useEntidadeDaIgreja, useIgrejasDaEntidade } from '@/features/comunicados/api'
 import { ROTULO_ESTADO, VARIANTE_ESTADO, useDistritoDaIgreja, usePrograma } from './api'
 import { DialogoActividade } from './DialogoActividade'
+import { Acompanhamento } from './Acompanhamento'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const DIA = new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'short', timeZone: 'Africa/Maputo' })
 
 export default function PaginaAreaPastoral() {
   const igreja = useIgreja()
-  const { pode, usuario } = useSessao()
+  const { pode, usuario, distrito: noDistrito, igrejas: minhas } = useSessao()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const ano = Number(params.get('ano')) || Number(hojeIso().slice(0, 4))
@@ -30,9 +32,11 @@ export default function PaginaAreaPastoral() {
   const entidade = useEntidadeDaIgreja()
   const igrejas = useIgrejasDaEntidade(entidade.data?.id)
   const q = usePrograma(ano)
-  const d = distrito.data
+  // no contexto do distrito (o pastor), o distrito vem da sessão; numa igreja, do distrito da igreja
+  const d = noDistrito ? { id: noDistrito.id, nome: noDistrito.nome, pastorUsuarioId: usuario?.id ?? null, pastorNome: usuario?.nome ?? null } : distrito.data
+  const [aba, setAba] = useState('programa')
   const podeRegistar = !!d && (d.pastorUsuarioId === usuario?.id || pode('organizacao.distrito.alterar')) && pode('actividades.actividade.criar')
-  const doDistrito = (igrejas.data ?? []).filter((i) => d && i.distritoId === d.id)
+  const doDistrito = noDistrito ? minhas.filter((i) => noDistrito.igrejas.includes(i.id)) : (igrejas.data ?? []).filter((i) => d && i.distritoId === d.id)
   const lista = (q.data ?? []).filter((x) => x.origem === 'AREA_PASTORAL').sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
   const hoje = hojeIso()
   const proximas = lista.filter((x) => x.dataInicio.slice(0, 10) >= hoje && x.estado !== 'CANCELADA')
@@ -42,11 +46,11 @@ export default function PaginaAreaPastoral() {
   return (
     <>
       <TituloPagina icone={Network} titulo="Área pastoral"
-        descricao={d ? `${d.nome} · as actividades do distrito para todas as suas igrejas` : 'As actividades do distrito pastoral para as suas igrejas'}
+        descricao={d ? `${d.nome}${d.pastorNome ? ` · Pastor: ${d.pastorNome}` : ''}` : 'As actividades do distrito para as suas igrejas'}
         accoes={podeRegistar && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova actividade da área pastoral</Button>} />
 
-      {distrito.isPending ? <LinhasACarregar linhas={4} />
-        : distrito.isError ? <EstadoErro erro={distrito.error} aoTentar={() => distrito.refetch()} />
+      {!noDistrito && distrito.isPending ? <LinhasACarregar linhas={4} />
+        : !noDistrito && distrito.isError ? <EstadoErro erro={distrito.error} aoTentar={() => distrito.refetch()} />
         : !d ? (
           <Cartao>
             <EstadoVazio icone={Network} titulo={`${igreja.nome} ainda não está num distrito pastoral`}
@@ -58,12 +62,22 @@ export default function PaginaAreaPastoral() {
         ) : (
           <div className="grid gap-6">
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-              <Indicador rotulo="Pastor do distrito" valor={d.pastorNome ?? '—'} icone={UserRound} nota={d.pastorUsuarioId ? 'regista e altera as actividades' : 'ainda não indicado'} />
-              <Indicador rotulo="Igrejas do distrito" valor={doDistrito.length || '—'} icone={Church} nota={doDistrito.map((i) => i.nome).slice(0, 3).join(', ') || 'só esta igreja visível'} />
-              <Indicador rotulo={`Actividades em ${ano}`} valor={lista.length} icone={Network} tom="info" nota={`${proximas.length} por realizar`} aCarregar={q.isPending} />
-              <Indicador rotulo="Orçamento previsto" valor={dinheiro(previsto.toFixed(2))} icone={Network} tom="success" nota="soma das actividades do ano" aCarregar={q.isPending} />
+              <Indicador rotulo="Igrejas" valor={doDistrito.length || '—'} icone={Church} nota={doDistrito.map((i) => i.nome).slice(0, 2).join(', ') || 'do distrito'} />
+              <Indicador rotulo={`Actividades ${ano}`} valor={lista.length} icone={CalendarRange} tom="info" nota={`${proximas.length} por realizar`} aCarregar={q.isPending} />
+              <Indicador rotulo="Realizadas" valor={lista.filter((x) => x.estado === 'CONCLUIDA').length} icone={CircleCheck} tom="success"
+                nota={`${lista.filter((x) => x.estado === 'CANCELADA').length} cancelada(s)`} aCarregar={q.isPending} />
+              <Indicador rotulo="Orçamento" valor={dinheiro(previsto.toFixed(2))} icone={Coins} nota={`executado ${dinheiro(lista.reduce((s, x) => s + Number(x.executado ?? 0), 0).toFixed(2))}`} aCarregar={q.isPending} />
             </div>
 
+            <Tabs value={aba} onValueChange={setAba}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="programa" className="alvo gap-1.5"><CalendarRange className="size-4" />Programa</TabsTrigger>
+              <TabsTrigger value="acompanhamento" className="alvo gap-1.5"><ListChecks className="size-4" />Acompanhamento</TabsTrigger>
+            </TabsList>
+            <TabsContent value="acompanhamento" className="mt-0">
+              {q.isPending ? <LinhasACarregar linhas={4} /> : <Acompanhamento ano={ano} linhas={lista.map((x) => ({ ...x, grupo: 'Área pastoral' }))} />}
+            </TabsContent>
+            <TabsContent value="programa" className="mt-0">
             <Cartao titulo={`Programa da área pastoral · ${ano}`} descricao="Aparece também no Programa anual e no calendário de cada igreja do distrito" semMargem
               accoes={(
                 <div className="flex items-center gap-1">
@@ -100,6 +114,8 @@ export default function PaginaAreaPastoral() {
                   </Tabela>
                 )}
             </Cartao>
+            </TabsContent>
+            </Tabs>
           </div>
         )}
       {nova && <DialogoActividade pastoral aoFechar={() => setNova(false)} aoGravar={(id) => navigate(`/actividades/${id}`)} />}

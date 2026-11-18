@@ -6,9 +6,9 @@
  */
 import { Suspense, useEffect, useState, type ComponentType } from 'react'
 import { pagina } from '@/lib/paginas'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Bell, Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
+  Bell, Building2, Check, Network, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
   SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
@@ -39,6 +39,17 @@ interface ItemNav {
 /** Perfis de quem acompanha mais do que uma igreja. */
 const PERFIS_DIRECCAO = ['PASTOR', 'ADMIN_ASSOCIACAO', 'SECRETARIO_ASSOCIACAO', 'TESOUREIRO_ASSOCIACAO']
 interface GrupoNav { rotulo?: string; itens: ItemNav[] }
+
+/** O menu no contexto do distrito pastoral (o pastor, fora da igreja local). */
+const NAV_DISTRITO: GrupoNav[] = [
+  {
+    itens: [
+      { para: '/', rotulo: 'Painel do distrito', icone: PhChartLineUp, fim: true },
+      { para: '/area-pastoral', rotulo: 'Programa da área pastoral', icone: PhMapTrifold, fim: true },
+      { para: '/comunicados', rotulo: 'Comunicados', icone: PhMegaphone, fim: false },
+    ],
+  },
+]
 
 const NAV: GrupoNav[] = [
   {
@@ -93,7 +104,6 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/actividades', rotulo: 'Programa anual', icone: PhCalendarStar, permissao: 'actividades.actividade.ler', fim: false },
       { para: '/escalas', rotulo: t.nav.escalas, icone: PhCalendarDots, permissao: 'actividades.escala_plano.ler', fim: false },
-      { para: '/area-pastoral', rotulo: 'Área pastoral', icone: PhMapTrifold, permissao: 'actividades.actividade.ler', fim: true },
       { para: '/programacao', rotulo: 'Programação do dia', icone: PhClipboardText, permissao: 'actividades.programa_dia.ler', fim: false },
       { para: '/santa-ceia', rotulo: 'Santa Ceia', icone: PhWine, permissao: 'actividades.santa_ceia.ler', fim: true },
     ],
@@ -114,12 +124,12 @@ function lerEncolhida() {
 }
 
 function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?: () => void }) {
-  const { pode, igrejas } = useSessao()
+  const { pode, igrejas, distrito } = useSessao()
   const { pathname } = useLocation()
   const direccao = igrejas.length > 1 || igrejas.some((i) => i.perfis?.some((p) => PERFIS_DIRECCAO.includes(p)))
   return (
     <nav aria-label="Principal">
-      {NAV.map((grupo, i) => {
+      {(distrito ? NAV_DISTRITO : NAV).map((grupo, i) => {
         const itens = grupo.itens.filter((it) => (!it.permissao || pode(it.permissao)) && (!it.direccao || direccao))
         if (!itens.length) return null
         return (
@@ -169,7 +179,7 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
 }
 
 function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; aberta: boolean; aoFechar: () => void }) {
-  const { igreja } = useSessao()
+  const { igreja, distrito } = useSessao()
   const sairSeguro = useSairSeguro()
   return (
     <>
@@ -187,8 +197,8 @@ function BarraLateral({ encolhida, aberta, aoFechar }: { encolhida: boolean; abe
           <Link to="/" onClick={aoFechar} className="flex min-w-0 items-center gap-3 text-foreground">
             <Marca className="size-8 flex-none" />
             <span className={cn('flex min-w-0 flex-col leading-tight', encolhida && 'lg:hidden')}>
-              <span className="truncate text-sm font-semibold">{igreja?.nome ?? t.produto.nome}</span>
-              <span className="text-xs text-muted-foreground">{t.produto.descricao}</span>
+              <span className="truncate text-sm font-semibold">{distrito?.nome ?? igreja?.nome ?? t.produto.nome}</span>
+              <span className="text-xs text-muted-foreground">{distrito ? `Área pastoral · ${distrito.igrejas.length} igreja(s)` : t.produto.descricao}</span>
             </span>
           </Link>
           <button type="button" onClick={aoFechar} aria-label={t.comum.fechar}
@@ -305,12 +315,13 @@ function Caminho() {
 }
 
 function MenuUtilizador() {
-  const { usuario, igreja, igrejas, escolherIgreja } = useSessao()
+  const { usuario, igreja, igrejas, escolherIgreja, distritos, distrito, escolherDistrito } = useSessao()
   const sairSeguro = useSairSeguro()
+  const navegar = useNavigate()
   const { alternar } = useTema()
   const nome = usuario?.nome ?? '—'
   const iniciais = nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('')
-  const perfis = igreja?.perfis?.map((p) => rotulos.perfil[p] ?? p) ?? []
+  const perfis = distrito ? ['Pastor do distrito'] : igreja?.perfis?.map((p) => rotulos.perfil[p] ?? p) ?? []
   return (
     <>
       {sairSeguro.dialogo}
@@ -328,21 +339,33 @@ function MenuUtilizador() {
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-2 py-2">
           <p className="truncate text-sm font-medium">{nome}</p>
-          <p className="truncate text-xs text-muted-foreground">{igreja?.nome}</p>
+          <p className="truncate text-xs text-muted-foreground">{distrito?.nome ?? igreja?.nome}</p>
           {perfis.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {perfis.map((p) => <Pilula key={p} variante="info"><ShieldCheck className="size-3" />{p}</Pilula>)}
             </div>
           )}
         </div>
-        {igrejas.length > 1 && (
+        {distritos.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Área pastoral</DropdownMenuLabel>
+            {distritos.map((d) => (
+              <DropdownMenuItem key={d.id} onSelect={() => { escolherDistrito(d.id); navegar('/') }}>
+                <Network className="size-4" /><span className="flex-1 truncate">{d.nome}</span>
+                {d.id === distrito?.id && <Check className="size-4 text-primary" />}
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
+        {(igrejas.length > 1 || distritos.length > 0) && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t.nav.mudarIgreja}</DropdownMenuLabel>
             {igrejas.map((i) => (
-              <DropdownMenuItem key={i.id} onSelect={() => escolherIgreja(i.id)}>
+              <DropdownMenuItem key={i.id} onSelect={() => { escolherIgreja(i.id); navegar('/') }}>
                 <Building2 className="size-4" /><span className="flex-1 truncate">{i.nome}</span>
-                {i.id === igreja?.id && <Check className="size-4 text-primary" />}
+                {!distrito && i.id === igreja?.id && <Check className="size-4 text-primary" />}
               </DropdownMenuItem>
             ))}
           </>

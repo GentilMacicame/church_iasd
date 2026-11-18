@@ -70,6 +70,7 @@ const PaginaTrimestresES = pagina(() => import('@/features/escola-sabatina/Pagin
 const PaginaVisitantesES = pagina(() => import('@/features/escola-sabatina/PaginaVisitantes'))
 const PaginaRelatoriosES = pagina(() => import('@/features/escola-sabatina/PaginaRelatoriosES'))
 const PaginaPainelGeral = pagina(() => import('@/features/painel-geral/PaginaPainelGeral'))
+const PaginaPainelDistrito = pagina(() => import('@/features/painel-geral/PaginaPainelDistrito'))
 
 /**
  * Qualquer gravação que falhe (criar, alterar, aprovar, terminar…) mostra o aviso de erro ao centro, com a mensagem
@@ -147,7 +148,7 @@ export default function App() {
               <Routes>
                 <Route path="/entrar" element={<PaginaEntrar />} />
                 <Route element={<ComSessao><Shell /></ComSessao>}>
-                  <Route index element={<PaginaInicio />} />
+                  <Route index element={<Inicio />} />
                   <Route path="painel-geral" element={<Exige permissao="organizacao.igreja.ler"><PaginaPainelGeral /></Exige>} />
                   <Route path="membros" element={<Exige permissao="secretaria.membro.ler"><PaginaMembros /></Exige>} />
                   <Route path="membros/novo" element={<Navigate to="/membros?registar=1" replace />} />
@@ -213,4 +214,10 @@ export default function App() {
       </TooltipProvider>
     </QueryClientProvider>
   )
+}
+
+/** A página inicial: o painel do distrito (pastor, fora da igreja local) ou o Início da igreja. */
+function Inicio() {
+  const { distrito } = useSessao()
+  return distrito ? <PaginaPainelDistrito /> : <PaginaInicio />
 }

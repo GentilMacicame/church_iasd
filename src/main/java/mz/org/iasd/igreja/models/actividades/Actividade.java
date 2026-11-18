@@ -31,6 +31,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoActividade;
  * @param valorPrevisto coluna {@code act_valor_previsto} — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param objectivos O que a actividade pretende alcançar (V34)
  * @param distritoId Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)
+ * @param motivoCancelamento Porque foi cancelada (obrigatório ao cancelar; V48)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -64,6 +65,8 @@ public record Actividade(
         String objectivos,
         @ColunaBd(value = "act_dst_id", tipo = Tipo.INT)
         Integer distritoId,
+        @ColunaBd(value = "act_motivo_cancelamento", tipo = Tipo.TEXTO)
+        String motivoCancelamento,
         @ColunaBd(value = "act_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoActividade estado,
         @ColunaBd(value = "act_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)
