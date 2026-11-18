@@ -1,0 +1,57 @@
+1. metas individuais do trimestre: Paulo 1 400,00 e Joana 700,00; a meta da classe calcula-se (2 100 ÷ 14 sábados)
+ emt_mem_id | emt_alvo_oferta 
+------------+-----------------
+        960 |         1400.00
+        961 |          700.00
+(2 rows)
+
+ alvo_por_sabado 
+-----------------
+          150.00
+(1 row)
+
+   o Tito não está matriculado nesta classe: recusado; e uma meta negativa também
+psql:database/tests/33_escola_sabatina_metas.sql:19: ERROR:  O membro não está matriculado nesta classe
+psql:database/tests/33_escola_sabatina_metas.sql:20: ERROR:  new row for relation "meta_individual" violates check constraint "chk_emt_alvo"
+   a Joana passa a 1 400,00: a meta da classe acompanha
+ alvo_por_sabado 
+-----------------
+          200.00
+(1 row)
+
+2. a chamada com a oferta de cada aluno (relatório 3); oferta negativa recusada
+ epr_mem_id | epr_oferta 
+------------+------------
+        960 |     100.00
+        961 |      50.00
+(2 rows)
+
+psql:database/tests/33_escola_sabatina_metas.sql:28: ERROR:  new row for relation "presenca" violates check constraint "chk_epr_oferta"
+3. acompanhamento por aluno e por classe
+     nome      |  meta   | contribuido | presencas | cumprimento 
+---------------+---------+-------------+-----------+-------------
+ Joana Cumbe   | 1400.00 |       50.00 |         1 |      0.0357
+ Paulo Mabjaia | 1400.00 |      100.00 |         1 |      0.0714
+(2 rows)
+
+ classe  | alunos | com_meta |  meta   | identificado | colectivo_inclui_individual 
+---------+--------+----------+---------+--------------+-----------------------------
+ Grupo 1 |      2 |        2 | 2800.00 |       150.00 | t
+(1 row)
+
+4. semanas especiais: a semana de oração; tipo desconhecido e datas trocadas recusados
+ ese_tipo |     ese_nome     
+----------+------------------
+ ORACAO   | Semana de Oração
+(1 row)
+
+psql:database/tests/33_escola_sabatina_metas.sql:38: ERROR:  new row for relation "semana_especial" violates check constraint "chk_ese_tipo"
+psql:database/tests/33_escola_sabatina_metas.sql:39: ERROR:  new row for relation "semana_especial" violates check constraint "chk_ese_datas"
+5. o tesoureiro e o secretário da ES não definem metas (o secretário da ES vê-as)
+psql:database/tests/33_escola_sabatina_metas.sql:43: ERROR:  new row violates row-level security policy for table "meta_individual"
+psql:database/tests/33_escola_sabatina_metas.sql:45: ERROR:  new row violates row-level security policy for table "meta_individual"
+ metas_que_ve 
+--------------
+            2
+(1 row)
+

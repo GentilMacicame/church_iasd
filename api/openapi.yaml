@@ -3890,6 +3890,331 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-alunos:
+    get:
+      summary: 'Relatório: Metas alunos'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.ler
+      operationId: relVEscolaSabatinaMetasAlunos
+      description: Lido da vista escola_sabatina.vw_metas_alunos.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: trimestreId
+        in: query
+        schema:
+          type: integer
+      - name: classeTrimestreId
+        in: query
+        schema:
+          type: integer
+        description: Só esta classe neste trimestre
+      x-vista: escola_sabatina.vw_metas_alunos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-classes:
+    get:
+      summary: 'Relatório: Metas classes'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.ler
+      operationId: relVEscolaSabatinaMetasClasses
+      description: Lido da vista escola_sabatina.vw_metas_classes.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: trimestreId
+        in: query
+        schema:
+          type: integer
+      - name: classeTrimestreId
+        in: query
+        schema:
+          type: integer
+        description: Só esta classe neste trimestre
+      x-vista: escola_sabatina.vw_metas_classes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-individuais:
+    get:
+      summary: 'Metas individuais: listar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.ler
+      operationId: listarMetaIndividual
+      description: Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: classeTrimestreId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetaIndividual'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Metas individuais: criar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.criar
+      operationId: criarMetaIndividual
+      description: Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/MetaIndividual'
+              required:
+              - classeTrimestreId
+              - membroId
+              - igrejaId
+              - alvoOferta
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaIndividual'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-individuais/{id}:
+    get:
+      summary: 'Metas individuais: ler um'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.ler
+      operationId: lerMetaIndividual
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaIndividual'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Metas individuais: alterar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.alterar
+      operationId: alterarMetaIndividual
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaIndividual'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaIndividual'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-individuais/{id}/reactivar:
+    post:
+      summary: 'Metas individuais: reactivar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.terminar
+      operationId: reactivarMetaIndividual
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaIndividual'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/metas-individuais/{id}/terminar:
+    post:
+      summary: 'Metas individuais: terminar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.meta_individual.terminar
+      operationId: terminarMetaIndividual
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaIndividual'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/escola-sabatina/painel:
     get:
       summary: 'Relatório: Painel'
@@ -4732,6 +5057,12 @@ paths:
                     type: boolean
                   estudouLicao:
                     type: boolean
+                  oferta:
+                    type: string
+                    pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                    example: '650.00'
+                    nullable: true
+                    description: Oferta missionária do aluno (contribuição individual; V47)
       responses:
         '200':
           description: OK
@@ -5154,6 +5485,228 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Sabado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/semanas-especiais:
+    get:
+      summary: 'Semanas especiais: listar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.ler
+      operationId: listarSemanaEspecial
+      description: Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ate
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SemanaEspecial'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Semanas especiais: criar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.criar
+      operationId: criarSemanaEspecial
+      description: Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/SemanaEspecial'
+              required:
+              - igrejaId
+              - tipo
+              - nome
+              - dataInicio
+              - dataFim
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanaEspecial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/semanas-especiais/{id}:
+    get:
+      summary: 'Semanas especiais: ler um'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.ler
+      operationId: lerSemanaEspecial
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanaEspecial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Semanas especiais: alterar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.alterar
+      operationId: alterarSemanaEspecial
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemanaEspecial'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanaEspecial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/semanas-especiais/{id}/reactivar:
+    post:
+      summary: 'Semanas especiais: reactivar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.terminar
+      operationId: reactivarSemanaEspecial
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanaEspecial'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/escola-sabatina/semanas-especiais/{id}/terminar:
+    post:
+      summary: 'Semanas especiais: terminar'
+      tags:
+      - Escola Sabatina
+      x-permissao: escola_sabatina.semana_especial.terminar
+      operationId: terminarSemanaEspecial
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanaEspecial'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -22920,6 +23473,61 @@ components:
       - igrejaId
       - nome
       - apelido
+    MetaIndividual:
+      type: object
+      description: Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)
+      x-tabela: escola_sabatina.meta_individual
+      x-prefixo: emt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        classeTrimestreId:
+          type: integer
+          format: int32
+          description: → escola_sabatina.classe_trimestre
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado da classe (segurança e desempenho)
+        alvoOferta:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Meta do aluno para o trimestre
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - classeTrimestreId
+      - membroId
+      - igrejaId
+      - alvoOferta
     Movimento:
       type: object
       description: 'Livro de membros: cada entrada e saída, com o voto que a autoriza'
@@ -23648,6 +24256,11 @@ components:
           type: boolean
         estudouLicao:
           type: boolean
+        oferta:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Oferta missionária do aluno neste sábado (contribuição individual; V47)
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -24620,6 +25233,66 @@ components:
       x-obrigatorios-ao-criar:
       - igrejaId
       - data
+    SemanaEspecial:
+      type: object
+      description: Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)
+      x-tabela: escola_sabatina.semana_especial
+      x-prefixo: ese
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        tipo:
+          type: string
+          maxLength: 20
+          description: ORACAO, FAMILIA, EVANGELISMO, JOVENS, MORDOMIA ou OUTRO
+        nome:
+          type: string
+          maxLength: 150
+          description: 'Ex.: Semana de Oração'
+        dataInicio:
+          type: string
+          format: date
+        dataFim:
+          type: string
+          format: date
+        observacoes:
+          type: string
+          maxLength: 500
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - tipo
+      - nome
+      - dataInicio
+      - dataFim
     Transacao:
       type: object
       description: 'Movimentos: entradas, saídas e transferências (cabeçalho)'

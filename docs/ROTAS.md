@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 524 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 538 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -117,6 +117,14 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/escola-sabatina/matriculas/{id}` | MatriculasController · alterar | `escola_sabatina.matricula.alterar` |
 | POST | `/v1/escola-sabatina/matriculas/{id}/reactivar` | MatriculasController · reactivar | `escola_sabatina.matricula.terminar` |
 | POST | `/v1/escola-sabatina/matriculas/{id}/terminar` | MatriculasController · terminar | `escola_sabatina.matricula.terminar` |
+| GET | `/v1/escola-sabatina/metas-alunos` | RelatoriosEscolaSabatinaController · metasAlunos | `escola_sabatina.meta_individual.ler` |
+| GET | `/v1/escola-sabatina/metas-classes` | RelatoriosEscolaSabatinaController · metasClasses | `escola_sabatina.meta_individual.ler` |
+| GET | `/v1/escola-sabatina/metas-individuais` | MetasIndividuaisController · listar | `escola_sabatina.meta_individual.ler` |
+| POST | `/v1/escola-sabatina/metas-individuais` | MetasIndividuaisController · criar | `escola_sabatina.meta_individual.criar` |
+| GET | `/v1/escola-sabatina/metas-individuais/{id}` | MetasIndividuaisController · obter | `escola_sabatina.meta_individual.ler` |
+| PATCH | `/v1/escola-sabatina/metas-individuais/{id}` | MetasIndividuaisController · alterar | `escola_sabatina.meta_individual.alterar` |
+| POST | `/v1/escola-sabatina/metas-individuais/{id}/reactivar` | MetasIndividuaisController · reactivar | `escola_sabatina.meta_individual.terminar` |
+| POST | `/v1/escola-sabatina/metas-individuais/{id}/terminar` | MetasIndividuaisController · terminar | `escola_sabatina.meta_individual.terminar` |
 | GET | `/v1/escola-sabatina/painel` | RelatoriosEscolaSabatinaController · painel | `escola_sabatina.relatorio_sabado.ler` |
 | GET | `/v1/escola-sabatina/pesos-pontuacao` | PesosPontuacaoController · listar | — |
 | POST | `/v1/escola-sabatina/pesos-pontuacao` | PesosPontuacaoController · criar | `escola_sabatina.pontuacao_config.criar` |
@@ -151,6 +159,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/escola-sabatina/sabados/{id}` | SabadosController · alterar | `escola_sabatina.sabado.alterar` |
 | POST | `/v1/escola-sabatina/sabados/{id}/reactivar` | SabadosController · reactivar | `escola_sabatina.sabado.terminar` |
 | POST | `/v1/escola-sabatina/sabados/{id}/terminar` | SabadosController · terminar | `escola_sabatina.sabado.terminar` |
+| GET | `/v1/escola-sabatina/semanas-especiais` | SemanasEspeciaisController · listar | `escola_sabatina.semana_especial.ler` |
+| POST | `/v1/escola-sabatina/semanas-especiais` | SemanasEspeciaisController · criar | `escola_sabatina.semana_especial.criar` |
+| GET | `/v1/escola-sabatina/semanas-especiais/{id}` | SemanasEspeciaisController · obter | `escola_sabatina.semana_especial.ler` |
+| PATCH | `/v1/escola-sabatina/semanas-especiais/{id}` | SemanasEspeciaisController · alterar | `escola_sabatina.semana_especial.alterar` |
+| POST | `/v1/escola-sabatina/semanas-especiais/{id}/reactivar` | SemanasEspeciaisController · reactivar | `escola_sabatina.semana_especial.terminar` |
+| POST | `/v1/escola-sabatina/semanas-especiais/{id}/terminar` | SemanasEspeciaisController · terminar | `escola_sabatina.semana_especial.terminar` |
 | GET | `/v1/escola-sabatina/trimestres` | TrimestresController · listar | — |
 | POST | `/v1/escola-sabatina/trimestres` | TrimestresController · criar | `escola_sabatina.trimestre.criar` |
 | GET | `/v1/escola-sabatina/trimestres/{id}` | TrimestresController · obter | — |

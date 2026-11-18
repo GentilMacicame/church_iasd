@@ -16,7 +16,7 @@
 import { useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BookOpenCheck, Calculator, CalendarCheck, CalendarDays, ClipboardList, CloudUpload, Coins, FileSignature, Gavel, HandCoins, Landmark,
+  BookOpenCheck, Calculator, CalendarCheck, CalendarDays, CalendarHeart, ClipboardList, CloudUpload, Coins, FileSignature, Gavel, HandCoins, Landmark,
   Lock, Mail, ReceiptText, ShieldAlert, Target, UserCheck, Users,
 } from 'lucide-react'
 import { api, dados } from '@/api/cliente'
@@ -28,6 +28,7 @@ import { useReunioes } from '@/features/livro/api'
 import { usePlanos } from '@/features/escalas/api'
 import { rotulos } from '@/i18n/pt-MZ'
 import { sabadoActual, trimestreActual, useSabados, useTrimestres } from '@/features/escola-sabatina/api'
+import { TIPOS_SEMANA, semanasProximas, useSemanasEspeciais } from '@/features/escola-sabatina/apiMetas'
 import { usePorEnviar } from '@/features/escola-sabatina/offline'
 import { limitar, publicar, registarFontes, type Alerta } from './loja'
 
@@ -323,6 +324,24 @@ function EsPorEnviar() {
   return null
 }
 
+/** V47: semana de oração, da família, de evangelismo… a decorrer ou nos próximos 14 dias. */
+function EsSemanasEspeciais() {
+  const q = useSemanasEspeciais()
+  const hoje = hojeIso()
+  const itens = semanasProximas(q.data ?? []).map((sm): Alerta => {
+    const agora = sm.dataInicio <= hoje
+    const dias = Math.round((Date.parse(`${sm.dataInicio}T12:00:00Z`) - Date.parse(`${hoje}T12:00:00Z`)) / 86_400_000)
+    return {
+      chave: `es-semana:${sm.id}:${agora ? 'agora' : 'breve'}`, modulo: 'Escola Sabatina', icone: CalendarHeart, tom: agora ? 'warning' : 'info',
+      data: sm.dataInicio, para: '/escola-sabatina',
+      titulo: agora ? `${sm.nome} a decorrer` : `${sm.nome} ${dias === 1 ? 'começa amanhã' : `começa daqui a ${dias} dias`}`,
+      detalhe: `${TIPOS_SEMANA[sm.tipo]} · ${data(sm.dataInicio)} a ${data(sm.dataFim)}`,
+    }
+  })
+  usePublicar('es-semanas', itens, q.isPending)
+  return null
+}
+
 // ===================================================================== escalas
 
 function EscalasPorPublicar() {
@@ -359,6 +378,7 @@ export function Fontes() {
     ['es-falta', pode('escola_sabatina.relatorio_sabado.criar')],
     ['es-enviar', pode('escola_sabatina.relatorio_sabado.criar') || pode('escola_sabatina.relatorio_sabado.alterar')],
     ['escalas', pode('actividades.escala_plano.alterar')],
+    ['es-semanas', pode('escola_sabatina.semana_especial.ler')],
   ]
   const activas = lista.filter(([, v]) => v).map(([n]) => n)
   const chave = `${igreja.id}:${activas.join(',')}`
@@ -382,6 +402,7 @@ export function Fontes() {
       {tem('es-falta') && <EsEmFalta />}
       {tem('es-enviar') && <EsPorEnviar />}
       {tem('escalas') && <EscalasPorPublicar />}
+      {tem('es-semanas') && <EsSemanasEspeciais />}
     </>
   )
 }

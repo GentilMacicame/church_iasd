@@ -44,6 +44,7 @@ public final class RelatoriosSabadoService {
         List<Long> membros = new ArrayList<>();
         List<Boolean> presentes = new ArrayList<>();
         List<Boolean> estudaram = new ArrayList<>();
+        List<BigDecimal> ofertas = new ArrayList<>();
         Set<Long> vistos = new HashSet<>();
         for (JsonValue v : lista) {
             JsonObject o = Corpo.objecto(v);
@@ -54,25 +55,31 @@ public final class RelatoriosSabadoService {
             membros.add(membro);
             presentes.add(Corpo.booleano(o, "presente"));
             estudaram.add(Corpo.tem(o, "estudouLicao") && Corpo.booleano(o, "estudouLicao"));
+            // V47: a oferta do aluno (opcional; null = não identificada)
+            ofertas.add(Corpo.tem(o, "oferta") && !o.isNull("oferta") ? Corpo.dinheiro(o, "oferta") : null);
         }
         if (!membros.isEmpty()) {
             Array m = c.createArrayOf("bigint", membros.toArray());
             Array p = c.createArrayOf("boolean", presentes.toArray());
             Array e = c.createArrayOf("boolean", estudaram.toArray());
+            Array o = c.createArrayOf("numeric", ofertas.toArray());
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO escola_sabatina.presenca (epr_ers_id, epr_mem_id, epr_presente, epr_estudou_licao) "
-                            + "SELECT ?, x.m, x.p, x.e FROM unnest(?::bigint[], ?::boolean[], ?::boolean[]) AS x(m, p, e) "
+                    "INSERT INTO escola_sabatina.presenca (epr_ers_id, epr_mem_id, epr_presente, epr_estudou_licao, epr_oferta) "
+                            + "SELECT ?, x.m, x.p, x.e, x.o FROM unnest(?::bigint[], ?::boolean[], ?::boolean[], ?::numeric[]) AS x(m, p, e, o) "
                             + "ON CONFLICT (epr_ers_id, epr_mem_id) WHERE epr_end_date IS NULL "
-                            + "DO UPDATE SET epr_presente = EXCLUDED.epr_presente, epr_estudou_licao = EXCLUDED.epr_estudou_licao")) {
+                            + "DO UPDATE SET epr_presente = EXCLUDED.epr_presente, epr_estudou_licao = EXCLUDED.epr_estudou_licao, "
+                            + "epr_oferta = EXCLUDED.epr_oferta")) {
                 ps.setLong(1, id);
                 ps.setArray(2, m);
                 ps.setArray(3, p);
                 ps.setArray(4, e);
+                ps.setArray(5, o);
                 ps.executeUpdate();
             } finally {
                 m.free();
                 p.free();
                 e.free();
+                o.free();
             }
         }
         return TabelaRepository.obterOu404(c, RELATORIO, id);

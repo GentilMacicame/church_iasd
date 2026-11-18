@@ -1490,6 +1490,131 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/escola-sabatina/metas-alunos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Metas alunos
+         * @description Lido da vista escola_sabatina.vw_metas_alunos.
+         */
+        get: operations["relVEscolaSabatinaMetasAlunos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/metas-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Metas classes
+         * @description Lido da vista escola_sabatina.vw_metas_classes.
+         */
+        get: operations["relVEscolaSabatinaMetasClasses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/metas-individuais": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Metas individuais: listar
+         * @description Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)
+         */
+        get: operations["listarMetaIndividual"];
+        put?: never;
+        /**
+         * Metas individuais: criar
+         * @description Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)
+         */
+        post: operations["criarMetaIndividual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/metas-individuais/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Metas individuais: ler um */
+        get: operations["lerMetaIndividual"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Metas individuais: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarMetaIndividual"];
+        trace?: never;
+    };
+    "/v1/escola-sabatina/metas-individuais/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Metas individuais: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarMetaIndividual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/metas-individuais/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Metas individuais: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarMetaIndividual"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/escola-sabatina/painel": {
         parameters: {
             query?: never;
@@ -1990,6 +2115,91 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarSabado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/semanas-especiais": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Semanas especiais: listar
+         * @description Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)
+         */
+        get: operations["listarSemanaEspecial"];
+        put?: never;
+        /**
+         * Semanas especiais: criar
+         * @description Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)
+         */
+        post: operations["criarSemanaEspecial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/semanas-especiais/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Semanas especiais: ler um */
+        get: operations["lerSemanaEspecial"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Semanas especiais: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarSemanaEspecial"];
+        trace?: never;
+    };
+    "/v1/escola-sabatina/semanas-especiais/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Semanas especiais: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarSemanaEspecial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/escola-sabatina/semanas-especiais/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Semanas especiais: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarSemanaEspecial"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9226,6 +9436,40 @@ export interface components {
             readonly criadoPor?: number | null;
             readonly modificadoPor?: number | null;
         };
+        /** @description Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47) */
+        MetaIndividual: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → escola_sabatina.classe_trimestre
+             */
+            classeTrimestreId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro
+             */
+            membroId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado da classe (segurança e desempenho)
+             */
+            igrejaId?: number;
+            /**
+             * @description Meta do aluno para o trimestre
+             * @example 650.00
+             */
+            alvoOferta?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Livro de membros: cada entrada e saída, com o voto que a autoriza */
         Movimento: {
             /** Format: int32 */
@@ -9606,6 +9850,11 @@ export interface components {
             readonly igrejaId?: number;
             presente?: boolean;
             estudouLicao?: boolean;
+            /**
+             * @description Oferta missionária do aluno neste sábado (contribuição individual; V47)
+             * @example 650.00
+             */
+            oferta?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -10153,6 +10402,34 @@ export interface components {
             /** @description Participantes: visitantes */
             visitantes?: number;
             estado?: components["schemas"]["EnumEstadoSantaCeia"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47) */
+        SemanaEspecial: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /** @description ORACAO, FAMILIA, EVANGELISMO, JOVENS, MORDOMIA ou OUTRO */
+            tipo?: string;
+            /** @description Ex.: Semana de Oração */
+            nome?: string;
+            /** Format: date */
+            dataInicio?: string;
+            /** Format: date */
+            dataFim?: string;
+            observacoes?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -13728,6 +14005,256 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    relVEscolaSabatinaMetasAlunos: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                trimestreId?: number;
+                /** @description Só esta classe neste trimestre */
+                classeTrimestreId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVEscolaSabatinaMetasClasses: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                trimestreId?: number;
+                /** @description Só esta classe neste trimestre */
+                classeTrimestreId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarMetaIndividual: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                classeTrimestreId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["MetaIndividual"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarMetaIndividual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["MetaIndividual"], "classeTrimestreId" | "membroId" | "igrejaId" | "alvoOferta">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaIndividual"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerMetaIndividual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaIndividual"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarMetaIndividual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaIndividual"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaIndividual"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarMetaIndividual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaIndividual"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarMetaIndividual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaIndividual"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     relVEscolaSabatinaPainel: {
         parameters: {
             query?: {
@@ -14409,6 +14936,11 @@ export interface operations {
                     membroId: number;
                     presente: boolean;
                     estudouLicao?: boolean;
+                    /**
+                     * @description Oferta missionária do aluno (contribuição individual; V47)
+                     * @example 650.00
+                     */
+                    oferta?: string | null;
                 }[];
             };
         };
@@ -14783,6 +15315,192 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Sabado"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarSemanaEspecial: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["SemanaEspecial"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarSemanaEspecial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["SemanaEspecial"], "igrejaId" | "tipo" | "nome" | "dataInicio" | "dataFim">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanaEspecial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerSemanaEspecial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanaEspecial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarSemanaEspecial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SemanaEspecial"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanaEspecial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarSemanaEspecial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanaEspecial"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarSemanaEspecial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanaEspecial"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

@@ -549,6 +549,7 @@ class BaseDadosTest {
                     + classe + ", " + trimestre + ") RETURNING ect_id");
             membro = inserir(dono, "INSERT INTO secretaria.membro (mem_igr_id, mem_nome, mem_apelido) VALUES ("
                     + igrejaCentral + ", 'Joao', 'Sitoe') RETURNING mem_id");
+            inserir(dono, "INSERT INTO escola_sabatina.matricula (ema_ecl_id, ema_mem_id) VALUES (" + classe + ", " + membro + ") RETURNING ema_id");
         }
         final long ect = classeTrimestre;
         final long esa = sabado;
@@ -561,10 +562,26 @@ class BaseDadosTest {
         assertEquals(igrejaCentral, rel.getInt("igrejaId"));                // copiado pelo trigger
 
         var chamada = Json.createArrayBuilder().add(Json.createObjectBuilder()
-                .add("membroId", membro).add("presente", true).add("estudouLicao", true)).build();
+                .add("membroId", membro).add("presente", true).add("estudouLicao", true).add("oferta", "40.00")).build();
         var depoisChamada = ExecutorTransaccao.executar(api, directorEs,
                 c -> RelatoriosSabadoService.gravarPresencas(c, ers, chamada));
         assertEquals(1, depoisChamada.getInt("membrosPresentes"));
+
+        // V47: a meta do aluno (a da classe calcula-se) e o acompanhamento: meta, contribuído na chamada, cumprimento
+        final long aluno = membro;
+        ExecutorTransaccao.executar(api, directorEs, c -> TabelaRepository.criar(c,
+                Catalogo.de(mz.org.iasd.igreja.models.escolasabatina.MetaIndividual.class), Json.createObjectBuilder()
+                        .add("classeTrimestreId", ect).add("membroId", aluno).add("igrejaId", igrejaCentral).add("alvoOferta", "520.00").build()));
+        JsonArray metas = ExecutorTransaccao.executar(api, directorEs, c -> mz.org.iasd.igreja.controllers.escolasabatina
+                .RelatoriosEscolaSabatinaController.METAS_ALUNOS.consultar(c, Map.of("igrejaId", String.valueOf(igrejaCentral),
+                        "classeTrimestreId", String.valueOf(ect))));
+        assertEquals(1, metas.size());
+        assertEquals("520.00", metas.getJsonObject(0).getString("meta"));
+        assertEquals("40.00", metas.getJsonObject(0).getString("contribuido"));
+        JsonArray classe = ExecutorTransaccao.executar(api, directorEs, c -> mz.org.iasd.igreja.controllers.escolasabatina
+                .RelatoriosEscolaSabatinaController.METAS_CLASSES.consultar(c, Map.of("igrejaId", String.valueOf(igrejaCentral),
+                        "classeTrimestreId", String.valueOf(ect))));
+        assertEquals("520.00", classe.getJsonObject(0).getString("meta"));
 
         // V29: a recusa por CHECK chega com a frase escrita na base (lida como a API a lê, com o papel da API)
         var frases = ExecutorTransaccao.executar(api, null, c -> {

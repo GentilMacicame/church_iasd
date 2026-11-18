@@ -292,6 +292,10 @@ src/
   em destaque, por aprovar) e Tesouraria (dízimos do mês com as ofertas, reavivamento, fidelidade, saldo) — e a evolução
   das contribuições. O Painel geral ganha os inactivos, os sem família, as entradas e perdas, a composição dos membros
   (sexo, idades, estado civil) e a coluna "Sem família" no quadro comparativo.
+- **Escola Sabatina** (V47): a chamada tem a oferta de cada aluno (contribuição individual; o total identificado
+  compara-se com a oferta da classe); a ficha da classe tem o separador **Metas** (meta de cada aluno, "aplicar a todos",
+  contribuído, presenças e cumprimento; a meta da classe é a soma); o painel da ES mostra as metas das classes e os
+  **programas especiais** (semana de oração, da família, de evangelismo…), que geram alertas 14 dias antes.
 
 ## Por fazer (próximas iterações)
 

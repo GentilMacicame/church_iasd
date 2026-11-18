@@ -198,7 +198,8 @@ acao('/v1/secretaria/transferencias/{id}/emitir-carta', 'Emitir a carta (voto da
 acao('/v1/secretaria/transferencias/{id}/concluir', 'Concluir no destino (voto do destino, até 6 meses)', SEC, 'secretaria.transferencia_membro.aceitar', VOTO, ref('Transferencia'))
 acao('/v1/secretaria/transferencias/{id}/recusar', 'Recusar', SEC, 'secretaria.transferencia_membro.alterar', obj(['motivo'], motivo=STR), ref('Transferencia'))
 acao('/v1/escola-sabatina/relatorios-sabado/{id}/presencas', 'Gravar a chamada inteira de uma vez (recalcula M.P. e E.D.)', ES, 'escola_sabatina.presenca.criar',
-     {'type': 'array', 'items': obj(['membroId', 'presente'], membroId=I, presente={'type': 'boolean'}, estudouLicao={'type': 'boolean'})}, ref('Relatorio'))
+     {'type': 'array', 'items': obj(['membroId', 'presente'], membroId=I, presente={'type': 'boolean'}, estudouLicao={'type': 'boolean'},
+                                    oferta={**MONEY, 'nullable': True, 'description': 'Oferta missionária do aluno (contribuição individual; V47)'})}, ref('Relatorio'))
 acao('/v1/escola-sabatina/relatorios-sabado/{id}/ofertas', 'Tesoureiro lança as ofertas da classe (uma linha por fundo) e liga-as ao relatório', ES, 'tesouraria.transacao.criar',
      obj(['contaId', 'missoes', 'decimoTerceiro', 'despesas'], contaId=I, missoes=MONEY, decimoTerceiro=MONEY, despesas=MONEY, contagemId=I), ref('Transacao'),
      'tesouraria.transacao + escola_sabatina.fn_ligar_ofertas', idemp=True)
@@ -335,6 +336,10 @@ paths['/v1/secretaria/membros-parecidos'] = {'get': op(
                 {'name': 'telefone', 'in': 'query', 'description': 'Telemóvel (os 9 últimos algarismos; V45)', 'schema': STR}],
     responses=resp('200', {'type': 'array', 'items': PARECIDO}))}
 rel('/v1/escola-sabatina/resumo-classes', 'escola_sabatina.vw_resumo_classe', ES, 'escola_sabatina.classe_trimestre.ler', TRI)
+# V47: metas individuais e da classe, contribuições individuais e colectivas
+CT = [{'name': 'classeTrimestreId', 'in': 'query', 'schema': {'type': 'integer'}, 'description': 'Só esta classe neste trimestre'}]
+rel('/v1/escola-sabatina/metas-alunos', 'escola_sabatina.vw_metas_alunos', ES, 'escola_sabatina.meta_individual.ler', TRI + CT)
+rel('/v1/escola-sabatina/metas-classes', 'escola_sabatina.vw_metas_classes', ES, 'escola_sabatina.meta_individual.ler', TRI + CT)
 rel('/v1/escola-sabatina/visitantes-a-anonimizar', 'escola_sabatina.vw_visitantes_a_anonimizar', ES, 'escola_sabatina.visitante.ler')
 rel('/v1/tesouraria/mpesa-pendentes', 'tesouraria.vw_mpesa_pendentes', PAG, 'tesouraria.pagamento_mpesa.ler')
 rel('/v1/nucleo/notificacoes-a-enviar', 'nucleo.vw_notificacoes_a_enviar', 'Comunicação', 'nucleo.notificacao.ler')

@@ -44,6 +44,11 @@ public class RelatoriosEscolaSabatinaController extends BaseRelatoriosController
             "ent_id = (SELECT igr_ent_id FROM organizacao.igreja WHERE igr_id = ?)", "divisao").comTrimestre("etr_id");
     public static final Relatorio RESUMO_CLASSES = Relatorio.porIgreja("escola_sabatina.vw_resumo_classe",
             "ect_igr_id = ?", "classe, ect_id").comTrimestre("ect_etr_id");
+    /** V47: meta individual, contribuído e presenças de cada aluno; e por classe (meta = soma das individuais). */
+    public static final Relatorio METAS_ALUNOS = Relatorio.porIgreja("escola_sabatina.vw_metas_alunos",
+            "igreja_id = ?", "nome, membro_id").comTrimestre("trimestre_id").comFiltro("classeTrimestreId", "classe_trimestre_id");
+    public static final Relatorio METAS_CLASSES = Relatorio.porIgreja("escola_sabatina.vw_metas_classes",
+            "igreja_id = ?", "classe, classe_trimestre_id").comTrimestre("trimestre_id").comFiltro("classeTrimestreId", "classe_trimestre_id");
     public static final Relatorio VISITANTES_A_ANONIMIZAR = Relatorio.porIgreja("escola_sabatina.vw_visitantes_a_anonimizar",
             "ers_igr_id = ?", "data_visita, evi_id");
 
@@ -89,6 +94,18 @@ public class RelatoriosEscolaSabatinaController extends BaseRelatoriosController
     }
 
     /** Resumo de cada classe no trimestre: presença, estudo diário, ofertas, visitantes, baptismos e alvos. */
+    @GET
+    @Path(Rotas.EscolaSabatina.METAS_ALUNOS)
+    public Response metasAlunos() throws SQLException {
+        return responder(METAS_ALUNOS);
+    }
+
+    @GET
+    @Path(Rotas.EscolaSabatina.METAS_CLASSES)
+    public Response metasClasses() throws SQLException {
+        return responder(METAS_CLASSES);
+    }
+
     @GET
     @Path(Rotas.EscolaSabatina.RESUMO_CLASSES)
     public Response resumoClasses() throws SQLException {

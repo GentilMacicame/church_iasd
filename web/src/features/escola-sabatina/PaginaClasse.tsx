@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, School, Table2, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ArrowLeft, Pencil, School, Table2, Target, UserMinus, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Avatar, Cartao, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -28,8 +28,9 @@ import {
 import { DialogoClasse } from './DialogoClasse'
 import { FolhaClasse } from './FolhaClasse'
 import { EscolherTrimestre, textoMT } from './componentes'
+import { MetasDaClasse } from './Metas'
 
-type Aba = 'folha' | 'matriculas'
+type Aba = 'folha' | 'matriculas' | 'metas'
 
 export default function PaginaClasse() {
   const id = Number(useParams().id)
@@ -44,7 +45,7 @@ export default function PaginaClasse() {
   const ct = cts.data?.find((c) => c.classeId === id)
   const basicos = useMembrosBasicos()
   const nomeDe = (mid?: number) => { const m = mid ? basicos.data?.find((x) => x.id === mid) : undefined; return m ? `${m.nome} ${m.apelido}` : null }
-  const aba: Aba = params.get('aba') === 'matriculas' ? 'matriculas' : 'folha'
+  const aba: Aba = params.get('aba') === 'matriculas' ? 'matriculas' : params.get('aba') === 'metas' ? 'metas' : 'folha'
   const definir = (k: string, v: string) => setParams((p) => { const n = new URLSearchParams(p); n.set(k, v); return n }, { replace: true })
   const [editar, setEditar] = useState(false)
   const [terminar, setTerminar] = useState(false)
@@ -96,7 +97,8 @@ export default function PaginaClasse() {
         ))}
 
         <div role="tablist" aria-label="Classe" className="flex gap-1 border-b print:hidden">
-          {([['folha', 'Folha do trimestre', Table2], ['matriculas', 'Matrículas', Users]] as const).map(([k, r, I]) => (
+          {([['folha', 'Folha do trimestre', Table2], ['metas', 'Metas', Target], ['matriculas', 'Matrículas', Users]] as const)
+            .filter(([k]) => k !== 'metas' || pode('escola_sabatina.meta_individual.ler')).map(([k, r, I]) => (
             <button key={k} type="button" role="tab" aria-selected={aba === k} onClick={() => definir('aba', k)}
               className={cn('alvo -mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
                 aba === k ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground')}>
@@ -113,6 +115,9 @@ export default function PaginaClasse() {
               : !ct ? <EstadoVazio icone={Table2}>Configure a classe para o trimestre para preencher a folha.</EstadoVazio>
               : <FolhaClasse classe={classe} ct={ct} trimestre={trimestre} />}
           </Cartao>
+        ) : aba === 'metas' ? (
+          !trimestre || !ct ? <Cartao><EstadoVazio icone={Target}>Configure a classe para o trimestre para definir as metas.</EstadoVazio></Cartao>
+            : <MetasDaClasse trimestre={trimestre} classeTrimestre={ct.id} />
         ) : (
           <div className="max-w-3xl"><Matriculas classe={classe} /></div>
         )}

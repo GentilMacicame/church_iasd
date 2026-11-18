@@ -289,6 +289,10 @@ public final class Rotas {
 
         /** MatriculasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String MATRICULAS = "/v1/escola-sabatina/matriculas";
+        /** MetasIndividuaisController · rotas-padrão (V47): a meta de cada aluno no trimestre */
+        public static final String METAS_INDIVIDUAIS = "/v1/escola-sabatina/metas-individuais";
+        /** SemanasEspeciaisController · rotas-padrão (V47): semana de oração, da família, de evangelismo… */
+        public static final String SEMANAS_ESPECIAIS = "/v1/escola-sabatina/semanas-especiais";
 
         /** PesosPontuacaoController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String PESOS_PONTUACAO = "/v1/escola-sabatina/pesos-pontuacao";
@@ -319,6 +323,10 @@ public final class Rotas {
 
         /** GET /v1/escola-sabatina/resumo-classes  (RelatoriosEscolaSabatinaController.resumoClasses) */
         public static final String RESUMO_CLASSES = "resumo-classes";
+        /** GET /v1/escola-sabatina/metas-alunos  (V47: meta, contribuído e presenças de cada aluno) */
+        public static final String METAS_ALUNOS = "metas-alunos";
+        /** GET /v1/escola-sabatina/metas-classes  (V47: meta da classe, contribuído e identificado) */
+        public static final String METAS_CLASSES = "metas-classes";
 
         /** GET /v1/escola-sabatina/visitantes-a-anonimizar  (RelatoriosEscolaSabatinaController.visitantesAAnonimizar) */
         public static final String VISITANTES_A_ANONIMIZAR = "visitantes-a-anonimizar";

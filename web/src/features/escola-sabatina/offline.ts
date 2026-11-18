@@ -62,8 +62,8 @@ export interface Rascunho {
   /** alunos matriculados nesse sábado (M.M. "pelas matrículas" num relatório que já existe) */
   matriculadosPelasMatriculas: number
   numeros: Numeros
-  /** chamada nominal: membroId → presença; null = sem chamada nominal (números à mão) */
-  chamada: Record<string, { presente: boolean; estudouLicao: boolean }> | null
+  /** chamada nominal: membroId → presença (e a oferta do aluno, V47); null = sem chamada nominal (números à mão) */
+  chamada: Record<string, { presente: boolean; estudouLicao: boolean; oferta?: string }> | null
   visitantesNovos: VisitanteNovo[]
   /** true = o secretário carregou em Guardar e ainda não chegou à base de dados */
   porEnviar: boolean
@@ -140,7 +140,7 @@ export function usePacote(igreja: number, classeTrimestreId: number, sabadoId: n
 export function rascunhoDoPacote(p: PacoteRelatorio): Rascunho {
   const r = p.relatorio
   const chamada = p.presencas.length
-    ? Object.fromEntries(p.presencas.map((x) => [String(x.membroId), { presente: x.presente, estudouLicao: x.estudouLicao }]))
+    ? Object.fromEntries(p.presencas.map((x) => [String(x.membroId), { presente: x.presente, estudouLicao: x.estudouLicao, oferta: x.oferta ?? '' }]))
     : null
   return {
     chave: chaveRelatorio(p.classeTrimestre.id, p.sabado.id),
@@ -299,7 +299,8 @@ async function passos(chave: string): Promise<ResultadoEnvio> {
     const id = r.relatorioId!
     // 2. a chamada inteira de uma vez (a base recalcula M.P. e E.D.)
     if (r.chamada && Object.keys(r.chamada).length) {
-      const lista = Object.entries(r.chamada).map(([m, p]) => ({ membroId: Number(m), presente: p.presente, estudouLicao: p.presente && p.estudouLicao }))
+      const lista = Object.entries(r.chamada).map(([m, p]) => ({ membroId: Number(m), presente: p.presente, estudouLicao: p.presente && p.estudouLicao,
+        oferta: p.oferta && Number(p.oferta) > 0 ? p.oferta : null }))
       const rel = (await dados(api.PUT('/v1/escola-sabatina/relatorios-sabado/{id}/presencas', { params: { path: { id } }, body: lista }))) as Relatorio
       await guardar({ baseModificadoEm: rel.modificadoEm })
     }

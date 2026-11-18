@@ -16,6 +16,7 @@ import { Exportar } from '@/components/comum/Exportar'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, dinheiro } from '@/lib/formatos'
+import { MetasDasClasses, SemanasEspeciais } from './Metas'
 import {
   nomeTrimestre, pct, trimestreActual, useClasses, useClassesTrimestre, useClassificacao, useSabados, useConferencia, useEmFalta, useEvolucao, usePainel, useResumoClasses, useTrimestres,
 } from './api'
@@ -178,6 +179,11 @@ export default function PaginaEscolaSabatina() {
                     )}
                 </Cartao>
               </div>
+            </div>
+
+            <div className="grid items-start gap-6 lg:grid-cols-12">
+              {pode('escola_sabatina.meta_individual.ler') && <div className="lg:col-span-8"><MetasDasClasses trimestre={trimestre} /></div>}
+              {pode('escola_sabatina.semana_especial.ler') && <div className="lg:col-span-4"><SemanasEspeciais /></div>}
             </div>
 
             <Cartao titulo="Presença sábado a sábado" descricao="Média das classes activas">

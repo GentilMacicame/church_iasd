@@ -48,7 +48,8 @@ public final class Nomes {
             Map.entry("epl", "escala_plano"), Map.entry("eds", "escala_dia"), Map.entry("ecn", "escala_coluna"),
             Map.entry("stc", "santa_ceia"), Map.entry("pgd", "programa_dia"), Map.entry("ppa", "programa_parte"),
             Map.entry("pit", "programa_item"), Map.entry("cpa", "contagem_participante"), Map.entry("cmc", "comunicado"),
-            Map.entry("cmi", "comunicado_igreja"), Map.entry("aco", "acesso_confidencial"));
+            Map.entry("cmi", "comunicado_igreja"), Map.entry("aco", "acesso_confidencial"),
+            Map.entry("emt", "meta_individual"), Map.entry("ese", "semana_especial"));
 
     /** Nomes curtos de entidades (ALIAS do gerador). */
     private static final Map<String, String> ALIAS = Map.of(

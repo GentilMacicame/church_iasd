@@ -17,10 +17,12 @@ import mz.org.iasd.igreja.models.actividades.SantaCeia;
 import mz.org.iasd.igreja.models.escolasabatina.Classe;
 import mz.org.iasd.igreja.models.escolasabatina.ClasseTrimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Matricula;
+import mz.org.iasd.igreja.models.escolasabatina.MetaIndividual;
 import mz.org.iasd.igreja.models.escolasabatina.PontuacaoConfig;
 import mz.org.iasd.igreja.models.escolasabatina.Presenca;
 import mz.org.iasd.igreja.models.escolasabatina.RelatorioSabado;
 import mz.org.iasd.igreja.models.escolasabatina.Sabado;
+import mz.org.iasd.igreja.models.escolasabatina.SemanaEspecial;
 import mz.org.iasd.igreja.models.escolasabatina.Trimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Visitante;
 import mz.org.iasd.igreja.models.nucleo.AcessoConfidencial;
@@ -218,6 +220,8 @@ public final class CatalogoGerado {
             Matricula.class,
             RelatorioSabado.class,
             Presenca.class,
+            MetaIndividual.class,
+            SemanaEspecial.class,
             Visitante.class,
             PontuacaoConfig.class,
             ContaFinanceira.class,

@@ -351,11 +351,18 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
   const marcar = (membro: number, campo: 'presente' | 'estudouLicao', v: boolean) => mudar((x) => {
     const c = { ...(x.chamada ?? {}) }
     const actual = c[membro] ?? { presente: false, estudouLicao: false }
-    c[membro] = campo === 'presente' ? { presente: v, estudouLicao: v && actual.estudouLicao } : { presente: actual.presente || v, estudouLicao: v }
+    c[membro] = campo === 'presente' ? { ...actual, presente: v, estudouLicao: v && actual.estudouLicao } : { ...actual, presente: actual.presente || v, estudouLicao: v }
     return { ...x, chamada: c }
   })
+  // V47: a oferta de cada aluno (contribuição individual; a da classe continua nos números do sábado)
+  const ofertar = (membro: number, valor: string) => mudar((x) => {
+    const c = { ...(x.chamada ?? {}) }
+    c[membro] = { ...(c[membro] ?? { presente: true, estudouLicao: false }), oferta: valor }
+    return { ...x, chamada: c }
+  })
+  const ofertaIdentificada = Object.values(chamada ?? {}).reduce((s, x) => s + (x.oferta && /^\d+(\.\d{1,2})?$/.test(x.oferta) ? centimos(x.oferta) : 0), 0)
   const comecar = () => mudar((x) => ({ ...x, chamada: Object.fromEntries(p.alunos.map((a) => [String(a.membroId), { presente: false, estudouLicao: false }])) }))
-  const todos = () => mudar((x) => ({ ...x, chamada: Object.fromEntries(p.alunos.map((a) => [String(a.membroId), { presente: true, estudouLicao: x.chamada?.[a.membroId]?.estudouLicao ?? false }])) }))
+  const todos = () => mudar((x) => ({ ...x, chamada: Object.fromEntries(p.alunos.map((a) => [String(a.membroId), { ...(x.chamada?.[a.membroId] ?? { estudouLicao: false }), presente: true }])) }))
   const contagem = chamada ? contarChamada(chamada) : null
 
   return (
@@ -382,7 +389,8 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
               <th className="w-14 py-2 pl-5 text-left font-medium sm:pl-6">N.º</th>
               <th className="py-2 pl-1 text-left font-medium">Aluno</th>
               <th className="w-24 py-2 text-center font-medium">Presente</th>
-              <th className="w-28 py-2 pr-3 text-center font-medium sm:pr-4">Estudou a lição</th>
+              <th className="w-28 py-2 text-center font-medium">Estudou a lição</th>
+              <th className="w-32 py-2 pr-3 text-right font-medium sm:pr-4">Oferta</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -398,7 +406,11 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
                     </span>
                   </td>
                   <td className="py-1"><Marca ligado={v.presente} so={fechado} rotulo={`${a.nome} ${a.apelido} presente`} aoMudar={(x) => marcar(a.membroId, 'presente', x)} /></td>
-                  <td className="py-1 pr-3 sm:pr-4"><Marca ligado={v.estudouLicao} so={fechado} tom="success" rotulo={`${a.nome} ${a.apelido} estudou a lição`} aoMudar={(x) => marcar(a.membroId, 'estudouLicao', x)} /></td>
+                  <td className="py-1"><Marca ligado={v.estudouLicao} so={fechado} tom="success" rotulo={`${a.nome} ${a.apelido} estudou a lição`} aoMudar={(x) => marcar(a.membroId, 'estudouLicao', x)} /></td>
+                  <td className="py-1 pr-3 sm:pr-4">
+                    <CampoDinheiro value={v.oferta ?? ''} onChange={(x: string) => ofertar(a.membroId, x)} disabled={fechado || !v.presente}
+                      aria-label={`Oferta de ${a.nome} ${a.apelido}`} className="h-8 w-28 text-sm" />
+                  </td>
                 </tr>
               )
             })}
@@ -407,8 +419,18 @@ function Chamada({ p, r, fechado, mudar }: { p: PacoteRelatorio; r: Rascunho; fe
             <tr className="border-t bg-muted/30 text-sm font-semibold">
               <td className="py-2 pl-5 sm:pl-6" colSpan={2}>Total</td>
               <td className="py-2 text-center tabular-nums">{contagem!.presentes}</td>
-              <td className="py-2 pr-3 text-center tabular-nums sm:pr-4">{contagem!.estudaram}</td>
+              <td className="py-2 text-center tabular-nums">{contagem!.estudaram}</td>
+              <td className="py-2 pr-3 text-right tabular-nums sm:pr-4">{dinheiro(deCentimos(ofertaIdentificada))}</td>
             </tr>
+            {ofertaIdentificada > 0 && (
+              <tr className="text-xs text-muted-foreground">
+                <td colSpan={5} className="py-1.5 pr-3 pl-5 text-right sm:pr-4 sm:pl-6">
+                  {ofertaIdentificada > centimos(r.numeros.oferta || '0')
+                    ? <span className="font-medium text-warning-text">As ofertas dos alunos passam a oferta missionária da classe ({dinheiro(r.numeros.oferta || '0')}): corrija uma delas.</span>
+                    : <>Identificada por aluno, da oferta missionária da classe de {dinheiro(r.numeros.oferta || '0')}; o resto não está identificado.</>}
+                </td>
+              </tr>
+            )}
           </tfoot>
         </table>
       )}

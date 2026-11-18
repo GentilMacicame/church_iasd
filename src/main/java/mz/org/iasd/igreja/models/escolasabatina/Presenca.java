@@ -1,6 +1,9 @@
 package mz.org.iasd.igreja.models.escolasabatina;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+
+import jakarta.json.bind.annotation.JsonbNumberFormat;
 
 import mz.org.iasd.igreja.models.catalogo.ColunaBd;
 import mz.org.iasd.igreja.models.catalogo.TabelaBd;
@@ -22,6 +25,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param igrejaId Copiado do relatório (segurança e desempenho) (preenchido pela base de dados)
  * @param presente coluna {@code epr_presente} — obrigatório ao criar
  * @param estudouLicao coluna {@code epr_estudou_licao}
+ * @param oferta Oferta missionária do aluno neste sábado (contribuição individual; V47) — dinheiro: no JSON é texto com 2 casas, ex. "650.00"
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -43,6 +47,8 @@ public record Presenca(
         Boolean presente,
         @ColunaBd(value = "epr_estudou_licao", tipo = Tipo.BOOLEANO, naoNula = true)
         Boolean estudouLicao,
+        @ColunaBd(value = "epr_oferta", tipo = Tipo.DINHEIRO)
+        @JsonbNumberFormat(value = "0.00", locale = "en") BigDecimal oferta,
         @ColunaBd(value = "epr_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "epr_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)
