@@ -21,7 +21,8 @@ import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
-import { TIPO_ENTIDADE, TIPO_IGREJA, useAdministradores, useOrganizacaoMut, useDistritos, useDistritosAdministrativos, useEntidadesOrg, useIgrejas, useIgrejasMut, useProvincias, type Igreja, type NovoAdministrador, type TipoIgreja } from './api'
+import { TIPO_ENTIDADE, TIPO_IGREJA, useAdministradores, useOrganizacaoMut, useDistritos, useDistritosAdministrativos, useEntidadesOrg, useIgrejas, useIgrejasMut, useProvincias, type Distrito, type Igreja, type NovoAdministrador, type TipoIgreja } from './api'
+import { useUsuarios } from '@/features/acessos/api'
 
 export default function PaginaIgrejas() {
   const { pode, escolherIgreja, recarregar } = useSessao()
@@ -526,9 +527,12 @@ function DialogoEntidade({ aoFechar }: { aoFechar: () => void }) {
 
 /* -------------------------------------------------------------------- distritos pastorais */
 function ListaDistritos() {
+  const { pode } = useSessao()
   const entidades = useEntidadesOrg()
   const distritos = useDistritos()
   const igrejas = useIgrejas()
+  const usuarios = useUsuarios()
+  const [editar, setEditar] = useState<Distrito | null>(null)
   const [fEnt, setFEnt] = useState('')
   const nomeEnt = (id?: number | null) => entidades.data?.find((e) => e.id === id)?.nome ?? '—'
   const lista = (distritos.data ?? []).filter((d) => !d.endDate && (!fEnt || String(d.entidadeId) === fEnt))
@@ -542,18 +546,20 @@ function ListaDistritos() {
         : !lista.length ? <EstadoVazio icone={Network} titulo="Ainda não há distritos pastorais">Registe os distritos da Associação; depois escolha-os ao registar as igrejas.</EstadoVazio>
         : (
           <Tabela>
-            <thead><tr><th className="sm:pl-6">Distrito pastoral</th><th>Associação / Missão</th><th className="num sm:pr-6">Igrejas</th></tr></thead>
+            <thead><tr><th className="sm:pl-6">Distrito pastoral</th><th>Associação / Missão</th><th className="hidden md:table-cell">Pastor</th><th className="num sm:pr-6">Igrejas</th></tr></thead>
             <tbody>
               {lista.map((d) => (
-                <tr key={d.id}>
-                  <td className="font-medium sm:pl-6">{d.nome}</td>
+                <tr key={d.id} onClick={pode('organizacao.distrito.alterar') ? () => setEditar(d) : undefined} className={cn(pode('organizacao.distrito.alterar') && 'cursor-pointer')}>
+                  <td className="font-medium sm:pl-6">{d.nome}{pode('organizacao.distrito.alterar') && <span className="ml-2 text-xs font-normal text-primary">Editar</span>}</td>
                   <td className="text-sm text-muted-foreground">{nomeEnt(d.entidadeId)}</td>
+                  <td className="hidden text-sm md:table-cell">{d.pastorUsuarioId ? usuarios.data?.find((u) => u.id === d.pastorUsuarioId)?.nome ?? 'Indicado' : <span className="text-warning-text">Sem pastor</span>}</td>
                   <td className="num sm:pr-6">{(igrejas.data ?? []).filter((i) => !i.endDate && i.distritoId === d.id).length}</td>
                 </tr>
               ))}
             </tbody>
           </Tabela>
         )}
+      {editar && <DialogoEditarDistrito distrito={editar} aoFechar={() => setEditar(null)} />}
     </Cartao>
   )
 }
@@ -600,6 +606,64 @@ function DialogoDistrito({ aoFechar }: { aoFechar: () => void }) {
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
           <Button type="button" className="alvo" disabled={distrito.isPending} onClick={submeter}>{distrito.isPending ? t.comum.aGravar : 'Registar'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/** Editar o distrito pastoral: o nome, o pastor (que regista as actividades da área pastoral) e as igrejas. */
+function DialogoEditarDistrito({ distrito, aoFechar }: { distrito: Distrito; aoFechar: () => void }) {
+  const igrejas = useIgrejas()
+  const usuarios = useUsuarios()
+  const { alterarDistrito } = useOrganizacaoMut()
+  const [nome, setNome] = useState(distrito.nome)
+  const [pastor, setPastor] = useState(distrito.pastorUsuarioId ? String(distrito.pastorUsuarioId) : '')
+  const daEntidade = (igrejas.data ?? []).filter((i) => !i.endDate && i.entidadeId === distrito.entidadeId)
+  const [marcadas, setMarcadas] = useState<Set<number>>(() => new Set(daEntidade.filter((i) => i.distritoId === distrito.id).map((i) => i.id)))
+  const [erro, setErro] = useState<string | null>(null)
+  const submeter = async () => {
+    setErro(null)
+    if (!nome.trim()) return setErro('Escreva o nome do distrito.')
+    const antes = new Set(daEntidade.filter((i) => i.distritoId === distrito.id).map((i) => i.id))
+    try {
+      await alterarDistrito.mutateAsync({ id: distrito.id, nome: nome.trim(), pastorUsuarioId: pastor ? Number(pastor) : null,
+        entram: [...marcadas].filter((i) => !antes.has(i)), saem: [...antes].filter((i) => !marcadas.has(i)) })
+      toast.success('Distrito pastoral actualizado.')
+      aoFechar()
+    } catch (e) { setErro(mensagemDe(e)) }
+  }
+  return (
+    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{distrito.nome}</DialogTitle>
+          <DialogDescription>O pastor do distrito regista as actividades da área pastoral; elas aparecem no programa de cada igreja marcada.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <ErroFormulario mensagem={erro} />
+          <div className="grid gap-1.5"><label htmlFor="ed-dst-nome" className="text-sm font-medium">Nome</label>
+            <Input id="ed-dst-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} className="alvo" /></div>
+          <div className="grid gap-1.5"><label htmlFor="ed-dst-pastor" className="text-sm font-medium">Pastor do distrito</label>
+            <CampoEscolha id="ed-dst-pastor" valor={pastor} aoMudar={setPastor} permitirLimpar vazio="Escolher o utilizador…" pesquisar="Pesquisar utilizador…"
+              opcoes={(usuarios.data ?? []).filter((u) => u.estado === 'ACTIVO').map((u) => ({ valor: String(u.id), rotulo: u.nome, detalhe: u.email ?? undefined }))} />
+            <p className="text-xs text-muted-foreground">Tem de ter um acesso (utilizador). Se ainda não tiver, crie-o em Acessos.</p></div>
+          <fieldset className="grid gap-2 rounded-lg border p-3">
+            <legend className="px-1 text-sm font-medium">Igrejas do distrito</legend>
+            {daEntidade.length === 0 ? <p className="text-sm text-muted-foreground">Sem igrejas nesta Associação/Missão.</p>
+              : daEntidade.map((i) => (
+                <label key={i.id} className="alvo flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={marcadas.has(i.id)} className="size-4 accent-[var(--primary)]"
+                    onChange={(e) => setMarcadas((m) => { const n = new Set(m); if (e.target.checked) n.add(i.id); else n.delete(i.id); return n })} />
+                  {i.nome}
+                  {i.distritoId && i.distritoId !== distrito.id && <span className="text-xs text-muted-foreground">(noutro distrito: muda para este)</span>}
+                </label>
+              ))}
+          </fieldset>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
+          <Button type="button" className="alvo" disabled={alterarDistrito.isPending} onClick={submeter}>{alterarDistrito.isPending ? t.comum.aGravar : t.comum.guardar}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

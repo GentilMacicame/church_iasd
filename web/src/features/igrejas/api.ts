@@ -153,5 +153,14 @@ export function useOrganizacaoMut() {
     mutationFn: (v: { entidadeId: number; nome: string }) => dados(api.POST('/v1/organizacao/distritos', { body: { entidadeId: v.entidadeId, nome: v.nome } as never })) as Promise<Distrito>,
     onSuccess: depois,
   })
-  return { entidade, distrito }
+  /** O nome e o pastor do distrito; e as igrejas que entram ou saem dele. */
+  const alterarDistrito = useMutation({
+    mutationFn: async (v: { id: number; nome: string; pastorUsuarioId: number | null; entram: number[]; saem: number[] }) => {
+      await dados(api.PATCH('/v1/organizacao/distritos/{id}', { params: { path: { id: v.id } }, body: { nome: v.nome, pastorUsuarioId: v.pastorUsuarioId } as never }))
+      for (const i of v.entram) await dados(api.PATCH('/v1/organizacao/igrejas/{id}', { params: { path: { id: i } }, body: { distritoId: v.id } as never }))
+      for (const i of v.saem) await dados(api.PATCH('/v1/organizacao/igrejas/{id}', { params: { path: { id: i } }, body: { distritoId: null } as never }))
+    },
+    onSuccess: depois,
+  })
+  return { entidade, distrito, alterarDistrito }
 }

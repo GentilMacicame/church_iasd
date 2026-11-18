@@ -75,7 +75,12 @@ export function useDistritoDaIgreja() {
       const i = (await dados(api.GET('/v1/organizacao/igrejas/{id}', { params: { path: { id: igreja.id } } }))) as Esquema<'Igreja'>
       if (!i.distritoId) return null
       const d = (await dados(api.GET('/v1/organizacao/distritos/{id}', { params: { path: { id: i.distritoId } } }))) as Esquema<'Distrito'>
-      return { id: i.distritoId, nome: d.nome ?? 'Distrito', pastorUsuarioId: d.pastorUsuarioId ?? null }
+      // o nome do pastor, se o utilizador o puder ler (senão fica só a indicação de que há pastor)
+      let pastorNome: string | null = null
+      if (d.pastorUsuarioId) {
+        try { pastorNome = ((await dados(api.GET('/v1/nucleo/usuarios/{id}', { params: { path: { id: d.pastorUsuarioId } } }))) as { nome?: string }).nome ?? null } catch { pastorNome = null }
+      }
+      return { id: i.distritoId, nome: d.nome ?? 'Distrito', pastorUsuarioId: d.pastorUsuarioId ?? null, pastorNome: pastorNome ?? (d.pastorUsuarioId ? 'Indicado' : null) }
     },
     staleTime: 10 * 60_000,
   })

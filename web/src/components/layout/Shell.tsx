@@ -11,7 +11,7 @@ import {
   Bell, Building2, Check, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -93,6 +93,7 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/actividades', rotulo: 'Programa anual', icone: PhCalendarStar, permissao: 'actividades.actividade.ler', fim: false },
       { para: '/escalas', rotulo: t.nav.escalas, icone: PhCalendarDots, permissao: 'actividades.escala_plano.ler', fim: false },
+      { para: '/area-pastoral', rotulo: 'Área pastoral', icone: PhMapTrifold, permissao: 'actividades.actividade.ler', fim: true },
       { para: '/programacao', rotulo: 'Programação do dia', icone: PhClipboardText, permissao: 'actividades.programa_dia.ler', fim: false },
       { para: '/santa-ceia', rotulo: 'Santa Ceia', icone: PhWine, permissao: 'actividades.santa_ceia.ler', fim: true },
     ],
@@ -272,6 +273,7 @@ function Caminho() {
   if (pathname.startsWith('/comunicados')) partes.push({ rotulo: 'Comunicados' })
   if (pathname === '/notificacoes') partes.push({ rotulo: t.nav.administracao }, { rotulo: 'Notificações' })
   if (pathname.startsWith('/santa-ceia')) partes.push({ rotulo: t.nav.actividades }, { rotulo: 'Santa Ceia' })
+  if (pathname === '/area-pastoral') partes.push({ rotulo: t.nav.actividades }, { rotulo: 'Área pastoral' })
   if (pathname.startsWith('/programacao')) {
     partes.push({ rotulo: t.nav.actividades }, { rotulo: 'Programação do dia', para: '/programacao' })
     if (/^\/programacao\/\d+/.test(pathname)) partes.push({ rotulo: 'Folha do dia' })

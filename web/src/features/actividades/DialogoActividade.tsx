@@ -58,8 +58,10 @@ function somarDias(iso: string, dias: number) {
 }
 const diasEntre = (a: string, b: string) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86_400_000)
 
-export function DialogoActividade({ actividade, departamentoInicial, dataInicial, aoFechar, aoGravar }: {
+export function DialogoActividade({ actividade, departamentoInicial, dataInicial, aoFechar, aoGravar, pastoral }: {
   actividade?: Actividade; departamentoInicial?: number; dataInicial?: string; aoFechar: () => void; aoGravar?: (id: number) => void
+  /** abrir já como actividade da área pastoral (página Área pastoral) */
+  pastoral?: boolean
 }) {
   const igreja = useIgreja()
   const deps = useDepartamentosIgreja()
@@ -76,7 +78,7 @@ export function DialogoActividade({ actividade, departamentoInicial, dataInicial
   const form = useForm<Valores>({
     resolver: zodResolver(esquema),
     defaultValues: {
-      origem: actividade?.distritoId ? 'AREA_PASTORAL' : 'IGREJA',
+      origem: actividade?.distritoId || (!actividade && pastoral) ? 'AREA_PASTORAL' : 'IGREJA',
       departamentoIgrejaId: String(actividade?.departamentoIgrejaId ?? departamentoInicial ?? ''),
       nome: actividade?.nome ?? '', dataInicio: ini.data || dataInicial || '', horaInicio: ini.hora || '09:00',
       dataFim: fim.data && fim.data !== ini.data ? fim.data : '', horaFim: fim.hora,
