@@ -80,7 +80,7 @@ export default function PaginaFechos() {
   return (
     <>
       <TituloPagina icone={CalendarCheck} titulo="Fecho do mês"
-        descricao="Depois de conferir os saldos com o banco e o caixa, feche o mês: nada mais se lança com data nesse mês." />
+        descricao="Conferidos os saldos, feche o mês: nada mais se lança nele" />
       <div className="grid gap-6">
         {q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} />
           : aCarregar ? <Barra className="h-56 w-full rounded-xl" />
@@ -134,7 +134,7 @@ export default function PaginaFechos() {
             </Tabela>
           )}
           <p className="border-t px-4 py-3 text-xs text-muted-foreground sm:px-6">
-            Um erro descoberto num mês fechado corrige-se com um estorno no mês aberto; só o pastor ou o administrador podem reabrir.
+            Erros num mês fechado corrigem-se com um estorno no mês aberto.
           </p>
         </Cartao>
       </div>

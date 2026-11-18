@@ -215,7 +215,7 @@ export default function PaginaReuniao() {
               )}
           </Cartao>
 
-          <Cartao titulo="Votos da acta" descricao="Admissões, transferências, eleições: os votos formais, pela ordem do número" icone={Vote} semMargem
+          <Cartao titulo="Votos da acta" descricao="Os votos formais, por número" icone={Vote} semMargem
             accoes={pode('secretaria.voto.criar') && !fechada && <Button size="sm" variant="outline" className="alvo" onClick={() => setNovoVoto(true)}><Plus className="size-4" />Registar voto</Button>}>
             {votos.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
               : votos.isError ? <EstadoErro erro={votos.error} aoTentar={() => votos.refetch()} className="mx-6 mb-6" />

@@ -53,7 +53,7 @@ export function DialogoContacto({ membroId, igrejaId, gatilho, primeiro }: { mem
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t.contactos.adicionar}</DialogTitle>
-          <DialogDescription>O telemóvel principal recebe os lembretes das escalas e os recibos por SMS; o telefone fixo não recebe SMS.</DialogDescription>
+          <DialogDescription>O telemóvel recebe os lembretes e os recibos por SMS.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />

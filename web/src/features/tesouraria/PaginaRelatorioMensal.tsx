@@ -91,7 +91,7 @@ export default function PaginaRelatorioMensal() {
   return (
     <>
       <div className="print:hidden">
-        <TituloPagina icone={FileText} titulo="Relatório mensal para a Missão" descricao="Segue com o depósito do mês: o resumo por fundo e os recibos de cada membro"
+        <TituloPagina icone={FileText} titulo="Relatório mensal para a Missão" descricao="Resumo por fundo e recibos do mês"
           accoes={<Button className="alvo" onClick={() => imprimirComo(`Relatório mensal ${mes} - ${igreja.nome}`)} disabled={aCarregar || !resumo.length}><Printer className="size-4" />Imprimir / guardar PDF</Button>} />
         <div className="mb-6 flex items-center gap-1">
           <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês anterior" onClick={() => setParams({ mes: mudarMes(mes, -1) })}><ChevronLeft className="size-4" /></Button>

@@ -88,7 +88,7 @@ export function MetasDaClasse({ trimestre, classeTrimestre }: { trimestre: Trime
         ))}
       </dl>
 
-      <Cartao titulo="Metas individuais" descricao="A meta de cada aluno para o trimestre; o que deu conta-se na chamada nominal (oferta de cada aluno)" icone={Target} semMargem
+      <Cartao titulo="Metas individuais" descricao="Meta de cada aluno no trimestre e o que já deu" icone={Target} semMargem
         accoes={podeGravar && lista.length > 0 && (
           <div className="flex items-center gap-2">
             <CampoDinheiro value={todos} onChange={setTodos} aria-label="Meta para todos" className="h-9 w-32" />
@@ -174,7 +174,7 @@ export function SemanasEspeciais() {
   const lista = (q.data ?? []).filter((s) => s.dataFim >= hoje || proximas.has(s.id)).sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
   const passadas = (q.data ?? []).filter((s) => s.dataFim < hoje).slice(0, 3)
   return (
-    <Cartao titulo="Programas especiais" descricao="Semana de oração, da família, de evangelismo… os próximos 14 dias geram um alerta" icone={CalendarHeart} semMargem
+    <Cartao titulo="Programas especiais" descricao="Semanas de oração, família, evangelismo…" icone={CalendarHeart} semMargem
       accoes={pode('escola_sabatina.semana_especial.criar') && <Button size="sm" variant="outline" onClick={() => setAberta('nova')}><Plus className="size-4" />Programa</Button>}>
       {q.isPending ? <LinhasACarregar linhas={3} />
         : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="m-4" />

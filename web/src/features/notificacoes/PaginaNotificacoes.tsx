@@ -46,7 +46,7 @@ export default function PaginaNotificacoes() {
 
   return (
     <>
-      <TituloPagina icone={BellRing} titulo="Notificações" descricao="As mensagens enviadas aos membros: recibos das contribuições, lembretes de escala e comunicados" />
+      <TituloPagina icone={BellRing} titulo="Notificações" descricao="SMS enviados: recibos, lembretes e comunicados" />
       <section className="min-w-0 rounded-xl border bg-card shadow-card">
         <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-6">
           <div role="tablist" aria-label="Estado" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">

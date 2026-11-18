@@ -90,10 +90,10 @@ export default function PaginaNovaEscala() {
         antes={<Link to="/escalas" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.escalas.titulo}</Link>}
         icone={CalendarPlus}
         titulo={t.escalas.nova}
-        descricao="Do Culto Divino, da Escola Sabatina ou da JA. Os sábados do período são preparados automaticamente; depois escala-se quem serve."
+        descricao="Culto Divino, Escola Sabatina ou JA; os sábados criam-se sozinhos"
       />
       <div className="grid gap-6 lg:grid-cols-12">
-        <div className="grid gap-6 lg:col-span-8">
+        <div className="grid gap-6 lg:col-span-9 xl:col-span-8">
           <ErroFormulario mensagem={erro} />
           <Cartao titulo="Período" descricao="Normalmente um trimestre" icone={CalendarPlus}>
             <div className="grid gap-4">
@@ -146,16 +146,6 @@ export default function PaginaNovaEscala() {
             </div>
           </Cartao>
         </div>
-        <aside className="lg:col-span-4">
-          <Cartao titulo="Como funciona">
-            <ol className="grid list-decimal gap-2 pl-4 text-sm text-muted-foreground">
-              <li>Grave a escala: aparecem todos os sábados do período.</li>
-              <li>Em cada sábado, escale quem serve (na Escola Sabatina e na JA, nas colunas que a igreja define).</li>
-              <li>Marque os dias especiais (Simpósio, 13.º sábado).</li>
-              <li>Publique: os membros vêem-na e os escalados recebem SMS à quarta e à sexta.</li>
-            </ol>
-          </Cartao>
-        </aside>
       </div>
       <div className="sticky bottom-0 -mx-4 mt-6 flex justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
         <Button asChild variant="outline" className="alvo"><Link to="/escalas">{t.comum.cancelar}</Link></Button>

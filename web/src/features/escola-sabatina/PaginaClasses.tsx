@@ -82,7 +82,7 @@ export default function PaginaClasses() {
 
         <Cartao
           titulo={trimestre ? `Quadro das classes · ${nomeTrimestre(trimestre)}` : 'Quadro das classes'}
-          descricao="Clique numa classe para abrir a folha do trimestre (sábado a sábado) e as matrículas"
+          descricao="As classes do trimestre: folha, metas e matrículas"
           accoes={anterior && semConfig > 0 && !cts.isPending && pode('escola_sabatina.classe_trimestre.criar') && (
             <Button variant="outline" size="sm" className="alvo" disabled={copiar.isPending} onClick={() => void copiarAnterior()}>
               <Copy className="size-4" />{copiar.isPending ? 'A copiar…' : `Copiar do ${nomeTrimestre(anterior)}`}

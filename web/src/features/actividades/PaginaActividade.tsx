@@ -240,7 +240,7 @@ function Orcamento({ a }: { a: Actividade }) {
     } catch (e) { setErro(mensagemDe(e)) }
   }
   return (
-    <Cartao titulo="Orçamento e execução" descricao="O previsto, o material, as despesas e o que já saiu da tesouraria" icone={Receipt} semMargem>
+    <Cartao titulo="Orçamento e execução" descricao="Previsto, material, despesas e executado" icone={Receipt} semMargem>
       <dl className="grid grid-cols-2 gap-4 border-t px-5 py-4 sm:grid-cols-4 sm:px-6">
         <Campo rotulo="Previsto">{dinheiro(a.valorPrevisto ?? '0.00')}</Campo>
         <Campo rotulo="Material">{dinheiro(deCentimos(totalMaterial))}</Campo>

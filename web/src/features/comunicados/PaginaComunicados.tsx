@@ -71,7 +71,7 @@ export default function PaginaComunicados() {
   return (
     <>
       <TituloPagina icone={Megaphone} titulo="Comunicados"
-        descricao="Anúncios da igreja, do distrito pastoral e da Associação/Missão"
+        descricao="Da igreja, do distrito e da Missão"
         accoes={podePublicar && <Button className="alvo" onClick={() => setEditar('novo')}><Plus className="size-4" />Novo comunicado</Button>} />
 
       {q.isPending ? <div className="grid gap-3"><Barra className="h-24 w-full" /><Barra className="h-24 w-full" /></div>
@@ -241,7 +241,7 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{comunicado ? 'Editar comunicado' : 'Novo comunicado'}</DialogTitle>
-          <DialogDescription>Fica como rascunho até o publicar. Publicado, aparece no mural de quem o deve ver, entre as datas indicadas.</DialogDescription>
+          <DialogDescription>Fica em rascunho até publicar.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

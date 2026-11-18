@@ -67,7 +67,7 @@ export default function PaginaReconciliacao() {
 
   return (
     <>
-      <TituloPagina icone={FileCheck2} titulo="Reconciliação com o extracto" descricao="Confirmar que cada linha do extracto do banco ou do M-Pesa está registada na tesouraria"
+      <TituloPagina icone={FileCheck2} titulo="Reconciliação com o extracto" descricao="Conferir o extracto do banco ou do M-Pesa"
         accoes={(
           <>
             {lista.length > 0 && <Exportar caminho="/v1/tesouraria/extractos-por-reconciliar" query={{ igrejaId: igreja.id }} nome="extracto-por-reconciliar" />}
@@ -91,7 +91,7 @@ export default function PaginaReconciliacao() {
               <Indicador rotulo="Créditos por ligar" valor={<Dinheiro valor={deCentimos(entradas)} />} icone={ArrowDownLeft} tom="success" />
               <Indicador rotulo="Débitos por ligar" valor={<Dinheiro valor={deCentimos(saidas)} />} icone={ArrowUpRight} tom="destructive" />
             </div>
-            <Cartao titulo="Linhas do extracto por ligar" descricao="Para cada linha, ligue o movimento sugerido ou escolha outro. Se não houver movimento, registe-o primeiro (ex.: comissão do banco como saída)." semMargem>
+            <Cartao titulo="Linhas do extracto por ligar" descricao="Ligue cada linha ao movimento sugerido ou a outro" semMargem>
               <Paginada itens={lista}>{(vis) => (
               <ul className="divide-y">
                 {vis.map((l) => {

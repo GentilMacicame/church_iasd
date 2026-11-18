@@ -79,7 +79,7 @@ export default function PaginaContas() {
 
   return (
     <>
-      <TituloPagina icone={Wallet} titulo="Contas" descricao="Onde está o dinheiro da igreja, e a conta da Missão para o que os membros pagam directamente lá"
+      <TituloPagina icone={Wallet} titulo="Contas" descricao="Caixa, M-Pesa, banco e a conta da Missão"
         accoes={(
           <>
             {pode('tesouraria.extrato_linha.ler') && <Button asChild variant="outline" className="alvo"><Link to="/tesouraria/reconciliacao"><FileCheck2 className="size-4" />Reconciliar extracto</Link></Button>}
@@ -91,11 +91,11 @@ export default function PaginaContas() {
         : contas.isError ? <EstadoErro erro={contas.error} aoTentar={() => contas.refetch()} />
         : (
           <div className="grid items-start gap-6 lg:grid-cols-12">
-            <Cartao titulo="Contas da igreja" descricao="O caixa, o M-Pesa e o banco onde o dinheiro da igreja está" icone={Church} semMargem className="lg:col-span-7">
+            <Cartao titulo="Contas da igreja" descricao="Caixa, M-Pesa e banco" icone={Church} semMargem className="lg:col-span-7">
               {daIgreja.length ? linhas(daIgreja, false) : <EstadoVazio icone={Wallet}>Ainda não há contas da igreja.</EstadoVazio>}
             </Cartao>
             {maneio.length > 0 && (
-              <Cartao titulo="Fundo de maneio" descricao="Dinheiro à mão para despesas urgentes: cada despesa fica com quem a fez e o comprovativo" icone={PiggyBank} className="lg:col-span-7">
+              <Cartao titulo="Fundo de maneio" descricao="Para despesas urgentes, com comprovativo" icone={PiggyBank} className="lg:col-span-7">
                 <ul className="grid gap-4">
                   {maneio.map((c) => (
                     <li key={c.id} className="flex flex-wrap items-center justify-between gap-3">
@@ -114,7 +114,7 @@ export default function PaginaContas() {
                 </ul>
               </Cartao>
             )}
-            <Cartao titulo="Conta da Missão" descricao="Para registar os dízimos e ofertas que os membros pagam directamente na Missão" icone={Landmark} semMargem className="lg:col-span-5">
+            <Cartao titulo="Conta da Missão" descricao="Pagamentos feitos directamente na Missão" icone={Landmark} semMargem className="lg:col-span-5">
               {daMissao.length ? linhas(daMissao, true) : (
                 <EstadoVazio icone={Landmark} titulo="Ainda não está registada"
                   accao={pode('tesouraria.conta_financeira.criar') && <Button variant="outline" className="alvo" onClick={() => abrir('missao')}>Registar a conta da Missão</Button>}>

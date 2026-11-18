@@ -126,7 +126,7 @@ export default function PaginaEleicao() {
   return (
     <>
       <div className="print:hidden">
-      <TituloPagina icone={Vote} titulo="Eleição de oficiais" descricao="Proposta da comissão de nomeações, voto da igreja e registo dos mandatos"
+      <TituloPagina icone={Vote} titulo="Eleição de oficiais" descricao="Proposta, voto e mandatos"
         antes={<Link to="/conselho" className="text-sm text-muted-foreground hover:underline print:hidden">← Mandatos e conselho</Link>}
         accoes={linhas.length > 0 && <Button variant="outline" className="alvo print:hidden" onClick={() => imprimirComo(`Relatório da comissão de nomeações - ${igreja.nome}`)}><Printer className="size-4" />Imprimir / guardar PDF</Button>} />
       </div>
@@ -138,7 +138,7 @@ export default function PaginaEleicao() {
           <Indicador rotulo="Mandato" valor={mandato?.nome ?? '—'} nota={mandato ? `${data(mandato.dataInicio)} → ${data(mandato.dataFim)}` : 'escolha-o no passo 2'} icone={Vote} tom="info" />
         </div>
 
-        <Cartao titulo="1. Proposta da comissão de nomeações" descricao="Um cargo por linha (repita o cargo para vários anciãos ou diaconisas). Fica guardada neste aparelho até ao registo." semMargem
+        <Cartao titulo="1. Proposta da comissão de nomeações" descricao="Um cargo por linha; repita-o para vários eleitos" semMargem
           accoes={(
             <div className="flex flex-wrap gap-2">
               {!linhas.length && <Button size="sm" variant="outline" className="alvo" onClick={comecarPelosActuais}>Começar pelos cargos actuais</Button>}
@@ -147,7 +147,7 @@ export default function PaginaEleicao() {
           )}>
           {!linhas.length ? (
             <EstadoVazio icone={ListPlus} titulo="A proposta está vazia">
-              Comece pelos cargos em exercício (para eleger os sucessores) ou junte os cargos um a um.
+              Comece pelos cargos em exercício ou junte-os um a um.
             </EstadoVazio>
           ) : (
             <Paginada itens={linhas}>{(vis, ini) => (
@@ -181,7 +181,7 @@ export default function PaginaEleicao() {
         </Cartao>
 
         {podeRegistar && linhas.length > 0 && (
-          <Cartao titulo="2. Voto da igreja e registo" descricao="Depois de a igreja votar o relatório (reunião regular ou assembleia administrativa), registe os eleitos com esse voto.">
+          <Cartao titulo="2. Voto da igreja e registo" descricao="Registe os eleitos com o voto da igreja">
             <div className="grid gap-4">
               <ErroFormulario mensagem={erro} />
               <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">

@@ -40,7 +40,7 @@ export default function PaginaTrimestres() {
       <TituloPagina
         icone={CalendarRange}
         titulo={t.es.trimestres}
-        descricao="Calendário da lição: trimestres, sábados e o sábado da oferta do 13.º sábado (definidos pela Associação)"
+        descricao="Trimestres e sábados da lição (definidos pela Associação)"
         accoes={pode('escola_sabatina.trimestre.criar') && <Button className="alvo" onClick={() => setNovo(true)}><Plus className="size-4" />Novo trimestre</Button>}
       />
       <div className="grid gap-6 lg:grid-cols-12">

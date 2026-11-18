@@ -120,7 +120,7 @@ export default function PaginaSabado() {
       <TituloPagina
         icone={BookOpenCheck}
         titulo={t.es.sabado}
-        descricao="Números, chamada, visitantes e as três ofertas de cada classe"
+        descricao="O relatório de cada classe"
         accoes={pode('escola_sabatina.classe_trimestre.criar') && (
           <Button asChild variant="outline" className="alvo"><Link to="/escola-sabatina/classes"><Settings2 className="size-4" />Classes</Link></Button>
         )}
@@ -140,7 +140,7 @@ export default function PaginaSabado() {
           : aCarregar ? <Cartao><LinhasACarregar linhas={4} /></Cartao>
           : !trimestre ? (
             <Cartao><EstadoVazio icone={BookOpenCheck} titulo="Ainda não há trimestres">
-              A Associação cria os trimestres e os sábados da lição. Depois de criados, aparecem aqui.
+              Os trimestres e sábados são criados pela Associação.
             </EstadoVazio></Cartao>
           ) : activas.length === 0 ? (
             <Cartao><EstadoVazio icone={Settings2} titulo="Nenhuma classe neste trimestre"

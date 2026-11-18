@@ -31,7 +31,7 @@ export default function PaginaLivro() {
   return (
     <>
       <TituloPagina icone={BookOpen} titulo={t.livro.titulo}
-        descricao="Cada entrada e saída de membros, com o voto que a autoriza. Regista-se a partir da ficha do membro." />
+        descricao="Entradas e saídas de membros, com o voto" />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           <Indicador rotulo={`Entradas em ${ano}`} valor={entradas} nota="baptismos, profissões de fé, cartas" icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
@@ -48,7 +48,7 @@ export default function PaginaLivro() {
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="mx-6 mb-6" />
             : lista.length === 0 ? (
               <EstadoVazio icone={BookOpen} titulo="O livro ainda está vazio">
-                Para admitir um interessado: registe o voto da igreja em Reuniões e depois, na ficha do membro, "Registar entrada".
+                Para admitir, registe o voto em Reuniões e depois "Registar entrada" na ficha.
               </EstadoVazio>
             ) : (
               <Tabela>

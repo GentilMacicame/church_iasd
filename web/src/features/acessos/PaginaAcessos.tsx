@@ -72,7 +72,7 @@ export default function PaginaAcessos() {
 
   return (
     <>
-      <TituloPagina icone={KeyRound} titulo="Utilizadores e perfis" descricao="Quem entra no sistema, os perfis de acesso nesta igreja e as permissões de cada perfil" />
+      <TituloPagina icone={KeyRound} titulo="Utilizadores e perfis" descricao="Utilizadores, perfis e permissões" />
       <section className="min-w-0 rounded-xl border bg-card shadow-card">
         <nav role="tablist" aria-label="Secções" className="flex gap-6 overflow-x-auto border-b px-4 sm:px-6">
           {ABAS.map((a) => (

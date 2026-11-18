@@ -40,7 +40,7 @@ export default function PaginaProgramacoes() {
 
   return (
     <>
-      <TituloPagina icone={ClipboardList} titulo="Programação do dia" descricao="A folha de cada sábado: Escola Sabatina, Culto Divino e JA, com as horas e quem faz cada parte"
+      <TituloPagina icone={ClipboardList} titulo="Programação do dia" descricao="A folha de cada sábado, com as horas e os responsáveis"
         accoes={pode('actividades.programa_dia.criar') && <Button className="alvo" onClick={() => setPreparar(true)}><Plus className="size-4" />Preparar programação</Button>} />
       <section className="min-w-0 rounded-xl border bg-card shadow-card">
         {q.isPending ? <LinhasACarregar linhas={5} />
@@ -94,7 +94,7 @@ function DialogoPreparar({ lista, aoFechar }: { lista: Programa[]; aoFechar: () 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Preparar programação</DialogTitle>
-          <DialogDescription>Os nomes da escala desse dia (apresentadores, sermão, tradutor, família da Escola Sabatina…) entram sozinhos.</DialogDescription>
+          <DialogDescription>Os nomes da escala desse dia entram sozinhos.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

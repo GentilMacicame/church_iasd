@@ -317,7 +317,7 @@ export default function PaginaEntrada() {
       <TituloPagina
         antes={<Link to="/tesouraria" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.tesouraria.titulo}</Link>}
         icone={HandCoins} titulo={t.tesouraria.entrada}
-        descricao="Os dízimos e ofertas de cada membro (envelope ou comprovativo) e as ofertas da salva."
+        descricao="Dízimos e ofertas por membro, família ou salva"
       />
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid min-w-0 gap-6 lg:col-span-8">
@@ -380,7 +380,7 @@ export default function PaginaEntrada() {
 
           {/* 2 · como entregou */}
           {!anonimo && (
-            <Cartao titulo="2. Como entregou o dinheiro" icone={Wallet} descricao="Em envelope na igreja, ou por depósito / M-Pesa com comprovativo">
+            <Cartao titulo="2. Como entregou o dinheiro" icone={Wallet} descricao="Envelope, depósito ou M-Pesa">
               <div role="radiogroup" aria-label="Como entregou o dinheiro" className="grid gap-4">
                 <div>
                   <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Na igreja local</p>
@@ -413,7 +413,7 @@ export default function PaginaEntrada() {
 
           {/* 3 · comprovativo (o que não é numerário) */}
           {!numerario && conta && (
-            <Cartao titulo="Comprovativo" icone={FileCheck2} descricao="O que o membro mandou ao tesoureiro: o talão do depósito ou a mensagem do M-Pesa">
+            <Cartao titulo="Comprovativo" icone={FileCheck2} descricao="Talão do depósito ou mensagem do M-Pesa">
               <div className="grid gap-4 sm:grid-cols-2">
                 <CampoFormulario rotulo={conta.tipo === 'BANCO' ? 'N.º do talão / referência' : 'Código da transacção'} erro={e.referencia?.message} obrigatorio={naMissao}>
                   {(p) => <Input {...p} {...form.register('referencia')} placeholder={conta.tipo === 'BANCO' ? 'ex.: 004512' : 'ex.: QK7H2LM9PX'} className="alvo num uppercase placeholder:normal-case" />}

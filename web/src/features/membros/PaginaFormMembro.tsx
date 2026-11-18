@@ -589,7 +589,7 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(1))}>
-          <Cartao titulo="Estado civil e cônjuge" descricao="Se o cônjuge for membro, escolha-o: os dois registos ficam ligados" icone={Heart}>
+          <Cartao titulo="Estado civil e cônjuge" descricao="Se o cônjuge for membro, escolha-o" icone={Heart}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.estadoCivil} erro={e.estadoCivil?.message}>
                 {(p) => <Seleccao {...p} {...register('estadoCivil')}><Opcoes mapa={rotulos.estadoCivil} /></Seleccao>}
@@ -640,7 +640,7 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(2))}>
-          <Cartao titulo="Contactos" descricao="O telemóvel recebe os SMS (lembretes das escalas e recibos)" icone={Phone}>
+          <Cartao titulo="Contactos" descricao="O telemóvel recebe os SMS" icone={Phone}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.telemovel} erro={e.telemovel?.message}>
                 {(p) => <Input {...p} {...register('telemovel')} inputMode="tel" autoComplete="tel" placeholder="+258 84 123 4567" className="alvo num" />}
@@ -654,7 +654,7 @@ export default function PaginaFormMembro() {
             </div>
             {id && <p className="mt-4 text-xs text-muted-foreground">Mudar um contacto guarda o anterior no histórico. WhatsApp e outros contactos gerem-se na ficha.</p>}
           </Cartao>
-          <Cartao titulo={t.ficha.moradaTitulo} descricao="Onde vive: permite encontrar o membro e fazer relatórios por bairro" icone={MapPin}>
+          <Cartao titulo={t.ficha.moradaTitulo} descricao="Morada e contactos" icone={MapPin}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.provincia} erro={e.provincia?.message}>
                 {(p) => (
@@ -731,7 +731,7 @@ export default function PaginaFormMembro() {
               )}
             </div>
           </Cartao>
-          <Cartao titulo={v.exMembro ? 'Rebaptismo' : 'Baptismo'} descricao="Data, local e ministro que oficiou (a entrada no livro faz-se depois, com o voto)" icone={Droplets}>
+          <Cartao titulo={v.exMembro ? 'Rebaptismo' : 'Baptismo'} descricao="Data, local e ministro" icone={Droplets}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.dataBaptismo} erro={e.dataBaptismo?.message}>{data('dataBaptismo')}</CampoFormulario>
               <CampoFormulario rotulo={t.ficha.igrejaBaptismo} erro={e.igrejaBaptismo?.message}>

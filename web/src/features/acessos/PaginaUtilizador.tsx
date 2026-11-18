@@ -104,7 +104,7 @@ export default function PaginaUtilizador() {
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="grid min-w-0 gap-6">
           <ErroFormulario mensagem={erro} />
-          <Cartao titulo="Dados do utilizador" descricao="Entra com o e-mail ou o telemóvel; o telemóvel recebe o código para definir a senha." icone={UserRound}>
+          <Cartao titulo="Dados do utilizador" descricao="Entra com o e-mail ou o telemóvel" icone={UserRound}>
             <div className="grid gap-4 md:grid-cols-2">
               <CampoFormulario rotulo="Nome completo" erro={erros.nome} obrigatorio className="md:col-span-2">
                 {(p) => <Input {...p} value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} autoComplete="off" placeholder="ex.: Ana Machava" className="alvo" />}
@@ -155,9 +155,9 @@ export default function PaginaUtilizador() {
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><MessageSquareText className="size-5" /></span>
               <h2 className="mt-4 font-semibold">Como funciona o acesso</h2>
               <ol className="mt-4 grid gap-4 text-sm text-muted-foreground">
-                {['Registe os dados e os perfis. Não é preciso escolher senha.',
-                  'Depois de gravar, carregue em "Enviar código por SMS": o utilizador recebe um código de 6 dígitos, válido 15 minutos.',
-                  'Na página de entrada, em "Esqueci a senha", escreve o e-mail ou o telemóvel, o código e a senha nova, e passa a entrar.',
+                {['Registe os dados e os perfis (sem senha).',
+                  'Envie o código por SMS (válido 15 minutos).',
+                  'O utilizador define a senha em "Esqueci a senha".',
                 ].map((passo, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="flex size-6 flex-none items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">{i + 1}</span>

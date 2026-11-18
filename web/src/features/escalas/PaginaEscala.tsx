@@ -385,7 +385,7 @@ export default function PaginaEscala() {
         </div>
       </div>
 
-      <Cartao titulo="Escala" descricao="Toque num nome para trocar ou retirar; num espaço vazio para escalar" icone={CalendarRange} semMargem className="print:border-0 print:shadow-none [&>header]:print:hidden">
+      <Cartao titulo="Escala" descricao="Toque numa célula para escalar ou trocar" icone={CalendarRange} semMargem className="print:border-0 print:shadow-none [&>header]:print:hidden">
         {dias.isPending || escalados.isPending || (!culto && colunasIgreja.isPending) ? <div className="grid gap-2 px-6 pb-6">{[0, 1, 2, 3, 4].map((i) => <Barra key={i} className="h-10 w-full" />)}</div>
           : dias.isError ? <EstadoErro erro={dias.error} aoTentar={() => dias.refetch()} className="mx-6 mb-6" />
           : escalados.isError ? <EstadoErro erro={escalados.error} aoTentar={() => escalados.refetch()} className="mx-6 mb-6" />

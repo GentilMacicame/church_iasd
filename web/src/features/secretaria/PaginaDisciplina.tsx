@@ -70,7 +70,7 @@ export default function PaginaDisciplina() {
 
   return (
     <>
-      <TituloPagina icone={Gavel} titulo="Disciplina" descricao="Censuras votadas pela igreja (1 a 12 meses) e remoções do livro · informação confidencial"
+      <TituloPagina icone={Gavel} titulo="Disciplina" descricao="Censuras e remoções · confidencial"
         accoes={(
           <>
             {pode('secretaria.movimento_membro.criar') && <Button variant="outline" className="alvo" onClick={() => setRemover(true)}><UserX className="size-4" />Registar remoção</Button>}
@@ -96,7 +96,7 @@ export default function PaginaDisciplina() {
               <Cartao semMargem>
                 {!lista.length ? (
                   <EstadoVazio icone={Gavel} titulo="Nenhuma censura registada">
-                    A censura é votada em reunião regular ou assembleia administrativa e dura de 1 a 12 meses.
+                    Censuras votadas pela igreja, de 1 a 12 meses.
                   </EstadoVazio>
                 ) : (
                   <Tabela>
@@ -168,7 +168,7 @@ export default function PaginaDisciplina() {
             )}
           </Tabs>
           <p className="text-sm text-muted-foreground">
-            O motivo de cada censura é confidencial: não aparece nas listas e cada consulta fica registada (quem, quando). O histórico de alterações guarda só que o motivo mudou.
+            O motivo é confidencial: não aparece nas listas e cada consulta fica registada.
           </p>
         </div>
       )}
@@ -269,7 +269,7 @@ function DialogoCensura({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Aplicar censura</DialogTitle>
-          <DialogDescription>Votada pela igreja em reunião regular ou assembleia administrativa. O membro deixa os cargos e não recebe carta de transferência durante a censura.</DialogDescription>
+          <DialogDescription>Votada pela igreja. Durante a censura, o membro deixa os cargos.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

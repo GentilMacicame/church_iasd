@@ -43,7 +43,7 @@ export default function PaginaVisitantes() {
 
   return (
     <>
-      <TituloPagina icone={UserPlus} titulo={t.es.visitantes} descricao="Visitantes registados nos relatórios do sábado, para o seguimento" />
+      <TituloPagina icone={UserPlus} titulo={t.es.visitantes} descricao="Para o seguimento" />
       <div className="grid gap-6">
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Indicador rotulo="Por acompanhar" valor={seguimento.length} nota="ainda não são membros" icone={UserPlus} tom="warning" aCarregar={q.isPending}
@@ -118,7 +118,7 @@ function DialogoTornouSe({ visitante, aoFechar, nomeDe }: { visitante: Visitante
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{visitante.nome} tornou-se membro</DialogTitle>
-          <DialogDescription>Escolha o registo na secretaria (membro ou interessado). Se ainda não existir, registe-o primeiro em Membros.</DialogDescription>
+          <DialogDescription>Escolha o membro ou interessado (registe-o antes em Membros).</DialogDescription>
         </DialogHeader>
         <ErroFormulario mensagem={erro} />
         <CampoFormulario rotulo="Registo de membro">

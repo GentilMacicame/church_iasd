@@ -609,7 +609,7 @@ function DialogoLancar({ rel, aoFechar, aoLancar }: { rel: Relatorio; aoFechar: 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Lançar as ofertas na tesouraria</DialogTitle>
-          <DialogDescription>Uma entrada confirmada com uma linha por fundo (ES missões, 13.º sábado, despesas da ES), ligada a este relatório.</DialogDescription>
+          <DialogDescription>Uma entrada por fundo, ligada a este relatório.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

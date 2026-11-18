@@ -115,7 +115,7 @@ export function Acompanhamento({ linhas, rotuloGrupo, ano }: { linhas: LinhaAcom
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Cartao titulo="Atrasadas" descricao="A data passou e continuam planeadas: iniciar, concluir ou cancelar" icone={AlarmClock} semMargem>
+        <Cartao titulo="Atrasadas" descricao="A data passou e continuam planeadas" icone={AlarmClock} semMargem>
           {!atrasadas.length ? <EstadoVazio icone={CircleCheck}>Nenhuma actividade em atraso.</EstadoVazio> : (
             <ul className="divide-y">
               {atrasadas.slice(0, 8).map((x) => (

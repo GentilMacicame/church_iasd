@@ -151,7 +151,7 @@ export default function PaginaMembros() {
       <TituloPagina
         icone={Users}
         titulo={t.membros.titulo}
-        descricao="Livro de membros da igreja: interessados, membros activos e saídas"
+        descricao="Membros, interessados e saídas"
         accoes={
           <>
             <Exportar caminho="/v1/secretaria/membros-lista" query={{ igrejaId: igreja.id }} nome={`membros-${igreja.nome}`} />

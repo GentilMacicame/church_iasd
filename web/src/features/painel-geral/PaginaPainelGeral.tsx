@@ -333,7 +333,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
                     { nome: 'Reavivamento', slot: 2, valores: meses.map((m) => m.reav) }]} formatar={(v) => textoMT(v)} />
               )}
             </Cartao>
-            <Cartao titulo="Entradas e saídas de membros" descricao="Admissões, transferências e outras saídas (falecimento, remoção), últimos 12 meses">
+            <Cartao titulo="Entradas e saídas de membros" descricao="Últimos 12 meses">
               {qm.isPending ? <LinhasACarregar linhas={4} /> : qm.isError ? <EstadoErro erro={qm.error} /> : (
                 <GraficoBarras rotulo="Movimento de membros por mês" categorias={categorias} destaque={categorias.length - 1} inteiros
                   series={[{ nome: 'Admissões', slot: 1, valores: meses.map((m) => m.admissoes) }, { nome: 'Transf. entradas', slot: 3, valores: meses.map((m) => m.te) },
@@ -369,7 +369,7 @@ export default function PaginaPainelGeral({ distritoFixo, titulo: tituloFixo }: 
             </Cartao>
           </div>
 
-          <Cartao titulo="Quadro comparativo das igrejas" descricao={`${intervalo.rotulo} · clique no título de uma coluna para ordenar; numa igreja para a abrir`}>
+          <Cartao titulo="Quadro comparativo das igrejas" descricao={`${intervalo.rotulo} · clique numa coluna para ordenar`}>
             {aCarregar ? <LinhasACarregar linhas={6} /> : !linhas.length ? <EstadoVazio>Nenhuma igreja com esse filtro.</EstadoVazio> : (
               <Folha minimo="min-w-[86rem]">
                 <thead>

@@ -207,7 +207,7 @@ function Matriculas({ classe }: { classe: Classe }) {
           </div>
         )}
         {pode('escola_sabatina.matricula.criar') && (
-          <CampoFormulario rotulo="Matricular" ajuda="Membros e interessados; quem está noutra classe tem de sair dela primeiro.">
+          <CampoFormulario rotulo="Matricular" ajuda="Quem está noutra classe sai dela primeiro.">
             {(p) => <CampoMembro id={p.id} valor={novo} aoMudar={setNovo} nomeDe={nomeDe} estados={['ACTIVO', 'INTERESSADO']}
               excluir={activas.map((m) => m.membroId)} vazio={matricular.isPending ? 'A matricular…' : 'Escolher membro ou interessado…'} />}
           </CampoFormulario>

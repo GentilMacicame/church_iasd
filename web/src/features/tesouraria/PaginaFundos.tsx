@@ -44,11 +44,11 @@ export default function PaginaFundos() {
 
   return (
     <>
-      <TituloPagina icone={Wallet} titulo="Fundos e ofertas" descricao="Para onde vai cada dízimo e cada oferta, e as ofertas próprias da igreja"
+      <TituloPagina icone={Wallet} titulo="Fundos e ofertas" descricao="Destino de cada fundo e ofertas da igreja"
         accoes={podeCriar && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova oferta da igreja</Button>} />
       {fundos.isError ? <EstadoErro erro={fundos.error} aoTentar={() => fundos.refetch()} /> : (
         <div className="grid items-start gap-6 lg:grid-cols-2">
-          <Cartao titulo="Ofertas da igreja" descricao="Recolhidas pela igreja para os seus fins: ficam 100% na igreja" icone={Church} semMargem>
+          <Cartao titulo="Ofertas da igreja" descricao="Ficam 100% na igreja" icone={Church} semMargem>
             {fundos.isPending ? <LinhasACarregar linhas={3} />
               : !daIgreja.length ? (
                 <EstadoVazio icone={Target} titulo="Ainda não há ofertas próprias"

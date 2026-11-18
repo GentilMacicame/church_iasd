@@ -67,7 +67,7 @@ export default function PaginaTransferencias() {
 
   return (
     <>
-      <TituloPagina icone={ArrowRightLeft} titulo="Transferências" descricao="Cartas de transferência de membros entre igrejas (válidas 6 meses)"
+      <TituloPagina icone={ArrowRightLeft} titulo="Transferências" descricao="Cartas entre igrejas (válidas 6 meses)"
         accoes={pode('secretaria.transferencia_membro.criar') && <Button className="alvo" onClick={() => setNovo(true)}><Plus className="size-4" />Pedido de transferência</Button>} />
       {q.isPending ? <Barra className="h-64 w-full" /> : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} /> : (
         <div className="grid gap-6">
@@ -171,7 +171,7 @@ function DialogoPedido({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Pedido de transferência</DialogTitle>
-          <DialogDescription>O membro (ou a igreja de destino) pede a carta. A carta só se emite depois do voto da igreja em 2.ª leitura.</DialogDescription>
+          <DialogDescription>A carta emite-se depois do voto da igreja em 2.ª leitura.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

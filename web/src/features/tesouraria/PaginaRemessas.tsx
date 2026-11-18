@@ -82,7 +82,7 @@ export default function PaginaRemessas() {
 
   return (
     <>
-      <TituloPagina icone={Landmark} titulo="Depósitos à Missão" descricao="No fim de cada mês: 100% dos dízimos e a parte da Missão nas ofertas, depositados na conta da Missão" />
+      <TituloPagina icone={Landmark} titulo="Depósitos à Missão" descricao="Dízimos e a parte da Missão nas ofertas, todos os meses" />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <Indicador rotulo="Por depositar" valor={<Dinheiro valor={emFaltaTotal} />} nota={`${porEnviar.length} mês(es)`} icone={Hourglass} tom="warning" aCarregar={devidas.isPending} />
@@ -90,7 +90,7 @@ export default function PaginaRemessas() {
           <Indicador rotulo={`Confirmados em ${ano}`} valor={<Dinheiro valor={soma(confirmadasAno)} />} nota={`${confirmadasAno.length} depósito(s)`} icone={CircleCheck} tom="success" aCarregar={remessas.isPending} />
         </div>
 
-        <Cartao titulo="Por depositar" descricao="Por mês: quanto entrou em cada fundo, quanto cabe à Missão e o que os membros já pagaram directamente lá" icone={Hourglass} semMargem>
+        <Cartao titulo="Por depositar" descricao="Por mês: entradas por fundo e a parte da Missão" icone={Hourglass} semMargem>
           {devidas.isPending || remessas.isPending ? <div className="px-6 pb-6"><Barra className="h-24 w-full" /></div>
             : devidas.isError ? <EstadoErro erro={devidas.error} aoTentar={() => devidas.refetch()} className="mx-6 mb-6" />
             : porEnviar.length === 0 ? <EstadoVazio icone={CircleCheck} titulo="Nada por depositar">Todos os depósitos devidos foram feitos.</EstadoVazio>

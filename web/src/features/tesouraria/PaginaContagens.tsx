@@ -56,22 +56,9 @@ export default function PaginaContagens() {
 
   return (
     <>
-      <TituloPagina icone={Calculator} titulo="Contagem do numerário" descricao="O dinheiro de cada culto: quanto se contou e se já está todo lançado"
+      <TituloPagina icone={Calculator} titulo="Contagem do numerário" descricao="O contado em cada culto e o já lançado"
         accoes={pode('tesouraria.contagem_numerario.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova contagem</Button>} />
       <div className="grid gap-6">
-        <ol className="grid gap-3 rounded-xl border bg-card p-4 text-sm shadow-card sm:grid-cols-3 sm:p-5">
-          {[
-            { n: 1, t: 'Contar', d: 'Depois do culto, o tesoureiro, um representante da Escola Sabatina e um diácono contam o dinheiro.' },
-            { n: 2, t: 'Lançar', d: 'Cada envelope e a salva lançam-se em "Lançar entrada", escolhendo esta contagem.' },
-            { n: 3, t: 'Conferir', d: 'Quando o lançado é igual ao contado, carregue em "Conferir".' },
-          ].map((p) => (
-            <li key={p.n} className="flex gap-3">
-              <span className="flex size-7 flex-none items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{p.n}</span>
-              <span><span className="block font-medium">{p.t}</span><span className="text-muted-foreground">{p.d}</span></span>
-            </li>
-          ))}
-        </ol>
-
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <Indicador rotulo="Contado este mês" valor={<Dinheiro valor={contadoMes} />} nota={`${doMes.length} contagem(ns)`} icone={Calculator} aCarregar={conf.isPending} />
           <Indicador rotulo="Por conferir" valor={abertas.length} nota="contagens ainda abertas" icone={Scale} tom="warning" aCarregar={conf.isPending} />
@@ -312,7 +299,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova contagem</DialogTitle>
-          <DialogDescription>O dinheiro do culto, contado antes de sair da igreja pelo tesoureiro, um representante da Escola Sabatina e um diácono.</DialogDescription>
+          <DialogDescription>Contam o tesoureiro, um representante da Escola Sabatina e um diácono.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

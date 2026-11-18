@@ -51,7 +51,7 @@ export default function PaginaActividades() {
   return (
     <>
       <TituloPagina icone={CalendarRange} titulo="Actividades e programa anual"
-        descricao="As actividades de todos os departamentos, com o responsável, o orçamento e o que já foi gasto"
+        descricao="Actividades dos departamentos e da área pastoral"
         accoes={
           <>
             <Exportar caminho="/v1/actividades/programa" query={{ igrejaId: igreja.id, ano }} nome={`programa-${ano}-${igreja.nome}`} />

@@ -78,7 +78,7 @@ export default function PaginaAreaPastoral() {
               {q.isPending ? <LinhasACarregar linhas={4} /> : <Acompanhamento ano={ano} linhas={lista.map((x) => ({ ...x, grupo: 'Área pastoral' }))} />}
             </TabsContent>
             <TabsContent value="programa" className="mt-0">
-            <Cartao titulo={`Programa da área pastoral · ${ano}`} descricao="Aparece também no Programa anual e no calendário de cada igreja do distrito" semMargem
+            <Cartao titulo={`Programa da área pastoral · ${ano}`} descricao="Aparece também no programa de cada igreja" semMargem
               accoes={(
                 <div className="flex items-center gap-1">
                   <Button variant="outline" size="icon" className="size-9" aria-label="Ano anterior" onClick={() => mudarAno(ano - 1)}><ChevronLeft className="size-4" /></Button>

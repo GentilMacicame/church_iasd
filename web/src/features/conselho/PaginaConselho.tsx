@@ -81,7 +81,7 @@ export default function PaginaConselho() {
   return (
     <>
       <TituloPagina icone={ShieldCheck} titulo="Mandatos, conselho e direcção"
-        descricao="Cada mandato tem o seu período; dentro dele, os oficiais servem no conselho da igreja ou na direcção"
+        descricao="Os oficiais de cada mandato: conselho e direcção"
         accoes={pode('secretaria.mandato.criar') && (
           <>
             <Button asChild variant="outline" className="alvo"><Link to="/conselho/eleicao"><Vote className="size-4" />Eleição de oficiais</Link></Button>

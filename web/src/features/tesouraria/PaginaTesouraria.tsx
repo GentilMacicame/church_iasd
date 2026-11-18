@@ -89,7 +89,7 @@ export default function PaginaTesouraria() {
                 </>
               )}
           </Cartao>
-          <Cartao titulo="Por fundo" descricao="O que está nas contas, o que ainda é da Missão e o que a igreja pode gastar" icone={PiggyBank} semMargem className="lg:col-span-12">
+          <Cartao titulo="Por fundo" descricao="Saldos, parte da Missão e o que se pode gastar" icone={PiggyBank} semMargem className="lg:col-span-12">
             {fundosSaldo.isPending ? <div className="px-6 pb-6"><Barra className="h-20 w-full" /></div>
               : fundosSaldo.isError ? <EstadoErro erro={fundosSaldo.error} aoTentar={() => fundosSaldo.refetch()} className="mx-6 mb-6" />
               : !fundosSaldo.data.length ? <EstadoVazio icone={PiggyBank}>Os saldos por fundo aparecem quando houver movimentos confirmados.</EstadoVazio>

@@ -84,7 +84,7 @@ export default function PaginaIgrejas() {
 
   return (
     <>
-      <TituloPagina icone={Building2} titulo="Igrejas" descricao="As igrejas que usam a plataforma, as Associações/Missões e os distritos pastorais"
+      <TituloPagina icone={Building2} titulo="Igrejas" descricao="Igrejas, Associações e distritos pastorais"
         accoes={aba === 'igrejas' ? (pode('organizacao.igreja.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Registar igreja</Button>)
           : aba === 'associacoes' ? (pode('organizacao.entidade.criar') && <Button className="alvo" onClick={() => setNovaEnt(true)}><Plus className="size-4" />Registar Associação / Missão</Button>)
           : (pode('organizacao.distrito.criar') && <Button className="alvo" onClick={() => setNovoDst(true)}><Plus className="size-4" />Registar distrito pastoral</Button>)} />
@@ -538,7 +538,7 @@ function ListaDistritos() {
   const lista = (distritos.data ?? []).filter((d) => !d.endDate && (!fEnt || String(d.entidadeId) === fEnt))
     .sort((a, b) => nomeEnt(a.entidadeId).localeCompare(nomeEnt(b.entidadeId), 'pt') || a.nome.localeCompare(b.nome, 'pt'))
   return (
-    <Cartao titulo="Distritos pastorais" descricao="Os distritos de cada Associação/Missão (cada um com o seu pastor)" icone={Network} semMargem
+    <Cartao titulo="Distritos pastorais" descricao="Cada distrito com o seu pastor e igrejas" icone={Network} semMargem
       accoes={<div className="w-52 sm:w-64"><CampoEscolha valor={fEnt} aoMudar={setFEnt} vazio="Todas as Associações" permitirLimpar
         opcoes={(entidades.data ?? []).filter((e) => !e.endDate).map((e) => ({ valor: String(e.id), rotulo: e.nome }))} /></div>}>
       {distritos.isPending ? <LinhasACarregar linhas={3} />
@@ -638,7 +638,7 @@ function DialogoEditarDistrito({ distrito, aoFechar }: { distrito: Distrito; aoF
       <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{distrito.nome}</DialogTitle>
-          <DialogDescription>O pastor do distrito regista as actividades da área pastoral; elas aparecem no programa de cada igreja marcada.</DialogDescription>
+          <DialogDescription>O pastor regista as actividades da área pastoral destas igrejas.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />

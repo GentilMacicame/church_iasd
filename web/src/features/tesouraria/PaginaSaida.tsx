@@ -100,7 +100,7 @@ export default function PaginaSaida() {
     <form onSubmit={submeter} noValidate>
       <TituloPagina
         antes={<Link to="/tesouraria" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.tesouraria.titulo}</Link>}
-        icone={Banknote} titulo={t.tesouraria.saida} descricao="Um pagamento da igreja. Outra pessoa aprova antes de o dinheiro sair."
+        icone={Banknote} titulo={t.tesouraria.saida} descricao="Outra pessoa aprova antes de o dinheiro sair"
       />
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <div className="grid gap-6 lg:col-span-8">
@@ -155,11 +155,7 @@ export default function PaginaSaida() {
         </div>
         <aside className="lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4">
           <Cartao titulo="Aprovação" icone={ShieldCheck}>
-            <ol className="grid list-decimal gap-2 pl-4 text-sm text-muted-foreground">
-              <li>Grave a saída: fica <strong className="text-foreground">pendente</strong>.</li>
-              <li>Outra pessoa com permissão (ancião ou pastor) aprova-a na ficha do movimento.</li>
-              <li>Depois confirma-se, e só aí o dinheiro sai do saldo.</li>
-            </ol>
+            <p className="text-sm text-muted-foreground">Fica <strong className="text-foreground">pendente</strong> até outra pessoa (ancião ou pastor) a aprovar.</p>
             <Button type="submit" disabled={form.formState.isSubmitting} className="alvo mt-5 h-11 w-full text-base">
               {form.formState.isSubmitting ? t.comum.aGravar : 'Registar saída'}
             </Button>

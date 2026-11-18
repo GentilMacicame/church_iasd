@@ -45,7 +45,7 @@ export default function PaginaOrcamento() {
 
   return (
     <>
-      <TituloPagina icone={ClipboardList} titulo="Orçamento anual" descricao="O previsto para o ano, aprovado pela igreja, e o realizado ao longo do ano"
+      <TituloPagina icone={ClipboardList} titulo="Orçamento anual" descricao="Previsto e realizado no ano"
         accoes={(
           <>
             {sel && <Exportar caminho="/v1/tesouraria/execucao-orcamento" query={{ igrejaId: igreja.id }} nome="execucao-do-orcamento" />}

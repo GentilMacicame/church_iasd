@@ -44,7 +44,7 @@ export default function PaginaEscalas() {
           <Indicador rotulo="Rascunhos" valor={rascunhos} nota="ainda não publicadas" icone={CalendarDays} tom="warning" aCarregar={q.isPending} />
         </div>
 
-        <Cartao titulo="Todas as escalas" descricao="Só as publicadas são vistas pelos membros e geram lembretes por SMS" semMargem>
+        <Cartao titulo="Todas as escalas" descricao="Só as publicadas geram lembretes" semMargem>
           {q.isPending ? <LinhasACarregar linhas={3} />
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="mx-6 mb-6" />
             : planos.length === 0 ? (

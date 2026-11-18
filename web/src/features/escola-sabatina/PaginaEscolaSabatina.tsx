@@ -102,7 +102,7 @@ export default function PaginaEscolaSabatina() {
 
             <div className="grid gap-6 lg:grid-cols-12">
               <Cartao className="lg:col-span-8" titulo="Classificação" icone={Trophy}
-                descricao="Pontuação de 0 a 100: presença, estudo diário, ofertas face ao alvo e visitantes"
+                descricao="Pontuação de 0 a 100"
                 accoes={trimestre && <Exportar caminho="/v1/escola-sabatina/classificacao" query={{ igrejaId: igreja.id, trimestreId: trimestre.id }} nome={`classificacao-es-${trimestre.ano}-${trimestre.numero}`} />}
                 semMargem>
                 {classificacao.isPending ? <LinhasACarregar linhas={4} />

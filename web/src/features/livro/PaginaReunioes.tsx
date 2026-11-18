@@ -87,7 +87,7 @@ function DialogoNovaReuniao({ aberto, aoMudar }: { aberto: boolean; aoMudar: (v:
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova reunião</DialogTitle>
-          <DialogDescription>Admissões e saídas do livro exigem voto em reunião regular ou assembleia administrativa; a junta directiva só recomenda.</DialogDescription>
+          <DialogDescription>Admissões e saídas exigem voto em reunião regular ou assembleia.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
@@ -141,7 +141,7 @@ export default function PaginaReunioes() {
 
   return (
     <>
-      <TituloPagina icone={Landmark} titulo={t.livro.reunioes} descricao="Reuniões do conselho, reuniões regulares e assembleias: presenças, agenda, deliberações e acta"
+      <TituloPagina icone={Landmark} titulo={t.livro.reunioes} descricao="Presenças, agenda, deliberações e acta"
         accoes={pode('secretaria.reuniao.criar') && <Button className="alvo" onClick={() => setNova(true)}><Plus className="size-4" />Nova reunião</Button>} />
       <div className="grid gap-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
