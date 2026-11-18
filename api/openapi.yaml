@@ -14449,6 +14449,238 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/adiantamentos:
+    get:
+      summary: 'Adiantamentos: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.ler
+      operationId: listarAdiantamento
+      description: Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: departamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ate
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Adiantamento'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Adiantamentos: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.criar
+      operationId: criarAdiantamento
+      description: Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/Adiantamento'
+              required:
+              - igrejaId
+              - departamentoIgrejaId
+              - membroId
+              - data
+              - valor
+              - descricao
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adiantamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/adiantamentos/{id}:
+    get:
+      summary: 'Adiantamentos: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.ler
+      operationId: lerAdiantamento
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adiantamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Adiantamentos: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.alterar
+      operationId: alterarAdiantamento
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Adiantamento'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adiantamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/adiantamentos/{id}/reactivar:
+    post:
+      summary: 'Adiantamentos: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.terminar
+      operationId: reactivarAdiantamento
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adiantamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/adiantamentos/{id}/terminar:
+    post:
+      summary: 'Adiantamentos: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.adiantamento.terminar
+      operationId: terminarAdiantamento
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adiantamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/alvo-sugerido:
     get:
       summary: Meta sugerida para o ano (+5%)
@@ -16736,6 +16968,182 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/extracto-departamentos:
+    get:
+      summary: Extracto por departamento num período
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.orcamento.ler
+      operationId: extractoDepartamentos
+      x-funcao-bd: tesouraria.fn_extracto_departamentos
+      description: 'Mês, trimestre, semestre ou ano (até um ano): por departamento a % do ano, o saldo inicial, a doação directa e a distribuída,
+        as despesas, as transferências, os estornos, os adiantamentos e o saldo final.'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: inicio
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: fim
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - departamentoIgrejaId
+                  - departamento
+                  - saldoInicial
+                  - saldoFinal
+                  properties:
+                    departamentoIgrejaId:
+                      type: integer
+                    departamento:
+                      type: string
+                    percentagem:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                      nullable: true
+                    saldoInicial:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    doacaoDirecta:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    doacaoDistribuida:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    despesas:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    transfSaida:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    transfEntrada:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    estornos:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    adiantamentos:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    saldoFinal:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/extracto-fundos:
+    get:
+      summary: Extracto por fundo num período
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.saldo_diario_fundo.ler
+      operationId: extractoFundos
+      x-funcao-bd: tesouraria.fn_extracto_fundos
+      description: 'Por fundo: saldo inicial, entradas, saídas e saldo final no período (até um ano).'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - name: inicio
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: fim
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - fundoId
+                  - fundo
+                  - saldoInicial
+                  - saldoFinal
+                  properties:
+                    fundoId:
+                      type: integer
+                    fundo:
+                      type: string
+                    tipo:
+                      type: string
+                    saldoInicial:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    entradas:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    saidas:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
+                    saldoFinal:
+                      type: string
+                      pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                      example: '650.00'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -19272,6 +19680,222 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/percentagens-departamento:
+    get:
+      summary: 'Percentagens departamento: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.ler
+      operationId: listarPercentagemDepartamento
+      description: 'Parte de cada departamento no ano: reparte a doação distribuída (V50)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: departamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PercentagemDepartamento'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Percentagens departamento: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.criar
+      operationId: criarPercentagemDepartamento
+      description: 'Parte de cada departamento no ano: reparte a doação distribuída (V50)'
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/PercentagemDepartamento'
+              required:
+              - igrejaId
+              - departamentoIgrejaId
+              - ano
+              - percentagem
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PercentagemDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/percentagens-departamento/{id}:
+    get:
+      summary: 'Percentagens departamento: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.ler
+      operationId: lerPercentagemDepartamento
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PercentagemDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Percentagens departamento: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.alterar
+      operationId: alterarPercentagemDepartamento
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PercentagemDepartamento'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PercentagemDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/percentagens-departamento/{id}/reactivar:
+    post:
+      summary: 'Percentagens departamento: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.terminar
+      operationId: reactivarPercentagemDepartamento
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PercentagemDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/percentagens-departamento/{id}/terminar:
+    post:
+      summary: 'Percentagens departamento: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.percentagem_departamento.terminar
+      operationId: terminarPercentagemDepartamento
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PercentagemDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/progresso-alvos:
     get:
       summary: 'Relatório: Progresso alvos'
@@ -20941,6 +21565,237 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/transferencias-departamento:
+    get:
+      summary: 'Transferencias departamento: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.ler
+      operationId: listarTransferenciaDepartamento
+      description: Transferência de saldo entre departamentos da igreja (V50)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: origemDepartamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: destinoDepartamentoIgrejaId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ate
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransferenciaDepartamento'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Transferencias departamento: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.criar
+      operationId: criarTransferenciaDepartamento
+      description: Transferência de saldo entre departamentos da igreja (V50)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/TransferenciaDepartamento'
+              required:
+              - igrejaId
+              - origemDepartamentoIgrejaId
+              - destinoDepartamentoIgrejaId
+              - data
+              - valor
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferenciaDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/transferencias-departamento/{id}:
+    get:
+      summary: 'Transferencias departamento: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.ler
+      operationId: lerTransferenciaDepartamento
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferenciaDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Transferencias departamento: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.alterar
+      operationId: alterarTransferenciaDepartamento
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferenciaDepartamento'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferenciaDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/transferencias-departamento/{id}/reactivar:
+    post:
+      summary: 'Transferencias departamento: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.terminar
+      operationId: reactivarTransferenciaDepartamento
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferenciaDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/transferencias-departamento/{id}/terminar:
+    post:
+      summary: 'Transferencias departamento: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transferencia_departamento.terminar
+      operationId: terminarTransferenciaDepartamento
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferenciaDepartamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
 components:
   securitySchemes:
     bearer:
@@ -21217,6 +22072,77 @@ components:
       x-obrigatorios-ao-criar:
       - actividadeId
       - membroId
+    Adiantamento:
+      type: object
+      description: Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)
+      x-tabela: tesouraria.adiantamento
+      x-prefixo: adt
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado do departamento
+        departamentoIgrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja_departamento
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Quem recebeu
+        data:
+          type: string
+          format: date
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+        descricao:
+          type: string
+          maxLength: 255
+        dataPrestacao:
+          type: string
+          format: date
+          description: Quando prestou contas
+        valorDevolvido:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: O que sobrou e voltou ao departamento
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - departamentoIgrejaId
+      - membroId
+      - data
+      - valor
+      - descricao
     Alvo:
       type: object
       description: Alvos de arrecadação por fundo
@@ -24333,6 +25259,57 @@ components:
       - transactionReference
       - thirdPartyReference
       - serviceProviderCode
+    PercentagemDepartamento:
+      type: object
+      description: 'Parte de cada departamento no ano: reparte a doação distribuída (V50)'
+      x-tabela: tesouraria.percentagem_departamento
+      x-prefixo: dpp
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado do departamento
+        departamentoIgrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja_departamento
+        ano:
+          type: integer
+        percentagem:
+          type: string
+          pattern: ^-?\d+(\.\d+)?$
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - departamentoIgrejaId
+      - ano
+      - percentagem
     Perfil:
       type: object
       description: Perfis de acesso (Admin, Secretário, Tesoureiro, ...)
@@ -25880,6 +26857,67 @@ components:
       x-obrigatorios-ao-criar:
       - membroId
       - origemIgrejaId
+    TransferenciaDepartamento:
+      type: object
+      description: Transferência de saldo entre departamentos da igreja (V50)
+      x-tabela: tesouraria.transferencia_departamento
+      x-prefixo: tdp
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado do departamento de origem
+        origemDepartamentoIgrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja_departamento
+        destinoDepartamentoIgrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja_departamento
+        data:
+          type: string
+          format: date
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+        descricao:
+          type: string
+          maxLength: 255
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - origemDepartamentoIgrejaId
+      - destinoDepartamentoIgrejaId
+      - data
+      - valor
     Trimestre:
       type: object
       description: Trimestres da lição

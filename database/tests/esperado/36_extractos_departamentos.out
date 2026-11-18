@@ -1,0 +1,58 @@
+1. percentagens de 2026: 60% e 40%; passar o 1.º a 61% daria 101%: recusado
+ igreja_copiada | dpp_percentagem 
+----------------+-----------------
+              1 |           60.00
+              1 |           40.00
+(2 rows)
+
+psql:database/tests/36_extractos_departamentos.sql:19: ERROR:  As percentagens dos departamentos passam de 100% em 2026
+2. transferência de 500 do 1.º para o 2.º; para o próprio departamento é recusada
+ tdp_valor 
+-----------
+    500.00
+(1 row)
+
+psql:database/tests/36_extractos_departamentos.sql:25: ERROR:  new row for relation "transferencia_departamento" violates check constraint "chk_tdp_diferentes"
+3. adiantamento de 300 ao Paulo pelo 2.º; devolve 100 na prestação de contas; devolver mais do que recebeu é recusado
+ adt_valor 
+-----------
+    300.00
+(1 row)
+
+ adt_valor_devolvido 
+---------------------
+              100.00
+(1 row)
+
+psql:database/tests/36_extractos_departamentos.sql:31: ERROR:  new row for relation "adiantamento" violates check constraint "chk_adt_devolvido"
+4. extracto de Novembro de 2026: transferências e adiantamentos nas colunas; o saldo final fecha
+ n | percentagem | transf_saida | transf_entrada | adiantamentos | fecha 
+---+-------------+--------------+----------------+---------------+-------
+ 1 |       60.00 |      -500.00 |           0.00 |          0.00 | t
+ 2 |       40.00 |         0.00 |         500.00 |       -200.00 | t
+(2 rows)
+
+   no mês seguinte a transferência e o adiantamento já estão no saldo inicial
+ n | transf_saida | transf_entrada | adiantamentos 
+---+--------------+----------------+---------------
+ 1 |         0.00 |           0.00 |          0.00
+ 2 |         0.00 |           0.00 |          0.00
+(2 rows)
+
+5. extracto por fundo do ano: o saldo final fecha em cada fundo
+ ha_fundos | fecha 
+-----------+-------
+ t         | t
+(1 row)
+
+6. o tesoureiro regista transferências; o secretário da ES não vê os adiantamentos
+ adiantamentos_que_ve 
+----------------------
+                    1
+(1 row)
+
+ adiantamentos_que_ve 
+----------------------
+                    0
+(1 row)
+

@@ -379,6 +379,25 @@ paths['/v1/tesouraria/contribuicoes-sobrepostas'] = {'get': op(
                 {'name': 'data', 'in': 'query', 'required': True, 'schema': D}],
     responses=resp('200', {'type': 'array', 'items': obj(['transacaoId', 'dataHora', 'quem', 'dizimo'], transacaoId=I, dataHora=DT,
                                                              quem=STR, dizimo=MONEY, recibo={**STR, 'nullable': True})}))}
+PERIODO = [{'name': 'igrejaId', 'in': 'query', 'required': True, 'schema': I}, {'name': 'inicio', 'in': 'query', 'required': True, 'schema': D},
+           {'name': 'fim', 'in': 'query', 'required': True, 'schema': D}]
+M_ = MONEY
+paths['/v1/tesouraria/extracto-departamentos'] = {'get': op(
+    'Extracto por departamento num período', TES, 'tesouraria.orcamento.ler', operationId='extractoDepartamentos',
+    **{'x-funcao-bd': 'tesouraria.fn_extracto_departamentos'},
+    description='Mês, trimestre, semestre ou ano (até um ano): por departamento a % do ano, o saldo inicial, a doação directa e a '
+                'distribuída, as despesas, as transferências, os estornos, os adiantamentos e o saldo final.',
+    parameters=PERIODO,
+    responses=resp('200', {'type': 'array', 'items': obj(['departamentoIgrejaId', 'departamento', 'saldoInicial', 'saldoFinal'],
+        departamentoIgrejaId=I, departamento=STR, percentagem={**M_, 'nullable': True}, saldoInicial=M_, doacaoDirecta=M_,
+        doacaoDistribuida=M_, despesas=M_, transfSaida=M_, transfEntrada=M_, estornos=M_, adiantamentos=M_, saldoFinal=M_)}))}
+paths['/v1/tesouraria/extracto-fundos'] = {'get': op(
+    'Extracto por fundo num período', TES, 'tesouraria.saldo_diario_fundo.ler', operationId='extractoFundos',
+    **{'x-funcao-bd': 'tesouraria.fn_extracto_fundos'},
+    description='Por fundo: saldo inicial, entradas, saídas e saldo final no período (até um ano).',
+    parameters=PERIODO,
+    responses=resp('200', {'type': 'array', 'items': obj(['fundoId', 'fundo', 'saldoInicial', 'saldoFinal'],
+        fundoId=I, fundo=STR, tipo=STR, saldoInicial=M_, entradas=M_, saidas=M_, saldoFinal=M_)}))}
 paths['/v1/tesouraria/alvo-sugerido'] = {'get': op(
     'Meta sugerida para o ano (+5%)', TES, 'tesouraria.alvo.ler', operationId='alvoSugerido', **{'x-funcao-bd': 'tesouraria.fn_alvo_sugerido'},
     description='O alvo do ano anterior do mesmo fundo + 5%; null se não houver. Quem tem a permissão pode ajustar ao gravar o alvo.',

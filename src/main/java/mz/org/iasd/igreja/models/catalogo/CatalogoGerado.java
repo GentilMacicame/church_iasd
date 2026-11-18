@@ -58,6 +58,7 @@ import mz.org.iasd.igreja.models.secretaria.ReuniaoPonto;
 import mz.org.iasd.igreja.models.secretaria.ReuniaoPresenca;
 import mz.org.iasd.igreja.models.secretaria.TransferenciaMembro;
 import mz.org.iasd.igreja.models.secretaria.Voto;
+import mz.org.iasd.igreja.models.tesouraria.Adiantamento;
 import mz.org.iasd.igreja.models.tesouraria.Alvo;
 import mz.org.iasd.igreja.models.tesouraria.CalendarioOferta;
 import mz.org.iasd.igreja.models.tesouraria.Categoria;
@@ -74,6 +75,7 @@ import mz.org.iasd.igreja.models.tesouraria.Orcamento;
 import mz.org.iasd.igreja.models.tesouraria.OrcamentoLinha;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoBancario;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoMpesa;
+import mz.org.iasd.igreja.models.tesouraria.PercentagemDepartamento;
 import mz.org.iasd.igreja.models.tesouraria.QuotaReavivamento;
 import mz.org.iasd.igreja.models.tesouraria.Recibo;
 import mz.org.iasd.igreja.models.tesouraria.Remessa;
@@ -82,6 +84,7 @@ import mz.org.iasd.igreja.models.tesouraria.SaldoDiarioConta;
 import mz.org.iasd.igreja.models.tesouraria.SaldoDiarioFundo;
 import mz.org.iasd.igreja.models.tesouraria.Transacao;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;
+import mz.org.iasd.igreja.models.tesouraria.TransferenciaDepartamento;
 import mz.org.iasd.igreja.models.tipos.CanalNotificacao;
 import mz.org.iasd.igreja.models.tipos.EsDivisao;
 import mz.org.iasd.igreja.models.tipos.Escolaridade;
@@ -231,6 +234,9 @@ public final class CatalogoGerado {
             Categoria.class,
             Alvo.class,
             QuotaReavivamento.class,
+            PercentagemDepartamento.class,
+            TransferenciaDepartamento.class,
+            Adiantamento.class,
             Orcamento.class,
             OrcamentoLinha.class,
             Despesa.class,

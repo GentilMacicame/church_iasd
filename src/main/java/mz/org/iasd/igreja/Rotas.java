@@ -376,6 +376,15 @@ public final class Rotas {
         /** QuotasReavivamentoController · rotas-padrão (V49: quota do reavivamento ajustada à mão) */
         public static final String QUOTAS_REAVIVAMENTO = "/v1/tesouraria/quotas-reavivamento";
 
+        /** PercentagensDepartamentoController · rotas-padrão (V50: parte de cada departamento no ano) */
+        public static final String PERCENTAGENS_DEPARTAMENTO = "/v1/tesouraria/percentagens-departamento";
+
+        /** TransferenciasDepartamentoController · rotas-padrão (V50: saldo passado entre departamentos) */
+        public static final String TRANSFERENCIAS_DEPARTAMENTO = "/v1/tesouraria/transferencias-departamento";
+
+        /** AdiantamentosController · rotas-padrão (V50: dinheiro adiantado a um responsável do departamento) */
+        public static final String ADIANTAMENTOS = "/v1/tesouraria/adiantamentos";
+
         /** CalendarioOfertasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String CALENDARIO_OFERTAS = "/v1/tesouraria/calendario-ofertas";
 
@@ -483,6 +492,12 @@ public final class Rotas {
 
         /** GET /v1/tesouraria/reavivamento-pessoas?ano=  (V49: quota, contribuído e falta de cada pessoa) */
         public static final String REAVIVAMENTO_PESSOAS = "reavivamento-pessoas";
+
+        /** GET /v1/tesouraria/extracto-departamentos?igrejaId=&amp;inicio=&amp;fim=  (V50) */
+        public static final String EXTRACTO_DEPARTAMENTOS = "extracto-departamentos";
+
+        /** GET /v1/tesouraria/extracto-fundos?igrejaId=&amp;inicio=&amp;fim=  (V50) */
+        public static final String EXTRACTO_FUNDOS = "extracto-fundos";
 
         /** GET /v1/tesouraria/fundo-mensal?ano=&amp;fundoId=  (V36: arrecadado por fundo e mês) */
         public static final String FUNDO_MENSAL = "fundo-mensal";

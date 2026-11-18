@@ -11,7 +11,7 @@ import {
   Bell, Building2, Check, Network, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, Flame as PhFlame, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, Flame as PhFlame, Table as PhTable, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -86,6 +86,7 @@ const NAV: GrupoNav[] = [
       { para: '/tesouraria/orcamento', rotulo: 'Orçamento anual', icone: PhTarget, permissao: 'tesouraria.orcamento.ler', fim: true },
       { para: '/tesouraria/reconciliacao', rotulo: 'Reconciliação', icone: PhListChecks, permissao: 'tesouraria.extrato_linha.ler', fim: true },
       { para: '/tesouraria/contas', rotulo: t.tesouraria.contas, icone: PhWallet, permissao: 'tesouraria.conta_financeira.ler', fim: true },
+      { para: '/tesouraria/extractos', rotulo: 'Extractos', icone: PhTable, permissao: 'tesouraria.orcamento.ler', fim: true },
       { para: '/tesouraria/reavivamento', rotulo: 'Reavivamento', icone: PhFlame, permissao: 'tesouraria.quota_reavivamento.ler', fim: true },
       { para: '/tesouraria/fundos', rotulo: 'Fundos e ofertas', icone: PhHandCoins, permissao: 'tesouraria.fundo.ler', fim: true },
     ],
@@ -262,6 +263,7 @@ function Caminho() {
     if (pathname === '/tesouraria/contas') partes.push({ rotulo: t.tesouraria.contas })
     if (pathname === '/tesouraria/fundos') partes.push({ rotulo: 'Fundos e ofertas' })
     if (pathname === '/tesouraria/reavivamento') partes.push({ rotulo: 'Reavivamento' })
+    if (pathname === '/tesouraria/extractos') partes.push({ rotulo: 'Extractos' })
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
     if (pathname === '/tesouraria/orcamento') partes.push({ rotulo: 'Orçamento anual' })
     if (pathname === '/tesouraria/reconciliacao') partes.push({ rotulo: t.tesouraria.contas, para: '/tesouraria/contas' }, { rotulo: 'Reconciliação' })

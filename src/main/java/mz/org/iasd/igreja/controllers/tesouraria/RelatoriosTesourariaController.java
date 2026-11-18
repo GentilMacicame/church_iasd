@@ -15,6 +15,7 @@ import mz.org.iasd.igreja.controllers.base.Parametros;
 import mz.org.iasd.igreja.infraestrutura.erros.ApiException;
 import mz.org.iasd.igreja.repositories.base.Relatorio;
 import mz.org.iasd.igreja.repositories.tesouraria.ContribuicoesRepository;
+import mz.org.iasd.igreja.repositories.tesouraria.ExtractosRepository;
 import mz.org.iasd.igreja.Rotas;
 
 /**
@@ -146,6 +147,37 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     @Path(Rotas.Tesouraria.FUNDO_MENSAL)
     public Response fundoMensal() throws SQLException {
         return responder(FUNDO_MENSAL);
+    }
+
+    /** V50: extracto por departamento num período (mês, trimestre, semestre ou ano). */
+    @GET
+    @Path(Rotas.Tesouraria.EXTRACTO_DEPARTAMENTOS)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response extractoDepartamentos(@QueryParam("igrejaId") String igrejaId, @QueryParam("inicio") String inicio,
+                                          @QueryParam("fim") String fim) throws SQLException {
+        java.time.LocalDate de = Parametros.data(inicio, "inicio", true), ate = Parametros.data(fim, "fim", true);
+        periodoValido(de, ate);
+        return Response.ok(ExtractosRepository.departamentos(unidade.ligacao(), Parametros.inteiro(igrejaId, "igrejaId", true), de, ate)).build();
+    }
+
+    /** V50: extracto por fundo num período. */
+    @GET
+    @Path(Rotas.Tesouraria.EXTRACTO_FUNDOS)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response extractoFundos(@QueryParam("igrejaId") String igrejaId, @QueryParam("inicio") String inicio,
+                                   @QueryParam("fim") String fim) throws SQLException {
+        java.time.LocalDate de = Parametros.data(inicio, "inicio", true), ate = Parametros.data(fim, "fim", true);
+        periodoValido(de, ate);
+        return Response.ok(ExtractosRepository.fundos(unidade.ligacao(), Parametros.inteiro(igrejaId, "igrejaId", true), de, ate)).build();
+    }
+
+    private static void periodoValido(java.time.LocalDate de, java.time.LocalDate ate) {
+        if (ate.isBefore(de)) {
+            throw ApiException.pedidoInvalido("O fim não pode ser antes do início", "fim");
+        }
+        if (de.plusYears(1).isBefore(ate)) {
+            throw ApiException.pedidoInvalido("Escolha um período até um ano", "fim");
+        }
     }
 
     /** V36: a meta sugerida para o ano (alvo do ano anterior + 5%); quem tem a permissão pode ajustar ao gravar o alvo. */

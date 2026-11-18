@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 545 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 565 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -420,6 +420,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 
 | Método | Caminho | Classe · método | Permissão |
 | --- | --- | --- | --- |
+| GET | `/v1/tesouraria/adiantamentos` | AdiantamentosController · listar | `tesouraria.adiantamento.ler` |
+| POST | `/v1/tesouraria/adiantamentos` | AdiantamentosController · criar | `tesouraria.adiantamento.criar` |
+| GET | `/v1/tesouraria/adiantamentos/{id}` | AdiantamentosController · obter | `tesouraria.adiantamento.ler` |
+| PATCH | `/v1/tesouraria/adiantamentos/{id}` | AdiantamentosController · alterar | `tesouraria.adiantamento.alterar` |
+| POST | `/v1/tesouraria/adiantamentos/{id}/reactivar` | AdiantamentosController · reactivar | `tesouraria.adiantamento.terminar` |
+| POST | `/v1/tesouraria/adiantamentos/{id}/terminar` | AdiantamentosController · terminar | `tesouraria.adiantamento.terminar` |
 | GET | `/v1/tesouraria/alvo-sugerido` | RelatoriosTesourariaController · alvoSugerido | `tesouraria.alvo.ler` |
 | GET | `/v1/tesouraria/alvos` | AlvosController · listar | `tesouraria.alvo.ler` |
 | POST | `/v1/tesouraria/alvos` | AlvosController · criar | `tesouraria.alvo.criar` |
@@ -478,6 +484,8 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/documentos/{id}/terminar` | DocumentosController · terminar | `tesouraria.documento.terminar` |
 | GET | `/v1/tesouraria/execucao-orcamento` | RelatoriosTesourariaController · execucaoOrcamento | `tesouraria.orcamento.ler` |
 | GET | `/v1/tesouraria/extracto-anual` | RelatoriosTesourariaController · extractoAnual | `tesouraria.transacao.ler (ou o próprio membro)` |
+| GET | `/v1/tesouraria/extracto-departamentos` | RelatoriosTesourariaController · extractoDepartamentos | `tesouraria.orcamento.ler` |
+| GET | `/v1/tesouraria/extracto-fundos` | RelatoriosTesourariaController · extractoFundos | `tesouraria.saldo_diario_fundo.ler` |
 | GET | `/v1/tesouraria/extractos` | ExtractosController · listar | `tesouraria.extrato_linha.ler` |
 | POST | `/v1/tesouraria/extractos` | ExtractosController · criar | `tesouraria.extrato_linha.criar` |
 | GET | `/v1/tesouraria/extractos-por-reconciliar` | RelatoriosTesourariaController · extractosPorReconciliar | `tesouraria.extrato_linha.ler` |
@@ -546,6 +554,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/tesouraria/participantes-contagem/{id}` | ParticipantesContagemController · alterar | `tesouraria.contagem_participante.alterar` |
 | POST | `/v1/tesouraria/participantes-contagem/{id}/reactivar` | ParticipantesContagemController · reactivar | `tesouraria.contagem_participante.terminar` |
 | POST | `/v1/tesouraria/participantes-contagem/{id}/terminar` | ParticipantesContagemController · terminar | `tesouraria.contagem_participante.terminar` |
+| GET | `/v1/tesouraria/percentagens-departamento` | PercentagensDepartamentoController · listar | `tesouraria.percentagem_departamento.ler` |
+| POST | `/v1/tesouraria/percentagens-departamento` | PercentagensDepartamentoController · criar | `tesouraria.percentagem_departamento.criar` |
+| GET | `/v1/tesouraria/percentagens-departamento/{id}` | PercentagensDepartamentoController · obter | `tesouraria.percentagem_departamento.ler` |
+| PATCH | `/v1/tesouraria/percentagens-departamento/{id}` | PercentagensDepartamentoController · alterar | `tesouraria.percentagem_departamento.alterar` |
+| POST | `/v1/tesouraria/percentagens-departamento/{id}/reactivar` | PercentagensDepartamentoController · reactivar | `tesouraria.percentagem_departamento.terminar` |
+| POST | `/v1/tesouraria/percentagens-departamento/{id}/terminar` | PercentagensDepartamentoController · terminar | `tesouraria.percentagem_departamento.terminar` |
 | GET | `/v1/tesouraria/progresso-alvos` | RelatoriosTesourariaController · progressoAlvos | `tesouraria.alvo.ler` |
 | GET | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · listar | `tesouraria.quota_reavivamento.ler` |
 | POST | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · criar | `tesouraria.quota_reavivamento.criar` |
@@ -587,4 +601,10 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/transacoes/{id}/reactivar` | TransacoesController · reactivar | `tesouraria.transacao.terminar` |
 | POST | `/v1/tesouraria/transacoes/{id}/recibo` | TransacoesController · recibo | `tesouraria.recibo.criar` |
 | POST | `/v1/tesouraria/transacoes/{id}/terminar` | TransacoesController · terminar | `tesouraria.transacao.terminar` |
+| GET | `/v1/tesouraria/transferencias-departamento` | TransferenciasDepartamentoController · listar | `tesouraria.transferencia_departamento.ler` |
+| POST | `/v1/tesouraria/transferencias-departamento` | TransferenciasDepartamentoController · criar | `tesouraria.transferencia_departamento.criar` |
+| GET | `/v1/tesouraria/transferencias-departamento/{id}` | TransferenciasDepartamentoController · obter | `tesouraria.transferencia_departamento.ler` |
+| PATCH | `/v1/tesouraria/transferencias-departamento/{id}` | TransferenciasDepartamentoController · alterar | `tesouraria.transferencia_departamento.alterar` |
+| POST | `/v1/tesouraria/transferencias-departamento/{id}/reactivar` | TransferenciasDepartamentoController · reactivar | `tesouraria.transferencia_departamento.terminar` |
+| POST | `/v1/tesouraria/transferencias-departamento/{id}/terminar` | TransferenciasDepartamentoController · terminar | `tesouraria.transferencia_departamento.terminar` |
 

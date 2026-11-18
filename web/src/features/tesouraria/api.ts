@@ -877,3 +877,78 @@ export function useQuotasReavivamentoMut() {
   })
   return { ajustar, retirar }
 }
+
+/** V50 · Extractos num período (mês, trimestre, semestre ou ano). */
+export interface LinhaExtractoDepartamento {
+  departamentoIgrejaId: number; departamento: string; percentagem: string | null; saldoInicial: string; doacaoDirecta: string
+  doacaoDistribuida: string; despesas: string; transfSaida: string; transfEntrada: string; estornos: string; adiantamentos: string; saldoFinal: string
+}
+export interface LinhaExtractoFundo { fundoId: number; fundo: string; tipo: string; saldoInicial: string; entradas: string; saidas: string; saldoFinal: string }
+export interface PercentagemDepartamento { id: number; departamentoIgrejaId: number; ano: number; percentagem: string; endDate?: string | null }
+export interface Adiantamento {
+  id: number; departamentoIgrejaId: number; membroId: number; data: string; valor: string; descricao: string
+  dataPrestacao: string | null; valorDevolvido: string; endDate?: string | null
+}
+
+export function useExtractoDepartamentos(inicio: string, fim: string) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'extracto-departamentos', inicio, fim],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/extracto-departamentos', { params: { query: { igrejaId: igreja.id, inicio, fim } } }))) as unknown as LinhaExtractoDepartamento[],
+  })
+}
+
+export function useExtractoFundos(inicio: string, fim: string) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'extracto-fundos', inicio, fim],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/extracto-fundos', { params: { query: { igrejaId: igreja.id, inicio, fim } } }))) as unknown as LinhaExtractoFundo[],
+  })
+}
+
+export function usePercentagensDepartamento(ano: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'percentagens-departamento', ano],
+    queryFn: async () => ((await dados(api.GET('/v1/tesouraria/percentagens-departamento' as never, { params: { query: { igrejaId: igreja.id, limite: 200 } } } as never))) as { dados: PercentagemDepartamento[] })
+      .dados.filter((p) => !p.endDate && p.ano === ano),
+  })
+}
+
+export function useAdiantamentos() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'adiantamentos'],
+    queryFn: async () => ((await dados(api.GET('/v1/tesouraria/adiantamentos' as never, { params: { query: { igrejaId: igreja.id, limite: 200, ordem: '-data' } } } as never))) as { dados: Adiantamento[] })
+      .dados.filter((a) => !a.endDate),
+  })
+}
+
+/** Percentagens, transferências e adiantamentos dos departamentos (V50). */
+export function useDepartamentosTesourariaMut() {
+  const invalidar = useInvalidar()
+  const igreja = useIgreja()
+  const chave = () => ({ header: { 'Idempotency-Key': crypto.randomUUID() } })
+  const gravarPercentagem = useMutation({
+    mutationFn: ({ id, departamentoIgrejaId, ano, percentagem }: { id?: number; departamentoIgrejaId: number; ano: number; percentagem: string }) => id
+      ? dados(api.PATCH('/v1/tesouraria/percentagens-departamento/{id}' as never, { params: { path: { id } }, body: { percentagem } } as never))
+      : dados(api.POST('/v1/tesouraria/percentagens-departamento' as never, { body: { igrejaId: igreja.id, departamentoIgrejaId, ano, percentagem }, params: chave() } as never)),
+    onSuccess: () => invalidar(),
+  })
+  const transferir = useMutation({
+    mutationFn: (c: { origemDepartamentoIgrejaId: number; destinoDepartamentoIgrejaId: number; data: string; valor: string; descricao?: string }) =>
+      dados(api.POST('/v1/tesouraria/transferencias-departamento' as never, { body: { igrejaId: igreja.id, ...c }, params: chave() } as never)),
+    onSuccess: () => invalidar(),
+  })
+  const adiantar = useMutation({
+    mutationFn: (c: { departamentoIgrejaId: number; membroId: number; data: string; valor: string; descricao: string }) =>
+      dados(api.POST('/v1/tesouraria/adiantamentos' as never, { body: { igrejaId: igreja.id, ...c }, params: chave() } as never)),
+    onSuccess: () => invalidar(),
+  })
+  const prestarContas = useMutation({
+    mutationFn: ({ id, dataPrestacao, valorDevolvido }: { id: number; dataPrestacao: string; valorDevolvido: string }) =>
+      dados(api.PATCH('/v1/tesouraria/adiantamentos/{id}' as never, { params: { path: { id } }, body: { dataPrestacao, valorDevolvido } } as never)),
+    onSuccess: () => invalidar(),
+  })
+  return { gravarPercentagem, transferir, adiantar, prestarContas }
+}

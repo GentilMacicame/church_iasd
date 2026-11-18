@@ -5605,6 +5605,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/adiantamentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Adiantamentos: listar
+         * @description Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)
+         */
+        get: operations["listarAdiantamento"];
+        put?: never;
+        /**
+         * Adiantamentos: criar
+         * @description Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)
+         */
+        post: operations["criarAdiantamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/adiantamentos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Adiantamentos: ler um */
+        get: operations["lerAdiantamento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Adiantamentos: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarAdiantamento"];
+        trace?: never;
+    };
+    "/v1/tesouraria/adiantamentos/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adiantamentos: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarAdiantamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/adiantamentos/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adiantamentos: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarAdiantamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/alvo-sugerido": {
         parameters: {
             query?: never;
@@ -6474,6 +6559,46 @@ export interface paths {
          * @description Lido da vista tesouraria.vw_extracto_anual.
          */
         get: operations["relVTesourariaExtractoAnual"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/extracto-departamentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Extracto por departamento num período
+         * @description Mês, trimestre, semestre ou ano (até um ano): por departamento a % do ano, o saldo inicial, a doação directa e a distribuída, as despesas, as transferências, os estornos, os adiantamentos e o saldo final.
+         */
+        get: operations["extractoDepartamentos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/extracto-fundos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Extracto por fundo num período
+         * @description Por fundo: saldo inicial, entradas, saídas e saldo final no período (até um ano).
+         */
+        get: operations["extractoFundos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7474,6 +7599,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/percentagens-departamento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Percentagens departamento: listar
+         * @description Parte de cada departamento no ano: reparte a doação distribuída (V50)
+         */
+        get: operations["listarPercentagemDepartamento"];
+        put?: never;
+        /**
+         * Percentagens departamento: criar
+         * @description Parte de cada departamento no ano: reparte a doação distribuída (V50)
+         */
+        post: operations["criarPercentagemDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/percentagens-departamento/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Percentagens departamento: ler um */
+        get: operations["lerPercentagemDepartamento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Percentagens departamento: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarPercentagemDepartamento"];
+        trace?: never;
+    };
+    "/v1/tesouraria/percentagens-departamento/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Percentagens departamento: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarPercentagemDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/percentagens-departamento/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Percentagens departamento: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarPercentagemDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/progresso-alvos": {
         parameters: {
             query?: never;
@@ -8124,6 +8334,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/transferencias-departamento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Transferencias departamento: listar
+         * @description Transferência de saldo entre departamentos da igreja (V50)
+         */
+        get: operations["listarTransferenciaDepartamento"];
+        put?: never;
+        /**
+         * Transferencias departamento: criar
+         * @description Transferência de saldo entre departamentos da igreja (V50)
+         */
+        post: operations["criarTransferenciaDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/transferencias-departamento/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Transferencias departamento: ler um */
+        get: operations["lerTransferenciaDepartamento"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Transferencias departamento: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarTransferenciaDepartamento"];
+        trace?: never;
+    };
+    "/v1/tesouraria/transferencias-departamento/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transferencias departamento: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarTransferenciaDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/transferencias-departamento/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transferencias departamento: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarTransferenciaDepartamento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8217,6 +8512,50 @@ export interface components {
             membroId?: number;
             /** @description Ex.: coordenação, logística, programa, finanças */
             funcao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50) */
+        Adiantamento: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado do departamento
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja_departamento
+             */
+            departamentoIgrejaId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Quem recebeu
+             */
+            membroId?: number;
+            /** Format: date */
+            data?: string;
+            /** @example 650.00 */
+            valor?: string;
+            descricao?: string;
+            /**
+             * Format: date
+             * @description Quando prestou contas
+             */
+            dataPrestacao?: string;
+            /**
+             * @description O que sobrou e voltou ao departamento
+             * @example 650.00
+             */
+            valorDevolvido?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -9852,6 +10191,32 @@ export interface components {
             readonly criadoPor?: number | null;
             readonly modificadoPor?: number | null;
         };
+        /** @description Parte de cada departamento no ano: reparte a doação distribuída (V50) */
+        PercentagemDepartamento: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado do departamento
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja_departamento
+             */
+            departamentoIgrejaId?: number;
+            ano?: number;
+            percentagem?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Perfis de acesso (Admin, Secretário, Tesoureiro, ...) */
         Perfil: {
             /** Format: int32 */
@@ -10733,6 +11098,40 @@ export interface components {
             aceiteEm?: string;
             observacoes?: string;
             estado?: components["schemas"]["EnumEstadoTransferencia"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Transferência de saldo entre departamentos da igreja (V50) */
+        TransferenciaDepartamento: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado do departamento de origem
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja_departamento
+             */
+            origemDepartamentoIgrejaId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja_departamento
+             */
+            destinoDepartamentoIgrejaId?: number;
+            /** Format: date */
+            data?: string;
+            /** @example 650.00 */
+            valor?: string;
+            descricao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -22856,6 +23255,197 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarAdiantamento: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                departamentoIgrejaId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["Adiantamento"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarAdiantamento: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["Adiantamento"], "igrejaId" | "departamentoIgrejaId" | "membroId" | "data" | "valor" | "descricao">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adiantamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerAdiantamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adiantamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarAdiantamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Adiantamento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adiantamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarAdiantamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adiantamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarAdiantamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Adiantamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     alvoSugerido: {
         parameters: {
             query: {
@@ -24693,6 +25283,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    extractoDepartamentos: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                inicio: string;
+                fim: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        departamentoIgrejaId: number;
+                        departamento: string;
+                        /** @example 650.00 */
+                        percentagem?: string | null;
+                        /** @example 650.00 */
+                        saldoInicial: string;
+                        /** @example 650.00 */
+                        doacaoDirecta?: string;
+                        /** @example 650.00 */
+                        doacaoDistribuida?: string;
+                        /** @example 650.00 */
+                        despesas?: string;
+                        /** @example 650.00 */
+                        transfSaida?: string;
+                        /** @example 650.00 */
+                        transfEntrada?: string;
+                        /** @example 650.00 */
+                        estornos?: string;
+                        /** @example 650.00 */
+                        adiantamentos?: string;
+                        /** @example 650.00 */
+                        saldoFinal: string;
+                    }[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    extractoFundos: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                inicio: string;
+                fim: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        fundoId: number;
+                        fundo: string;
+                        tipo?: string;
+                        /** @example 650.00 */
+                        saldoInicial: string;
+                        /** @example 650.00 */
+                        entradas?: string;
+                        /** @example 650.00 */
+                        saidas?: string;
+                        /** @example 650.00 */
+                        saldoFinal: string;
+                    }[];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -26852,6 +27537,194 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    listarPercentagemDepartamento: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                departamentoIgrejaId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["PercentagemDepartamento"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarPercentagemDepartamento: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["PercentagemDepartamento"], "igrejaId" | "departamentoIgrejaId" | "ano" | "percentagem">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PercentagemDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerPercentagemDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PercentagemDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarPercentagemDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PercentagemDepartamento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PercentagemDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarPercentagemDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PercentagemDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarPercentagemDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PercentagemDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     relVTesourariaProgressoAlvos: {
         parameters: {
             query?: {
@@ -28164,6 +29037,197 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Transacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarTransferenciaDepartamento: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                origemDepartamentoIgrejaId?: number;
+                destinoDepartamentoIgrejaId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+                desde?: string;
+                ate?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["TransferenciaDepartamento"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarTransferenciaDepartamento: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["TransferenciaDepartamento"], "igrejaId" | "origemDepartamentoIgrejaId" | "destinoDepartamentoIgrejaId" | "data" | "valor">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferenciaDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerTransferenciaDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferenciaDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarTransferenciaDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferenciaDepartamento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferenciaDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarTransferenciaDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferenciaDepartamento"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarTransferenciaDepartamento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferenciaDepartamento"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

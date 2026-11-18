@@ -303,6 +303,8 @@ src/
   ao cancelar), orçamento executado, mês a mês e a comparação por departamento.
 - **Reavivamento** (Tesouraria › Reavivamento; V49): o alvo do ano repartido por pessoa (adultos e crianças), quota
   ajustável, contribuído e falta; na entrada, o campo Reavivamento mostra a quota do membro.
+- **Extractos** (Tesouraria › Extractos; V50): por departamento e por fundo, no mês, trimestre, semestre ou ano;
+  percentagens dos departamentos, transferências entre eles e adiantamentos com prestação de contas.
 
 ## Por fazer (próximas iterações)
 
