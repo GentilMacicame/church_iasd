@@ -17,10 +17,10 @@ import { centimos, data, deCentimos, dinheiro, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { imprimirComo } from '@/lib/documentos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useContribuicoesDoMes, useEntidades, useFundos, useRemessas, useRemessasDevidas, useTransacao } from './api'
+import { FUNDOS_OCULTOS, useContribuicoesDoMes, useEntidades, useFundos, useRemessas, useRemessasDevidas, useTransacao } from './api'
 import { parteDoFundo } from './comum'
 import { nomeMes } from './PaginaRemessas'
-import type { RemessaComLinhas } from './api'
+import type { Devida, RemessaComLinhas } from './api'
 
 /** Um depósito do mês na conta da Missão, com o talão (a referência da saída). */
 function Deposito({ remessa, complementar }: { remessa: RemessaComLinhas; complementar: boolean }) {
@@ -62,8 +62,20 @@ export default function PaginaRelatorioMensal() {
   const basicos = useMembrosBasicos()
   const nomes = useMemo(() => new Map((basicos.data ?? []).map((x) => [x.id, `${x.nome} ${x.apelido}`])), [basicos.data])
 
-  const resumo = (devidas.data ?? []).filter((d) => d.ano === ano && d.mes === m)
-  const idsMissao = new Set(resumo.map((d) => d.fundoId))
+  // as ofertas da Escola Sabatina (e as missionárias) contam dentro da oferta combinada: uma só linha "Ofertas"
+  const tipoDe = (id: number) => fundos.data?.find((f) => f.id === id)?.tipo ?? ''
+  const brutos = (devidas.data ?? []).filter((d) => d.ano === ano && d.mes === m)
+  const destinoOfertas = brutos.find((d) => tipoDe(d.fundoId) === 'OFERTA_COMBINADA')?.fundoId
+  const juntar = (fid: number) => (destinoOfertas && FUNDOS_OCULTOS.includes(tipoDe(fid)) ? destinoOfertas : fid)
+  const resumo = brutos.reduce<Devida[]>((acc, d) => {
+    const id = juntar(d.fundoId)
+    const ja = acc.find((x) => x.fundoId === id)
+    if (!ja) { acc.push({ ...d, fundoId: id }); return acc }
+    for (const k of ['recebido', 'devido', 'remetido', 'emFalta', 'pagoDirecto'] as const) ja[k] = deCentimos(centimos(ja[k]) + centimos(d[k]))
+    ja.fundoNome = 'Ofertas'
+    return acc
+  }, [])
+  const idsMissao = new Set(brutos.map((d) => d.fundoId))
   const colunas = resumo.map((d) => ({ id: d.fundoId, nome: d.fundoNome }))
   const depositos = (remessas.data ?? []).filter((r) => !r.endDate && r.ano === ano && r.mes === m && r.estado !== 'PREPARADA')
     .sort((a, b) => a.id - b.id)
@@ -75,12 +87,12 @@ export default function PaginaRelatorioMensal() {
     for (const c of contrib.data ?? []) {
       if (!idsMissao.has(c.fundoId)) continue
       const l = porTra.get(c.id) ?? { id: c.id, membroId: c.membroId, data: c.dataHora, recibo: c.numero ? `${c.numero}/${c.ano}` : null, naMissao: !!c.pagoNaMissao, referencia: c.referencia, estorno: c.estorno, valores: new Map() }
-      l.valores.set(c.fundoId, (l.valores.get(c.fundoId) ?? 0) + centimos(c.valor))
+      l.valores.set(juntar(c.fundoId), (l.valores.get(juntar(c.fundoId)) ?? 0) + centimos(c.valor))
       porTra.set(c.id, l)
     }
     return [...porTra.values()].sort((a, b) => a.data.localeCompare(b.data) || a.id - b.id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contrib.data, devidas.data, ano, m])
+  }, [contrib.data, devidas.data, fundos.data, ano, m])
   const somaNomeados = (fid: number) => linhas.reduce((s, l) => s + (l.valores.get(fid) ?? 0), 0)
   const anonimas = colunas.map((c) => centimos(resumo.find((d) => d.fundoId === c.id)?.recebido ?? '0') - somaNomeados(c.id))
   const temAnonimas = anonimas.some((v) => v !== 0)
@@ -123,20 +135,19 @@ export default function PaginaRelatorioMensal() {
 
             <Cartao titulo="Resumo por fundo" descricao={`O que cabe a ${entidadeNome} de ${nomeMes(ano, m)}`} semMargem className="print:border-0 print:shadow-none">
               <Tabela>
-                <thead><tr><th className="sm:pl-6">Fundo</th><th className="num">Entrou</th><th className="num">Cabe à Missão</th><th className="num">Pago na Missão</th><th className="num">Depositado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
+                <thead><tr><th className="sm:pl-6">Fundo</th><th className="num">Entrou</th><th className="num">Pago na Missão</th><th className="num">Depositado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
                 <tbody>
                   {resumo.map((d) => (
                     <tr key={d.fundoId}>
                       <td className="sm:pl-6"><span className="font-medium">{d.fundoNome}</span><span className="block text-xs text-muted-foreground">{parteDoFundo(fundos.data?.find((f) => f.id === d.fundoId) ?? {})}</span></td>
                       <td className="num"><Dinheiro valor={d.recebido} /></td>
-                      <td className="num font-medium"><Dinheiro valor={d.devido} /></td>
                       <td className="num text-muted-foreground"><Dinheiro valor={d.pagoDirecto} /></td>
                       <td className="num text-muted-foreground"><Dinheiro valor={d.remetido} /></td>
                       <td className={cn('num font-medium sm:pr-6', centimos(d.emFalta) !== 0 && (centimos(d.emFalta) < 0 ? 'text-info-text' : 'text-warning-text'))}><Dinheiro valor={d.emFalta} /></td>
                     </tr>
                   ))}
                   <tr className="bg-muted/30 font-semibold">
-                    <td className="sm:pl-6">Total</td><td className="num"><Dinheiro valor={soma('recebido')} /></td><td className="num"><Dinheiro valor={soma('devido')} /></td>
+                    <td className="sm:pl-6">Total</td><td className="num"><Dinheiro valor={soma('recebido')} /></td>
                     <td className="num"><Dinheiro valor={soma('pagoDirecto')} /></td><td className="num"><Dinheiro valor={soma('remetido')} /></td><td className="num sm:pr-6"><Dinheiro valor={soma('emFalta')} /></td>
                   </tr>
                 </tbody>

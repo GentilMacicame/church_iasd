@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CircleCheck, ClipboardList, Pencil, Printer, Plus, Save, Tags, X } from 'lucide-react'
+import { CircleCheck, ClipboardList, Pencil, Printer, Plus, Save, Tags, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -280,35 +280,42 @@ function DialogoCategorias({ aoFechar }: { aoFechar: () => void }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Categorias</DialogTitle>
-          <DialogDescription>Receitas e despesas do orçamento e dos movimentos.</DialogDescription>
+          <DialogDescription className="sr-only">Receitas e despesas</DialogDescription>
         </DialogHeader>
         <Segmentos rotulo="Tipo" valor={tipo} aoMudar={setTipo} className="justify-self-start"
           opcoes={[{ valor: 'RECEITA', rotulo: 'Receitas', contagem: todas.filter((c) => c.tipo === 'RECEITA').length }, { valor: 'DESPESA', rotulo: 'Despesas', contagem: todas.filter((c) => c.tipo === 'DESPESA').length }] as const} />
-        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); registar() }}>
-          <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder={tipo === 'RECEITA' ? 'Nova receita (ex.: Aluguer do salão)' : 'Nova despesa (ex.: Limpeza)'} maxLength={100} className="alvo" />
-          <Button type="submit" className="alvo" disabled={!nome.trim() || criar.isPending}><Plus className="size-4" />Registar</Button>
-        </form>
-        <ul className="divide-y rounded-xl border">
-          {categorias.isPending ? <li className="p-4"><Barra className="h-6 w-full" /></li> : lista.map((c) => (
-            <li key={c.id} className="flex items-center gap-2 px-3 py-2">
-              {aEditar?.id === c.id ? (
-                <form className="flex flex-1 gap-2" onSubmit={(e) => { e.preventDefault(); if (aEditar.nome.trim()) renomear.mutate({ id: c.id, nome: aEditar.nome.trim() }, { onSuccess: () => setAEditar(null), onError: (er) => toast.error(mensagemDe(er)) }) }}>
-                  <Input autoFocus value={aEditar.nome} onChange={(e) => setAEditar({ id: c.id, nome: e.target.value })} maxLength={100} className="alvo h-8" />
-                  <Button type="submit" size="sm" disabled={renomear.isPending}>Guardar</Button>
-                </form>
-              ) : (
-                <>
-                  <span className="flex-1 text-sm">{c.nome}{c.eRemessa && <span className="ml-2 text-xs text-muted-foreground">(depósitos à Missão)</span>}</span>
-                  <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Mudar o nome de ${c.nome}`} onClick={() => setAEditar({ id: c.id, nome: c.nome })}><Pencil className="size-4" /></Button>
-                  {!c.eRemessa && (
-                    <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive-text" aria-label={`Retirar ${c.nome}`} disabled={terminar.isPending}
-                      onClick={() => terminar.mutate(c.id, { onSuccess: () => toast.success('Categoria retirada.'), onError: (e) => toast.error(mensagemDe(e)) })}><X className="size-4" /></Button>
-                  )}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-hidden rounded-xl border">
+          <ul className="max-h-[50dvh] divide-y overflow-y-auto">
+            {categorias.isPending ? <li className="p-4"><Barra className="h-6 w-full" /></li> : lista.map((c) => (
+              <li key={c.id} className="group flex min-h-11 items-center gap-2 px-3 py-1.5 transition-colors hover:bg-muted/40">
+                {aEditar?.id === c.id ? (
+                  <form className="flex flex-1 gap-2" onSubmit={(e) => { e.preventDefault(); if (aEditar.nome.trim()) renomear.mutate({ id: c.id, nome: aEditar.nome.trim() }, { onSuccess: () => setAEditar(null), onError: (er) => toast.error(mensagemDe(er)) }) }}>
+                    <Input autoFocus value={aEditar.nome} onChange={(e) => setAEditar({ id: c.id, nome: e.target.value })} maxLength={100} className="alvo h-8" />
+                    <Button type="submit" size="sm" disabled={renomear.isPending}>Guardar</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setAEditar(null)}>{t.comum.cancelar}</Button>
+                  </form>
+                ) : (
+                  <>
+                    <span className="min-w-0 flex-1 truncate text-sm">{c.nome}</span>
+                    {c.eRemessa ? <Pilula variante="secondary">Sistema</Pilula> : (
+                      <span className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                        <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Mudar o nome de ${c.nome}`} onClick={() => setAEditar({ id: c.id, nome: c.nome })}><Pencil className="size-4" /></Button>
+                        <Button type="button" variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-destructive-text" aria-label={`Retirar ${c.nome}`} disabled={terminar.isPending}
+                          onClick={() => terminar.mutate(c.id, { onSuccess: () => toast.success('Categoria retirada.'), onError: (e) => toast.error(mensagemDe(e)) })}><Trash2 className="size-4" /></Button>
+                      </span>
+                    )}
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form className="flex items-center gap-2 border-t bg-muted/30 px-3 py-2" onSubmit={(e) => { e.preventDefault(); registar() }}>
+            <Plus className="size-4 flex-none text-muted-foreground" aria-hidden />
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder={tipo === 'RECEITA' ? 'Nova receita…' : 'Nova despesa…'} maxLength={100}
+              className="alvo h-9 border-0 bg-transparent shadow-none focus-visible:ring-0" aria-label="Nome da nova categoria" />
+            <Button type="submit" size="sm" className="alvo" disabled={!nome.trim() || criar.isPending}>Registar</Button>
+          </form>
+        </div>
         <DialogFooter><Button type="button" variant="outline" className="alvo" onClick={aoFechar}>Fechar</Button></DialogFooter>
       </DialogContent>
     </Dialog>

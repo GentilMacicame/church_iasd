@@ -37,7 +37,7 @@ import { centimos, data as dataEcra, deCentimos, dinheiro, hojeIso, qtd } from '
 import { useMembrosBasicos } from '@/features/membros/api'
 import { useFamiliasResumo } from '@/features/secretaria/api'
 import { cn } from '@/lib/utils'
-import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, fundosDaIgreja, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, type Conta } from './api'
+import { CATEGORIA_POR_FUNDO, carregarComprovativo, daMissao, fundosDaIgreja, useCategorias, useContagens, useContas, useContribuicoesDoAno, useContribuicoesSobrepostas, useCriarMovimento, useFundos, useReavivamentoPessoas, type Conta } from './api'
 import { CampoComprovativo } from './Comprovativos'
 import { parteDoFundo } from './comum'
 import { CampoHora } from '@/components/comum/CampoHora'
@@ -59,11 +59,11 @@ type Valores = z.infer<typeof esquema>
 
 export const METODO_DA_CONTA: Record<string, string> = { CAIXA: 'NUMERARIO', FUNDO_MANEIO: 'NUMERARIO', MPESA: 'MPESA', EMOLA: 'EMOLA', BANCO: 'BANCO' }
 /** Os fundos de quase todos os envelopes: ficam em destaque; os outros abrem-se em "Outros fundos". */
-const PRINCIPAIS = ['DIZIMO', 'OFERTA_COMBINADA']
+const PRINCIPAIS = ['DIZIMO', 'OFERTA_COMBINADA', 'REAVIVAMENTO']
 /** Não se lançam no envelope da igreja local (vêm do relatório da Escola Sabatina); só na conta da Missão. */
 const SO_NA_MISSAO = ['ES_13_SABADO', 'OFERTA_MISSIONARIA']
 /** Os fundos das ofertas especiais: escolhem-se em cada linha de oferta especial, com a designação. */
-const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO', 'CONSTRUCAO']
+const ESPECIAIS = ['OFERTA_ESPECIAL', 'PROJECTO', 'CONSTRUCAO']
 interface Especial { fundoId: string; designacao: string; valor: string }
 const especiaisVazias = (): Especial[] => []
 const novaEspecial = (): Especial => ({ fundoId: '', designacao: '', valor: '' })
@@ -140,6 +140,9 @@ export default function PaginaEntrada() {
   const { fields } = useFieldArray({ control: form.control, name: 'linhas' })
   const linhas = form.watch('linhas')
   const membro = form.watch('membro')
+  // a quota do reavivamento do membro escolhido neste ano (V49): mostra-se por baixo do campo Reavivamento
+  const reav = useReavivamentoPessoas(Number(hojeIso().slice(0, 4)))
+  const quotaDoMembro = membro ? reav.data?.find((x) => x.membroId === Number(membro)) : undefined
   const e = form.formState.errors
   const contagensAbertas = (contagens.data ?? []).filter((c) => c.estado === 'ABERTA' && !c.endDate)
   const nomeDe = (id: number) => { const m = basicos.data?.find((x) => x.id === id); return m && `${m.nome} ${m.apelido}` }
@@ -442,12 +445,15 @@ export default function PaginaEntrada() {
           <Cartao titulo={anonimo ? '2. Valores' : '3. Valores'} descricao="Escreva só o que tem valor; o total soma-se sozinho" icone={HandCoins}
             accoes={<Button type="button" variant="ghost" size="sm" className="hidden sm:inline-flex" aria-pressed={verCategorias} onClick={() => setVerCategorias((v) => !v)}>{verCategorias ? 'Ocultar categorias' : 'Alterar categorias'}</Button>}>
             {principais.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className={cn('grid gap-4 sm:grid-cols-2', principais.length > 2 && 'lg:grid-cols-3')}>
                 {principais.map(({ i, fundo }) => (
                   <div key={fields[i].id} className="flex flex-col rounded-lg border p-4">
                     <p className="text-sm font-semibold">{fundo?.tipo === 'OFERTA_COMBINADA' ? 'Oferta' : fundo?.nome}</p>
                     <p className="mb-2 flex-1 text-xs text-muted-foreground">{fundo?.tipo === 'OFERTA_COMBINADA' ? `${fundo.nome} · ` : ''}{fundo && parteDoFundo(fundo)}</p>
                     {campoValor(i, true)}
+                    {fundo?.tipo === 'REAVIVAMENTO' && quotaDoMembro && (
+                      <p className="mt-2 text-xs text-muted-foreground">Quota {quotaDoMembro.ano}: <span className="num text-foreground">{dinheiro(quotaDoMembro.quota)}</span> · já deu <span className="num text-foreground">{dinheiro(quotaDoMembro.contribuido)}</span>{centimos(quotaDoMembro.falta) > 0 ? <> · falta <span className="num font-medium text-warning-text">{dinheiro(quotaDoMembro.falta)}</span></> : ' · em dia'}</p>
+                    )}
                     {categoria(i)}
                   </div>
                 ))}
@@ -539,8 +545,8 @@ export default function PaginaEntrada() {
       </div>
       {sessao.length > 0 && <div className="mx-auto mt-6 w-full max-w-5xl"><ListaSessao sessao={sessao} total={totalSessao} /></div>}
       {/* o total, o recibo e o botão sempre à vista no fundo do ecrã */}
-      <div className="sticky bottom-0 z-20 mx-auto mt-6 w-full max-w-5xl print:hidden">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-t-2xl border border-b-0 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
+      <div className="sticky bottom-3 z-20 mx-auto mt-6 w-full max-w-5xl print:hidden">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
           <div className="min-w-0">
             <p className="text-xs font-medium text-muted-foreground">Total{anonimo ? ' · ofertas da salva' : contribuinte ? ` · ${contribuinte}` : ''}</p>
             <p className="num text-2xl font-bold tracking-tight"><Dinheiro valor={deCentimos(total)} /></p>

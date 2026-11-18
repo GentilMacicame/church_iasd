@@ -38,6 +38,7 @@ const PaginaRemessas = pagina(() => import('@/features/tesouraria/PaginaRemessas
 const PaginaFechos = pagina(() => import('@/features/tesouraria/PaginaFechos'))
 const PaginaContas = pagina(() => import('@/features/tesouraria/PaginaContas'))
 const PaginaFundos = pagina(() => import('@/features/tesouraria/PaginaFundos'))
+const PaginaReavivamento = pagina(() => import('@/features/tesouraria/PaginaReavivamento'))
 const PaginaIgrejas = pagina(() => import('@/features/igrejas/PaginaIgrejas'))
 const PaginaAcessos = pagina(() => import('@/features/acessos/PaginaAcessos'))
 const PaginaUtilizador = pagina(() => import('@/features/acessos/PaginaUtilizador'))
@@ -176,6 +177,7 @@ export default function App() {
                   <Route path="tesouraria/fechos" element={<Exige permissao="tesouraria.fecho_periodo.ler"><PaginaFechos /></Exige>} />
                   <Route path="tesouraria/contas" element={<Exige permissao="tesouraria.conta_financeira.ler"><PaginaContas /></Exige>} />
                   <Route path="tesouraria/fundos" element={<Exige permissao="tesouraria.fundo.ler"><PaginaFundos /></Exige>} />
+                  <Route path="tesouraria/reavivamento" element={<Exige permissao="tesouraria.quota_reavivamento.ler"><PaginaReavivamento /></Exige>} />
                   <Route path="tesouraria/orcamento" element={<Exige permissao="tesouraria.orcamento.ler"><PaginaOrcamento /></Exige>} />
                   <Route path="tesouraria/reconciliacao" element={<Exige permissao="tesouraria.extrato_linha.ler"><PaginaReconciliacao /></Exige>} />
                   <Route path="tesouraria/relatorio-mensal" element={<Exige permissao="tesouraria.transacao.ler"><PaginaRelatorioMensal /></Exige>} />

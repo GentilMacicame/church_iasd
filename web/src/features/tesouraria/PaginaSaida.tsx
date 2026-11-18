@@ -155,8 +155,8 @@ export default function PaginaSaida() {
           </Cartao>
         </div>
       </div>
-      <div className="sticky bottom-0 z-20 mx-auto mt-6 w-full max-w-4xl print:hidden">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-t-2xl border border-b-0 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
+      <div className="sticky bottom-3 z-20 mx-auto mt-6 w-full max-w-4xl print:hidden">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
           <div className="min-w-0">
             <p className="text-xs font-medium text-muted-foreground">Valor a pagar</p>
             <p className="num text-2xl font-bold tracking-tight">{dinheiro(form.watch('valor') || '0')}</p>

@@ -33,7 +33,6 @@ export default function PaginaFamilias() {
   const [pesquisa, setPesquisa] = useState('')
   const [editar, setEditar] = useState<Familia | 'nova' | null>(null)
   const selId = Number(params.get('familia')) || null
-  const res = new Map((resumo.data ?? []).map((r) => [r.id, r]))
   const lista = useMemo(() => (familias.data ?? []).filter((f) => !f.endDate && (!pesquisa || normal(f.nome).includes(normal(pesquisa)))), [familias.data, pesquisa])
   const sel = (familias.data ?? []).find((f) => f.id === selId) ?? null
   const semFamilia = (membros.data ?? []).filter((m) => m.estado === 'ACTIVO' && !m.familiaId).length
@@ -47,7 +46,7 @@ export default function PaginaFamilias() {
         <div className="grid gap-6">
           <div className="grid gap-3 sm:grid-cols-3">
             <Indicador rotulo="Famílias" valor={String((familias.data ?? []).filter((f) => !f.endDate).length)} icone={Home} />
-            <Indicador rotulo="Membros activos em famílias" valor={String((resumo.data ?? []).reduce((s, r) => s + Number(r.membrosActivos), 0))} icone={Users} tom="success" />
+            <Indicador rotulo="Membros activos nas famílias" valor={String((resumo.data ?? []).reduce((s, r) => s + Number(r.membrosActivos), 0))} icone={Users} tom="success" />
             <Indicador rotulo="Membros activos sem família" valor={String(semFamilia)} icone={UserPlus} tom="warning" destaque={semFamilia > 0} />
           </div>
           <Cartao semMargem>
@@ -81,7 +80,7 @@ export default function PaginaFamilias() {
                             <span className="flex -space-x-2">
                               {da.slice(0, 4).map((m) => <Avatar key={m.id} id={m.id} nome={m.nome} apelido={m.apelido} tamanho={28} className="ring-2 ring-card" />)}
                             </span>
-                            <span className="text-sm text-muted-foreground">{res.get(f.id)?.membrosActivos ?? da.length}</span>
+                            <span className="text-sm text-muted-foreground">{da.length}</span>
                           </span>
                         </td>
                         <td className="text-right text-muted-foreground sm:pr-6"><ChevronRight className="ml-auto size-4" /></td>
@@ -98,7 +97,7 @@ export default function PaginaFamilias() {
         <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-2xl">
           <SheetTitle className="sr-only">{sel?.nome ?? 'Família'}</SheetTitle>
           <SheetDescription className="sr-only">Membros da família</SheetDescription>
-          {sel && <div className="p-4 pt-12 sm:p-6 sm:pt-12"><DetalheFamilia f={sel} aoEditar={() => setEditar(sel)} /></div>}
+          {sel && <div className="p-5 sm:p-6"><DetalheFamilia f={sel} aoEditar={() => setEditar(sel)} /></div>}
         </SheetContent>
       </Sheet>
       {editar && <DialogoFamilia f={editar === 'nova' ? null : editar} aoFechar={(id) => { setEditar(null); if (id) escolher(id) }} />}
@@ -130,65 +129,57 @@ function DetalheFamilia({ f, aoEditar }: { f: Familia; aoEditar: () => void }) {
   // relações que o sistema conhece: casais (cônjuges ligados na ficha) e menores
   const casais = daFamilia.filter((m) => m.conjugeMembroId && (m.id < m.conjugeMembroId || !daFamilia.some((x) => x.id === m.conjugeMembroId)))
   const menores = daFamilia.filter((m) => { const a = idade(m.dataNascimento); return a != null && a < 18 })
-  const chefe = daFamilia.find((m) => m.parentesco === 'CHEFE')
   return (
-    <Cartao titulo={f.nome} descricao={[f.morada || 'Sem morada', chefe && `chefe: ${chefe.nome} ${chefe.apelido}`].filter(Boolean).join(' · ')} icone={Home} semMargem
-      accoes={(
+    <div className="grid gap-6">
+      <header className="flex flex-wrap items-start justify-between gap-3 pr-8">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex size-11 flex-none items-center justify-center rounded-xl bg-accent text-accent-foreground"><Home className="size-5" /></span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold tracking-tight">{f.nome}</h2>
+            <p className="text-sm text-muted-foreground">{[f.morada || 'Sem morada', `${daFamilia.length} ${daFamilia.length === 1 ? 'membro' : 'membros'}`].join(' · ')}</p>
+          </div>
+        </div>
         <div className="flex gap-2">
-          {pode('secretaria.familia.alterar') && <Button size="sm" variant="ghost" className="alvo" onClick={aoEditar}><Pencil className="size-4" />Editar</Button>}
+          {pode('secretaria.familia.alterar') && <Button size="sm" variant="outline" className="alvo" onClick={aoEditar}><Pencil className="size-4" />Editar</Button>}
           {podeMudar && <Button size="sm" className="alvo" onClick={() => setJuntar(true)}><UserPlus className="size-4" />Juntar membro</Button>}
         </div>
-      )}>
+      </header>
       {membros.isPending ? <Barra className="m-4 h-24" /> : !daFamilia.length ? (
         <EstadoVazio icone={Users} titulo="Família sem membros">Junte os membros que vivem nesta casa.</EstadoVazio>
       ) : (
         <>
-          <Tabela porPagina={false}>
-            <thead>
-              <tr>
-                <th className="sm:pl-6">Membro</th>
-                <th>Parentesco</th>
-                <th className="num hidden sm:table-cell">Idade</th>
-                <th className="hidden md:table-cell">Estado civil</th>
-                <th className="hidden sm:table-cell">Estado</th>
-                <th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {daFamilia.map((m) => (
-                <tr key={m.id}>
-                  <td className="sm:pl-6">
-                    <Link to={`/membros/${m.id}`} className="flex min-w-0 items-center gap-3 hover:underline">
-                      <Avatar id={m.id} nome={m.nome} apelido={m.apelido} />
-                      <span className="min-w-0"><span className="block truncate font-medium">{m.nome} {m.apelido}</span>
-                        <span className="text-xs text-muted-foreground sm:hidden">{rotulos.estadoMembro[m.estado] ?? m.estado}</span></span>
-                    </Link>
-                  </td>
-                  <td>
-                    {podeMudar ? (
-                      <Seleccao aria-label={`Parentesco de ${m.nome}`} value={m.parentesco ?? ''} onChange={(e) => mudarParentesco(m.id, e.target.value)} className="h-9 w-44">
-                        <option value="">—</option>
-                        {ORDEM_PARENTESCO.map((k) => <option key={k} value={k}>{rotulos.parentesco[k]}</option>)}
-                      </Seleccao>
-                    ) : (m.parentesco ? rotulos.parentesco[m.parentesco] : '—')}
-                  </td>
-                  <td className="num hidden sm:table-cell">{idade(m.dataNascimento) ?? '—'}</td>
-                  <td className="hidden md:table-cell">{m.estadoCivil ? rotulos.estadoCivil[m.estadoCivil] : '—'}</td>
-                  <td className="hidden sm:table-cell"><Pilula variante={m.estado === 'ACTIVO' ? 'success' : m.estado === 'INTERESSADO' ? 'info' : 'secondary'}>{rotulos.estadoMembro[m.estado] ?? m.estado}</Pilula></td>
-                  <td className="sm:pr-6">
-                    {podeMudar && (
-                      <Button size="icon" variant="ghost" className="alvo size-9 text-muted-foreground" disabled={ligarMembro.isPending}
-                        onClick={() => mudar(m.id, null, `${m.nome} ${m.apelido}`)} aria-label={`Tirar ${m.nome} da família`} title="Tirar da família">
-                        <UserMinus className="size-4" />
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Tabela>
+          <ul className="grid gap-2">
+            {daFamilia.map((m) => (
+              <li key={m.id} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card px-3 py-3 sm:flex-nowrap">
+                <Link to={`/membros/${m.id}`} className="flex min-w-0 flex-1 items-center gap-3 hover:text-primary">
+                  <Avatar id={m.id} nome={m.nome} apelido={m.apelido} tamanho={40} />
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate font-medium">{m.nome} {m.apelido}</span>
+                      {m.parentesco === 'CHEFE' && <Pilula variante="info">Chefe</Pilula>}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {[idade(m.dataNascimento) != null && `${idade(m.dataNascimento)} anos`, m.estadoCivil && rotulos.estadoCivil[m.estadoCivil], rotulos.estadoMembro[m.estado] ?? m.estado].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                </Link>
+                {podeMudar ? (
+                  <Seleccao aria-label={`Parentesco de ${m.nome}`} value={m.parentesco ?? ''} onChange={(e) => mudarParentesco(m.id, e.target.value)} className="h-9 w-36">
+                    <option value="">Parentesco…</option>
+                    {ORDEM_PARENTESCO.map((k) => <option key={k} value={k}>{rotulos.parentesco[k]}</option>)}
+                  </Seleccao>
+                ) : <span className="text-sm text-muted-foreground">{m.parentesco ? rotulos.parentesco[m.parentesco] : '—'}</span>}
+                {podeMudar && (
+                  <Button size="icon" variant="ghost" className="alvo size-9 text-muted-foreground hover:text-destructive-text" disabled={ligarMembro.isPending}
+                    onClick={() => mudar(m.id, null, `${m.nome} ${m.apelido}`)} aria-label={`Tirar ${m.nome} da família`} title="Tirar da família">
+                    <UserMinus className="size-4" />
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
           {(casais.length > 0 || menores.length > 0) && (
-            <div className="grid gap-3 border-t px-4 py-4 text-sm sm:grid-cols-2 sm:px-6">
+            <div className="grid gap-4 rounded-xl border bg-muted/30 p-4 text-sm sm:grid-cols-2">
               {casais.length > 0 && (
                 <div>
                   <p className="mb-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Casais</p>
@@ -221,7 +212,7 @@ function DetalheFamilia({ f, aoEditar }: { f: Familia; aoEditar: () => void }) {
           </DialogContent>
         </Dialog>
       )}
-    </Cartao>
+    </div>
   )
 }
 

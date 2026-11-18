@@ -14,5 +14,6 @@ public enum TipoIdentificacao {
     DIRE,
     CEDULA,
     CARTA_CONDUCAO,
-    OUTRO
+    OUTRO,
+    CARTAO_ELEITOR
 }

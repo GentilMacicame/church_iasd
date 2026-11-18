@@ -249,7 +249,7 @@ export const rotulos = {
   },
   tipoIdentificacao: {
     BI: 'Bilhete de identidade', PASSAPORTE: 'Passaporte', DIRE: 'DIRE', CEDULA: 'Cédula pessoal',
-    CARTA_CONDUCAO: 'Carta de condução', OUTRO: 'Outro',
+    CARTA_CONDUCAO: 'Carta de condução', CARTAO_ELEITOR: 'Cartão de eleitor', OUTRO: 'Outro',
   },
   escolaridade: {
     NENHUMA: 'Nenhuma', PRIMARIO: 'Primário', SECUNDARIO: 'Secundário', TECNICO_PROFISSIONAL: 'Técnico-profissional',

@@ -1,0 +1,48 @@
+1. o fundo do reavivamento da igreja 1 e o alvo de 2026
+       fun_nome       
+----------------------
+ Reavivamento (teste)
+(1 row)
+
+ alv_valor_alvo 
+----------------
+       12000.00
+(1 row)
+
+2. sem ajustes: todas as quotas iguais e a soma dá o alvo
+ ha_pessoas | quotas_diferentes | soma_e_o_alvo 
+------------+-------------------+---------------
+ t          |                 1 | t
+(1 row)
+
+3. o Paulo fica com 0 (sem rendimento): os outros repartem o alvo; a soma continua a dar o alvo
+ igreja_copiada_do_membro | qrv_valor 
+--------------------------+-----------
+                        1 |      0.00
+(1 row)
+
+ quota | quota_ajustada |     motivo     
+-------+----------------+----------------
+  0.00 |           0.00 | Sem rendimento
+(1 row)
+
+ quotas_dos_outros | soma_e_o_alvo 
+-------------------+---------------
+                 1 | t
+(1 row)
+
+   repetida no mesmo ano, negativa e de pessoa que não existe: recusadas
+psql:database/tests/35_reavivamento_por_pessoa.sql:27: ERROR:  duplicate key value violates unique constraint "uq_qrv_mem_id_ano"
+psql:database/tests/35_reavivamento_por_pessoa.sql:28: ERROR:  new row for relation "quota_reavivamento" violates check constraint "chk_qrv_valor"
+psql:database/tests/35_reavivamento_por_pessoa.sql:29: ERROR:  A pessoa não existe
+4. o tesoureiro ajusta quotas; o secretário da ES nem as vê
+ qrv_valor 
+-----------
+     50.00
+(1 row)
+
+ quotas_que_ve 
+---------------
+             0
+(1 row)
+

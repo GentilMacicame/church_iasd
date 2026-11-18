@@ -19316,6 +19316,274 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-reavivamento:
+    get:
+      summary: 'Quotas reavivamento: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.ler
+      operationId: listarQuotaReavivamento
+      description: Quota do reavivamento de uma pessoa no ano, ajustada à mão (as outras repartem o alvo; V49)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuotaReavivamento'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Quotas reavivamento: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.criar
+      operationId: criarQuotaReavivamento
+      description: Quota do reavivamento de uma pessoa no ano, ajustada à mão (as outras repartem o alvo; V49)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/QuotaReavivamento'
+              required:
+              - igrejaId
+              - membroId
+              - ano
+              - valor
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-reavivamento/{id}:
+    get:
+      summary: 'Quotas reavivamento: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.ler
+      operationId: lerQuotaReavivamento
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Quotas reavivamento: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.alterar
+      operationId: alterarQuotaReavivamento
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotaReavivamento'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-reavivamento/{id}/reactivar:
+    post:
+      summary: 'Quotas reavivamento: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.terminar
+      operationId: reactivarQuotaReavivamento
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/quotas-reavivamento/{id}/terminar:
+    post:
+      summary: 'Quotas reavivamento: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.terminar
+      operationId: terminarQuotaReavivamento
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaReavivamento'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reavivamento-pessoas:
+    get:
+      summary: 'Relatório: Reavivamento pessoas'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.quota_reavivamento.ler
+      operationId: relVTesourariaReavivamentoPessoas
+      description: Lido da vista tesouraria.vw_reavivamento_pessoas.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: ano
+        in: query
+        schema:
+          type: integer
+      - name: mes
+        in: query
+        schema:
+          type: integer
+      x-vista: tesouraria.vw_reavivamento_pessoas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/recalcular-saldos:
     post:
       summary: Recalcular os saldos pré-calculados de uma igreja a partir dos movimentos (auditoria, depois de importações)
@@ -22478,6 +22746,7 @@ components:
       - CEDULA
       - CARTA_CONDUCAO
       - OUTRO
+      - CARTAO_ELEITOR
     EnumTipoIgreja:
       type: string
       enum:
@@ -24559,6 +24828,63 @@ components:
           nullable: true
       x-obrigatorios-ao-criar:
       - nome
+    QuotaReavivamento:
+      type: object
+      description: Quota do reavivamento de uma pessoa no ano, ajustada à mão (as outras repartem o alvo; V49)
+      x-tabela: tesouraria.quota_reavivamento
+      x-prefixo: qrv
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado do membro (segurança e desempenho)
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        ano:
+          type: integer
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Quota da pessoa no ano
+        motivo:
+          type: string
+          maxLength: 255
+          description: 'Ex.: sem rendimento'
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - membroId
+      - ano
+      - valor
     Recibo:
       type: object
       description: Recibos numerados por igreja e ano

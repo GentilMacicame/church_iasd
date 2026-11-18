@@ -6,7 +6,6 @@
  * Excepção: sem rede, nas páginas da Escola Sabatina (relatório do sábado sem rede, P-05), não faz logout.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useSessao } from '@/auth/sessao'
@@ -73,20 +72,24 @@ export function Inactividade() {
 
   return (
     <Dialog open={restam != null} onOpenChange={(v) => { if (!v) continuar() }}>
-      <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Clock className="size-5 text-warning-text" />Ainda está aí?</DialogTitle>
-          <DialogDescription>Não mexe no ecrã há 5 minutos. Por segurança, a sessão termina sozinha.</DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col items-center gap-2 py-2" aria-live="assertive">
-          <span className="num text-5xl font-bold tabular-nums">{restam ?? 0}</span>
-          <span className="text-sm text-muted-foreground">segundos para sair</span>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className="h-full rounded-full bg-warning transition-[width] duration-1000 ease-linear" style={{ width: `${((restam ?? 0) / AVISO_S) * 100}%` }} />
+      <DialogContent className="sm:max-w-sm" showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="items-center pr-6 text-center">
+          <div className="relative my-2 size-28" aria-live="assertive">
+            <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden>
+              <circle cx="50" cy="50" r="44" fill="none" strokeWidth="7" className="stroke-muted" />
+              <circle cx="50" cy="50" r="44" fill="none" strokeWidth="7" strokeLinecap="round" className="stroke-warning transition-[stroke-dashoffset] duration-1000 ease-linear"
+                strokeDasharray={2 * Math.PI * 44} strokeDashoffset={2 * Math.PI * 44 * (1 - (restam ?? 0) / AVISO_S)} />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="num text-3xl font-bold tabular-nums">{restam ?? 0}</span>
+              <span className="text-xs text-muted-foreground">segundos</span>
+            </span>
           </div>
-        </div>
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button type="button" variant="ghost" className="alvo" onClick={() => { aSair.current = true; void sair() }}>Sair agora</Button>
+          <DialogTitle className="text-center">Ainda está aí?</DialogTitle>
+          <DialogDescription className="text-center">Por segurança, a sessão vai terminar.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+          <Button type="button" variant="outline" className="alvo" onClick={() => { aSair.current = true; void sair() }}>Sair</Button>
           <Button type="button" className="alvo" autoFocus onClick={continuar}>Continuar</Button>
         </DialogFooter>
       </DialogContent>

@@ -301,6 +301,8 @@ src/
   Acompanhamento) e Comunicados. As actividades da área pastoral aparecem no Programa anual de cada igreja.
 - **Acompanhamento** (Programa anual › Acompanhamento; V48): realizadas, atrasadas, canceladas (com o motivo, obrigatório
   ao cancelar), orçamento executado, mês a mês e a comparação por departamento.
+- **Reavivamento** (Tesouraria › Reavivamento; V49): o alvo do ano repartido por pessoa (adultos e crianças), quota
+  ajustável, contribuído e falta; na entrada, o campo Reavivamento mostra a quota do membro.
 
 ## Por fazer (próximas iterações)
 

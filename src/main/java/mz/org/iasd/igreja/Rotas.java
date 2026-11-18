@@ -373,6 +373,9 @@ public final class Rotas {
         /** AlvosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String ALVOS = "/v1/tesouraria/alvos";
 
+        /** QuotasReavivamentoController · rotas-padrão (V49: quota do reavivamento ajustada à mão) */
+        public static final String QUOTAS_REAVIVAMENTO = "/v1/tesouraria/quotas-reavivamento";
+
         /** CalendarioOfertasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String CALENDARIO_OFERTAS = "/v1/tesouraria/calendario-ofertas";
 
@@ -477,6 +480,9 @@ public final class Rotas {
 
         /** GET /v1/tesouraria/progresso-alvos  (RelatoriosTesourariaController.progressoAlvos) */
         public static final String PROGRESSO_ALVOS = "progresso-alvos";
+
+        /** GET /v1/tesouraria/reavivamento-pessoas?ano=  (V49: quota, contribuído e falta de cada pessoa) */
+        public static final String REAVIVAMENTO_PESSOAS = "reavivamento-pessoas";
 
         /** GET /v1/tesouraria/fundo-mensal?ano=&amp;fundoId=  (V36: arrecadado por fundo e mês) */
         public static final String FUNDO_MENSAL = "fundo-mensal";

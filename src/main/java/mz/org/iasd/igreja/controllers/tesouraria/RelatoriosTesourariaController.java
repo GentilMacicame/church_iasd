@@ -50,6 +50,9 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     public static final Relatorio EXTRACTO_ANUAL = Relatorio.porIgreja("tesouraria.vw_extracto_anual",
             "tra_igr_id = ?", "ano DESC, fundo").comAnoMes("ano", null);
     public static final Relatorio PROGRESSO_ALVOS = Relatorio.porIgreja("tesouraria.vw_progresso_alvo", "alv_igr_id = ?", "alv_id");
+    /** V49: reavivamento por pessoa (o alvo da igreja repartido, com quota ajustável). */
+    public static final Relatorio REAVIVAMENTO_PESSOAS = Relatorio.porIgreja("tesouraria.vw_reavivamento_pessoas",
+            "igreja_id = ?", "nome, apelido, membro_id").comAnoMes("ano", null);
     public static final Relatorio FUNDO_MENSAL = Relatorio.porIgreja("tesouraria.vw_fundo_mensal", "igreja_id = ?", "fundo, ano, mes")
             .comAnoMes("ano", "mes").comFiltro("fundoId", "fundo_id");
     public static final Relatorio CONFERENCIA_CONTAGENS = Relatorio.porIgreja("tesouraria.vw_contagem_conferencia",
@@ -103,6 +106,13 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     @Path(Rotas.Tesouraria.PROGRESSO_ALVOS)
     public Response progressoAlvos() throws SQLException {
         return responder(PROGRESSO_ALVOS);
+    }
+
+    /** Reavivamento por pessoa no ano: quota, contribuído e falta (V49). */
+    @GET
+    @Path(Rotas.Tesouraria.REAVIVAMENTO_PESSOAS)
+    public Response reavivamentoPessoas() throws SQLException {
+        return responder(REAVIVAMENTO_PESSOAS);
     }
 
     /** Diferença entre o contado e o lançado (P-06 passo 4). */

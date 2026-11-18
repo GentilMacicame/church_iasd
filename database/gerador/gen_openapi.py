@@ -304,10 +304,11 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
                      ('contribuicoes', 'vw_contribuicoes_membro', 'tesouraria.transacao.ler (ou o próprio membro)'),
                      ('extracto-anual', 'vw_extracto_anual', 'tesouraria.transacao.ler (ou o próprio membro)'),
                      ('progresso-alvos', 'vw_progresso_alvo', 'tesouraria.alvo.ler'),
+                     ('reavivamento-pessoas', 'vw_reavivamento_pessoas', 'tesouraria.quota_reavivamento.ler'),
                      ('conferencia-contagens', 'vw_contagem_conferencia', 'tesouraria.contagem_numerario.ler'),
                      ('despesas-por-pagar', 'vw_despesas_por_pagar', 'tesouraria.despesa.ler'),
                      ('extractos-por-reconciliar', 'vw_extrato_por_reconciliar', 'tesouraria.extrato_linha.ler')]:
-    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual', 'contribuicoes') else ())
+    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual', 'contribuicoes', 'reavivamento-pessoas') else ())
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
 rel('/v1/secretaria/membros-lista', 'secretaria.vw_membros_lista', SEC, 'secretaria.membro.ler')   # V33: exportar
 # V33: registos parecidos (possíveis duplicados) antes de registar ou ao editar; só avisa, não bloqueia

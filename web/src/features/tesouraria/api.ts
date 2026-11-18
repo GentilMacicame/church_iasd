@@ -97,6 +97,21 @@ export function useFundos() {
 /** Fundo próprio da igreja (oferta especial ou projecto): 100% da igreja. */
 export const daPropriaIgreja = (f: Fundo) => f.igrejaId != null
 
+/** Fundos que não se mostram: as ofertas da Escola Sabatina e as missionárias contam dentro das Ofertas. */
+export const FUNDOS_OCULTOS = ['ES_MISSOES', 'ES_13_SABADO', 'OFERTA_MISSIONARIA']
+export const fundoVisivel = (f: Fundo) => !f.endDate && !FUNDOS_OCULTOS.includes(f.tipo)
+
+/** Saldos por fundo para mostrar: os fundos ocultos somam-se na oferta combinada, numa linha "Ofertas". */
+export function juntarOfertasSaldos(lista: SaldoFundo[]): SaldoFundo[] {
+  const destino = lista.find((x) => x.tipo === 'OFERTA_COMBINADA')
+  if (!destino) return lista.filter((x) => !FUNDOS_OCULTOS.includes(x.tipo))
+  const somar = (k: 'entradas' | 'saidas' | 'saldo' | 'naAssociacao' | 'porRemeter' | 'disponivel') =>
+    deCentimos(lista.filter((x) => x === destino || FUNDOS_OCULTOS.includes(x.tipo)).reduce((s, x) => s + centimos(x[k] ?? '0'), 0))
+  const junto: SaldoFundo = { ...destino, nome: lista.some((x) => FUNDOS_OCULTOS.includes(x.tipo)) ? 'Ofertas' : destino.nome,
+    entradas: somar('entradas'), saidas: somar('saidas'), saldo: somar('saldo'), naAssociacao: somar('naAssociacao'), porRemeter: somar('porRemeter'), disponivel: somar('disponivel') }
+  return lista.filter((x) => !FUNDOS_OCULTOS.includes(x.tipo)).map((x) => (x === destino ? junto : x))
+}
+
 /** Criar e terminar as ofertas e projectos da igreja (a base de dados só deixa nesta igreja, sem parte da Missão). */
 export function useFundosMut() {
   const igreja = useIgreja()
@@ -830,4 +845,35 @@ export function useAlvosMut() {
     onSuccess: () => invalidar(),
   })
   return { criar, terminar }
+}
+
+/** V49 · Reavivamento por pessoa: a quota (ajustada ou parte igual do alvo), o contribuído e a falta, num ano. */
+export interface PessoaReavivamento {
+  igrejaId: number; ano: number; membroId: number; nome: string; apelido: string; dataNascimento: string | null; menor: boolean
+  alvoIgreja: string; quotaId: number | null; quotaAjustada: string | null; motivo: string | null; quota: string; contribuido: string; falta: string
+}
+
+export function useReavivamentoPessoas(ano: number) {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'reavivamento-pessoas', ano],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/reavivamento-pessoas' as never, { params: { query: { igrejaId: igreja.id, ano, limite: 2000 } } } as never))) as unknown as PessoaReavivamento[],
+  })
+}
+
+/** Ajustar ou retirar o ajuste da quota de uma pessoa. */
+export function useQuotasReavivamentoMut() {
+  const invalidar = useInvalidar()
+  const igreja = useIgreja()
+  const ajustar = useMutation({
+    mutationFn: async ({ quotaId, membroId, ano, valor, motivo }: { quotaId: number | null; membroId: number; ano: number; valor: string; motivo: string }) => quotaId
+      ? dados(api.PATCH('/v1/tesouraria/quotas-reavivamento/{id}' as never, { params: { path: { id: quotaId } }, body: { valor, motivo: motivo || null } } as never))
+      : dados(api.POST('/v1/tesouraria/quotas-reavivamento' as never, { body: { igrejaId: igreja.id, membroId, ano, valor, motivo: motivo || undefined }, params: { header: { 'Idempotency-Key': crypto.randomUUID() } } } as never)),
+    onSuccess: () => invalidar(),
+  })
+  const retirar = useMutation({
+    mutationFn: (quotaId: number) => dados(api.POST('/v1/tesouraria/quotas-reavivamento/{id}/terminar' as never, { params: { path: { id: quotaId } } } as never)),
+    onSuccess: () => invalidar(),
+  })
+  return { ajustar, retirar }
 }

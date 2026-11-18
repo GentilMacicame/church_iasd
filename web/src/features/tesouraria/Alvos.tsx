@@ -20,7 +20,7 @@ import { useIgreja, useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, data, dinheiro, diasAte, hojeIso } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
-import { alvoSugerido, useAlvos, useAlvosMut, useFundos, useProgressoAlvos, type Alvo } from './api'
+import { alvoSugerido, fundoVisivel, useAlvos, useAlvosMut, useFundos, useProgressoAlvos, type Alvo } from './api'
 import { Paginada } from '@/components/comum/Paginacao'
 
 export function CartaoAlvos() {
@@ -131,7 +131,7 @@ function DialogoAlvo({ aoFechar }: { aoFechar: () => void }) {
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
           <div className="grid gap-1.5 sm:col-span-2">
             <label htmlFor="alv-fundo" className="text-sm font-medium">Fundo <span className="text-destructive-text">*</span></label>
-            <CampoEscolha id="alv-fundo" valor={fundo} aoMudar={setFundo} vazio="Escolher o fundo…" opcoes={(fundos.data ?? []).filter((f) => !f.endDate).map((f) => ({ valor: String(f.id), rotulo: f.nome }))} />
+            <CampoEscolha id="alv-fundo" valor={fundo} aoMudar={setFundo} vazio="Escolher o fundo…" opcoes={(fundos.data ?? []).filter(fundoVisivel).filter((f, i, l) => l.findIndex((x) => x.tipo === f.tipo && x.nome === f.nome) === i).map((f) => ({ valor: String(f.id), rotulo: f.nome }))} />
           </div>
           <div className="grid gap-1.5 sm:col-span-2">
             <label htmlFor="alv-desc" className="text-sm font-medium">Para quê</label>

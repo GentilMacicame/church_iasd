@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils'
 import { useContagemPorAprovar, useMembrosBasicos, useParticipacao } from '@/features/membros/api'
 import { emVigor as comunicadoEmVigor, useComunicados } from '@/features/comunicados/api'
 import { useHistoricoSantaCeia } from '@/features/santa-ceia/api'
-import { emVigor, usePlanos } from '@/features/escalas/api'
+import { COLUNAS, CURTO, emVigor, usePlanos } from '@/features/escalas/api'
 import { useResumoMensal } from '@/features/tesouraria/api'
 import { useAlertas, type Alerta } from '@/features/alertas/loja'
 import { TomAlerta } from '@/features/alertas/Sino'
@@ -175,7 +175,8 @@ function ProximoSabado() {
   const planos = usePlanos()
   const vigor = (planos.data ?? []).find(emVigor)
   const pregador = doDia.find((l) => l.funcao === 'PREGADOR')
-  const outros = doDia.filter((l) => l !== pregador)
+  // as funções da escala do Culto Divino, pela ordem da escala (as antigas já não aparecem)
+  const outros = COLUNAS.filter((f) => f !== 'PREGADOR').map((f) => ({ funcao: f, l: doDia.find((x) => x.funcao === f) }))
   const quando = dataPorExtenso(sabado)
   return (
     <Cartao
@@ -203,18 +204,18 @@ function ProximoSabado() {
               <div className="mx-5 mb-3 flex items-center gap-3 rounded-lg bg-accent px-4 py-3 sm:mx-6">
                 <span className="flex size-9 flex-none items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-hidden><Mic className="size-[18px]" /></span>
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-accent-foreground/80">Prega neste sábado</p>
+                  <p className="text-xs font-medium text-accent-foreground/80">Sermão principal</p>
                   <p className="truncate text-base font-semibold text-accent-foreground">{pregador.membro}</p>
                 </div>
               </div>
             )}
             <dl className="divide-y border-t">
-              {outros.map((l) => (
-                <div key={l.id} className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm sm:px-6">
-                  <dt className="text-muted-foreground">{rotulos.funcaoEscala[l.funcao] ?? l.funcao}</dt>
-                  <dd className="truncate text-right font-medium">
-                    {l.membro}
-                    {l.estado === 'SUBSTITUIDA' && <Pilula variante="secondary" className="ml-2">substituto</Pilula>}
+              {outros.map(({ funcao, l }) => (
+                <div key={funcao} className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm sm:px-6">
+                  <dt className="text-muted-foreground">{CURTO[funcao] ?? funcao}</dt>
+                  <dd className={cn('truncate text-right', l ? 'font-medium' : 'text-muted-foreground')}>
+                    {l ? l.membro : 'por escalar'}
+                    {l?.estado === 'SUBSTITUIDA' && <Pilula variante="secondary" className="ml-2">substituto</Pilula>}
                   </dd>
                 </div>
               ))}

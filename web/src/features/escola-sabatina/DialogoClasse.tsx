@@ -159,14 +159,14 @@ export function DialogoClasse({ classe, ct, trimestre, numero, aoFechar, aoGrava
               </Seccao>
 
               <Seccao titulo="Alvos do trimestre">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {numero_('alvoMembros', 'Alvo de membros')}
-                  {numero_('alvoEstudo', 'Alvo de E.D.', '%')}
-                  {numero_('alvoFiliais', 'Alvo de filiais')}
-                  <CampoFormulario rotulo="Alvo de ofertas por sábado" erro={e.alvoOferta?.message}>
+                <div className="grid grid-cols-2 items-end gap-4 sm:grid-cols-3">
+                  {numero_('alvoMembros', 'Membros')}
+                  {numero_('alvoEstudo', 'Estudo diário', '%')}
+                  {numero_('alvoFiliais', 'Filiais')}
+                  <CampoFormulario rotulo="Ofertas por sábado" erro={e.alvoOferta?.message}>
                     {(p) => <Controller control={form.control} name="alvoOferta" render={({ field }) => <CampoDinheiro {...p} value={field.value} onChange={field.onChange} onBlur={field.onBlur} />} />}
                   </CampoFormulario>
-                  {numero_('alvoBaptismos', 'Alvo de baptismos')}
+                  {numero_('alvoBaptismos', 'Baptismos')}
                 </div>
               </Seccao>
             </fieldset>

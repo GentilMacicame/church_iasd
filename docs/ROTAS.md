@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 538 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 545 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -547,6 +547,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/participantes-contagem/{id}/reactivar` | ParticipantesContagemController · reactivar | `tesouraria.contagem_participante.terminar` |
 | POST | `/v1/tesouraria/participantes-contagem/{id}/terminar` | ParticipantesContagemController · terminar | `tesouraria.contagem_participante.terminar` |
 | GET | `/v1/tesouraria/progresso-alvos` | RelatoriosTesourariaController · progressoAlvos | `tesouraria.alvo.ler` |
+| GET | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · listar | `tesouraria.quota_reavivamento.ler` |
+| POST | `/v1/tesouraria/quotas-reavivamento` | QuotasReavivamentoController · criar | `tesouraria.quota_reavivamento.criar` |
+| GET | `/v1/tesouraria/quotas-reavivamento/{id}` | QuotasReavivamentoController · obter | `tesouraria.quota_reavivamento.ler` |
+| PATCH | `/v1/tesouraria/quotas-reavivamento/{id}` | QuotasReavivamentoController · alterar | `tesouraria.quota_reavivamento.alterar` |
+| POST | `/v1/tesouraria/quotas-reavivamento/{id}/reactivar` | QuotasReavivamentoController · reactivar | `tesouraria.quota_reavivamento.terminar` |
+| POST | `/v1/tesouraria/quotas-reavivamento/{id}/terminar` | QuotasReavivamentoController · terminar | `tesouraria.quota_reavivamento.terminar` |
+| GET | `/v1/tesouraria/reavivamento-pessoas` | RelatoriosTesourariaController · reavivamentoPessoas | `tesouraria.quota_reavivamento.ler` |
 | POST | `/v1/tesouraria/recalcular-saldos` | SaldosController · recalcular | `tesouraria.fecho_periodo.criar` |
 | GET | `/v1/tesouraria/recibos` | RecibosController · listar | `tesouraria.recibo.ler` |
 | POST | `/v1/tesouraria/recibos` | RecibosController · criar | `tesouraria.recibo.criar` |

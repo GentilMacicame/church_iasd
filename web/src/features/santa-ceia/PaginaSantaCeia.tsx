@@ -4,7 +4,7 @@
  * participantes; agendar, registar os participantes depois de realizada, editar e cancelar.
  */
 import { useEffect, useState } from 'react'
-import { CalendarCheck, CalendarPlus, Clock, MapPin, MoreHorizontal, Pencil, Users, Wine, XCircle } from 'lucide-react'
+import { CalendarCheck, CalendarPlus, MoreHorizontal, Pencil, Users, Wine, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -188,14 +188,16 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
           <DialogTitle>{santaCeia ? 'Editar Santa Ceia' : 'Agendar Santa Ceia'}</DialogTitle>
           <DialogDescription>Depois de realizada, registe os participantes.</DialogDescription>
         </DialogHeader>
+        <ErroFormulario mensagem={erro} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
-          <div className="grid gap-1.5"><label htmlFor="stc-data" className="text-sm font-medium">Data <span className="text-destructive-text">*</span></label><CampoData id="stc-data" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium"><Clock className="mr-1 inline size-3.5" />Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo num" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-local" className="text-sm font-medium"><MapPin className="mr-1 inline size-3.5" />Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Responsável (quem oficia)</label>
+          <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-3">
+            <div className="grid gap-1.5"><label htmlFor="stc-data" className="text-sm font-medium">Data <span className="text-destructive-text">*</span></label><CampoData id="stc-data" value={dia} onChange={setDia} className="alvo" /></div>
+            <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium">Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo w-full" /></div>
+          </div>
+          <div className="grid gap-1.5"><label htmlFor="stc-local" className="text-sm font-medium">Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
+          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Quem oficia</label>
             <CampoMembro id="stc-resp" valor={responsavel} aoMudar={setResponsavel} nomeDe={nomeDe} /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-obs" className="text-sm font-medium">Observações</label><Textarea id="stc-obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} maxLength={500} /></div>
+          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-obs" className="text-sm font-medium">Observações</label><Textarea id="stc-obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} maxLength={500} placeholder="Opcional" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

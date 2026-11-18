@@ -9,7 +9,7 @@ import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { useMembrosBasicos } from '@/features/membros/api'
-import { useFundos, useMovimentos, useResumoMensal, useSaldosContas, useSaldosFundos, type Transacao } from './api'
+import { juntarOfertasSaldos, useFundos, useMovimentos, useResumoMensal, useSaldosContas, useSaldosFundos, type Transacao } from './api'
 import { PilulaEstado, Valor, parteDoFundo, quem } from './comum'
 
 export default function PaginaTesouraria() {
@@ -97,7 +97,7 @@ export default function PaginaTesouraria() {
                 <Tabela>
                   <thead><tr><th className="sm:pl-6">Fundo</th><th className="num hidden sm:table-cell">Saldo</th><th className="num hidden sm:table-cell">Da Missão</th><th className="num sm:pr-6">Pode gastar</th></tr></thead>
                   <tbody>
-                    {fundosSaldo.data.map((f) => (
+                    {juntarOfertasSaldos(fundosSaldo.data).map((f) => (
                       <tr key={f.codigo}>
                         <td className="sm:pl-6">
                           <span className="font-medium">{f.nome}</span>

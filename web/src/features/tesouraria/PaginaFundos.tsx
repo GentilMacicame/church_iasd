@@ -20,7 +20,7 @@ import { mensagemDe } from '@/api/erros'
 import { useSessao } from '@/auth/sessao'
 import { t } from '@/i18n/pt-MZ'
 import { cn } from '@/lib/utils'
-import { daPropriaIgreja, useFundos, useFundosMut, useSaldosFundos, type Fundo } from './api'
+import { daPropriaIgreja, fundoVisivel, useFundos, useFundosMut, useSaldosFundos, type Fundo } from './api'
 import { parteDoFundo } from './comum'
 import { CartaoAlvos } from './Alvos'
 
@@ -32,8 +32,12 @@ export default function PaginaFundos() {
   const [nova, setNova] = useState(false)
   const [aTerminar, setATerminar] = useState<Fundo | null>(null)
   const saldoDe = new Map((saldos.data ?? []).map((s) => [s.fundoId, s]))
-  const lista = (fundos.data ?? []).filter((f) => !f.endDate)
+  const lista = (fundos.data ?? []).filter(fundoVisivel)
+  // os fundos gerais repetidos (um por Associação): fica um de cada, o que tem movimento nesta igreja
   const daMissao = lista.filter((f) => !daPropriaIgreja(f))
+    .sort((a, b) => Number(saldoDe.has(b.id)) - Number(saldoDe.has(a.id)) || a.id - b.id)
+    .filter((f, i, l) => l.findIndex((x) => x.tipo === f.tipo && x.nome === f.nome) === i)
+    .sort((a, b) => a.id - b.id)
   const daIgreja = lista.filter(daPropriaIgreja)
   const podeCriar = pode('tesouraria.fundo.criar')
 

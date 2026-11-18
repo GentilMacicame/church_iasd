@@ -23,7 +23,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { METODO_DA_CONTA } from './PaginaEntrada'
 import {
-  useCategorias, useConfirmarRemessa, useContasIgreja as useContas, useEntidades, useEnviarRemessa, useFundos, useRemessas, useRemessasDevidas,
+  FUNDOS_OCULTOS, useCategorias, useConfirmarRemessa, useContasIgreja as useContas, useEntidades, useEnviarRemessa, useFundos, useRemessas, useRemessasDevidas,
   type Devida, type EstadoRemessa, type RemessaComLinhas,
 } from './api'
 import { parteDoFundo } from './comum'
@@ -51,12 +51,24 @@ export default function PaginaRemessas() {
   const fundoDe = (id: number) => fundos.data?.find((f) => f.id === id)?.nome ?? `Fundo ${id}`
   const totalDe = (r: RemessaComLinhas) => deCentimos(r.linhas.filter((l) => !l.endDate).reduce((s, l) => s + centimos(l.valor), 0))
 
+  /** Para mostrar: as ofertas da Escola Sabatina (e as missionárias) dentro da oferta combinada, numa linha "Ofertas". */
+  const paraMostrar = (linhas: Devida[]) => {
+    const tipoDe = (id: number) => fundos.data?.find((f) => f.id === id)?.tipo ?? ''
+    const destino = linhas.find((d) => tipoDe(d.fundoId) === 'OFERTA_COMBINADA')?.fundoId
+    return linhas.reduce<Devida[]>((acc, d) => {
+      const id = destino && FUNDOS_OCULTOS.includes(tipoDe(d.fundoId)) ? destino : d.fundoId
+      const ja = acc.find((x) => x.fundoId === id)
+      if (!ja) { acc.push({ ...d, fundoId: id }); return acc }
+      for (const k of ['recebido', 'devido', 'remetido', 'emFalta', 'pagoDirecto'] as const) ja[k] = deCentimos(centimos(ja[k]) + centimos(d[k]))
+      ja.fundoNome = 'Ofertas'
+      return acc
+    }, [])
+  }
+
   /** Meses com valor em falta, o mais antigo primeiro (é o que se paga primeiro). */
   const porEnviar = useMemo(() => {
     const m = new Map<string, Periodo>()
-    const tipoDe = (id: number) => fundos.data?.find((f) => f.id === id)?.tipo ?? ''
     for (const d of devidas.data ?? []) {
-      if (FORA_DO_DEPOSITO.includes(tipoDe(d.fundoId))) continue
       const chave = `${d.ano}-${String(d.mes).padStart(2, '0')}-${d.entidadeId}`
       const p = m.get(chave) ?? { chave, ano: d.ano, mes: d.mes, entidadeId: d.entidadeId, linhas: [], emFalta: '0.00' }
       p.linhas.push(d)
@@ -71,7 +83,7 @@ export default function PaginaRemessas() {
       }))
       .filter((p) => centimos(p.emFalta) > 0)
       .sort((a, b) => a.chave.localeCompare(b.chave))
-  }, [devidas.data, remessas.data, fundos.data])
+  }, [devidas.data, remessas.data])
 
   const lista = (remessas.data ?? []).filter((r) => !r.endDate)
   const emFaltaTotal = deCentimos(porEnviar.reduce((s, p) => s + centimos(p.emFalta), 0))
@@ -112,13 +124,12 @@ export default function PaginaRemessas() {
                       )}
                     </div>
                     <Tabela className="mt-2">
-                      <thead><tr><th className="sm:pl-6">Fundo</th><th className="num hidden sm:table-cell">Entrou</th><th className="num">Cabe à Missão</th><th className="num hidden md:table-cell">Pago na Missão</th><th className="num hidden sm:table-cell">Já enviado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
+                      <thead><tr><th className="sm:pl-6">Fundo</th><th className="num hidden sm:table-cell">Entrou</th><th className="num hidden md:table-cell">Pago na Missão</th><th className="num hidden sm:table-cell">Já enviado</th><th className="num sm:pr-6">Em falta</th></tr></thead>
                       <tbody>
-                        {p.linhas.map((l) => (
+                        {paraMostrar(p.linhas).map((l) => (
                           <tr key={l.fundoId}>
                             <td className="sm:pl-6"><span className="font-medium">{l.fundoNome}</span><span className="block text-xs text-muted-foreground">{fundos.data && parteDoFundo(fundos.data.find((f) => f.id === l.fundoId) ?? {})}</span></td>
                             <td className="num hidden text-muted-foreground sm:table-cell"><Dinheiro valor={l.recebido} /></td>
-                            <td className="num"><Dinheiro valor={l.devido} /></td>
                             <td className="num hidden text-muted-foreground md:table-cell"><Dinheiro valor={l.pagoDirecto} /></td>
                             <td className="num hidden text-muted-foreground sm:table-cell"><Dinheiro valor={l.remetido} /></td>
                             <td className="num font-medium sm:pr-6"><Dinheiro valor={l.emFalta} /></td>
@@ -182,7 +193,7 @@ export default function PaginaRemessas() {
 }
 
 /** Fundos que não entram no depósito mensal à Missão. */
-const FORA_DO_DEPOSITO = ['ES_MISSOES', 'ES_13_SABADO']
+const SAO_OFERTAS = ['OFERTA_COMBINADA', 'OFERTA_MISSIONARIA', 'ES_MISSOES', 'ES_13_SABADO']
 
 function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome: string; aoFechar: () => void }) {
   const contas = useContas()
@@ -200,12 +211,20 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
   const met = metodo || (conta?.tipo === 'MPESA' || conta?.tipo === 'EMOLA' ? METODO_DA_CONTA[conta.tipo] : 'BANCO')
   const categoria = categorias.data?.find((c) => c.eRemessa)
   const c = (v?: string) => (!v ? 0 : /^\d{1,14}(\.\d{1,2})?$/.test(v) ? centimos(v) : -1)
-  // as ofertas da Escola Sabatina (missionárias e 13.º sábado) não entram neste depósito
+  // no ecrã: Dízimo e Ofertas (a oferta combinada e as da Escola Sabatina juntas); por baixo vai uma linha por fundo
   const fundos = useFundos()
-  const foraDoDeposito = (id: number) => FORA_DO_DEPOSITO.includes(fundos.data?.find((f) => f.id === id)?.tipo ?? '')
+  const eOferta = (id: number) => SAO_OFERTAS.includes(fundos.data?.find((f) => f.id === id)?.tipo ?? '')
   const fundosLinhas = (p.remessa ? p.remessa.linhas.map((l) => ({ fundoId: l.fundoId, nome: p.linhas.find((d) => d.fundoId === l.fundoId)?.fundoNome ?? `Fundo ${l.fundoId}`, emFalta: l.valor }))
     : p.linhas.filter((l) => centimos(l.emFalta) > 0).map((l) => ({ fundoId: l.fundoId, nome: l.fundoNome, emFalta: l.emFalta })))
-    .filter((l) => p.remessa || !foraDoDeposito(l.fundoId))
+
+  const grupos = fundosLinhas.reduce<{ nome: string; detalhe: string[]; valor: number }[]>((g, l) => {
+    const v = Math.max(0, c(valores[l.fundoId] ?? l.emFalta))
+    if (eOferta(l.fundoId)) {
+      const o = g.find((x) => x.nome === 'Ofertas') ?? (g.push({ nome: 'Ofertas', detalhe: [], valor: 0 }), g[g.length - 1])
+      o.valor += v; o.detalhe.push(l.nome)
+    } else g.push({ nome: l.nome, detalhe: [], valor: v })
+    return g
+  }, [])
   const total = fundosLinhas.reduce((s, l) => s + Math.max(0, c(valores[l.fundoId] ?? l.emFalta)), 0)
 
   const submeter = async () => {
@@ -241,10 +260,10 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
           <ErroFormulario mensagem={erro} />
           <div className="overflow-hidden rounded-xl border">
             <ul className="divide-y">
-              {fundosLinhas.map((l) => (
-                <li key={l.fundoId} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                  <span className="font-medium">{l.nome}</span>
-                  <span className="num">{dinheiro(valores[l.fundoId] ?? l.emFalta)}</span>
+              {grupos.map((g) => (
+                <li key={g.nome} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                  <span className="font-medium">{g.nome}</span>
+                  <span className="num">{dinheiro(deCentimos(g.valor))}</span>
                 </li>
               ))}
             </ul>

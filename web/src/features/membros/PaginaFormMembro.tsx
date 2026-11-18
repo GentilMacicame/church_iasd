@@ -18,7 +18,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Briefcase, Check, Church, ClipboardCheck, Droplets, Heart, IdCard, MapPin, Pencil, Phone,
+  AlertTriangle, ArrowLeft, ArrowRight, Briefcase, Check, Church, ClipboardCheck, Droplets, Heart, IdCard, Pencil, Phone,
   UserPen, UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -48,6 +48,16 @@ const dataPassada = z.string()
 const TELEFONE = /^\+?\d[\d\s]{7,16}$/
 const telefone = texto(30).refine((v) => !v || TELEFONE.test(v), 'Escreva o número com o indicativo, por exemplo +258 84 123 4567')
 const OUTRA = 'outra'
+
+/** Formato de cada documento (sem espaços): o padrão, a ajuda por baixo do campo e a mensagem de erro. */
+const REGRAS_DOCUMENTO: Record<string, { padrao: RegExp; ajuda: string; erro: string }> = {
+  BI: { padrao: /^\d{12}[A-Za-z]$/, ajuda: '12 algarismos e uma letra', erro: 'O BI tem 12 algarismos e uma letra, ex.: 110100000000A' },
+  PASSAPORTE: { padrao: /^[A-Za-z]{1,2}\d{6,9}$/, ajuda: '1 ou 2 letras e 6 a 9 algarismos', erro: 'O passaporte tem 1 ou 2 letras e 6 a 9 algarismos, ex.: AB1234567' },
+  DIRE: { padrao: /^\d{2}[A-Za-z]{2}\d{8}[A-Za-z]?$/, ajuda: '2 algarismos, 2 letras e 8 algarismos', erro: 'A DIRE tem 2 algarismos, 2 letras e 8 algarismos, ex.: 11MZ00012345' },
+  CEDULA: { padrao: /^\d{1,10}(\/\d{2,4})?$/, ajuda: 'Número (e o ano), ex.: 1234/2010', erro: 'A cédula é um número, com o ano se tiver, ex.: 1234/2010' },
+  CARTA_CONDUCAO: { padrao: /^\d{6,10}$/, ajuda: '6 a 10 algarismos', erro: 'A carta de condução tem de 6 a 10 algarismos' },
+  CARTAO_ELEITOR: { padrao: /^\d{8,13}$/, ajuda: '8 a 13 algarismos', erro: 'O cartão de eleitor tem de 8 a 13 algarismos' },
+}
 /** Sugestões para "Como conheceu a mensagem" (texto livre: pode escrever outra). */
 const METODOS_CONVERSAO = ['Estudo bíblico', 'Campanha de evangelismo', 'Família', 'Amigo ou vizinho', 'Escola Sabatina',
   'Pequeno grupo', 'Rádio ou televisão', 'Literatura', 'Internet e redes sociais']
@@ -102,11 +112,9 @@ const esquema = z.object({
   modoEntrada: z.string(),
 }).superRefine((v, ctx) => {
   const doc = v.numeroIdentificacao.replace(/\s/g, '')
-  if (doc && v.tipoIdentificacao === 'BI' && !/^\d{12}[A-Za-z]$/.test(doc)) {
-    ctx.addIssue({ code: 'custom', path: ['numeroIdentificacao'], message: 'O BI tem 12 algarismos e uma letra, ex.: 110100000000A' })
-  }
-  if (doc && v.tipoIdentificacao === 'PASSAPORTE' && !/^[A-Za-z0-9]{6,12}$/.test(doc)) {
-    ctx.addIssue({ code: 'custom', path: ['numeroIdentificacao'], message: 'O passaporte tem de 6 a 12 letras ou algarismos' })
+  const regra = REGRAS_DOCUMENTO[v.tipoIdentificacao]
+  if (doc && regra && !regra.padrao.test(doc)) {
+    ctx.addIssue({ code: 'custom', path: ['numeroIdentificacao'], message: regra.erro })
   }
   if (doc && !v.tipoIdentificacao) {
     ctx.addIssue({ code: 'custom', path: ['tipoIdentificacao'], message: 'Escolha o tipo de documento' })
@@ -186,84 +194,30 @@ const PASSOS = [
  */
 function Passos({ actual, feitos, aoEscolher, livre }: { actual: number; feitos: Set<number>; aoEscolher: (i: number) => void; livre: boolean }) {
   const total = PASSOS.length
-  const pct = Math.round(((actual + 1) / total) * 100)
   const podeIr = (i: number) => livre || i <= actual || feitos.has(i) || feitos.has(i - 1)
-  const P = PASSOS[actual]
   return (
-    <>
-      <nav aria-label="Secções da ficha" className="rounded-xl border bg-card p-4 shadow-card lg:hidden">
-        <div className="flex items-center gap-3">
-          <span className="flex size-10 flex-none items-center justify-center rounded-full bg-primary text-primary-foreground"><P.icone className="size-5" /></span>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-muted-foreground">Secção {actual + 1} de {total}</p>
-            <p className="truncate font-semibold">{P.titulo}</p>
-          </div>
-          <span className="text-xs font-medium text-muted-foreground tabular-nums">{pct}%</span>
-        </div>
-        <div className="mt-3 flex gap-1" aria-hidden>
-          {PASSOS.map((x, i) => <span key={x.chave} className={cn('h-1.5 flex-1 rounded-full', i <= actual ? 'bg-primary' : feitos.has(i) ? 'bg-primary/40' : 'bg-muted')} />)}
-        </div>
-        {livre && (
-          <div className="-mx-1 mt-3 flex gap-1 overflow-x-auto pb-1">
-            {PASSOS.map((x, i) => (
-              <button key={x.chave} type="button" onClick={() => aoEscolher(i)} aria-current={i === actual ? 'step' : undefined}
-                className={cn('alvo flex-none rounded-full border px-3 text-xs font-medium', i === actual ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground')}>
-                {x.titulo}
+    <nav aria-label="Secções da ficha" className="rounded-2xl border bg-card px-4 py-4 shadow-card sm:px-6">
+      <ol className="flex items-start">
+        {PASSOS.map((x, i) => {
+          const emCurso = i === actual
+          const feito = feitos.has(i) && !emCurso
+          return (
+            <li key={x.chave} className="relative flex flex-1 flex-col items-center">
+              {i > 0 && <span aria-hidden className={cn('absolute top-4 right-1/2 left-[-50%] h-0.5', i <= actual || feito ? 'bg-primary' : 'bg-border')} />}
+              <button type="button" disabled={!podeIr(i)} onClick={() => aoEscolher(i)} aria-current={emCurso ? 'step' : undefined} title={x.titulo}
+                className="alvo group relative z-[1] flex flex-col items-center gap-1.5 disabled:cursor-not-allowed">
+                <span className={cn('flex size-8 items-center justify-center rounded-full border-2 bg-card text-sm font-semibold transition-colors',
+                  emCurso ? 'border-primary bg-primary text-primary-foreground ring-4 ring-primary/15' : feito ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground group-enabled:group-hover:border-primary/50')}>
+                  {feito ? <Check className="size-4" /> : i + 1}
+                </span>
+                <span className={cn('hidden max-w-28 text-center text-xs leading-tight font-medium md:block', emCurso ? 'text-foreground' : 'text-muted-foreground')}>{x.titulo}</span>
               </button>
-            ))}
-          </div>
-        )}
-      </nav>
-
-      <nav aria-label="Secções da ficha" className="hidden rounded-xl border bg-card p-5 shadow-card lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:block">
-        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Progresso</p>
-        <div className="mt-2 flex items-baseline justify-between text-sm">
-          <span className="font-medium">Secção {actual + 1} de {total}</span>
-          <span className="text-muted-foreground tabular-nums">{pct}%</span>
-        </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-          <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${pct}%` }} />
-        </div>
-        <ol className="mt-6">
-          {PASSOS.map((x, i) => {
-            const emCurso = i === actual
-            const feito = feitos.has(i) && !emCurso
-            return (
-              <li key={x.chave} className="relative pb-4 last:pb-0">
-                {i < total - 1 && <span aria-hidden className={cn('absolute top-10 bottom-0 left-[19px] w-0.5 rounded-full', feito ? 'bg-primary/50' : 'bg-border')} />}
-                <button type="button" disabled={!podeIr(i)} onClick={() => aoEscolher(i)} aria-current={emCurso ? 'step' : undefined}
-                  className={cn('alvo group relative flex w-full items-start gap-3 rounded-lg p-1 text-left transition-colors disabled:cursor-not-allowed',
-                    emCurso ? 'bg-accent/60' : 'enabled:hover:bg-muted/60')}>
-                  <span className={cn('flex size-8 flex-none items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors',
-                    emCurso || feito ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground',
-                    emCurso && 'shadow-sm ring-4 ring-primary/15')}>
-                    {feito ? <Check className="size-4" /> : emCurso ? <x.icone className="size-4" /> : i + 1}
-                  </span>
-                  <span className="min-w-0 pt-0.5">
-                    <span className={cn('block text-sm font-semibold', emCurso || feito ? 'text-foreground' : 'text-muted-foreground')}>{x.titulo}</span>
-                    <span className="block text-xs leading-snug text-muted-foreground">{x.descricao}</span>
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ol>
-      </nav>
-    </>
-  )
-}
-
-/** No computador, por cima do formulário: a secção em curso. */
-function CabecalhoPasso({ passo }: { passo: number }) {
-  const P = PASSOS[passo]
-  return (
-    <header className="hidden items-center gap-3 border-b pb-4 lg:flex">
-      <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-accent text-accent-foreground"><P.icone className="size-5" /></span>
-      <div>
-        <p className="text-xs font-medium text-muted-foreground">Secção {passo + 1} de {PASSOS.length}</p>
-        <h2 className="text-lg font-semibold tracking-tight">{P.titulo} <span className="font-normal text-muted-foreground">· {P.descricao}</span></h2>
-      </div>
-    </header>
+            </li>
+          )
+        })}
+      </ol>
+      <p className="mt-3 text-center text-sm font-medium md:hidden">{actual + 1}/{total} · {PASSOS[actual].titulo}</p>
+    </nav>
   )
 }
 
@@ -541,15 +495,14 @@ export default function PaginaFormMembro() {
         descricao={id ? `Ficha no livro de membros de ${igreja.nome}` : `${igreja.nome} · o registo fica por aprovar pelo secretário`}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-5xl items-start gap-6">
         <Passos actual={passo} feitos={feitos} aoEscolher={irPara} livre={!!id} />
         <div className="grid min-w-0 gap-6">
-        <CabecalhoPasso passo={passo} />
         <ErroFormulario mensagem={erroTopo} />
 
         {/* as secções ficam todas montadas (só se escondem): os valores e as validações não se perdem */}
         <div className={cn('grid gap-6', mostra(0))}>
-          <Cartao titulo={t.ficha.identificacao} descricao="Nome e nascimento" icone={IdCard}>
+          <Cartao titulo={t.ficha.identificacao}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.nome} erro={e.nome?.message} obrigatorio>
                 {(p) => <Input {...p} {...register('nome')} autoComplete="given-name" className="alvo" />}
@@ -571,13 +524,13 @@ export default function PaginaFormMembro() {
               </CampoFormulario>
             </div>
           </Cartao>
-          <Cartao titulo="Documentos" descricao="Documento de identificação e outro, se tiver" icone={IdCard}>
+          <Cartao titulo="Documentos">
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.tipoIdentificacao} erro={e.tipoIdentificacao?.message}>
                 {(p) => <Seleccao {...p} {...register('tipoIdentificacao')}><Opcoes mapa={rotulos.tipoIdentificacao} /></Seleccao>}
               </CampoFormulario>
               <CampoFormulario rotulo={t.ficha.numeroIdentificacao} erro={e.numeroIdentificacao?.message}
-                ajuda={v.tipoIdentificacao === 'BI' ? '12 algarismos e uma letra' : undefined}>
+                ajuda={REGRAS_DOCUMENTO[v.tipoIdentificacao]?.ajuda}>
                 {(p) => <Input {...p} {...register('numeroIdentificacao')} autoComplete="off" className="alvo num uppercase" />}
               </CampoFormulario>
               <CampoFormulario rotulo={t.ficha.outroDocumento} erro={e.outroDocumento?.message} ajuda="Tipo e número, ex.: NUIT 400123456">
@@ -589,7 +542,7 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(1))}>
-          <Cartao titulo="Estado civil e cônjuge" descricao="Se o cônjuge for membro, escolha-o" icone={Heart}>
+          <Cartao titulo="Estado civil e cônjuge">
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.estadoCivil} erro={e.estadoCivil?.message}>
                 {(p) => <Seleccao {...p} {...register('estadoCivil')}><Opcoes mapa={rotulos.estadoCivil} /></Seleccao>}
@@ -618,7 +571,7 @@ export default function PaginaFormMembro() {
               </div>
             )}
           </Cartao>
-          <Cartao titulo={t.ficha.filiacao} descricao="Pais e encarregado de educação" icone={Heart}>
+          <Cartao titulo={t.ficha.filiacao}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.nomePai} erro={e.nomePai?.message}>
                 {(p) => <Input {...p} {...register('nomePai')} className="alvo" />}
@@ -640,7 +593,7 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(2))}>
-          <Cartao titulo="Contactos" descricao="O telemóvel recebe os SMS" icone={Phone}>
+          <Cartao titulo="Contactos">
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.telemovel} erro={e.telemovel?.message}>
                 {(p) => <Input {...p} {...register('telemovel')} inputMode="tel" autoComplete="tel" placeholder="+258 84 123 4567" className="alvo num" />}
@@ -654,7 +607,7 @@ export default function PaginaFormMembro() {
             </div>
             {id && <p className="mt-4 text-xs text-muted-foreground">Mudar um contacto guarda o anterior no histórico. WhatsApp e outros contactos gerem-se na ficha.</p>}
           </Cartao>
-          <Cartao titulo={t.ficha.moradaTitulo} descricao="Morada e contactos" icone={MapPin}>
+          <Cartao titulo={t.ficha.moradaTitulo}>
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.provincia} erro={e.provincia?.message}>
                 {(p) => (
@@ -690,7 +643,7 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(3))}>
-          <Cartao titulo="Profissão e estudos" descricao="O que faz, onde trabalha e até onde estudou" icone={Briefcase}>
+          <Cartao titulo="Profissão e estudos">
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.profissao} erro={e.profissao?.message}>
                 {(p) => <Input {...p} {...register('profissao')} className="alvo" />}
@@ -706,33 +659,35 @@ export default function PaginaFormMembro() {
         </div>
 
         <div className={cn('grid gap-6', mostra(4))}>
-          <Cartao titulo="Conversão" descricao="De onde veio e como conheceu a mensagem" icone={Droplets}>
-            <div className={grade}>
+          <Cartao titulo="Conversão">
+            <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
               <CampoFormulario rotulo={t.ficha.religiaoAnterior} erro={e.religiaoAnterior?.message}>
                 {(p) => <Input {...p} {...register('religiaoAnterior')} placeholder="ex.: Católica, nenhuma" className="alvo" />}
               </CampoFormulario>
-              <CampoFormulario rotulo={t.ficha.metodoConversao} erro={e.metodoConversao?.message} ajuda="Escolha da lista ou escreva">
-                {(p) => <Input {...p} {...register('metodoConversao')} list="metodos-conversao" className="alvo" />}
+              <CampoFormulario rotulo={t.ficha.metodoConversao} erro={e.metodoConversao?.message}>
+                {(p) => <Input {...p} {...register('metodoConversao')} list="metodos-conversao" placeholder="ex.: amigo, rádio, evangelismo" className="alvo" />}
               </CampoFormulario>
               <datalist id="metodos-conversao">{METODOS_CONVERSAO.map((m) => <option key={m} value={m} />)}</datalist>
             </div>
-            <div className="mt-5 grid gap-4 border-t pt-5">
-              <label className="alvo flex items-center gap-2 text-sm font-medium">
-                <input type="checkbox" {...register('exMembro')} className="size-4 accent-[var(--primary)]" />
-                {t.ficha.exMembro}
+            <div className="mt-5 grid gap-4">
+              <label className={cn('alvo flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors hover:bg-muted/40', v.exMembro && 'border-primary bg-primary/5')}>
+                <input type="checkbox" {...register('exMembro')} className="mt-0.5 size-4 accent-[var(--primary)]" />
+                <span>
+                  <span className="block text-sm font-medium">{t.ficha.exMembro}</span>
+                  <span className="block text-xs text-muted-foreground">O baptismo de agora fica como rebaptismo.</span>
+                </span>
               </label>
               {mostraAnterior && (
-                <div className={grade}>
-                  <CampoFormulario rotulo={t.ficha.dataBaptismoAnterior} erro={e.dataBaptismoAnterior?.message}
-                    ajuda="O baptismo de agora fica registado como rebaptismo.">
+                <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+                  <CampoFormulario rotulo={t.ficha.dataBaptismoAnterior} erro={e.dataBaptismoAnterior?.message}>
                     {data('dataBaptismoAnterior')}
                   </CampoFormulario>
                 </div>
               )}
             </div>
           </Cartao>
-          <Cartao titulo={v.exMembro ? 'Rebaptismo' : 'Baptismo'} descricao="Data, local e ministro" icone={Droplets}>
-            <div className={grade}>
+          <Cartao titulo={v.exMembro ? 'Rebaptismo' : 'Baptismo'}>
+            <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
               <CampoFormulario rotulo={t.ficha.dataBaptismo} erro={e.dataBaptismo?.message}>{data('dataBaptismo')}</CampoFormulario>
               <CampoFormulario rotulo={t.ficha.igrejaBaptismo} erro={e.igrejaBaptismo?.message}>
                 {(p) => (
@@ -742,18 +697,18 @@ export default function PaginaFormMembro() {
                   </Seleccao>
                 )}
               </CampoFormulario>
-              <CampoFormulario rotulo={t.ficha.localBaptismo} erro={e.localBaptismo?.message} ajuda="ex.: Rio Matola, baptistério da igreja">
-                {(p) => <Input {...p} {...register('localBaptismo')} className="alvo" />}
+              <CampoFormulario rotulo={t.ficha.localBaptismo} erro={e.localBaptismo?.message}>
+                {(p) => <Input {...p} {...register('localBaptismo')} placeholder="ex.: Rio Matola, baptistério" className="alvo" />}
               </CampoFormulario>
-              <CampoFormulario rotulo={t.ficha.oficiante} erro={e.oficiante?.message} ajuda="Nome do pastor ordenado que oficiou">
-                {(p) => <Input {...p} {...register('oficiante')} className="alvo" />}
+              <CampoFormulario rotulo={t.ficha.oficiante} erro={e.oficiante?.message}>
+                {(p) => <Input {...p} {...register('oficiante')} placeholder="Pastor que oficiou" className="alvo" />}
               </CampoFormulario>
             </div>
           </Cartao>
         </div>
 
         <div className={cn('grid gap-6', mostra(5))}>
-          <Cartao titulo="Participação na igreja" descricao="Como e quando entrou nesta igreja" icone={Church}>
+          <Cartao titulo="Participação na igreja">
             <div className={grade}>
               <CampoFormulario rotulo={t.ficha.dataEntrada} erro={e.dataEntrada?.message} ajuda="Data do voto de admissão nesta igreja.">
                 {data('dataEntrada')}
@@ -776,7 +731,7 @@ export default function PaginaFormMembro() {
         </div>
 
         {passo === ultimo && (
-          <Cartao titulo="Rever a ficha" descricao={id ? 'Confira as alterações e guarde.' : 'Confira os dados; o registo fica por aprovar pelo secretário.'} icone={ClipboardCheck}>
+          <Cartao titulo="Rever a ficha">
             <div className="grid gap-4 lg:grid-cols-2">
               <Seccao i={0}>
                 <Linha rotulo={t.ficha.nome} valor={`${v.nome} ${v.apelido}`.trim()} />
@@ -820,7 +775,7 @@ export default function PaginaFormMembro() {
           </Cartao>
         )}
 
-        <div className="sticky bottom-0 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pt-5 sm:pb-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-3 z-20 flex items-center gap-2 rounded-2xl border bg-card/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur sm:px-6">
           <Button asChild variant="ghost" className="alvo mr-auto"><Link to={voltarPara}>{t.comum.cancelar}</Link></Button>
           {passo > 0 && <Button type="button" variant="outline" className="alvo" onClick={() => irPara(passo - 1)}><ArrowLeft className="size-4" /><span className="hidden sm:inline">Anterior</span></Button>}
           {passo < ultimo && <Button type="button" variant={id ? 'outline' : 'default'} className="alvo min-w-28" onClick={() => void avancar()}>Seguinte<ArrowRight className="size-4" /></Button>}

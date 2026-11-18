@@ -74,6 +74,7 @@ import mz.org.iasd.igreja.models.tesouraria.Orcamento;
 import mz.org.iasd.igreja.models.tesouraria.OrcamentoLinha;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoBancario;
 import mz.org.iasd.igreja.models.tesouraria.PagamentoMpesa;
+import mz.org.iasd.igreja.models.tesouraria.QuotaReavivamento;
 import mz.org.iasd.igreja.models.tesouraria.Recibo;
 import mz.org.iasd.igreja.models.tesouraria.Remessa;
 import mz.org.iasd.igreja.models.tesouraria.RemessaLinha;
@@ -229,6 +230,7 @@ public final class CatalogoGerado {
             CalendarioOferta.class,
             Categoria.class,
             Alvo.class,
+            QuotaReavivamento.class,
             Orcamento.class,
             OrcamentoLinha.class,
             Despesa.class,
