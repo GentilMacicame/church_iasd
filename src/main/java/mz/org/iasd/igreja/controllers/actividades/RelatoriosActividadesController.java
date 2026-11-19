@@ -40,7 +40,7 @@ public class RelatoriosActividadesController extends BaseRelatoriosController {
     public static final Relatorio SANTA_CEIA = Relatorio.porIgreja("actividades.vw_santa_ceia", "igreja_id = ?", "data DESC, igreja")
             .comAnoMes("ano", null);
     public static final Relatorio SANTA_CEIA_PARTICIPACAO = Relatorio.porIgreja("actividades.vw_santa_ceia_participacao", "igreja_id = ?",
-            "faltas DESC, membro").comAnoMes("ano", null);
+            "faltas DESC, membro").comAnoMes("ano", null).comFiltro("membroId", "membro_id");
     public static final Relatorio PROGRAMA = Relatorio.porIgreja("actividades.vw_actividades_execucao",
             "igreja_id = ?", "data_inicio, nome").comAnoMes("ano", "mes");
 

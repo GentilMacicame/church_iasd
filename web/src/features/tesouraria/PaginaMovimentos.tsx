@@ -1,10 +1,10 @@
 /** Movimentos · "O que entrou e saiu neste mês, e o que falta confirmar ou aprovar?" */
 import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Banknote, ChevronLeft, ChevronRight, HandCoins, ListOrdered, ShieldAlert } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Banknote, HandCoins, ListOrdered, ShieldAlert } from 'lucide-react'
 import { Seleccao } from '@/components/comum/Seleccao'
 import { Button } from '@/components/ui/button'
-import { Dinheiro, Indicador, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Dinheiro, Indicador, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { useSessao } from '@/auth/sessao'
 import { rotulos, t } from '@/i18n/pt-MZ'
@@ -21,11 +21,6 @@ function limitesDoMes(mes: string) {
   const [a, m] = mes.split('-').map(Number)
   const ultimo = new Date(Date.UTC(a, m, 0)).getUTCDate()
   return { desde: `${mes}-01`, ate: `${mes}-${String(ultimo).padStart(2, '0')}`, nome: `${MESES[m - 1]} de ${a}` }
-}
-function mudarMes(mes: string, d: number) {
-  const [a, m] = mes.split('-').map(Number)
-  const n = new Date(Date.UTC(a, m - 1 + d, 1))
-  return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}`
 }
 
 type Filtro = 'todos' | 'entradas' | 'saidas' | 'pendentes'
@@ -59,6 +54,8 @@ export default function PaginaMovimentos() {
   const lista = doMes.filter((tr) =>
     filtro === 'entradas' ? tr.tipo === 'ENTRADA' : filtro === 'saidas' ? tr.tipo === 'SAIDA' : filtro === 'pendentes' ? tr.estado === 'PENDENTE' && !tr.endDate : true)
 
+  const anoHoje = Number(hojeIso().slice(0, 4))
+  const anos = Array.from({ length: 6 }, (_, i) => String(anoHoje - i))
   const definir = (k: string, v?: string) => setParams((p) => { const n = new URLSearchParams(p); if (v) n.set(k, v); else n.delete(k); return n })
   const abas: { k: Filtro; rotulo: string; n: number }[] = [
     { k: 'todos', rotulo: 'Todos', n: doMes.length }, { k: 'entradas', rotulo: 'Entradas', n: doMes.filter((x) => x.tipo === 'ENTRADA').length },
@@ -75,6 +72,18 @@ export default function PaginaMovimentos() {
           </>
         )} />
       <div className="grid gap-6">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Período e conta">
+          <Seleccao aria-label="Mês" value={mes.slice(5, 7)} onChange={(e) => definir('mes', `${mes.slice(0, 4)}-${e.target.value}`)} className="w-[calc(50%-0.25rem)] sm:w-40">
+            {MESES.map((n, i) => { const v = String(i + 1).padStart(2, '0'); return <option key={v} value={v} disabled={`${mes.slice(0, 4)}-${v}` > hojeIso().slice(0, 7)}>{n[0].toUpperCase() + n.slice(1)}</option> })}
+          </Seleccao>
+          <Seleccao aria-label="Ano" value={mes.slice(0, 4)} onChange={(e) => { const a = e.target.value; const m = `${a}-${mes.slice(5, 7)}`; definir('mes', m > hojeIso().slice(0, 7) ? hojeIso().slice(0, 7) : m) }} className="w-[calc(50%-0.25rem)] sm:w-28">
+            {anos.map((a) => <option key={a} value={a}>{a}</option>)}
+          </Seleccao>
+          <Seleccao aria-label="Conta" value={contaFiltro ? String(contaFiltro) : ''} onChange={(e) => definir('conta', e.target.value || undefined)} className="w-full sm:w-60">
+            <option value="">Todas as contas</option>
+            {(contas.data ?? []).filter((c) => !c.endDate).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </Seleccao>
+        </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           <Indicador rotulo="Entradas" valor={<Dinheiro valor={soma(entradas)} />}
             nota={pagoNaMissao.length ? <>{entradas.length} na igreja · + <Dinheiro valor={soma(pagoNaMissao.filter((x) => x.tipo === 'ENTRADA'))} /> pagos na Missão</> : `${qtd(entradas.length, 'confirmada(s)')}`} icone={ArrowDownRight} tom="success" aCarregar={q.isPending} />
@@ -84,24 +93,9 @@ export default function PaginaMovimentos() {
         </div>
 
         <section className="min-w-0 rounded-xl border bg-card shadow-card">
-          <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês anterior" onClick={() => definir('mes', mudarMes(mes, -1))}><ChevronLeft className="size-4" /></Button>
-              <span className="min-w-36 text-center text-sm font-medium first-letter:uppercase">{nome}</span>
-              <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês seguinte" disabled={mes >= hojeIso().slice(0, 7)} onClick={() => definir('mes', mudarMes(mes, 1))}><ChevronRight className="size-4" /></Button>
-            </div>
-            <Seleccao aria-label="Conta" value={contaFiltro ? String(contaFiltro) : ''} onChange={(e) => definir('conta', e.target.value || undefined)} className="w-full sm:w-56">
-              <option value="">Todas as contas</option>
-              {(contas.data ?? []).filter((c) => !c.endDate).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </Seleccao>
-            <div role="tablist" aria-label="Filtrar" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
-              {abas.map((a) => (
-                <button key={a.k} role="tab" aria-selected={filtro === a.k} type="button" onClick={() => definir('ver', a.k === 'todos' ? undefined : a.k)}
-                  className={cn('alvo rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground', filtro === a.k && 'bg-card text-foreground shadow-sm')}>
-                  {a.rotulo} <span className="num ml-1 opacity-70">{a.n}</span>
-                </button>
-              ))}
-            </div>
+          <div className="border-b px-4 py-3 sm:px-6">
+            <Segmentos rotulo="Mostrar" valor={filtro} aoMudar={(v) => definir('ver', v === 'todos' ? undefined : v)}
+              opcoes={abas.map((a) => ({ valor: a.k, rotulo: a.rotulo, contagem: a.n }))} />
           </div>
           {q.isPending ? <LinhasACarregar linhas={6} />
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="m-4" />

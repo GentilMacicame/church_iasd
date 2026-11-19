@@ -20,6 +20,7 @@ import { f, rotulos, t } from '@/i18n/pt-MZ'
 import { data, idade } from '@/lib/formatos'
 import { PilulasMembro } from './PaginaMembros'
 import { DialogoBaptismo, DialogoContacto } from './Dialogos'
+import { AcompanhamentoMembro } from './Acompanhamento'
 import { CartaoLivro } from '@/features/livro/MovimentosMembro'
 import { CartaoConsentimentos } from '@/features/secretaria/Consentimentos'
 import {
@@ -316,6 +317,7 @@ export default function PaginaMembro() {
     <>
       <Voltar />
       <Cabecalho m={m} />
+      <AcompanhamentoMembro m={m} />
       <div className="grid items-start gap-6 lg:grid-cols-12">
         <Ficha m={m} />
         <div className="grid gap-6 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:col-span-4">

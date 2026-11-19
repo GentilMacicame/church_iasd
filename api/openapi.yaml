@@ -3136,6 +3136,10 @@ paths:
         in: query
         schema:
           type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
       x-vista: actividades.vw_santa_ceia_participacao
       responses:
         '200':
@@ -16841,6 +16845,10 @@ paths:
         in: query
         schema:
           type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
       x-vista: tesouraria.vw_contribuicoes_membro
       responses:
         '200':
@@ -21095,6 +21103,10 @@ paths:
         schema:
           type: integer
       - name: mes
+        in: query
+        schema:
+          type: integer
+      - name: membroId
         in: query
         schema:
           type: integer

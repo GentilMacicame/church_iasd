@@ -6,9 +6,9 @@
  */
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { CalendarRange, ChevronLeft, ChevronRight, Church, CircleCheck, Coins, ListChecks, Network, Plus } from 'lucide-react'
+import { CalendarRange, Church, CircleCheck, Coins, ListChecks, Network, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Cartao, Indicador, Pilula, Tabela, TituloPagina } from '@/components/comum/elementos'
+import { Cartao, Indicador, Pilula, Segmentos, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
 import { useIgreja, useSessao } from '@/auth/sessao'
 import { dinheiro, hojeIso, hora, qtd } from '@/lib/formatos'
@@ -19,7 +19,13 @@ import { DialogoActividade } from './DialogoActividade'
 import { Acompanhamento } from './Acompanhamento'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-const DIA = new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'short', timeZone: 'Africa/Maputo' })
+const MESES_CURTOS = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.']
+const SEMANA = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.']
+/** "10 out." e o dia da semana, na hora de Maputo. */
+function diaMes(iso: string) {
+  const d = new Date(new Date(iso).toLocaleString('en-US', { timeZone: 'Africa/Maputo' }))
+  return { dia: `${d.getDate()} ${MESES_CURTOS[d.getMonth()]}`, semana: SEMANA[d.getDay()] }
+}
 
 export default function PaginaAreaPastoral() {
   const igreja = useIgreja()
@@ -41,6 +47,9 @@ export default function PaginaAreaPastoral() {
   const hoje = hojeIso()
   const proximas = lista.filter((x) => x.dataInicio.slice(0, 10) >= hoje && x.estado !== 'CANCELADA')
   const previsto = lista.reduce((s, x) => s + Number(x.valorPrevisto ?? 0), 0)
+  // os dois anos anteriores, o corrente e o seguinte (e o escolhido, se for outro)
+  const anoHoje = Number(hojeIso().slice(0, 4))
+  const anosVisiveis = [...new Set([anoHoje - 2, anoHoje - 1, anoHoje, anoHoje + 1, ano])].sort((x, y) => x - y)
   const mudarAno = (n: number) => setParams((p) => { const x = new URLSearchParams(p); x.set('ano', String(n)); return x }, { replace: true })
 
   return (
@@ -60,32 +69,28 @@ export default function PaginaAreaPastoral() {
             </EstadoVazio>
           </Cartao>
         ) : (
-          <div className="grid gap-6">
+          <Tabs value={aba} onValueChange={setAba} className="grid gap-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Segmentos rotulo="Ano" valor={String(ano)} aoMudar={(v) => mudarAno(Number(v))}
+                opcoes={anosVisiveis.map((a) => ({ valor: String(a), rotulo: String(a) }))} />
+              <TabsList>
+                <TabsTrigger value="programa" className="alvo gap-1.5"><CalendarRange className="size-4" />Programa</TabsTrigger>
+                <TabsTrigger value="acompanhamento" className="alvo gap-1.5"><ListChecks className="size-4" />Acompanhamento</TabsTrigger>
+              </TabsList>
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
               <Indicador rotulo="Igrejas" valor={doDistrito.length || '—'} icone={Church} nota={doDistrito.map((i) => i.nome).slice(0, 2).join(', ') || 'do distrito'} />
-              <Indicador rotulo={`Actividades ${ano}`} valor={lista.length} icone={CalendarRange} tom="info" nota={`${proximas.length} por realizar`} aCarregar={q.isPending} />
+              <Indicador rotulo="Actividades" valor={lista.length} icone={CalendarRange} tom="info" nota={`${proximas.length} por realizar`} aCarregar={q.isPending} />
               <Indicador rotulo="Realizadas" valor={lista.filter((x) => x.estado === 'CONCLUIDA').length} icone={CircleCheck} tom="success"
                 nota={`${qtd(lista.filter((x) => x.estado === 'CANCELADA').length, 'cancelada(s)')}`} aCarregar={q.isPending} />
               <Indicador rotulo="Orçamento" valor={dinheiro(previsto.toFixed(2))} icone={Coins} nota={`executado ${dinheiro(lista.reduce((s, x) => s + Number(x.executado ?? 0), 0).toFixed(2))}`} aCarregar={q.isPending} />
             </div>
 
-            <Tabs value={aba} onValueChange={setAba}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="programa" className="alvo gap-1.5"><CalendarRange className="size-4" />Programa</TabsTrigger>
-              <TabsTrigger value="acompanhamento" className="alvo gap-1.5"><ListChecks className="size-4" />Acompanhamento</TabsTrigger>
-            </TabsList>
             <TabsContent value="acompanhamento" className="mt-0">
               {q.isPending ? <LinhasACarregar linhas={4} /> : <Acompanhamento ano={ano} linhas={lista.map((x) => ({ ...x, grupo: 'Área pastoral' }))} />}
             </TabsContent>
             <TabsContent value="programa" className="mt-0">
-            <Cartao titulo={`Programa da área pastoral · ${ano}`} descricao="Aparece também no programa de cada igreja" semMargem
-              accoes={(
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="size-9" aria-label="Ano anterior" onClick={() => mudarAno(ano - 1)}><ChevronLeft className="size-4" /></Button>
-                  <span className="w-14 text-center text-sm font-medium tabular-nums">{ano}</span>
-                  <Button variant="outline" size="icon" className="size-9" aria-label="Ano seguinte" onClick={() => mudarAno(ano + 1)}><ChevronRight className="size-4" /></Button>
-                </div>
-              )}>
+            <Cartao titulo={`Programa de ${ano}`} descricao="Aparece também no programa de cada igreja" semMargem>
               {q.isPending ? <LinhasACarregar linhas={4} />
                 : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="m-4" />
                 : lista.length === 0 ? (
@@ -100,7 +105,7 @@ export default function PaginaAreaPastoral() {
                     <tbody>
                       {lista.map((x) => (
                         <tr key={x.id} onClick={() => navigate(`/actividades/${x.id}`)} className={cn('cursor-pointer', (x.estado === 'CANCELADA' || x.dataInicio.slice(0, 10) < hoje) && 'text-muted-foreground')}>
-                          <td className="whitespace-nowrap sm:pl-6"><span className="font-medium">{DIA.format(new Date(x.dataInicio))}</span><span className="block text-xs text-muted-foreground tabular-nums">{hora(x.dataInicio)}{x.dataFim ? `–${hora(x.dataFim)}` : ''}</span></td>
+                          <td className="whitespace-nowrap sm:pl-6"><span className="font-medium">{diaMes(x.dataInicio).dia}</span><span className="block text-xs text-muted-foreground tabular-nums">{diaMes(x.dataInicio).semana} · {hora(x.dataInicio)}{x.dataFim ? `–${hora(x.dataFim)}` : ''}</span></td>
                           <td>
                             <Link to={`/actividades/${x.id}`} onClick={(e) => e.stopPropagation()} className={cn('font-medium hover:text-primary', x.estado === 'CANCELADA' && 'line-through')}>{x.nome}</Link>
                             {x.local && <span className="block text-xs text-muted-foreground">{x.local}</span>}
@@ -115,8 +120,7 @@ export default function PaginaAreaPastoral() {
                 )}
             </Cartao>
             </TabsContent>
-            </Tabs>
-          </div>
+          </Tabs>
         )}
       {nova && <DialogoActividade pastoral aoFechar={() => setNova(false)} aoGravar={(id) => navigate(`/actividades/${id}`)} />}
     </>

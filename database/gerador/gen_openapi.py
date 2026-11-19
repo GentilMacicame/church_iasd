@@ -308,7 +308,8 @@ for p_, v_, perm in [('saldos-contas', 'vw_saldo_conta', 'tesouraria.conta_finan
                      ('conferencia-contagens', 'vw_contagem_conferencia', 'tesouraria.contagem_numerario.ler'),
                      ('despesas-por-pagar', 'vw_despesas_por_pagar', 'tesouraria.despesa.ler'),
                      ('extractos-por-reconciliar', 'vw_extrato_por_reconciliar', 'tesouraria.extrato_linha.ler')]:
-    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, ANO if p_ in ('remessas-devidas', 'extracto-anual', 'contribuicoes', 'reavivamento-pessoas') else ())
+    rel(f'/v1/tesouraria/{p_}', 'tesouraria.' + v_, TES, perm, (ANO + [{'name': 'membroId', 'in': 'query', 'schema': I}]) if p_ in ('contribuicoes', 'reavivamento-pessoas')
+        else ANO if p_ in ('remessas-devidas', 'extracto-anual') else ())
 rel('/v1/secretaria/membros-basico', 'secretaria.vw_membro_basico', SEC, 'secretaria.membro.ler')
 rel('/v1/secretaria/membros-lista', 'secretaria.vw_membros_lista', SEC, 'secretaria.membro.ler')   # V33: exportar
 # V33: registos parecidos (possíveis duplicados) antes de registar ou ao editar; só avisa, não bloqueia
@@ -418,7 +419,7 @@ rel('/v1/actividades/santa-ceia-historico', 'actividades.vw_santa_ceia', TITULO[
     [{'name': 'ano', 'in': 'query', 'schema': I}])
 # V52: participação de cada membro na Santa Ceia por ano
 rel('/v1/actividades/santa-ceia-participacao', 'actividades.vw_santa_ceia_participacao', TITULO['actividades'], 'actividades.santa_ceia_participante.ler',
-    [{'name': 'ano', 'in': 'query', 'schema': I}])
+    [{'name': 'ano', 'in': 'query', 'schema': I}, {'name': 'membroId', 'in': 'query', 'schema': I}])
 # V38: dashboard por período, igreja a igreja
 PAINEL_LINHA = obj(['id', 'nome', 'membros', 'activos', 'inactivos'], id=I, nome=STR, entidadeId=I, entidade=STR,
                    distritoPastoralId={**I, 'nullable': True}, distritoPastoral={**STR, 'nullable': True},

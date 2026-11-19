@@ -47,13 +47,13 @@ public class RelatoriosTesourariaController extends BaseRelatoriosController {
     public static final Relatorio EXECUCAO_ORCAMENTO = Relatorio.porIgreja("tesouraria.vw_execucao_orcamento",
             "orc_igr_id = ?", "orc_ano DESC, cat_codigo").comAnoMes("orc_ano", null);
     public static final Relatorio CONTRIBUICOES = Relatorio.porIgreja("tesouraria.vw_contribuicoes_membro",
-            "tra_igr_id = ?", "tra_data_hora DESC").comAnoMes("periodo_ano", "periodo_mes");
+            "tra_igr_id = ?", "tra_data_hora DESC").comAnoMes("periodo_ano", "periodo_mes").comFiltro("membroId", "tra_mem_id");
     public static final Relatorio EXTRACTO_ANUAL = Relatorio.porIgreja("tesouraria.vw_extracto_anual",
             "tra_igr_id = ?", "ano DESC, fundo").comAnoMes("ano", null);
     public static final Relatorio PROGRESSO_ALVOS = Relatorio.porIgreja("tesouraria.vw_progresso_alvo", "alv_igr_id = ?", "alv_id");
     /** V49: reavivamento por pessoa (o alvo da igreja repartido, com quota ajustável). */
     public static final Relatorio REAVIVAMENTO_PESSOAS = Relatorio.porIgreja("tesouraria.vw_reavivamento_pessoas",
-            "igreja_id = ?", "nome, apelido, membro_id").comAnoMes("ano", null);
+            "igreja_id = ?", "nome, apelido, membro_id").comAnoMes("ano", null).comFiltro("membroId", "membro_id");
     public static final Relatorio FUNDO_MENSAL = Relatorio.porIgreja("tesouraria.vw_fundo_mensal", "igreja_id = ?", "fundo, ano, mes")
             .comAnoMes("ano", "mes").comFiltro("fundoId", "fundo_id");
     public static final Relatorio CONFERENCIA_CONTAGENS = Relatorio.porIgreja("tesouraria.vw_contagem_conferencia",
