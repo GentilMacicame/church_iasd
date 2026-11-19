@@ -195,10 +195,14 @@
 
 /* Impressão (escala para afixar): folha A4 deitada, sem cores de fundo. */
 @media print {
-  @page { size: A4 landscape; margin: 12mm; }
+  /* margem da folha a zero: o browser deixa de ter onde pôr o endereço, a data e o título da página;
+     as margens passam para o conteúdo e repetem-se em cada folha (box-decoration-break: clone) */
+  @page { size: A4 landscape; margin: 0; }
+  body { padding: 12mm !important; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   /* documentos oficiais (acta): A4 ao alto, margens de documento */
-  @page documento { size: A4 portrait; margin: 18mm 16mm 16mm; }
-  .documento-a4 { page: documento; }
+  @page documento { size: A4 portrait; margin: 0; }
+  body:has(.documento-a4) { padding: 0 !important; }
+  .documento-a4 { page: documento; padding: 18mm 16mm 16mm !important; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   /* ao imprimir um documento, a moldura da aplicação não ocupa altura (sem página em branco no fim) */
   body:has(.documento-a4) .min-h-dvh, body:has(.documento-a4) .min-h-screen { min-height: 0 !important; }
   body:has(.documento-a4) main { padding: 0 !important; }

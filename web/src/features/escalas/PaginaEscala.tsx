@@ -356,7 +356,7 @@ export default function PaginaEscala() {
   return (
     <>
       {/* a grelha pode ter muitas colunas: imprime-se ao baixo */}
-      <style>{'@media print { @page { size: A4 landscape; margin: 10mm; } }'}</style>
+      <style>{'@media print { @page { size: A4 landscape; margin: 0; } body { padding: 10mm !important; } }'}</style>
       {/* cabeçalho da folha impressa */}
       <div className="mb-6 hidden text-center print:block">
         <Marca className="mx-auto mb-2 size-12" />

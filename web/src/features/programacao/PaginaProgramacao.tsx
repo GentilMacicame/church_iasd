@@ -108,7 +108,7 @@ export default function PaginaProgramacao() {
 
   return (
     <>
-      <style>{'@media print { @page { size: A4 portrait; margin: 10mm; } }'}</style>
+      <style>{'@media print { @page { size: A4 portrait; margin: 0; } body { padding: 10mm !important; } }'}</style>
       <div className="print:hidden">
         <Link to="/programacao" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> Programação do dia

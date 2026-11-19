@@ -77,7 +77,7 @@ export default function PaginaActa() {
       </div>
 
       {/* o documento: folha A4 no ecrã e na impressão */}
-      <article className="documento-a4 relative mx-auto w-full max-w-[210mm] bg-white px-[16mm] py-[18mm] font-serif text-[11.5pt] leading-relaxed text-neutral-900 shadow-card ring-1 ring-black/5 print:max-w-none print:p-0 print:shadow-none print:ring-0">
+      <article className="documento-a4 relative mx-auto w-full max-w-[210mm] bg-white px-[16mm] py-[18mm] text-[11.5pt] leading-relaxed text-neutral-900 shadow-card ring-1 ring-black/5 print:max-w-none print:p-0 print:shadow-none print:ring-0">
         {!aprovada && (
           <span aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
             <span className="-rotate-30 text-[90pt] font-bold tracking-widest text-neutral-900/[0.05]">RASCUNHO</span>
