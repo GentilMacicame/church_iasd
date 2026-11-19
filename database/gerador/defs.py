@@ -311,6 +311,10 @@ M('V5__actividades', 'actividades', 'Actividades e escalas',
    estado=('estado_santa_ceia_t', "'AGENDADA'")),
  # V44: programação do dia (Escola Sabatina, transição, Culto Divino, JA), para preparar e imprimir
  T('santa_ceia_acompanhante', 'sca', 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)', [
+   ('stc_id', 'fk:santa_ceia', NN), ('igr_id', 'fk:igreja', NN, 'Copiado da Santa Ceia'), ('mem_id', 'fk:membro', NN),
+   ('funcao', 'VARCHAR(20)', "NOT NULL DEFAULT 'DIACONO'", 'DIACONO ou DIACONISA (V52)')],
+   uniq=[['stc_id', 'mem_id']]),
+ T('santa_ceia_participante', 'scp', 'Membro que participou na Santa Ceia, pelo nome, para o relatório de participação (V52)', [
    ('stc_id', 'fk:santa_ceia', NN), ('igr_id', 'fk:igreja', NN, 'Copiado da Santa Ceia'), ('mem_id', 'fk:membro', NN)],
    uniq=[['stc_id', 'mem_id']]),
  T('programa_dia', 'pgd', 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)', [
@@ -695,7 +699,7 @@ SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
  'oficial': ('direct', 'igr_id'), 'mandato': ('direct', 'igr_id'), 'igreja_departamento': ('direct', 'igr_id'), 'escala': ('direct', 'igr_id'),
- 'escala_plano': ('direct', 'igr_id'), 'escala_coluna': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'santa_ceia_acompanhante': ('direct', 'igr_id'), 'programa_dia': ('direct', 'igr_id'),
+ 'escala_plano': ('direct', 'igr_id'), 'escala_coluna': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'santa_ceia_acompanhante': ('direct', 'igr_id'), 'santa_ceia_participante': ('direct', 'igr_id'), 'programa_dia': ('direct', 'igr_id'),
  'programa_parte': ('parent', 'pgd_id', 'programa_dia'), 'programa_item': ('parent', 'pgd_id', 'programa_dia'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'meta_individual': ('direct', 'igr_id'), 'semana_especial': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
  'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'), 'quota_reavivamento': ('direct', 'igr_id'), 'quota_escalao_reavivamento': ('direct', 'igr_id'), 'percentagem_departamento': ('direct', 'igr_id'), 'transferencia_departamento': ('direct', 'igr_id'), 'adiantamento': ('direct', 'igr_id'),

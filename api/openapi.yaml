@@ -2001,6 +2001,224 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/participantes-santa-ceia:
+    get:
+      summary: 'Participantes santa ceia: listar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.ler
+      operationId: listarSantaCeiaParticipante
+      description: Membro que participou na Santa Ceia, pelo nome, para o relatório de participação (V52)
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: santaCeiaId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SantaCeiaParticipante'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Participantes santa ceia: criar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.criar
+      operationId: criarSantaCeiaParticipante
+      description: Membro que participou na Santa Ceia, pelo nome, para o relatório de participação (V52)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/SantaCeiaParticipante'
+              required:
+              - santaCeiaId
+              - igrejaId
+              - membroId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/participantes-santa-ceia/{id}:
+    get:
+      summary: 'Participantes santa ceia: ler um'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.ler
+      operationId: lerSantaCeiaParticipante
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Participantes santa ceia: alterar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.alterar
+      operationId: alterarSantaCeiaParticipante
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SantaCeiaParticipante'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/participantes-santa-ceia/{id}/reactivar:
+    post:
+      summary: 'Participantes santa ceia: reactivar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.terminar
+      operationId: reactivarSantaCeiaParticipante
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/participantes-santa-ceia/{id}/terminar:
+    post:
+      summary: 'Participantes santa ceia: terminar'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.terminar
+      operationId: terminarSantaCeiaParticipante
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SantaCeiaParticipante'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/actividades/planos-escala:
     get:
       summary: 'Planos escala: listar'
@@ -2871,6 +3089,54 @@ paths:
         schema:
           type: integer
       x-vista: actividades.vw_santa_ceia
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/actividades/santa-ceia-participacao:
+    get:
+      summary: 'Relatório: Santa ceia participacao'
+      tags:
+      - Actividades e escalas
+      x-permissao: actividades.santa_ceia_participante.ler
+      operationId: relVActividadesSantaCeiaParticipacao
+      description: Lido da vista actividades.vw_santa_ceia_participacao.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: ano
+        in: query
+        schema:
+          type: integer
+      x-vista: actividades.vw_santa_ceia_participacao
       responses:
         '200':
           description: OK
@@ -27043,6 +27309,59 @@ components:
       description: 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)'
       x-tabela: actividades.santa_ceia_acompanhante
       x-prefixo: sca
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        santaCeiaId:
+          type: integer
+          format: int32
+          description: → actividades.santa_ceia
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado da Santa Ceia
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        funcao:
+          type: string
+          maxLength: 20
+          description: DIACONO ou DIACONISA (V52)
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - santaCeiaId
+      - igrejaId
+      - membroId
+    SantaCeiaParticipante:
+      type: object
+      description: Membro que participou na Santa Ceia, pelo nome, para o relatório de participação (V52)
+      x-tabela: actividades.santa_ceia_participante
+      x-prefixo: scp
       properties:
         id:
           type: integer

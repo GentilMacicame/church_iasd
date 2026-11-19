@@ -1,0 +1,66 @@
+ mem_sexo | count 
+----------+-------
+ M        |     2
+ F        |     2
+(2 rows)
+
+ stc_estado 
+------------
+ AGENDADA
+(1 row)
+
+1. acompanhantes: um diácono e uma diaconisa; função trocada e função inválida recusadas
+ sca_funcao 
+------------
+ DIACONO
+(1 row)
+
+ sca_funcao 
+------------
+ DIACONISA
+(1 row)
+
+psql:database/tests/37_santa_ceia_participantes.sql:29: ERROR:  Um homem acompanha como diácono, não como diaconisa
+psql:database/tests/37_santa_ceia_participantes.sql:31: ERROR:  new row for relation "santa_ceia_acompanhante" violates check constraint "chk_sca_funcao"
+2. participantes pelo nome (ainda agendada): três marcados; repetido e de outra igreja recusados
+ igreja_copiada 
+----------------
+              1
+(1 row)
+
+psql:database/tests/37_santa_ceia_participantes.sql:39: ERROR:  duplicate key value violates unique constraint "uq_scp_stc_id_mem_id"
+psql:database/tests/37_santa_ceia_participantes.sql:41: ERROR:  O participante tem de ser membro desta igreja (os de fora contam como visitantes)
+3. realizada com menos homens do que os nomes: recusada; com os números certos: aceite
+psql:database/tests/37_santa_ceia_participantes.sql:44: ERROR:  Estão marcados 2 homens pelo nome: o número de homens não pode ser menor
+ stc_estado 
+------------
+ REALIZADA
+(1 row)
+
+4. já realizada: marcar mais uma mulher do que as registadas é recusado
+psql:database/tests/37_santa_ceia_participantes.sql:49: ERROR:  Os nomes marcados passam o número de mulheres registado nesta Santa Ceia
+5. histórico com os nomeados e relatório por membro
+    data    | homens | mulheres | visitantes | total | nomeados 
+------------+--------+----------+------------+-------+----------
+ 2026-08-01 |      2 |        1 |          2 |     5 |        3
+(1 row)
+
+ mem_sexo | n | celebracoes | participacoes | faltas |   ultima   
+----------+---+-------------+---------------+--------+------------
+ M        | 1 |           1 |             1 |      0 | 2026-08-01
+ M        | 2 |           1 |             1 |      0 | 2026-08-01
+ F        | 1 |           1 |             1 |      0 | 2026-08-01
+ F        | 2 |           1 |             0 |      1 | 
+(4 rows)
+
+6. desmarcar é sempre possível; o tesoureiro não vê os participantes
+ desmarcado 
+------------
+ t
+(1 row)
+
+ tesoureiro 
+------------
+          0
+(1 row)
+

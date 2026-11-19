@@ -20,6 +20,7 @@ import mz.org.iasd.igreja.models.tipos.EstadoRegisto;
  * @param santaCeiaId Referência a actividades.santa_ceia — obrigatório ao criar
  * @param igrejaId Copiado da Santa Ceia — obrigatório ao criar
  * @param membroId Referência a secretaria.membro — obrigatório ao criar
+ * @param funcao DIACONO ou DIACONISA (V52)
  * @param estado Estado do registo
  * @param criadoEm Data de criação (preenchido pela base de dados)
  * @param modificadoEm Data da última alteração (preenchido pela base de dados)
@@ -37,6 +38,8 @@ public record SantaCeiaAcompanhante(
         Integer igrejaId,
         @ColunaBd(value = "sca_mem_id", tipo = Tipo.INT, obrigatoria = true, naoNula = true)
         Integer membroId,
+        @ColunaBd(value = "sca_funcao", tipo = Tipo.TEXTO, naoNula = true)
+        String funcao,
         @ColunaBd(value = "sca_estado", tipo = Tipo.ENUM, naoNula = true)
         EstadoRegisto estado,
         @ColunaBd(value = "sca_criado_em", tipo = Tipo.DATA_HORA, escrita = false, naoNula = true)

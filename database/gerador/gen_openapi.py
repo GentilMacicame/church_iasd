@@ -416,6 +416,9 @@ paths['/v1/secretaria/disciplinas/{id}/motivo'] = {'get': op(
 # V39: histórico da Santa Ceia (participantes) por igreja e ano
 rel('/v1/actividades/santa-ceia-historico', 'actividades.vw_santa_ceia', TITULO['actividades'], 'actividades.santa_ceia.ler',
     [{'name': 'ano', 'in': 'query', 'schema': I}])
+# V52: participação de cada membro na Santa Ceia por ano
+rel('/v1/actividades/santa-ceia-participacao', 'actividades.vw_santa_ceia_participacao', TITULO['actividades'], 'actividades.santa_ceia_participante.ler',
+    [{'name': 'ano', 'in': 'query', 'schema': I}])
 # V38: dashboard por período, igreja a igreja
 PAINEL_LINHA = obj(['id', 'nome', 'membros', 'activos', 'inactivos'], id=I, nome=STR, entidadeId=I, entidade=STR,
                    distritoPastoralId={**I, 'nullable': True}, distritoPastoral={**STR, 'nullable': True},

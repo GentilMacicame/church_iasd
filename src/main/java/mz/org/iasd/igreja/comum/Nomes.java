@@ -49,7 +49,7 @@ public final class Nomes {
             Map.entry("stc", "santa_ceia"), Map.entry("pgd", "programa_dia"), Map.entry("ppa", "programa_parte"),
             Map.entry("pit", "programa_item"), Map.entry("cpa", "contagem_participante"), Map.entry("cmc", "comunicado"),
             Map.entry("cmi", "comunicado_igreja"), Map.entry("aco", "acesso_confidencial"),
-            Map.entry("emt", "meta_individual"), Map.entry("qrv", "quota_reavivamento"), Map.entry("sca", "santa_ceia_acompanhante"), Map.entry("rqe", "quota_escalao_reavivamento"), Map.entry("dpp", "percentagem_departamento"), Map.entry("tdp", "transferencia_departamento"), Map.entry("adt", "adiantamento"), Map.entry("ese", "semana_especial"));
+            Map.entry("emt", "meta_individual"), Map.entry("qrv", "quota_reavivamento"), Map.entry("sca", "santa_ceia_acompanhante"), Map.entry("scp", "santa_ceia_participante"), Map.entry("rqe", "quota_escalao_reavivamento"), Map.entry("dpp", "percentagem_departamento"), Map.entry("tdp", "transferencia_departamento"), Map.entry("adt", "adiantamento"), Map.entry("ese", "semana_especial"));
 
     /** Nomes curtos de entidades (ALIAS do gerador). */
     private static final Map<String, String> ALIAS = Map.of(

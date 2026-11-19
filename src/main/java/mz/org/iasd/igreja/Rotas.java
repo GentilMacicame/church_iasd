@@ -577,6 +577,8 @@ public final class Rotas {
 
         /** AcompanhantesSantaCeiaController · rotas-padrão (V51: os diáconos que acompanham o oficiante) */
         public static final String ACOMPANHANTES_SANTA_CEIA = "/v1/actividades/acompanhantes-santa-ceia";
+        /** ParticipantesSantaCeiaController · rotas-padrão (V52: os membros que participaram, pelo nome) */
+        public static final String PARTICIPANTES_SANTA_CEIA = "/v1/actividades/participantes-santa-ceia";
         /** ProgramasDiaController · rotas-padrão (V44): programação do dia (folha do sábado) */
         public static final String PROGRAMAS_DIA = "/v1/actividades/programas-dia";
         /** ColunasEscalaController · rotas-padrão (V45): colunas da escala da Escola Sabatina e da JA */
@@ -592,6 +594,8 @@ public final class Rotas {
 
         /** GET /v1/actividades/santa-ceia-historico?igrejaId=&amp;ano=  (RelatoriosActividadesController, V39) */
         public static final String SANTA_CEIA_HISTORICO = "santa-ceia-historico";
+        /** GET /v1/actividades/santa-ceia-participacao?igrejaId=&amp;ano=  (RelatoriosActividadesController, V52) */
+        public static final String SANTA_CEIA_PARTICIPACAO = "santa-ceia-participacao";
 
         /** ResponsaveisActividadeController · rotas-padrão (V34): outros responsáveis de uma actividade */
         public static final String RESPONSAVEIS_ACTIVIDADE = "/v1/actividades/responsaveis-actividade";

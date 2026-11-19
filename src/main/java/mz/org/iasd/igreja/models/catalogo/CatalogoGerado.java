@@ -15,6 +15,7 @@ import mz.org.iasd.igreja.models.actividades.ProgramaItem;
 import mz.org.iasd.igreja.models.actividades.ProgramaParte;
 import mz.org.iasd.igreja.models.actividades.SantaCeia;
 import mz.org.iasd.igreja.models.actividades.SantaCeiaAcompanhante;
+import mz.org.iasd.igreja.models.actividades.SantaCeiaParticipante;
 import mz.org.iasd.igreja.models.escolasabatina.Classe;
 import mz.org.iasd.igreja.models.escolasabatina.ClasseTrimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Matricula;
@@ -217,6 +218,7 @@ public final class CatalogoGerado {
             EscalaDia.class,
             SantaCeia.class,
             SantaCeiaAcompanhante.class,
+            SantaCeiaParticipante.class,
             ProgramaDia.class,
             ProgramaParte.class,
             ProgramaItem.class,
