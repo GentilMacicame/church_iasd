@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight, BarChart3, BellRing, BookOpen, CalendarDays, CircleCheck, ClipboardCheck, Flame, HandCoins, HeartHandshake,
-  LayoutDashboard, Megaphone, Mic, Plus, Wine, UserCheck, UserPlus, Users, Wallet,
+  LayoutDashboard, Megaphone, Mic, Wine, UserCheck, UserPlus, Users, Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Cartao, Dinheiro, Indicador, Pilula, TituloPagina } from '@/components/comum/elementos'
@@ -552,14 +552,6 @@ export default function PaginaInicio() {
         icone={LayoutDashboard}
         titulo={igreja.nome}
         descricao={`${nome ? `Olá, ${nome}. ` : ''}Semana até ${dataPorExtenso(proximoSabado())}.`}
-        accoes={<>
-          {comTesouraria && pode('tesouraria.transacao.criar') && (
-            <Button asChild variant="outline" className="alvo"><Link to="/tesouraria/entrada"><HandCoins className="size-4" />Lançar entrada</Link></Button>
-          )}
-          {pode('secretaria.membro.criar') && (
-            <Button asChild className="alvo"><Link to="/membros?registar=1"><Plus className="size-4" />{t.membros.registar}</Link></Button>
-          )}
-        </>}
       />
       <div className="grid gap-6">
         <Indicadores comTesouraria={comTesouraria} />

@@ -90,7 +90,7 @@ export default function PaginaMovimentos() {
               <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês seguinte" disabled={mes >= hojeIso().slice(0, 7)} onClick={() => definir('mes', mudarMes(mes, 1))}><ChevronRight className="size-4" /></Button>
             </div>
             {contaFiltro != null && (
-              <button type="button" onClick={() => definir('conta')} className="alvo inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium" aria-label="Ver todas as contas">
+              <button type="button" onClick={() => definir('conta')} className="alvo inline-flex items-center gap-1 rounded-[2px] border px-3 py-1 text-xs font-medium" aria-label="Ver todas as contas">
                 Só {contaDe.get(contaFiltro) ?? 'esta conta'} <X className="size-3" />
               </button>
             )}
@@ -112,12 +112,12 @@ export default function PaginaMovimentos() {
                 <tbody>
                   {lista.map((tr) => (
                     <tr key={tr.id} onClick={() => navigate(`/tesouraria/movimentos/${tr.id}`)} className={cn('cursor-pointer', tr.endDate && 'opacity-60')}>
-                      <td className="hidden tabular-nums whitespace-nowrap text-muted-foreground sm:table-cell sm:pl-6">{data(tr.dataHora)}</td>
+                      <td className="hidden tabular-nums whitespace-nowrap sm:table-cell sm:pl-6">{data(tr.dataHora)}</td>
                       <td>
                         <Link to={`/tesouraria/movimentos/${tr.id}`} onClick={(e) => e.stopPropagation()} className="font-medium hover:text-primary">{quem(tr, (id) => nomes.get(id), (id) => familias.data?.find((f) => f.id === id)?.nome)}</Link>
                         <p className="text-xs text-muted-foreground"><span className="tabular-nums sm:hidden">{data(tr.dataHora)} · </span>{rotulos.tipoTransacao[tr.tipo]} · {rotulos.metodo[tr.metodo ?? ''] ?? tr.metodo}{tr.descricao ? ` · ${tr.descricao}` : ''}</p>
                       </td>
-                      <td className="hidden text-muted-foreground md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}{naMissao.has(tr.contaId ?? 0) && <span className="block text-xs text-info-text">pago na Missão</span>}</td>
+                      <td className="hidden md:table-cell">{tr.contaId ? contaDe.get(tr.contaId) : '—'}{naMissao.has(tr.contaId ?? 0) && <span className="block text-xs text-info-text">pago na Missão</span>}</td>
                       <td className="hidden sm:table-cell"><PilulaEstado tr={tr} /></td>
                       <td className="num sm:pr-6"><Valor tr={tr} /><span className="mt-1 block sm:hidden"><PilulaEstado tr={tr} /></span></td>
                     </tr>

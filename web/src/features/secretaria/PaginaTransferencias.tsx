@@ -171,7 +171,7 @@ function DialogoPedido({ aoFechar }: { aoFechar: () => void }) {
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="tr-membro" className="text-sm font-medium">Membro <span className="text-destructive-text">*</span></label>
             <CampoMembro id="tr-membro" valor={membro} aoMudar={setMembro} nomeDe={nomeDe} />
           </div>
@@ -182,12 +182,12 @@ function DialogoPedido({ aoFechar }: { aoFechar: () => void }) {
             ))}
           </div>
           {fora ? (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="tr-ext" className="text-sm font-medium">Igreja de destino <span className="text-destructive-text">*</span></label>
               <Input id="tr-ext" value={externo} onChange={(e) => setExterno(e.target.value)} className="alvo" maxLength={150} placeholder="ex.: IASD de Lichinga, Missão do Norte" />
             </div>
           ) : (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="tr-dest" className="text-sm font-medium">Igreja de destino <span className="text-destructive-text">*</span></label>
               {dir.isPending ? <Barra className="h-9 w-full" /> : (
                 <CampoEscolha id="tr-dest" valor={destino} aoMudar={setDestino} vazio="Escolher a igreja…" pesquisar="Pesquisar pelo nome ou local…"
@@ -196,12 +196,12 @@ function DialogoPedido({ aoFechar }: { aoFechar: () => void }) {
             </div>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="tr-data" className="text-sm font-medium">Data do pedido</label>
               <CampoData id="tr-data" value={dia} onChange={setDia} className="alvo" />
             </div>
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="tr-obs" className="text-sm font-medium">Observações</label>
             <Input id="tr-obs" value={obs} onChange={(e) => setObs(e.target.value)} className="alvo" maxLength={500} placeholder="ex.: mudou-se para Lichinga por trabalho" />
           </div>
@@ -251,12 +251,12 @@ function DialogoVoto({ accao, aoFechar }: { accao: Accao; aoFechar: () => void }
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           {accao.tipo !== 'externa' && (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="tr-voto" className="text-sm font-medium">Voto (2.ª leitura)</label>
               <CampoVoto id="tr-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA']} segundaLeitura preferir="TRANSFERENCIA" />
             </div>
           )}
-          <div className="grid gap-1.5 sm:w-1/2">
+          <div className="campo-flutuante grid gap-1.5 sm:w-1/2">
             <label htmlFor="tr-dia" className="text-sm font-medium">{accao.tipo === 'carta' ? 'Data da carta' : 'Data da aceitação'}</label>
             <CampoData id="tr-dia" value={dia} onChange={setDia} className="alvo" />
           </div>
@@ -288,8 +288,10 @@ function DialogoRecusar({ t: x, aoFechar }: { t: TransferenciaResumo; aoFechar: 
         </DialogHeader>
         <div className="grid gap-2">
           <ErroFormulario mensagem={erro} />
-          <label htmlFor="tr-motivo" className="text-sm font-medium">Motivo</label>
-          <Input id="tr-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className="alvo" maxLength={500} autoFocus />
+          <div className="campo-flutuante grid gap-1.5">
+            <label htmlFor="tr-motivo" className="text-sm font-medium">Motivo</label>
+            <Input id="tr-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className="alvo" maxLength={500} autoFocus />
+          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

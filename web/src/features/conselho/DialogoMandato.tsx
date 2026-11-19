@@ -65,7 +65,7 @@ export function DialogoMandato({ mandato, anosPadrao, inicioSugerido, aoFechar, 
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="mdt-ini" className="text-sm font-medium">Começa em <span className="text-destructive-text">*</span></label>
             <CampoData id="mdt-ini" value={inicio} onChange={setInicio} className="alvo" />
           </div>
@@ -81,20 +81,20 @@ export function DialogoMandato({ mandato, anosPadrao, inicioSugerido, aoFechar, 
             </div>
           </fieldset>
           {duracao === 'outra' && (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="mdt-fim" className="text-sm font-medium">Último dia do mandato <span className="text-destructive-text">*</span></label>
               <CampoData id="mdt-fim" value={fimManual} onChange={setFimManual} className="alvo" />
             </div>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="mdt-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
             <Input id="mdt-nome" value={nomeFinal} maxLength={100} onChange={(e) => { setNomeTocado(true); setNome(e.target.value) }} className="alvo" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="mdt-voto" className="text-sm font-medium">Voto da igreja que elegeu <span className="font-normal text-muted-foreground">(opcional)</span></label>
             <CampoVoto id="mdt-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA']} preferir="ELEICAO" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="mdt-obs" className="text-sm font-medium">Observações <span className="font-normal text-muted-foreground">(opcional)</span></label>
             <Input id="mdt-obs" value={obs} maxLength={255} onChange={(e) => setObs(e.target.value)} className="alvo" />
           </div>

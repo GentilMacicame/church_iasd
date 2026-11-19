@@ -131,7 +131,7 @@ export function DialogoRegistarMembro({ aberto, aoFechar }: { aberto: boolean; a
 
 function Campo({ id, rotulo, obrigatorio, erro, children }: { id: string; rotulo: string; obrigatorio?: boolean; erro?: string; children: React.ReactNode }) {
   return (
-    <div className="grid content-start gap-1.5">
+    <div className="campo-flutuante grid content-start gap-1.5">
       <label htmlFor={id} className="text-sm font-medium">{rotulo}{obrigatorio && <span className="text-destructive-text"> *</span>}</label>
       {children}
       {erro && <p className="text-xs font-medium text-destructive-text">{erro}</p>}

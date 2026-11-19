@@ -182,7 +182,7 @@ export default function PaginaProgramacao() {
                   </table>
                 </div>
                 {pode('actividades.programa_item.criar') && (
-                  <Button type="button" variant="ghost" size="sm" className="mt-1 print:hidden" onClick={() => setItem({ item: null, parte: pt })}>
+                  <Button type="button" variant="ghost" size="sm" className="mt-1 h-auto max-w-full py-1.5 text-left whitespace-normal print:hidden" onClick={() => setItem({ item: null, parte: pt })}>
                     <Plus className="size-4" />Item em {pt.titulo}
                   </Button>
                 )}
@@ -280,15 +280,15 @@ function DialogoItem({ item, parte, ordem, programaId, nomes, aoFechar }: {
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid grid-cols-[1fr_1fr_5rem] gap-3">
-            <div className="grid gap-1.5"><label htmlFor="pi-ini" className="text-sm font-medium">Início</label><CampoHora id="pi-ini" value={ini} onChange={(e) => setIni(e.target.value)} className="alvo num" /></div>
-            <div className="grid gap-1.5"><label htmlFor="pi-fim" className="text-sm font-medium">Fim</label><CampoHora id="pi-fim" value={fim} onChange={(e) => setFim(e.target.value)} className="alvo num" /></div>
-            <div className="grid gap-1.5"><label htmlFor="pi-ord" className="text-sm font-medium">Ordem</label><Input id="pi-ord" inputMode="numeric" value={pos} onChange={(e) => setPos(e.target.value.replace(/\D/g, ''))} className="alvo num" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pi-ini" className="text-sm font-medium">Início</label><CampoHora id="pi-ini" value={ini} onChange={(e) => setIni(e.target.value)} className="alvo num" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pi-fim" className="text-sm font-medium">Fim</label><CampoHora id="pi-fim" value={fim} onChange={(e) => setFim(e.target.value)} className="alvo num" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pi-ord" className="text-sm font-medium">Ordem</label><Input id="pi-ord" inputMode="numeric" value={pos} onChange={(e) => setPos(e.target.value.replace(/\D/g, ''))} className="alvo num" /></div>
           </div>
-          <div className="grid gap-1.5"><label htmlFor="pi-act" className="text-sm font-medium">Actividade <span className="text-destructive-text">*</span></label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pi-act" className="text-sm font-medium">Actividade <span className="text-destructive-text">*</span></label>
             <Input id="pi-act" value={actividade} onChange={(e) => setActividade(e.target.value)} maxLength={200} placeholder="ex.: Hino inicial (H.A 509)" className="alvo" autoFocus={!item} /></div>
           <div className="grid gap-1.5"><span className="text-sm font-medium">Responsável</span>
             <CampoQuem id="pi-resp" tipo={tipo} setTipo={setTipo} valor={valor} setValor={setValor} nomes={nomes} /></div>
-          <div className="grid gap-1.5"><label htmlFor="pi-esc" className="text-sm font-medium">Vem da escala</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pi-esc" className="text-sm font-medium">Vem da escala</label>
             <CampoLigacao id="pi-esc" valor={escala} aoMudar={setEscala} nomes={nomes} />
             <p className="text-xs text-muted-foreground">Ligado à escala, "Preencher pela escala" põe aqui quem está escalado nesse dia.</p></div>
           <label className="alvo flex items-center gap-2 text-sm"><input type="checkbox" checked={destaque} onChange={(e) => setDestaque(e.target.checked)} className="size-4 accent-[var(--primary)]" />Linha em destaque na folha</label>
@@ -343,16 +343,16 @@ function DialogoParte({ parte, ordem, programaId, nomes, aoFechar }: { parte: Pa
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid grid-cols-[1fr_5rem] gap-3">
-            <div className="grid gap-1.5"><label htmlFor="pp-tit" className="text-sm font-medium">Título <span className="text-destructive-text">*</span></label>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pp-tit" className="text-sm font-medium">Título <span className="text-destructive-text">*</span></label>
               <Input id="pp-tit" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={100} placeholder="ex.: Programação do Culto Divino" className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="pp-ord" className="text-sm font-medium">Ordem</label>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pp-ord" className="text-sm font-medium">Ordem</label>
               <Input id="pp-ord" inputMode="numeric" value={pos} onChange={(e) => setPos(e.target.value.replace(/\D/g, ''))} className="alvo num" /></div>
           </div>
-          <div className="grid gap-1.5"><label htmlFor="pp-rot" className="text-sm font-medium">Cabeçalho da 1.ª coluna</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pp-rot" className="text-sm font-medium">Cabeçalho da 1.ª coluna</label>
             <Input id="pp-rot" value={rotulo} onChange={(e) => setRotulo(e.target.value)} maxLength={30} placeholder="Apresentador" className="alvo" /></div>
           <div className="grid gap-1.5"><span className="text-sm font-medium">Apresentador</span>
             <CampoQuem id="pp-apr" tipo={tipo} setTipo={setTipo} valor={valor} setValor={setValor} nomes={nomes} departamentos={false} /></div>
-          <div className="grid gap-1.5"><label htmlFor="pp-esc" className="text-sm font-medium">Vem da escala</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pp-esc" className="text-sm font-medium">Vem da escala</label>
             <CampoLigacao id="pp-esc" valor={escala} aoMudar={setEscala} nomes={nomes} /></div>
         </div>
         <DialogFooter className="gap-2 sm:justify-between">
@@ -388,10 +388,10 @@ function DialogoCabecalho({ programaId, titulo: t1, nota: n1, sugestao, aoFechar
         <DialogHeader><DialogTitle>Título e nota</DialogTitle><DialogDescription>O que aparece no cimo e no fim da folha.</DialogDescription></DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="pc-tit" className="text-sm font-medium">Título</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pc-tit" className="text-sm font-medium">Título</label>
             <Input id="pc-tit" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={150} placeholder={sugestao} className="alvo" />
             <p className="text-xs text-muted-foreground">Vazio: {sugestao}</p></div>
-          <div className="grid gap-1.5"><label htmlFor="pc-nota" className="text-sm font-medium">Nota no fim da folha</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pc-nota" className="text-sm font-medium">Nota no fim da folha</label>
             <Textarea id="pc-nota" rows={2} value={nota} onChange={(e) => setNota(e.target.value)} maxLength={500} placeholder="ex.: Passível de ajustes e simplificação" /></div>
         </div>
         <DialogFooter>

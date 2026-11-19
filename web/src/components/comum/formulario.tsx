@@ -22,12 +22,22 @@ export function CampoFormulario({ rotulo, erro, ajuda, obrigatorio, className, c
   const id = useId()
   const descricao = [ajuda && `${id}-ajuda`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
   return (
-    <div className={cn('grid content-start gap-2', className)}>
-      <Label htmlFor={id} className="text-sm font-medium">
-        {rotulo}
-        {obrigatorio && <span className="text-destructive" aria-hidden> *</span>}
-      </Label>
-      {children({ id, 'aria-invalid': Boolean(erro), 'aria-describedby': descricao })}
+    <div className={cn('grid content-start gap-1.5', className)}>
+      {/* rótulo flutuante: vazio e sem foco fica dentro do campo; ao entrar ou com valor sobe para a linha do contorno */}
+      <div data-campo className={cn('group/campo relative mt-2',
+        '[&_input:not(:focus)]:placeholder:text-transparent [&_textarea:not(:focus)]:placeholder:text-transparent')}>
+        {children({ id, 'aria-invalid': Boolean(erro), 'aria-describedby': descricao })}
+        <Label htmlFor={id} className={cn(
+          'pointer-events-none absolute -top-2 left-2.5 block z-[1] max-w-[calc(100%-1.25rem)] truncate rounded-sm bg-card px-1 text-xs leading-4 font-medium text-muted-foreground transition-all duration-150',
+          'group-focus-within/campo:text-primary',
+          'group-has-[input:placeholder-shown:not(:focus)]/campo:top-1/2 group-has-[input:placeholder-shown:not(:focus)]/campo:-translate-y-1/2 group-has-[input:placeholder-shown:not(:focus)]/campo:text-sm group-has-[input:placeholder-shown:not(:focus)]/campo:font-normal',
+          'group-has-[textarea:placeholder-shown:not(:focus)]/campo:top-2.5 group-has-[textarea:placeholder-shown:not(:focus)]/campo:text-sm group-has-[textarea:placeholder-shown:not(:focus)]/campo:font-normal',
+          erro && 'text-destructive-text group-focus-within/campo:text-destructive-text',
+        )}>
+          {rotulo}
+          {obrigatorio && <span className="text-destructive" aria-hidden> *</span>}
+        </Label>
+      </div>
       {ajuda && !erro && <p id={`${id}-ajuda`} className="text-xs text-muted-foreground">{ajuda}</p>}
       {erro && <p id={`${id}-erro`} className="text-xs font-medium text-destructive-text">{erro}</p>}
     </div>

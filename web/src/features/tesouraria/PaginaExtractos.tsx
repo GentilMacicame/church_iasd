@@ -282,9 +282,9 @@ function DialogoTransferenciaDep({ aoFechar }: { aoFechar: () => void }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5"><span className="text-sm font-medium">De</span><Seleccao aria-label="De" value={origem} onChange={(e) => setOrigem(e.target.value)}><option value="">Escolher…</option>{lista.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}</Seleccao></div>
           <div className="grid gap-1.5"><span className="text-sm font-medium">Para</span><Seleccao aria-label="Para" value={destino} onChange={(e) => setDestino(e.target.value)}><option value="">Escolher…</option>{lista.filter((d) => String(d.id) !== origem).map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}</Seleccao></div>
-          <div className="grid gap-1.5"><label htmlFor="tdp-data" className="text-sm font-medium">Data</label><CampoData id="tdp-data" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="tdp-valor" className="text-sm font-medium">Valor</label><CampoDinheiro id="tdp-valor" value={valor} onChange={setValor} className="alvo" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="tdp-desc" className="text-sm font-medium">Motivo</label><Input id="tdp-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={255} placeholder="Opcional" className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="tdp-data" className="text-sm font-medium">Data</label><CampoData id="tdp-data" value={dia} onChange={setDia} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="tdp-valor" className="text-sm font-medium">Valor</label><CampoDinheiro id="tdp-valor" value={valor} onChange={setValor} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="tdp-desc" className="text-sm font-medium">Motivo</label><Input id="tdp-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={255} placeholder="Opcional" className="alvo" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
@@ -322,10 +322,10 @@ function DialogoAdiantamento({ aoFechar }: { aoFechar: () => void }) {
         <ErroFormulario mensagem={erro} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5 sm:col-span-2"><span className="text-sm font-medium">Departamento</span><Seleccao aria-label="Departamento" value={dep} onChange={(e) => setDep(e.target.value)}><option value="">Escolher…</option>{(deps.data?.daIgreja ?? []).map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}</Seleccao></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="adt-membro" className="text-sm font-medium">Quem recebe</label><CampoMembro id="adt-membro" valor={membro} aoMudar={setMembro} nomeDe={nomeDe} /></div>
-          <div className="grid gap-1.5"><label htmlFor="adt-data" className="text-sm font-medium">Data</label><CampoData id="adt-data" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="adt-valor" className="text-sm font-medium">Valor</label><CampoDinheiro id="adt-valor" value={valor} onChange={setValor} className="alvo" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="adt-desc" className="text-sm font-medium">Para quê</label><Input id="adt-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={255} placeholder="ex.: material do retiro" className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="adt-membro" className="text-sm font-medium">Quem recebe</label><CampoMembro id="adt-membro" valor={membro} aoMudar={setMembro} nomeDe={nomeDe} /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="adt-data" className="text-sm font-medium">Data</label><CampoData id="adt-data" value={dia} onChange={setDia} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="adt-valor" className="text-sm font-medium">Valor</label><CampoDinheiro id="adt-valor" value={valor} onChange={setValor} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="adt-desc" className="text-sm font-medium">Para quê</label><Input id="adt-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={255} placeholder="ex.: material do retiro" className="alvo" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
@@ -354,8 +354,8 @@ function DialogoPrestar({ a, aoFechar }: { a: Adiantamento; aoFechar: () => void
         <DialogHeader><DialogTitle>Prestar contas</DialogTitle><DialogDescription>{a.descricao} · adiantado {dinheiro(a.valor)}</DialogDescription></DialogHeader>
         <ErroFormulario mensagem={erro} />
         <div className="grid gap-4">
-          <div className="grid gap-1.5"><label htmlFor="pre-data" className="text-sm font-medium">Data</label><CampoData id="pre-data" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="pre-dev" className="text-sm font-medium">Devolvido</label><CampoDinheiro id="pre-dev" value={devolvido} onChange={setDevolvido} className="alvo" />
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pre-data" className="text-sm font-medium">Data</label><CampoData id="pre-data" value={dia} onChange={setDia} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pre-dev" className="text-sm font-medium">Devolvido</label><CampoDinheiro id="pre-dev" value={devolvido} onChange={setDevolvido} className="alvo" />
             <span className="text-xs text-muted-foreground">O que sobrou e voltou ao departamento.</span></div>
         </div>
         <DialogFooter>

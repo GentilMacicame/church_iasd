@@ -98,7 +98,7 @@ function DialogoPreparar({ lista, aoFechar }: { lista: Programa[]; aoFechar: () 
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="pp-dia" className="text-sm font-medium">Dia</label>
             <CampoData id="pp-dia" value={dia} onChange={setDia} className="alvo" />
           </div>

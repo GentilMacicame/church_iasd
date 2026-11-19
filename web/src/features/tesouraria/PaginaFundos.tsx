@@ -147,7 +147,7 @@ function DialogoOferta({ aoFechar }: { aoFechar: () => void }) {
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="ofe-nome" className="text-sm font-medium">Nome</label>
             <Input id="ofe-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} placeholder="ex.: Construção" className="alvo" autoFocus />
           </div>

@@ -185,11 +185,11 @@ export default function PaginaEleicao() {
             <div className="grid gap-4">
               <ErroFormulario mensagem={erro} />
               <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                <div className="grid gap-1.5">
+                <div className="campo-flutuante grid gap-1.5">
                   <label htmlFor="ele-voto" className="text-sm font-medium">Voto que aprovou o relatório</label>
                   <CampoVoto id="ele-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA']} preferir="ELEICAO" />
                 </div>
-                <div className="grid gap-1.5">
+                <div className="campo-flutuante grid gap-1.5">
                   <label htmlFor="ele-mdt" className="text-sm font-medium">Mandato dos eleitos</label>
                   <div className="flex gap-2">
                     <Seleccao id="ele-mdt" value={mandatoId} onChange={(e) => setMandatoEscolhido(e.target.value)} className="min-w-0 flex-1">

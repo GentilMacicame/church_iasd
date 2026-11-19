@@ -106,31 +106,31 @@ export function DialogoTransferencia({ aoFechar, origem, destino, valor: valorIn
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto_1fr]">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="trf-de" className="text-sm font-medium">De</label>
               <CampoEscolha id="trf-de" valor={deId} aoMudar={setDe} opcoes={lista.map(opcao)} vazio="Conta de origem…" />
             </div>
             <ArrowRight aria-hidden className="mx-auto mb-2.5 hidden size-4 text-muted-foreground sm:block" />
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="trf-para" className="text-sm font-medium">Para</label>
               <CampoEscolha id="trf-para" valor={paraId} aoMudar={setPara} opcoes={lista.filter((c) => String(c.id) !== deId).map(opcao)} vazio="Conta de destino…" />
             </div>
           </div>
           {saldoDe != null && <p className="-mt-2 text-xs text-muted-foreground">Saldo em {contaDe?.nome}: <Dinheiro valor={saldoDe} /></p>}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="trf-valor" className="text-sm font-medium">Valor <span className="text-destructive-text">*</span></label>
               <CampoDinheiro id="trf-valor" value={valor} onChange={setValor} className="alvo" />
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="trf-data" className="text-sm font-medium">Data</label>
               <CampoData id="trf-data" value={dia} onChange={setDia} className="alvo" />
             </div>
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
               <label htmlFor="trf-ref" className="text-sm font-medium">{contaPara?.tipo === 'BANCO' ? 'N.º do talão de depósito' : 'Referência'}</label>
               <Input id="trf-ref" value={referencia} onChange={(e) => setReferencia(e.target.value)} className="alvo num" maxLength={100} placeholder={contaPara?.tipo === 'BANCO' ? 'ex.: 004512' : 'opcional'} />
             </div>
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
               <label htmlFor="trf-desc" className="text-sm font-medium">Descrição</label>
               <Input id="trf-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="alvo" maxLength={255} placeholder="ex.: Depósito das ofertas de sábado" />
             </div>

@@ -427,9 +427,9 @@ function DialogoOficial({ mandato, orgaoInicial, aoFechar }: { mandato: Mandato;
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="ofi-mem" className="text-sm font-medium">Membro <span className="text-destructive-text">*</span></label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ofi-mem" className="text-sm font-medium">Membro <span className="text-destructive-text">*</span></label>
             <CampoMembro id="ofi-mem" valor={membro} aoMudar={setMembro} nomeDe={nomeDe} /></div>
-          <div className="grid gap-1.5"><label htmlFor="ofi-car" className="text-sm font-medium">Cargo <span className="text-destructive-text">*</span></label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ofi-car" className="text-sm font-medium">Cargo <span className="text-destructive-text">*</span></label>
             {cargos.isPending ? <Barra className="h-9 w-full" /> : <CampoEscolha id="ofi-car" valor={cargo} aoMudar={mudarCargo} vazio="Escolher o cargo…" pesquisar="Pesquisar cargo…"
               opcoes={lista.map((c) => ({ valor: String(c.id), rotulo: c.nome, detalhe: c.conselho ? 'normalmente no conselho' : 'normalmente na direcção' }))} />}</div>
           <fieldset className="grid gap-1.5">
@@ -445,7 +445,7 @@ function DialogoOficial({ mandato, orgaoInicial, aoFechar }: { mandato: Mandato;
             </div>
           </fieldset>
           <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5"><label htmlFor="ofi-ini" className="text-sm font-medium">Começa em</label>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="ofi-ini" className="text-sm font-medium">Começa em</label>
               <CampoData id="ofi-ini" value={inicio} onChange={setInicio} className="alvo" /></div>
             <div className="grid gap-1.5"><span className="text-sm font-medium">Até</span>
               <p className="flex h-9 items-center rounded-md border border-dashed px-3 text-sm text-muted-foreground tabular-nums">{data(mandato.dataFim)}</p></div>
@@ -516,8 +516,8 @@ function DialogoCorrigir({ o, aoFechar }: { o: Oficial; aoFechar: () => void }) 
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5"><label htmlFor="cor-ini" className="text-sm font-medium">Início</label><CampoData id="cor-ini" value={inicio} onChange={setInicio} className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="cor-fim" className="text-sm font-medium">Fim previsto</label><CampoData id="cor-fim" value={fim} onChange={setFim} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="cor-ini" className="text-sm font-medium">Início</label><CampoData id="cor-ini" value={inicio} onChange={setInicio} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="cor-fim" className="text-sm font-medium">Fim previsto</label><CampoData id="cor-fim" value={fim} onChange={setFim} className="alvo" /></div>
           </div>
         </div>
         <DialogFooter>
@@ -547,7 +547,7 @@ function DialogoTerminar({ o, aoFechar }: { o: Oficial; aoFechar: () => void }) 
         <DialogHeader><DialogTitle>Terminar antes do fim do mandato</DialogTitle><DialogDescription>{o.membro} · {o.cargo}. Fica no histórico.</DialogDescription></DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="ter-fim" className="text-sm font-medium">Saiu em</label><CampoData id="ter-fim" value={fim} onChange={setFim} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ter-fim" className="text-sm font-medium">Saiu em</label><CampoData id="ter-fim" value={fim} onChange={setFim} className="alvo" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

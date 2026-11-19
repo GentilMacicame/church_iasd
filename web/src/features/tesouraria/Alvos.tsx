@@ -129,15 +129,15 @@ function DialogoAlvo({ aoFechar }: { aoFechar: () => void }) {
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
-          <div className="grid gap-1.5 sm:col-span-2">
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
             <label htmlFor="alv-fundo" className="text-sm font-medium">Fundo <span className="text-destructive-text">*</span></label>
             <CampoEscolha id="alv-fundo" valor={fundo} aoMudar={setFundo} vazio="Escolher o fundo…" opcoes={(fundos.data ?? []).filter(fundoVisivel).filter((f, i, l) => l.findIndex((x) => x.tipo === f.tipo && x.nome === f.nome) === i).map((f) => ({ valor: String(f.id), rotulo: f.nome }))} />
           </div>
-          <div className="grid gap-1.5 sm:col-span-2">
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
             <label htmlFor="alv-desc" className="text-sm font-medium">Para quê</label>
             <Input id="alv-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="alvo" maxLength={255} placeholder="ex.: Telhado do templo" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="alv-valor" className="text-sm font-medium">Valor do alvo <span className="text-destructive-text">*</span></label>
             <CampoDinheiro id="alv-valor" value={valor} onChange={setValor} className="alvo" />
           </div>
@@ -147,11 +147,11 @@ function DialogoAlvo({ aoFechar }: { aoFechar: () => void }) {
                 {valor !== sugerido && <button type="button" className="ml-1 font-medium text-primary hover:underline" onClick={() => setValor(sugerido)}>usar</button>}</>
             ) : fundo ? `Sem meta em ${anoDoAlvo - 1} para este fundo.` : null}
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="alv-ini" className="text-sm font-medium">De</label>
             <CampoData id="alv-ini" value={inicio} onChange={setInicio} className="alvo" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="alv-fim" className="text-sm font-medium">Até</label>
             <CampoData id="alv-fim" value={fim} onChange={setFim} className="alvo" />
           </div>

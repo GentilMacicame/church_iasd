@@ -76,11 +76,11 @@ function DialogoDevocional({ r, nomeDe, aoFechar }: { r: Reuniao; nomeDe: (id: n
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dev-ini" className="text-sm font-medium">Primeira oração</label>
             <CampoMembro id="dev-ini" valor={inicial} aoMudar={setInicial} nomeDe={nomeDe} vazio="Quem orou…" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dev-hino" className="text-sm font-medium">Hino entoado</label>
             <div className="relative">
               <Music aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -99,7 +99,7 @@ function DialogoDevocional({ r, nomeDe, aoFechar }: { r: Reuniao; nomeDe: (id: n
               ? <Input aria-label="Nome do convidado" value={nomeConvidado} onChange={(e) => setNomeConvidado(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Pastor João Mabunda (pastor do distrito)" />
               : <CampoMembro id="dev-med" valor={meditacao} aoMudar={setMeditacao} nomeDe={nomeDe} vazio="Quem fez a meditação…" />}
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dev-fim" className="text-sm font-medium">Última oração</label>
             <CampoMembro id="dev-fim" valor={final} aoMudar={setFinal} nomeDe={nomeDe} vazio="Quem orou…" />
           </div>

@@ -351,11 +351,11 @@ function Encerramento({ reuniao, fechada }: { reuniao: Reuniao; fechada: boolean
   return (
     <Cartao titulo="Encerramento" icone={Clock} recolhivel abertoInicial={!!(reuniao.encerradaEm || reuniao.encerramento)}>
       <div className="grid gap-3">
-        <div className="grid gap-1.5">
+        <div className="campo-flutuante grid gap-1.5">
           <label htmlFor="enc-hora" className="text-sm font-medium">Hora do encerramento</label>
           <CampoHora id="enc-hora" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} disabled={fechada} className="alvo" />
         </div>
-        <div className="grid gap-1.5">
+        <div className="campo-flutuante grid gap-1.5">
           <label htmlFor="enc-texto" className="text-sm font-medium">Registo</label>
           <Textarea id="enc-texto" rows={3} value={texto} onChange={(e) => setTexto(e.target.value)} disabled={fechada} placeholder="ex.: Oração final pelo ancião Alberto Macuácua; próxima reunião a 13/12." />
         </div>
@@ -406,11 +406,11 @@ function DialogoPonto({ reuniaoId, ponto, ordem, votos, aoFechar }: { reuniaoId:
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="pt-ass" className="text-sm font-medium">Assunto <span className="text-destructive-text">*</span></label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-ass" className="text-sm font-medium">Assunto <span className="text-destructive-text">*</span></label>
             <Input id="pt-ass" value={assunto} onChange={(e) => setAssunto(e.target.value)} maxLength={255} placeholder="ex.: Pintura da fachada do templo" className="alvo" autoFocus /></div>
-          <div className="grid gap-1.5"><label htmlFor="pt-det" className="text-sm font-medium">Descrição</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-det" className="text-sm font-medium">Descrição</label>
             <Textarea id="pt-det" rows={3} value={detalhes} onChange={(e) => setDetalhes(e.target.value)} placeholder="O que foi apresentado, propostas, valores…" /></div>
-          <div className="grid gap-1.5"><label htmlFor="pt-disc" className="text-sm font-medium">Discussão</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-disc" className="text-sm font-medium">Discussão</label>
             <Textarea id="pt-disc" rows={3} value={discussao} onChange={(e) => setDiscussao(e.target.value)} placeholder="O resumo do que se disse: opiniões, dúvidas, propostas de alteração…" /></div>
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="alvo flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={discutido} onChange={(e) => setDiscutido(e.target.checked)} className="size-4 accent-[var(--primary)]" />Foi discutido</label>
@@ -424,19 +424,19 @@ function DialogoPonto({ reuniaoId, ponto, ordem, votos, aoFechar }: { reuniaoId:
             </div>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5"><label htmlFor="pt-est" className="text-sm font-medium">Resultado</label>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-est" className="text-sm font-medium">Resultado</label>
               <Seleccao id="pt-est" value={estado} onChange={(e) => setEstado(e.target.value as EstadoPonto)}>
                 {(Object.keys(ESTADO_PONTO) as EstadoPonto[]).map((k) => <option key={k} value={k}>{ESTADO_PONTO[k].r}</option>)}
               </Seleccao></div>
             {votos.length > 0 && (
-              <div className="grid gap-1.5"><label htmlFor="pt-vot" className="text-sm font-medium">Voto formal da acta</label>
+              <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-vot" className="text-sm font-medium">Voto formal da acta</label>
                 <Seleccao id="pt-vot" value={votoId} onChange={(e) => setVotoId(e.target.value)}>
                   <option value="">Nenhum</option>
                   {votos.map((v) => <option key={v.id} value={v.id}>{v.numero} · {v.assunto}</option>)}
                 </Seleccao></div>
             )}
           </div>
-          <div className="grid gap-1.5"><label htmlFor="pt-del" className="text-sm font-medium">Deliberação / decisão</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="pt-del" className="text-sm font-medium">Deliberação / decisão</label>
             <Textarea id="pt-del" rows={3} value={deliberacao} onChange={(e) => setDeliberacao(e.target.value)} placeholder="O que ficou decidido, quem faz o quê e até quando" /></div>
         </div>
         <DialogFooter className="gap-2 sm:justify-between">
@@ -487,14 +487,14 @@ function DialogoEditarReuniao({ reuniao, aoFechar }: { reuniao: Reuniao; aoFecha
         <DialogHeader><DialogTitle>Editar a reunião</DialogTitle><DialogDescription>Identificação da reunião, presidente e secretário(a).</DialogDescription></DialogHeader>
         <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
           <div className="sm:col-span-2"><ErroFormulario mensagem={erro} /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-num" className="text-sm font-medium">N.º da reunião</label><Input id="ed-num" value={numero} onChange={(e) => setNumero(e.target.value)} className="alvo num" /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-tipo" className="text-sm font-medium">Tipo</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-num" className="text-sm font-medium">N.º da reunião</label><Input id="ed-num" value={numero} onChange={(e) => setNumero(e.target.value)} className="alvo num" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-tipo" className="text-sm font-medium">Tipo</label>
             <Seleccao id="ed-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>{Object.entries(rotulos.tipoReuniao).map(([k, r]) => <option key={k} value={k}>{r}</option>)}</Seleccao></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-dia" className="text-sm font-medium">Data</label><CampoData id="ed-dia" value={dia} onChange={setDia} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-hora" className="text-sm font-medium">Hora</label><CampoHora id="ed-hora" value={h} onChange={(e) => setH(e.target.value)} className="alvo num" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="ed-local" className="text-sm font-medium">Local</label><Input id="ed-local" value={local} onChange={(e) => setLocal(e.target.value)} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-pres" className="text-sm font-medium">Presidida por</label><EscolherDoConselho id="ed-pres" valor={pres} aoMudar={setPres} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-sec" className="text-sm font-medium">Secretário(a)</label><EscolherDoConselho id="ed-sec" valor={sec} aoMudar={setSec} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-dia" className="text-sm font-medium">Data</label><CampoData id="ed-dia" value={dia} onChange={setDia} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-hora" className="text-sm font-medium">Hora</label><CampoHora id="ed-hora" value={h} onChange={(e) => setH(e.target.value)} className="alvo num" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="ed-local" className="text-sm font-medium">Local</label><Input id="ed-local" value={local} onChange={(e) => setLocal(e.target.value)} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-pres" className="text-sm font-medium">Presidida por</label><EscolherDoConselho id="ed-pres" valor={pres} aoMudar={setPres} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-sec" className="text-sm font-medium">Secretário(a)</label><EscolherDoConselho id="ed-sec" valor={sec} aoMudar={setSec} oficiais={conselho.data ?? []} nomeDe={nomeDe} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>

@@ -196,15 +196,15 @@ export default function PaginaIgrejas() {
 function CamposAdministrador({ v, set, prefixo }: { v: NovoAdministrador; set: (v: NovoAdministrador) => void; prefixo: string }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <div className="grid gap-1.5 sm:col-span-2">
+      <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
         <label htmlFor={`${prefixo}-nome`} className="text-sm font-medium">Nome</label>
         <Input id={`${prefixo}-nome`} value={v.nome} onChange={(e) => set({ ...v, nome: e.target.value })} maxLength={150} placeholder="ex.: Gabriel Langa" className="alvo" />
       </div>
-      <div className="grid gap-1.5">
+      <div className="campo-flutuante grid gap-1.5">
         <label htmlFor={`${prefixo}-tel`} className="text-sm font-medium">Telefone</label>
         <Input id={`${prefixo}-tel`} value={v.telefone} onChange={(e) => set({ ...v, telefone: e.target.value })} inputMode="tel" placeholder="+258 84 000 0000" className="alvo num" />
       </div>
-      <div className="grid gap-1.5">
+      <div className="campo-flutuante grid gap-1.5">
         <label htmlFor={`${prefixo}-email`} className="text-sm font-medium">E-mail</label>
         <Input id={`${prefixo}-email`} value={v.email} onChange={(e) => set({ ...v, email: e.target.value })} inputMode="email" placeholder="opcional" className="alvo" />
       </div>
@@ -316,39 +316,39 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
           <ErroFormulario mensagem={erro} />
           <fieldset className={cn('grid gap-3', passo !== 0 && 'hidden')}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="grid gap-1.5 sm:col-span-2">
+              <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
                 <label htmlFor="igr-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
                 <Input id="igr-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} placeholder="ex.: Igreja de Nwamatibjana" className="alvo" autoFocus />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-tipo" className="text-sm font-medium">Tipo</label>
                 <Seleccao id="igr-tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoIgreja)}>
                   {Object.entries(TIPO_IGREJA).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
                 </Seleccao>
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-ent" className="text-sm font-medium">Associação / Missão <span className="text-destructive-text">*</span></label>
                 <CampoEscolha id="igr-ent" valor={ent} aoMudar={(v) => { setEntidadeId(v); setDistritoId(''); setMaeId('') }} pesquisar="Pesquisar Associação…"
                   semOpcoes="Registe primeiro a Associação/Missão" opcoes={campos.map((e) => ({ valor: String(e.id), rotulo: e.nome, detalhe: [TIPO_ENTIDADE[e.tipo], e.sigla].filter(Boolean).join(' · ') }))} />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-dst" className="text-sm font-medium">Distrito pastoral</label>
                 <CampoEscolha id="igr-dst" valor={distritoId} aoMudar={setDistritoId} permitirLimpar pesquisar="Pesquisar distrito pastoral…"
                   vazio="Sem distrito pastoral" semOpcoes="Esta Associação ainda não tem distritos"
                   opcoes={dstDaEnt.map((d) => ({ valor: String(d.id), rotulo: d.nome }))} />
               </div>
               {tipo !== 'IGREJA_ORGANIZADA' && (
-                <div className="grid gap-1.5">
+                <div className="campo-flutuante grid gap-1.5">
                   <label htmlFor="igr-mae" className="text-sm font-medium">Igreja-mãe <span className="text-destructive-text">*</span></label>
                   <CampoEscolha id="igr-mae" valor={maeId} aoMudar={setMaeId} pesquisar="Pesquisar igreja…" semOpcoes="Não há igrejas organizadas nesta Associação"
                     opcoes={maes.map((m) => ({ valor: String(m.id), rotulo: m.nome }))} />
                 </div>
               )}
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-data" className="text-sm font-medium">Organizada em</label>
                 <CampoData id="igr-data" value={dataOrg} onChange={setDataOrg} className="alvo" />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-cod" className="text-sm font-medium">Código ACMS</label>
                 <Input id="igr-cod" value={codigo} onChange={(e) => setCodigo(e.target.value)} maxLength={30} placeholder="opcional" className="alvo" />
               </div>
@@ -356,22 +356,22 @@ function DialogoIgreja({ aoFechar, aoCriar }: { aoFechar: () => void; aoCriar: (
           </fieldset>
           <fieldset className={cn('grid gap-3', passo !== 1 && 'hidden')}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-prv" className="text-sm font-medium">Província <span className="text-destructive-text">*</span></label>
                 <CampoEscolha id="igr-prv" valor={prvId} aoMudar={(v) => { setPrvId(v); setDadId('') }} pesquisar="Pesquisar província…"
                   opcoes={(provincias.data ?? []).filter((x) => !x.endDate).map((x) => ({ valor: String(x.id), rotulo: x.nome }))} />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-dad" className="text-sm font-medium">Distrito <span className="text-destructive-text">*</span></label>
                 <CampoEscolha id="igr-dad" valor={dadId} aoMudar={setDadId} disabled={!prvId} pesquisar="Pesquisar distrito…"
                   vazio={prvId ? 'Escolher…' : 'Escolha primeiro a província'}
                   opcoes={dadsDaProvincia.map((d) => ({ valor: String(d.id), rotulo: d.nome }))} />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-loc" className="text-sm font-medium">Localidade / bairro <span className="text-destructive-text">*</span></label>
                 <Input id="igr-loc" value={localidade} onChange={(e) => setLocalidade(e.target.value)} maxLength={120} placeholder="ex.: Bairro de Nwamatibjana" className="alvo" />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="igr-end" className="text-sm font-medium">Endereço</label>
                 <Input id="igr-end" value={endereco} onChange={(e) => setEndereco(e.target.value)} maxLength={255} placeholder="ex.: Rua 4, quarteirão 12" className="alvo" />
               </div>
@@ -505,21 +505,21 @@ function DialogoEntidade({ aoFechar }: { aoFechar: () => void }) {
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
               <label htmlFor="ent-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
               <Input id="ent-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} placeholder="ex.: Missão Sul de Moçambique" className="alvo" autoFocus />
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="ent-tipo" className="text-sm font-medium">Tipo</label>
               <Seleccao id="ent-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
                 {Object.entries(TIPO_ENTIDADE).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="ent-sigla" className="text-sm font-medium">Sigla</label>
               <Input id="ent-sigla" value={sigla} onChange={(e) => setSigla(e.target.value)} maxLength={10} placeholder="ex.: MSM" className="alvo uppercase" />
             </div>
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
               <label htmlFor="ent-pai" className="text-sm font-medium">Pertence a</label>
               <CampoEscolha id="ent-pai" valor={paiId} aoMudar={setPaiId} permitirLimpar vazio="Nenhuma (nível de topo)" pesquisar="Pesquisar União, Divisão…"
                 opcoes={(entidades.data ?? []).filter((e) => !e.endDate).map((e) => ({ valor: String(e.id), rotulo: e.nome, detalhe: TIPO_ENTIDADE[e.tipo] }))} />
@@ -532,7 +532,7 @@ function DialogoEntidade({ aoFechar }: { aoFechar: () => void }) {
                 Criar já os fundos (dízimo, ofertas missionárias, Escola Sabatina, oferta combinada)
               </label>
               {fundos && (
-                <div className="grid gap-1.5 sm:max-w-xs">
+                <div className="campo-flutuante grid gap-1.5 sm:max-w-xs">
                   <label htmlFor="ent-pct" className="text-sm font-medium">Parte da Missão na oferta combinada (%)</label>
                   <Input id="ent-pct" value={pct} onChange={(e) => setPct(e.target.value)} inputMode="decimal" className="alvo num" />
                   <p className="text-xs text-muted-foreground">O resto fica na igreja. O dízimo vai sempre 100% para a Missão.</p>
@@ -618,12 +618,12 @@ function DialogoDistrito({ aoFechar }: { aoFechar: () => void }) {
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dst-ent" className="text-sm font-medium">Associação / Missão <span className="text-destructive-text">*</span></label>
             <CampoEscolha id="dst-ent" valor={ent} aoMudar={setEntId} pesquisar="Pesquisar Associação…" semOpcoes="Registe primeiro a Associação/Missão"
               opcoes={campos.map((e) => ({ valor: String(e.id), rotulo: e.nome, detalhe: TIPO_ENTIDADE[e.tipo] }))} />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dst-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
             <Input id="dst-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} placeholder="ex.: Distrito de Xai-Xai" className="alvo" autoFocus />
           </div>
@@ -667,9 +667,9 @@ function DialogoEditarDistrito({ distrito, aoFechar }: { distrito: Distrito; aoF
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="ed-dst-nome" className="text-sm font-medium">Nome</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-dst-nome" className="text-sm font-medium">Nome</label>
             <Input id="ed-dst-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="ed-dst-pastor" className="text-sm font-medium">Pastor do distrito</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="ed-dst-pastor" className="text-sm font-medium">Pastor do distrito</label>
             <CampoEscolha id="ed-dst-pastor" valor={pastor} aoMudar={setPastor} permitirLimpar vazio="Escolher o utilizador…" pesquisar="Pesquisar utilizador…"
               opcoes={(usuarios.data ?? []).filter((u) => u.estado === 'ACTIVO').map((u) => ({ valor: String(u.id), rotulo: u.nome, detalhe: u.email ?? undefined }))} />
             <p className="text-xs text-muted-foreground">Tem de ter um acesso (utilizador). Se ainda não tiver, crie-o em Acessos.</p></div>

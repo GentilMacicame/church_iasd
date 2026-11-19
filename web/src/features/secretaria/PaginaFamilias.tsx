@@ -241,11 +241,11 @@ function DialogoFamilia({ f, aoFechar }: { f: Familia | null; aoFechar: (id?: nu
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="fam-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
             <Input id="fam-nome" value={nome} onChange={(e) => setNome(e.target.value)} className="alvo" maxLength={150} autoFocus placeholder="ex.: Família Chirindza" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="fam-morada" className="text-sm font-medium">Morada</label>
             <Input id="fam-morada" value={morada} onChange={(e) => setMorada(e.target.value)} className="alvo" maxLength={255} placeholder="ex.: Bairro 3, quarteirão 12, casa 45" />
           </div>

@@ -269,7 +269,7 @@ function DialogoColunas({ tipo, colunas, aoFechar }: { tipo: TipoEscala; colunas
             <span className="text-xs text-muted-foreground">Sugestões:</span>
             {sugestoes.map((x) => (
               <button key={x} type="button" disabled={gravar.isPending} onClick={() => juntarSugestao(x)}
-                className="alvo inline-flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                className="alvo inline-flex items-center gap-1 rounded-[2px] border border-dashed px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                 <Plus className="size-3" />{x}
               </button>
             ))}

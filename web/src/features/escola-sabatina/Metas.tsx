@@ -232,17 +232,17 @@ function DialogoSemana({ semana, aoFechar }: { semana: SemanaEspecial | null; ao
         <DialogHeader><DialogTitle>{semana ? semana.nome : 'Programa especial'}</DialogTitle><DialogDescription>Aparece como alerta nos 14 dias antes e enquanto decorre.</DialogDescription></DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5"><label htmlFor="se-tipo" className="text-sm font-medium">Tipo</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="se-tipo" className="text-sm font-medium">Tipo</label>
             <Seleccao id="se-tipo" value={tipo} onChange={(e) => { const k = e.target.value as TipoSemana; if (nome === TIPOS_SEMANA[tipo]) setNome(k === 'OUTRO' ? '' : TIPOS_SEMANA[k]); setTipo(k) }}>
               {(Object.keys(TIPOS_SEMANA) as TipoSemana[]).map((k) => <option key={k} value={k}>{TIPOS_SEMANA[k]}</option>)}
             </Seleccao></div>
-          <div className="grid gap-1.5"><label htmlFor="se-nome" className="text-sm font-medium">Nome</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="se-nome" className="text-sm font-medium">Nome</label>
             <Input id="se-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={150} className="alvo" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-1.5"><label htmlFor="se-ini" className="text-sm font-medium">Início</label><CampoData id="se-ini" value={inicio} onChange={setInicio} className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="se-fim" className="text-sm font-medium">Fim</label><CampoData id="se-fim" value={fim} onChange={setFim} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="se-ini" className="text-sm font-medium">Início</label><CampoData id="se-ini" value={inicio} onChange={setInicio} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="se-fim" className="text-sm font-medium">Fim</label><CampoData id="se-fim" value={fim} onChange={setFim} className="alvo" /></div>
           </div>
-          <div className="grid gap-1.5"><label htmlFor="se-obs" className="text-sm font-medium">Observações</label>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="se-obs" className="text-sm font-medium">Observações</label>
             <Textarea id="se-obs" rows={2} value={obs} onChange={(e) => setObs(e.target.value)} maxLength={500} placeholder="ex.: tema, pregador, horário" /></div>
         </div>
         <DialogFooter>

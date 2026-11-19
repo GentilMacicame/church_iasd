@@ -94,17 +94,17 @@ function DialogoConsentimento({ m, tipo, actual, menor, aoFechar }: { m: Membro;
                 className={cn('alvo rounded-lg border px-3 py-2 text-sm font-medium', concedido === o.v ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground')}>{o.r}</button>
             ))}
           </div>
-          <div className="grid gap-1.5 sm:w-1/2">
+          <div className="campo-flutuante grid gap-1.5 sm:w-1/2">
             <label htmlFor="cns-data" className="text-sm font-medium">Data</label>
             <CampoData id="cns-data" value={dia} onChange={setDia} className="alvo" />
           </div>
           {menor && (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cns-quem" className="text-sm font-medium">Dado pelo encarregado</label>
               <CampoMembro id="cns-quem" valor={porQuem} aoMudar={setPorQuem} nomeDe={nomeDe} excluir={[m.id]} vazio="Escolher o encarregado…" />
             </div>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="cns-obs" className="text-sm font-medium">Observações</label>
             <Input id="cns-obs" value={obs} onChange={(e) => setObs(e.target.value)} className="alvo" maxLength={500} placeholder="ex.: assinou o formulário em papel" />
           </div>

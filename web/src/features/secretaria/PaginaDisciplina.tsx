@@ -273,20 +273,20 @@ function DialogoCensura({ aoFechar }: { aoFechar: () => void }) {
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dsc-membro" className="text-sm font-medium">Membro <span className="text-destructive-text">*</span></label>
             <CampoMembro id="dsc-membro" valor={membro} aoMudar={setMembro} nomeDe={nomeDe} />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dsc-voto" className="text-sm font-medium">Voto <span className="text-destructive-text">*</span></label>
             <CampoVoto id="dsc-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA']} preferir="DISCIPLINA" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="dsc-ini" className="text-sm font-medium">Início</label>
               <CampoData id="dsc-ini" value={inicio} onChange={setInicio} className="alvo" />
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="dsc-meses" className="text-sm font-medium">Duração</label>
               <Seleccao id="dsc-meses" value={meses} onChange={(e) => setMeses(e.target.value)}>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n} {n === 1 ? 'mês' : 'meses'}</option>)}
@@ -300,7 +300,7 @@ function DialogoCensura({ aoFechar }: { aoFechar: () => void }) {
               <span><b>O membro tem {anos} anos.</b> Confirmo que os pais ou o encarregado foram avisados.</span>
             </label>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dsc-motivo" className="text-sm font-medium">Motivo <span className="font-normal text-muted-foreground">(confidencial)</span></label>
             <textarea id="dsc-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={3} maxLength={1000}
               className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none" />

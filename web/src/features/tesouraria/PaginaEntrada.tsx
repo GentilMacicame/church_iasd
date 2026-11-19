@@ -361,7 +361,7 @@ export default function PaginaEntrada() {
               ))}
             </div>
             {porFamilia && (
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="ent-familia" className="text-sm font-medium">Família <span className="text-destructive" aria-hidden>*</span></label>
                 <CampoEscolha id="ent-familia" valor={familia} aoMudar={(v) => { setFamilia(v); setErroFamilia(null) }} invalido={!!erroFamilia}
                   vazio="Procurar a família pelo nome…" pesquisar="Pesquisar família…" semOpcoes="Ainda não há famílias registadas (Secretaria › Famílias)"

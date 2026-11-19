@@ -155,8 +155,8 @@ function DialogoAjustar({ p, ano, aoFechar }: { p: PessoaReavivamento; ano: numb
         </DialogHeader>
         <ErroFormulario mensagem={erro} />
         <div className="grid gap-4">
-          <div className="grid gap-1.5"><label htmlFor="qrv-valor" className="text-sm font-medium">Quota do ano</label><CampoDinheiro id="qrv-valor" value={valor} onChange={setValor} className="alvo" /></div>
-          <div className="grid gap-1.5"><label htmlFor="qrv-motivo" className="text-sm font-medium">Motivo</label><Input id="qrv-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={255} placeholder="ex.: sem rendimento" className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="qrv-valor" className="text-sm font-medium">Quota do ano</label><CampoDinheiro id="qrv-valor" value={valor} onChange={setValor} className="alvo" /></div>
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="qrv-motivo" className="text-sm font-medium">Motivo</label><Input id="qrv-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={255} placeholder="ex.: sem rendimento" className="alvo" /></div>
         </div>
         <DialogFooter>
           {p.quotaId != null && (

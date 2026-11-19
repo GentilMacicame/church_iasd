@@ -78,7 +78,7 @@ export function Lugar({ n }: { n?: number | null }) {
   if (!n) return <span className="text-muted-foreground">—</span>
   const m = MEDALHAS[n - 1]
   return m
-    ? <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ring-1', m.classe)}>{m.rotulo}</span>
+    ? <span className={cn('inline-flex items-center rounded-[2px] px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ring-1', m.classe)}>{m.rotulo}</span>
     : <span className="text-sm tabular-nums text-muted-foreground">{n}.º lugar</span>
 }
 

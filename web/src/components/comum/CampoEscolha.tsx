@@ -52,7 +52,7 @@ export function CampoEscolha({ id, valor, aoMudar, opcoes, vazio = 'Escolher…'
     <Popover open={aberto} onOpenChange={(v) => { setAberto(v); if (!v) aoFechar?.(); if (v) { setBusca(''); setActivo(Math.max(0, opcoes.findIndex((o) => o.valor === valor))) } }}>
       <PopoverTrigger asChild>
         <button id={id} type="button" role="combobox" aria-label={rotuloAcessivel} aria-expanded={aberto} aria-haspopup="listbox" disabled={disabled} aria-invalid={invalido || undefined}
-          className={cn('group/escolha alvo flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-[border-color,box-shadow] hover:border-foreground/20',
+          className={cn('group/escolha alvo flex h-10 w-full items-center justify-between gap-2 rounded-[2px] border border-input bg-card px-3 text-left text-sm shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-[border-color,box-shadow] hover:border-foreground/20',
             'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/15 focus-visible:outline-none aria-expanded:border-primary aria-expanded:ring-[3px] aria-expanded:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive')}>
           <span className={cn('truncate', escolhida ? 'text-foreground' : 'text-muted-foreground')}>{escolhida ? escolhida.rotulo : (opcoes.length ? vazio : semOpcoes)}</span>
           {escolhida && permitirLimpar

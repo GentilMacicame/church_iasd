@@ -373,12 +373,12 @@ function DialogoPerfil({ perfil, aoFechar }: { perfil?: Perfil; aoFechar: () => 
           <ErroFormulario mensagem={erro} />
           {!perfil && (
             <>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="per-nome" className="text-sm font-medium">Nome técnico <span className="text-destructive-text">*</span></label>
                 <Input id="per-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="ex.: TESOUREIRO_ADJUNTO" className="alvo uppercase" maxLength={40} autoFocus />
                 <p className="text-xs text-muted-foreground">Sem espaços nem acentos.</p>
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="per-ambito" className="text-sm font-medium">Âmbito</label>
                 <Seleccao id="per-ambito" value={ambito} onChange={(e) => setAmbito(e.target.value)}>
                   <option value="IGREJA">Uma igreja</option>
@@ -387,7 +387,7 @@ function DialogoPerfil({ perfil, aoFechar }: { perfil?: Perfil; aoFechar: () => 
               </div>
             </>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="per-desc" className="text-sm font-medium">Descrição</label>
             <Input id="per-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="O que este perfil faz" className="alvo" maxLength={255} />
           </div>
@@ -466,7 +466,7 @@ function AbaPermissoes() {
   return (
     <div className="grid gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="grid gap-1.5 sm:w-96">
+        <div className="campo-flutuante grid gap-1.5 sm:w-96">
           <label htmlFor="perm-perfil" className="text-sm font-medium">Seleccionar perfil</label>
           <Seleccao id="perm-perfil" value={perfil ? String(perfil.id) : ''} onChange={(e) => escolherPerfil(e.target.value)}>
             {lista.map((p) => <option key={p.id} value={p.id}>{nomePerfil(p)}{p.endDate ? ' (inactivo)' : ''}{p.ambito === 'ENTIDADE' ? ' · Missão' : ''}</option>)}

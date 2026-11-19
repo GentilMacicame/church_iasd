@@ -325,13 +325,13 @@ function DialogoDecidir({ d, aoFechar }: { d: Despesa; aoFechar: () => void }) {
             ))}
           </div>
           {!rejeitar && (
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="dec-valor" className="text-sm font-medium">Valor aprovado</label>
               <CampoDinheiro id="dec-valor" value={valor} onChange={setValor} className="alvo" />
               <p className="text-xs text-muted-foreground">Pode aprovar menos do que o pedido, nunca mais.</p>
             </div>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="dec-motivo" className="text-sm font-medium">{rejeitar ? 'Motivo' : 'Nota'}{rejeitar && <span className="text-destructive-text"> *</span>}</label>
             <Textarea id="dec-motivo" rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder={rejeitar ? 'ex.: fica para o orçamento do próximo trimestre' : 'opcional'} />
           </div>
@@ -393,27 +393,27 @@ function DialogoPagar({ d, aoFechar }: { d: Despesa; aoFechar: () => void }) {
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="pag-conta" className="text-sm font-medium">Conta</label>
               <Seleccao id="pag-conta" value={conta ? String(conta.id) : ''} onChange={(e) => { setContaId(e.target.value); setMetodo('') }}>
                 {(contas.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="pag-metodo" className="text-sm font-medium">Forma de pagamento</label>
               <Seleccao id="pag-metodo" value={met} onChange={(e) => setMetodo(e.target.value)}>
                 {Object.entries(rotulos.metodo).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="pag-valor" className="text-sm font-medium">Valor pago</label>
               <CampoDinheiro id="pag-valor" value={valor} onChange={setValor} className="alvo" />
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="pag-data" className="text-sm font-medium">Data</label>
               <CampoData id="pag-data" value={dia} onChange={setDia} className="alvo" />
             </div>
-            <div className="grid gap-1.5 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2">
               <label htmlFor="pag-ref" className="text-sm font-medium">Referência</label>
               <Input id="pag-ref" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="n.º da factura ou do recibo" className="alvo num" />
             </div>

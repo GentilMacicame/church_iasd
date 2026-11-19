@@ -277,7 +277,7 @@ function Participantes({ contagemId, aberta, nomeDe, lista, aCarregar }: {
       </div>
       <div className="flex flex-wrap gap-2 px-3 py-3 text-sm">
         {aCarregar ? <Barra className="h-6 w-40" /> : lista.length === 0 ? <span className="text-muted-foreground">Ninguém registado</span> : lista.map((x) => (
-          <span key={x.id} className="inline-flex items-center gap-1.5 rounded-full border bg-card py-1 pr-1.5 pl-3">
+          <span key={x.id} className="inline-flex items-center gap-1.5 rounded-[2px] border bg-card py-1 pr-1.5 pl-3">
             <span className="font-medium">{nomeDe(x.membroId) ?? `Membro ${x.membroId}`}</span> <span className="text-xs text-muted-foreground">{FUNCOES_CONTAGEM[x.funcao] ?? x.funcao}</span>
             {podeTirar && (
               <button type="button" className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Tirar ${nomeDe(x.membroId) ?? 'participante'}`} disabled={tirar.isPending}
@@ -361,17 +361,17 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
           <section className="grid content-start gap-3">
             <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Quem conta</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="cnt-data" className="text-sm font-medium">Data</label>
                 <CampoData id="cnt-data" value={dia} onChange={setDia} className="alvo" />
               </div>
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="cnt-ocasiao" className="text-sm font-medium">Culto</label>
                 <Input id="cnt-ocasiao" value={ocasiao} onChange={(e) => setOcasiao(e.target.value)} maxLength={100} className="alvo" />
               </div>
             </div>
             {[...MINIMO_CONTAGEM, { funcao: 'ANCIAO', rotulo: 'o ancião', titulo: 'Ancião' }].map((f) => (
-              <div key={f.funcao} className="grid gap-1.5">
+              <div key={f.funcao} className="campo-flutuante grid gap-1.5">
                 <label htmlFor={`cnt-${f.funcao}`} className="text-sm font-medium">
                   {ROTULO_CURTO[f.funcao] ?? f.titulo}
                   {f.funcao !== 'ANCIAO' ? <span className="text-destructive-text"> *</span> : <span className="font-normal text-muted-foreground"> (opcional)</span>}
@@ -379,7 +379,7 @@ function DialogoContagem({ aoFechar, nomeDe }: { aoFechar: () => void; nomeDe: (
                 <CampoMembro id={`cnt-${f.funcao}`} valor={quem[f.funcao]} aoMudar={(x) => setQuem((q) => ({ ...q, [f.funcao]: x }))} nomeDe={nomeDe} />
               </div>
             ))}
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cnt-conta" className="text-sm font-medium">Fica no</label>
               <Seleccao id="cnt-conta" value={conta ? String(conta.id) : ''} onChange={(e) => setContaId(e.target.value)}>
                 {(caixas.length ? caixas : contas.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}

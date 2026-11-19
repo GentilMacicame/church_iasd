@@ -278,7 +278,7 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
                   {seleccao.length > 0 && (
                     <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto border-b px-2 py-2">
                       {seleccao.map((id) => (
-                        <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pr-1 pl-2.5 text-xs font-medium text-primary">
+                        <span key={id} className="inline-flex items-center gap-1 rounded-[2px] bg-primary/10 py-0.5 pr-1 pl-2.5 text-xs font-medium text-primary">
                           {candidatas.find((i) => i.id === id)?.nome ?? `Igreja ${id}`}
                           <button type="button" className="rounded-full p-0.5 hover:bg-primary/15" aria-label="Retirar" onClick={() => setEscolhidas(seleccao.filter((x) => x !== id))}><X className="size-3" /></button>
                         </span>
@@ -302,11 +302,11 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
               )}
             </div>
           )}
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="cmc-titulo" className="text-sm font-medium">Título <span className="text-destructive-text">*</span></label>
             <Input id="cmc-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={200} className="alvo" autoFocus placeholder="ex.: Santa Ceia no próximo sábado" />
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="cmc-conteudo" className="text-sm font-medium">Comunicado <span className="text-destructive-text">*</span></label>
             <Textarea id="cmc-conteudo" value={conteudo} onChange={(e) => setConteudo(e.target.value)} rows={6} />
           </div>
@@ -316,9 +316,9 @@ function DialogoComunicado({ comunicado, aoFechar }: { comunicado?: Comunicado; 
               opcoes={(['MEMBROS', 'LIDERANCA'] as const).map((x) => ({ valor: x, rotulo: ROTULO_PUBLICO[x] }))} />
           </div>
           <div className="grid gap-3 sm:grid-cols-[1fr_7rem_1fr]">
-            <div className="grid gap-1.5"><label htmlFor="cmc-data" className="text-sm font-medium">Publicar em</label><CampoData id="cmc-data" value={dataPub} onChange={setDataPub} className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="cmc-hora" className="text-sm font-medium">Hora</label><CampoHora id="cmc-hora" value={horaPub} onChange={(e) => setHoraPub(e.target.value)} className="alvo num" /></div>
-            <div className="grid gap-1.5"><label htmlFor="cmc-ate" className="text-sm font-medium">Válido até</label><CampoData id="cmc-ate" value={validoAte} onChange={setValidoAte} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="cmc-data" className="text-sm font-medium">Publicar em</label><CampoData id="cmc-data" value={dataPub} onChange={setDataPub} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="cmc-hora" className="text-sm font-medium">Hora</label><CampoHora id="cmc-hora" value={horaPub} onChange={(e) => setHoraPub(e.target.value)} className="alvo num" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="cmc-ate" className="text-sm font-medium">Válido até</label><CampoData id="cmc-ate" value={validoAte} onChange={setValidoAte} className="alvo" /></div>
           </div>
         </div>
         <DialogFooter>

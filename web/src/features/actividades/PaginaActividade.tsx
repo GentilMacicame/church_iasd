@@ -138,7 +138,7 @@ function Ficha({ a }: { a: Actividade }) {
             <DialogTitle>Cancelar «{a.nome}»?</DialogTitle>
             <DialogDescription>Fica no histórico com o motivo.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="act-motivo" className="text-sm font-medium">Motivo <span className="text-destructive-text">*</span></label>
             <Textarea id="act-motivo" rows={2} maxLength={255} value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="ex.: chuvas fortes, falta de orçamento" autoFocus />
           </div>

@@ -272,23 +272,23 @@ function DialogoEnviar({ p, entidadeNome, aoFechar }: { p: Periodo; entidadeNome
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="rem-conta" className="text-sm font-medium">Sai da conta</label>
               <Seleccao id="rem-conta" value={conta ? String(conta.id) : ''} onChange={(e) => { setContaId(e.target.value); setMetodo('') }}>
                 {(contas.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="rem-metodo" className="text-sm font-medium">Forma</label>
               <Seleccao id="rem-metodo" value={met} onChange={(e) => setMetodo(e.target.value)}>
                 {Object.entries(rotulos.metodo).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="rem-data" className="text-sm font-medium">Data do depósito</label>
               <CampoData id="rem-data" value={dia} onChange={setDia} className="alvo" />
             </div>
-            <div className="grid gap-1.5 sm:col-span-3">
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-3">
               <label htmlFor="rem-ref" className="text-sm font-medium">N.º do talão do depósito <span className="text-destructive-text">*</span></label>
               <Input id="rem-ref" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="ou o código da transacção M-Pesa" className="alvo num uppercase" maxLength={100} />
             </div>

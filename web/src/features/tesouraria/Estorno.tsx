@@ -81,7 +81,7 @@ export function DialogoEstorno({ tr, linhas, fundoDe, aberto, aoMudar }: {
             {invalidos.length > 0 && <p className="text-sm text-destructive-text">Escreva os valores como 1 500,00.</p>}
             {tentou && total <= 0 && <p className="text-sm text-destructive-text">Escreva o valor a estornar.</p>}
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="est-motivo" className="text-sm font-medium">Motivo <span className="text-destructive-text">*</span></label>
             <Textarea id="est-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={3} placeholder="ex.: valor lançado em duplicado no sábado 07/11"
               aria-invalid={(tentou && semMotivo) || undefined} />

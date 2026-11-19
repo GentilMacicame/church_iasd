@@ -3,7 +3,8 @@
  * type="date" segue a língua do sistema (um Android em inglês mostra mm/dd/yyyy), por isso este é de texto:
  * aceita só algarismos, põe as barras sozinho e entrega à API a data ISO (2026-11-14).
  */
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
+import { CalendarDays } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,9 @@ export function ecraParaIso(texto: string): string | null {
   if (data.getUTCFullYear() !== a || data.getUTCMonth() !== mes - 1 || data.getUTCDate() !== d || a < 1900) return null
   return `${m[3]}-${m[2]}-${m[1]}`
 }
+
+/** As classes de largura do campo passam para o invólucro (o ícone fica dentro do campo). */
+const larguras = (c?: string) => c?.split(/\s+/).filter((x) => /^(sm:)?(max-)?w-/.test(x)).join(' ')
 
 function mascara(texto: string): string {
   const n = texto.replace(/\D/g, '').slice(0, 8)
@@ -42,22 +46,36 @@ export const CampoData = forwardRef<HTMLInputElement, Props>(function CampoData(
     if (ecraParaIso(texto) !== value) setTexto(isoParaEcra(value) || (value && !/^\d{4}-/.test(value) ? value : ''))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
+  // o ícone abre o calendário do browser (um campo de data escondido); escrever à mão continua a funcionar
+  const calendario = useRef<HTMLInputElement>(null)
+  const abrir = () => { const el = calendario.current; if (!el) return; try { el.showPicker() } catch { el.focus() } }
   return (
-    <Input
-      ref={ref}
-      {...props}
-      inputMode="numeric"
-      autoComplete="off"
-      placeholder="dd/mm/aaaa"
-      maxLength={10}
-      value={texto}
-      onChange={(e) => {
-        const t = mascara(e.target.value)
-        setTexto(t)
-        const iso = ecraParaIso(t)
-        onChange(iso === null ? t : iso)
-      }}
-      className={cn('num', className)}
-    />
+    <span data-calendario className={cn('relative block', larguras(className))}>
+      <Input
+        ref={ref}
+        {...props}
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="dd/mm/aaaa"
+        maxLength={10}
+        value={texto}
+        onChange={(e) => {
+          const t = mascara(e.target.value)
+          setTexto(t)
+          const iso = ecraParaIso(t)
+          onChange(iso === null ? t : iso)
+        }}
+        className={cn('num pr-8', className)}
+      />
+      {!props.disabled && (
+        <button type="button" tabIndex={-1} onClick={abrir} aria-label="Abrir o calendário"
+          className="absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <CalendarDays className="size-4" />
+        </button>
+      )}
+      <input ref={calendario} type="date" tabIndex={-1} aria-hidden className="pointer-events-none absolute right-0 bottom-0 h-0 w-0 opacity-0"
+        value={/^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ''}
+        onChange={(e) => { if (e.target.value) { setTexto(isoParaEcra(e.target.value)); onChange(e.target.value) } }} />
+    </span>
   )
 })

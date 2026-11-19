@@ -149,7 +149,7 @@ const PILULAS: Record<VariantePilula, string> = {
 /** Estado numa linha (badge): tom suave com texto do mesmo tom; nunca espremido. */
 export function Pilula({ variante = 'secondary', children, className }: { variante?: VariantePilula; children: ReactNode; className?: string }) {
   return (
-    <span className={cn('inline-flex flex-none items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap', PILULAS[variante], className)}>
+    <span className={cn('inline-flex flex-none items-center gap-1 rounded-[2px] border px-2 py-0.5 text-xs font-medium whitespace-nowrap', PILULAS[variante], className)}>
       {children}
     </span>
   )
@@ -242,16 +242,16 @@ export function Segmentos<T extends string>({ opcoes, valor, aoMudar, rotulo, cl
   opcoes: readonly { valor: T; rotulo: ReactNode; contagem?: number }[]; valor: T; aoMudar: (v: T) => void; rotulo: string; className?: string
 }) {
   return (
-    <div role="tablist" aria-label={rotulo} className={cn('inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-1 [scrollbar-width:none]', className)}>
+    <div role="tablist" aria-label={rotulo} className={cn('inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-[2px] bg-muted p-1 [scrollbar-width:none]', className)}>
       {opcoes.map((o) => {
         const activo = o.valor === valor
         return (
           <button key={o.valor} type="button" role="tab" aria-selected={activo} onClick={() => aoMudar(o.valor)}
-            className={cn('alvo inline-flex h-8 flex-none items-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all',
+            className={cn('alvo inline-flex h-8 flex-none items-center gap-1.5 rounded-[2px] px-3 text-sm font-medium whitespace-nowrap transition-all',
               activo ? 'bg-card text-foreground shadow-[0_1px_3px_rgb(15_23_42/0.12)]' : 'text-muted-foreground hover:text-foreground')}>
             {o.rotulo}
             {o.contagem != null && (
-              <span className={cn('min-w-5 rounded-full px-1.5 text-center text-xs tabular-nums', activo ? 'bg-primary/10 text-primary' : 'bg-background/70 text-muted-foreground')}>{o.contagem}</span>
+              <span className={cn('min-w-5 rounded-[2px] px-1.5 text-center text-xs tabular-nums', activo ? 'bg-primary/10 text-primary' : 'bg-background/70 text-muted-foreground')}>{o.contagem}</span>
             )}
           </button>
         )

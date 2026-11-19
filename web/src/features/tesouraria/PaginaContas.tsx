@@ -191,38 +191,38 @@ function DialogoConta({ missao: inicial, tipoInicial, aoFechar }: { missao: bool
             ))}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cta-tipo" className="text-sm font-medium">Tipo</label>
               <Seleccao id="cta-tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
                 {Object.entries(TIPOS).filter(([k]) => !missao || (k !== 'CAIXA' && k !== 'FUNDO_MANEIO')).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </Seleccao>
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cta-nome" className="text-sm font-medium">Nome <span className="text-destructive-text">*</span></label>
               <Input id="cta-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder={missao ? 'Conta da Missão (BIM)' : 'ex.: BCI da igreja'} className="alvo" maxLength={100} />
             </div>
             {tipo !== 'CAIXA' && tipo !== 'FUNDO_MANEIO' && (
               <>
-                <div className="grid gap-1.5">
+                <div className="campo-flutuante grid gap-1.5">
                   <label htmlFor="cta-banco" className="text-sm font-medium">{tipo === 'BANCO' ? 'Banco' : 'Operador'}</label>
                   <Input id="cta-banco" value={banco} onChange={(e) => setBanco(e.target.value)} placeholder={tipo === 'BANCO' ? 'ex.: BIM' : 'ex.: Vodacom'} className="alvo" maxLength={100} />
                 </div>
-                <div className="grid gap-1.5">
+                <div className="campo-flutuante grid gap-1.5">
                   <label htmlFor="cta-numero" className="text-sm font-medium">{tipo === 'BANCO' ? 'N.º da conta ou NIB' : 'Número'}</label>
                   <Input id="cta-numero" value={numero} onChange={(e) => setNumero(e.target.value)} className="alvo num" maxLength={50} />
                 </div>
               </>
             )}
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cta-titular" className="text-sm font-medium">Titular</label>
               <Input id="cta-titular" value={titular} onChange={(e) => setTitular(e.target.value)} placeholder={missao ? nomeEntidade : igreja.nome} className="alvo" maxLength={150} />
             </div>
-            <div className="grid gap-1.5">
+            <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="cta-data" className="text-sm font-medium">{missao ? 'A contar de' : 'Data do saldo inicial'}</label>
               <CampoData id="cta-data" value={dia} onChange={setDia} className="alvo" />
             </div>
             {!missao && (
-              <div className="grid gap-1.5">
+              <div className="campo-flutuante grid gap-1.5">
                 <label htmlFor="cta-saldo" className="text-sm font-medium">{tipo === 'FUNDO_MANEIO' ? 'Valor inicial do fundo' : 'Saldo inicial'}</label>
                 <CampoDinheiro id="cta-saldo" value={saldo} onChange={setSaldo} className="alvo" />
               </div>

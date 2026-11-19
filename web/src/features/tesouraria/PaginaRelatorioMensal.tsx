@@ -156,10 +156,10 @@ export default function PaginaRelatorioMensal() {
                 {depositos.length ? (
                   <>
                     <p className="mb-1 text-xs font-medium text-muted-foreground">Depósitos na conta de {entidadeNome}</p>
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto"><table className="w-full min-w-[26rem] text-sm">
                       <thead><tr className="text-xs text-muted-foreground"><th className="pb-1 text-left font-medium">Data</th><th className="pb-1 text-left font-medium">Tipo</th><th className="pb-1 text-left font-medium">Talão</th><th className="pb-1 text-right font-medium">Valor</th><th className="pb-1"><span className="sr-only">Estado</span></th></tr></thead>
                       <tbody>{depositos.map((r, i) => <Deposito key={r.id} remessa={r} complementar={i > 0} />)}</tbody>
-                    </table>
+                    </table></div>
                   </>
                 ) : (
                   <p className="text-warning-text">Ainda não foi feito o depósito à Missão deste mês. <Link to="/tesouraria/remessas" className="font-medium text-primary hover:underline print:hidden">Fazer o depósito</Link></p>

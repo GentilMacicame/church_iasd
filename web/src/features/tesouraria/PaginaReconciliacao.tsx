@@ -186,8 +186,8 @@ function DialogoEscolher({ linha, movimentos, aoLigar, aoFechar, aCorrer }: {
           <DialogTitle>Ligar a um movimento</DialogTitle>
           <DialogDescription>Linha de {data(linha.data)} em {linha.conta}: <Dinheiro valor={linha.valor} />{linha.descricao ? ` — ${linha.descricao}` : ''}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-2">
-          <label htmlFor="rec-mov" className="text-sm font-medium">Movimento confirmado desta conta (até 10 dias antes ou depois)</label>
+        <div className="campo-flutuante grid gap-2">
+          <label htmlFor="rec-mov" className="text-sm font-medium">Movimento confirmado (até 10 dias antes ou depois)</label>
           <CampoEscolha id="rec-mov" valor={id} aoMudar={setId} vazio="Escolher o movimento…" pesquisar="Pesquisar pelo n.º, descrição ou valor…" semOpcoes="Não há movimentos desta conta no período"
             opcoes={movimentos.map((x) => {
               const e = efeito(x, linha.contaId) ?? 0
@@ -238,7 +238,7 @@ function DialogoImportar({ contas, aoFechar }: { contas: { id: number; nome: str
         </DialogHeader>
         <div className="grid gap-4">
           <ErroFormulario mensagem={erro} />
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="imp-conta" className="text-sm font-medium">Conta</label>
             <CampoEscolha id="imp-conta" valor={conta} aoMudar={setConta} opcoes={contas.map((c) => ({ valor: String(c.id), rotulo: c.nome }))} vazio="Escolher a conta…" />
           </div>
@@ -249,7 +249,7 @@ function DialogoImportar({ contas, aoFechar }: { contas: { id: number; nome: str
               <Upload className="size-4" />{ficheiro || 'Escolher ficheiro CSV…'}
             </Button>
           </div>
-          <div className="grid gap-1.5">
+          <div className="campo-flutuante grid gap-1.5">
             <label htmlFor="imp-csv" className="text-sm font-medium">Ou cole as linhas {linhas > 0 && <span className="font-normal text-muted-foreground">({linhas} linha{linhas === 1 ? '' : 's'})</span>}</label>
             <textarea id="imp-csv" value={csv} onChange={(e) => setCsv(e.target.value)} rows={6} spellCheck={false}
               placeholder={'data;descricao;referencia;valor\n02/11/2026;Depósito numerário;004512;12 500,00\n05/11/2026;Comissão de manutenção;;-150,00'}

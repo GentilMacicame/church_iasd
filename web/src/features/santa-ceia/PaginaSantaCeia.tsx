@@ -204,12 +204,12 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
         </DialogHeader>
         <ErroFormulario mensagem={erro} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-3">
-            <div className="grid gap-1.5"><label htmlFor="stc-data" className="text-sm font-medium">Data <span className="text-destructive-text">*</span></label><CampoData id="stc-data" value={dia} onChange={setDia} className="alvo" /></div>
-            <div className="grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium">Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo w-full" /></div>
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2">
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="stc-data" className="text-sm font-medium">Data <span className="text-destructive-text">*</span></label><CampoData id="stc-data" value={dia} onChange={setDia} className="alvo" /></div>
+            <div className="campo-flutuante grid gap-1.5"><label htmlFor="stc-hora" className="text-sm font-medium">Hora</label><CampoHora id="stc-hora" value={hora} onChange={(e) => setHora(e.target.value)} className="alvo w-full" /></div>
           </div>
-          <div className="grid gap-1.5"><label htmlFor="stc-local" className="text-sm font-medium">Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Oficiante <span className="font-normal text-muted-foreground">(pastor ou ancião)</span></label>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="stc-local" className="text-sm font-medium">Local</label><Input id="stc-local" value={local} onChange={(e) => setLocal(e.target.value)} maxLength={150} className="alvo" placeholder="ex.: Templo" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="stc-resp" className="text-sm font-medium">Oficiante <span className="font-normal text-muted-foreground">(pastor ou ancião)</span></label>
             {oficiantes.length ? (
               <Seleccao id="stc-resp" value={responsavel ? String(responsavel) : ''} onChange={(e) => setResponsavel(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">Escolher…</option>
@@ -226,7 +226,7 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
                   const sim = acompanhantes.includes(o.membroId)
                   return (
                     <button key={o.membroId} type="button" aria-pressed={sim} onClick={() => trocarAcompanhante(o.membroId)}
-                      className={cn('alvo inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors', sim ? 'border-primary bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:border-foreground/30 hover:text-foreground')}>
+                      className={cn('alvo inline-flex items-center gap-1.5 rounded-[2px] border px-3 py-1.5 text-sm transition-colors', sim ? 'border-primary bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:border-foreground/30 hover:text-foreground')}>
                       {sim && <Check className="size-3.5" />}{o.membro}
                     </button>
                   )
@@ -234,7 +234,7 @@ function DialogoAgendar({ santaCeia, aoFechar }: { santaCeia?: SantaCeia; aoFech
               </div>
             ) : <p className="text-sm text-muted-foreground">Sem diáconos no mandato em exercício.</p>}
           </div>
-          <div className="grid gap-1.5 sm:col-span-2"><label htmlFor="stc-obs" className="text-sm font-medium">Observações</label><Textarea id="stc-obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} maxLength={500} placeholder="Opcional" /></div>
+          <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="stc-obs" className="text-sm font-medium">Observações</label><Textarea id="stc-obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} maxLength={500} placeholder="Opcional" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
@@ -264,7 +264,7 @@ function DialogoParticipantes({ s, aoFechar }: { s: SantaCeia; aoFechar: () => v
     } catch (e) { setErro(mensagemDe(e)) }
   }
   const campo = (id: string, rotulo: string, v: string, set: (x: string) => void) => (
-    <div className="grid gap-1.5"><label htmlFor={id} className="text-sm font-medium">{rotulo}</label>
+    <div className="campo-flutuante grid gap-1.5"><label htmlFor={id} className="text-sm font-medium">{rotulo}</label>
       <Input id={id} value={v} onChange={(e) => set(e.target.value)} inputMode="numeric" className="alvo num text-center text-lg" /></div>
   )
   return (

@@ -242,8 +242,10 @@ function DialogoAprovar({ o, aoFechar }: { o: Orcamento; aoFechar: () => void })
         </DialogHeader>
         <div className="grid gap-2">
           <ErroFormulario mensagem={erro} />
-          <label htmlFor="orc-voto" className="text-sm font-medium">Voto</label>
-          <CampoVoto id="orc-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA', 'JUNTA_DIRECTIVA']} preferir="FINANCEIRO" />
+          <div className="campo-flutuante grid gap-1.5">
+            <label htmlFor="orc-voto" className="text-sm font-medium">Voto</label>
+            <CampoVoto id="orc-voto" valor={voto} aoMudar={setVoto} reunioes={['REUNIAO_REGULAR', 'ASSEMBLEIA_ADMINISTRATIVA', 'JUNTA_DIRECTIVA']} preferir="FINANCEIRO" />
+          </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
