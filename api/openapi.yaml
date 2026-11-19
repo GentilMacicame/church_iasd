@@ -13543,6 +13543,224 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pessoas-voto:
+    get:
+      summary: 'Pessoas voto: listar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.ler
+      operationId: listarVotoMembro
+      description: 'Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: votoId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VotoMembro'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Pessoas voto: criar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.criar
+      operationId: criarVotoMembro
+      description: 'Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/VotoMembro'
+              required:
+              - votoId
+              - igrejaId
+              - membroId
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoMembro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pessoas-voto/{id}:
+    get:
+      summary: 'Pessoas voto: ler um'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.ler
+      operationId: lerVotoMembro
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoMembro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Pessoas voto: alterar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.alterar
+      operationId: alterarVotoMembro
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotoMembro'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoMembro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pessoas-voto/{id}/reactivar:
+    post:
+      summary: 'Pessoas voto: reactivar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.terminar
+      operationId: reactivarVotoMembro
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoMembro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/secretaria/pessoas-voto/{id}/terminar:
+    post:
+      summary: 'Pessoas voto: terminar'
+      tags:
+      - Secretaria
+      x-permissao: secretaria.voto_membro.terminar
+      operationId: terminarVotoMembro
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VotoMembro'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/secretaria/pontos-agenda:
     get:
       summary: 'Pontos agenda: listar'
@@ -28091,3 +28309,52 @@ components:
       - numero
       - tipo
       - assunto
+    VotoMembro:
+      type: object
+      description: 'Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)'
+      x-tabela: secretaria.voto_membro
+      x-prefixo: vtm
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        votoId:
+          type: integer
+          format: int32
+          description: → secretaria.voto
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado da reunião do voto
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - votoId
+      - igrejaId
+      - membroId

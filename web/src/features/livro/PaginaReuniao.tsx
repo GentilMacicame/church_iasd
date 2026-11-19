@@ -29,11 +29,12 @@ import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { emExercicio, useConselho, type Oficial } from '@/features/conselho/api'
 import { EscolherDoConselho } from '@/features/conselho/EscolherDoConselho'
-import { useCriarVoto, usePontos, usePresencas, useReuniao, useReuniaoMut, useVotos, type EstadoPonto, type Ponto, type Presenca, type Reuniao, type TipoVoto, type Voto } from './api'
+import { useCriarVoto, useGravarPessoasVoto, usePessoasVoto, usePontos, usePresencas, useReuniao, useReuniaoMut, useVotos, type EstadoPonto, type Ponto, type Presenca, type Reuniao, type PessoaVoto, type TipoVoto, type Voto } from './api'
 import { PilulaEstadoReuniao } from './PaginaReunioes'
 import { CartaoDevocional } from './Devocional'
 import { Paginada } from '@/components/comum/Paginacao'
 import { CampoHora } from '@/components/comum/CampoHora'
+import { EscolhaMultipla } from '@/components/comum/CampoEscolha'
 
 const n = z.string().regex(/^\d*$/, 'Só algarismos')
 const esquema = z.object({
@@ -52,8 +53,52 @@ function proximoNumero(votos: Voto[], ano: string) {
   return `${ano}-${String(maior + 1).padStart(3, '0')}`
 }
 
+/** Tipos de voto que dizem respeito a pessoas (o livro de membros pede o voto da própria pessoa). */
+const VOTOS_DE_PESSOAS = ['ADMISSAO', 'REMOCAO', 'DISCIPLINA', 'TRANSFERENCIA']
+
+/** Escolha das pessoas a que o voto se refere: membros e interessados da igreja. */
+function CampoPessoas({ id, valores, aoMudar }: { id?: string; valores: number[]; aoMudar: (v: number[]) => void }) {
+  const basicos = useMembrosBasicos()
+  const opcoes = (basicos.data ?? []).filter((m) => m.estado === 'ACTIVO' || m.estado === 'INTERESSADO' || valores.includes(m.id))
+    .sort((a, b) => `${a.nome} ${a.apelido}`.localeCompare(`${b.nome} ${b.apelido}`, 'pt'))
+    .map((m) => ({ valor: String(m.id), rotulo: `${m.nome} ${m.apelido}`, detalhe: m.estado === 'INTERESSADO' ? 'Interessado' : 'Membro activo' }))
+  return <EscolhaMultipla id={id} valores={valores.map(String)} aoMudar={(v) => aoMudar(v.map(Number))} opcoes={opcoes} vazio="Escolher as pessoas…" pesquisar="Procurar pelo nome…" />
+}
+
+/** Mudar as pessoas de um voto já registado (ex.: votos antigos sem pessoas). */
+function DialogoPessoasVoto({ voto, actuais, aoFechar }: { voto: Voto; actuais: PessoaVoto[]; aoFechar: () => void }) {
+  const gravarPessoas = useGravarPessoasVoto()
+  const [membros, setMembros] = useState<number[]>(actuais.map((p) => p.membroId))
+  const [erro, setErro] = useState<string | null>(null)
+  const guardar = () => gravarPessoas.mutate({ votoId: voto.id, actuais, membros }, {
+    onSuccess: () => { toast.success('Pessoas do voto gravadas.'); aoFechar() }, onError: (e) => setErro(mensagemDe(e)),
+  })
+  return (
+    <Dialog open onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Pessoas do voto n.º {voto.numero}</DialogTitle>
+          <DialogDescription>{voto.assunto}</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <ErroFormulario mensagem={erro} />
+          <div className="campo-flutuante grid gap-1.5"><label htmlFor="vot-pessoas">A quem se refere</label>
+            <CampoPessoas id="vot-pessoas" valores={membros} aoMudar={setMembros} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={aoFechar}>{t.comum.cancelar}</Button>
+          <Button type="button" disabled={gravarPessoas.isPending} onClick={guardar}>{gravarPessoas.isPending ? t.comum.aGravar : t.comum.guardar}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function DialogoVoto({ reuniao, votos, aberto, aoMudar }: { reuniao: Reuniao; votos: Voto[]; aberto: boolean; aoMudar: (v: boolean) => void }) {
   const criar = useCriarVoto()
+  const gravarPessoas = useGravarPessoasVoto()
+  const [pessoas, setPessoas] = useState<number[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const form = useForm({
     resolver: zodResolver(esquema),
@@ -63,11 +108,15 @@ function DialogoVoto({ reuniao, votos, aberto, aoMudar }: { reuniao: Reuniao; vo
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
     const num = (x: string) => (x ? Number(x) : undefined)
+    const dePessoas = VOTOS_DE_PESSOAS.includes(v.tipo)
+    if (dePessoas && v.tipo !== 'TRANSFERENCIA' && !pessoas.length) { setErro('Escolha a pessoa (ou as pessoas) a que o voto se refere.'); return }
     try {
-      await criar.mutateAsync({
+      const novo = await criar.mutateAsync({
         reuniaoId: reuniao.id, numero: v.numero, tipo: v.tipo as TipoVoto, assunto: v.assunto, texto: v.texto || undefined,
         leitura: Number(v.leitura), aFavor: num(v.aFavor), contra: num(v.contra), abstencoes: num(v.abstencoes), estado: v.estado as Voto['estado'],
       })
+      if (dePessoas && pessoas.length) await gravarPessoas.mutateAsync({ votoId: novo.id, actuais: [], membros: pessoas })
+      setPessoas([])
       toast.success(`Voto ${v.numero} registado.`)
       aoMudar(false)
     } catch (err) {
@@ -89,8 +138,13 @@ function DialogoVoto({ reuniao, votos, aberto, aoMudar }: { reuniao: Reuniao; vo
           <CampoFormulario rotulo="Tipo de voto">
             {(p) => <Seleccao {...p} {...form.register('tipo')}>{Object.entries(rotulos.tipoVoto).map(([k, r]) => <option key={k} value={k}>{r}</option>)}</Seleccao>}
           </CampoFormulario>
-          <CampoFormulario rotulo="Assunto" erro={e.assunto?.message} obrigatorio className="sm:col-span-2" ajuda="ex.: Admissão por baptismo de Amélia Chirindza">
-            {(p) => <Input {...p} {...form.register('assunto')} className="alvo" />}
+          {VOTOS_DE_PESSOAS.includes(form.watch('tipo')) && (
+            <div className="campo-flutuante grid gap-1.5 sm:col-span-2"><label htmlFor="vot-novo-pessoas">A quem se refere {form.watch('tipo') !== 'TRANSFERENCIA' && <span className="text-destructive" aria-hidden>*</span>}</label>
+              <CampoPessoas id="vot-novo-pessoas" valores={pessoas} aoMudar={setPessoas} />
+            </div>
+          )}
+          <CampoFormulario rotulo="Assunto" erro={e.assunto?.message} obrigatorio className="sm:col-span-2">
+            {(p) => <Input {...p} {...form.register('assunto')} className="alvo" placeholder="ex.: Admissão por baptismo" />}
           </CampoFormulario>
           <CampoFormulario rotulo="Texto do voto" erro={e.texto?.message} className="sm:col-span-2">
             {(p) => <Textarea {...p} {...form.register('texto')} rows={2} />}
@@ -131,6 +185,8 @@ export default function PaginaReuniao() {
   const pontos = usePontos(id)
   const mut = useReuniaoMut(id)
   const [novoVoto, setNovoVoto] = useState(false)
+  const pessoasVoto = usePessoasVoto()
+  const [pessoasDe, setPessoasDe] = useState<Voto | null>(null)
   const [ponto, setPonto] = useState<Ponto | 'novo' | null>(null)
   const [editar, setEditar] = useState(false)
   const [aprovar, setAprovar] = useState(false)
@@ -228,7 +284,17 @@ export default function PaginaReuniao() {
                     {daReuniao.map((v) => (
                       <tr key={v.id}>
                         <td className="tabular-nums font-medium whitespace-nowrap sm:pl-6">{v.numero}</td>
-                        <td><p className="font-medium">{v.assunto}</p>{v.leitura === 2 && <p className="text-xs text-muted-foreground">2.ª leitura</p>}</td>
+                        <td><p className="font-medium">{v.assunto}</p>{v.leitura === 2 && <p className="text-xs text-muted-foreground">2.ª leitura</p>}
+                          {VOTOS_DE_PESSOAS.includes(v.tipo) && (() => {
+                            const ps = (pessoasVoto.data ?? []).filter((p) => p.votoId === v.id)
+                            return (
+                              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                {ps.length ? <span className="text-muted-foreground">{ps.map((p) => nomeDe(p.membroId) ?? `#${p.membroId}`).join(', ')}</span>
+                                  : <span className="font-medium text-warning-text">Sem pessoas indicadas</span>}
+                                {pode('secretaria.voto_membro.criar') && <button type="button" className="font-medium text-primary hover:underline" onClick={() => setPessoasDe(v)}>{ps.length ? 'Mudar' : 'Indicar pessoas'}</button>}
+                              </p>
+                            )
+                          })()}</td>
                         <td className="hidden text-muted-foreground md:table-cell">{rotulos.tipoVoto[v.tipo]}</td>
                         <td className="num hidden whitespace-nowrap text-muted-foreground sm:table-cell">{v.aFavor ?? '—'} / {v.contra ?? '—'} / {v.abstencoes ?? '—'}</td>
                         <td className="sm:pr-6"><PilulaResultado v={v} /></td>
@@ -248,6 +314,7 @@ export default function PaginaReuniao() {
       </div>
 
       <DialogoVoto reuniao={r} votos={votos.data ?? []} aberto={novoVoto} aoMudar={setNovoVoto} />
+      {pessoasDe && <DialogoPessoasVoto voto={pessoasDe} actuais={(pessoasVoto.data ?? []).filter((p) => p.votoId === pessoasDe.id)} aoFechar={() => setPessoasDe(null)} />}
       {ponto && <DialogoPonto reuniaoId={r.id} ponto={ponto === 'novo' ? null : ponto} ordem={listaPontos.length + 1} votos={daReuniao} aoFechar={() => setPonto(null)} />}
       {editar && <DialogoEditarReuniao reuniao={r} aoFechar={() => setEditar(false)} />}
       <DialogoConfirmar aberto={aprovar} aoMudar={setAprovar} titulo="Aprovar a acta?"

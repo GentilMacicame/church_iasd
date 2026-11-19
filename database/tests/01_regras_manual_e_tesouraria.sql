@@ -20,6 +20,8 @@ INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto, vot_lei
  (5,4,'2026-020','TRANSFERENCIA','Aceitar Ana (votação)',2),
  (6,5,'2026-030','DISCIPLINA','Censura a Rui',1),
  (7,3,'2026-013','ELEICAO','Relatório da comissão de nomeações',2);
+-- V53: os votos de admissão indicam a pessoa
+INSERT INTO voto_membro (vtm_vot_id, vtm_igr_id, vtm_mem_id) VALUES (1,1,103),(2,1,103);
 \echo '1. admitir por voto da junta (deve falhar: a junta só recomenda)'
 INSERT INTO movimento_membro (mmb_mem_id, mmb_igr_id, mmb_tipo, mmb_data, mmb_vot_id) VALUES (103,1,'BAPTISMO','2026-10-10',1);
 \echo '2. admitir com voto da igreja (passa) e mudar estado à mão (falha)'

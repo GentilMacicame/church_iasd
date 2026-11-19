@@ -25,7 +25,7 @@ public final class Nomes {
             Map.entry("igr", "igreja"), Map.entry("dep", "departamento"), Map.entry("ide", "igreja_departamento"),
             Map.entry("car", "cargo"), Map.entry("fam", "familia"), Map.entry("mem", "membro"),
             Map.entry("cto", "contacto"), Map.entry("cns", "consentimento"), Map.entry("reu", "reuniao"),
-            Map.entry("vot", "voto"), Map.entry("mmb", "movimento_membro"), Map.entry("tme", "transferencia_membro"),
+            Map.entry("vot", "voto"), Map.entry("vtm", "voto_membro"), Map.entry("mmb", "movimento_membro"), Map.entry("tme", "transferencia_membro"),
             Map.entry("dsc", "disciplina"), Map.entry("ofi", "oficial"), Map.entry("bap", "baptismo"),
             Map.entry("act", "actividade"), Map.entry("mat", "material"), Map.entry("esc", "escala"),
             Map.entry("etr", "trimestre"), Map.entry("esa", "sabado"), Map.entry("ecl", "classe"),

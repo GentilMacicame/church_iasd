@@ -30,7 +30,7 @@
 5. índices (igreja, id) no lugar dos índices (igreja)
  novos | antigos 
 -------+---------
-    29 |       0
+    30 |       0
 (1 row)
 
 6. tesoureiro (autorizado): vê a fila de mensagens da igreja e termina uma mensagem

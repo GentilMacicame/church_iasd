@@ -5261,6 +5261,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/secretaria/pessoas-voto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pessoas voto: listar
+         * @description Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)
+         */
+        get: operations["listarVotoMembro"];
+        put?: never;
+        /**
+         * Pessoas voto: criar
+         * @description Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)
+         */
+        post: operations["criarVotoMembro"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/pessoas-voto/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pessoas voto: ler um */
+        get: operations["lerVotoMembro"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Pessoas voto: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarVotoMembro"];
+        trace?: never;
+    };
+    "/v1/secretaria/pessoas-voto/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pessoas voto: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarVotoMembro"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/secretaria/pessoas-voto/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pessoas voto: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarVotoMembro"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/secretaria/pontos-agenda": {
         parameters: {
             query?: never;
@@ -11668,6 +11753,35 @@ export interface components {
             contra?: number;
             abstencoes?: number;
             estado?: components["schemas"]["EnumResultadoVoto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53) */
+        VotoMembro: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.voto
+             */
+            votoId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado da reunião do voto
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro
+             */
+            membroId?: number;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
             /** Format: date-time */
@@ -22851,6 +22965,192 @@ export interface operations {
                         ultimaParticipacao?: string | null;
                         inactivo: boolean;
                     }[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarVotoMembro: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                votoId?: number;
+                membroId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["VotoMembro"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarVotoMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["VotoMembro"], "votoId" | "igrejaId" | "membroId">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VotoMembro"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerVotoMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VotoMembro"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarVotoMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VotoMembro"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VotoMembro"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarVotoMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VotoMembro"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarVotoMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VotoMembro"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

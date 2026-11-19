@@ -23,7 +23,7 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { data, hojeIso } from '@/lib/formatos'
 import { useMembrosBasicos, type Membro } from '@/features/membros/api'
 import { CampoMembro } from '@/components/comum/EscolherMembro'
-import { ENTRADAS, REUNIOES_QUE_VOTAM, SAIDAS, eEntrada, useCriarMovimento, useMovimentosDoMembro, useReunioes, useVotos, type TipoMovimento } from './api'
+import { ENTRADAS, REUNIOES_QUE_VOTAM, SAIDAS, eEntrada, useCriarMovimento, useMovimentosDoMembro, usePessoasVoto, useReunioes, useVotos, type TipoMovimento } from './api'
 
 const esquema = z.object({
   tipo: z.string().min(1),
@@ -41,6 +41,7 @@ export function DialogoMovimento({ m: doMembro, sentido, aberto, aoMudar, tipos:
 }) {
   const igreja = useIgreja()
   const votos = useVotos()
+  const pessoasVoto = usePessoasVoto()
   const reunioes = useReunioes()
   const basicos = useMembrosBasicos()
   const [escolhido, setEscolhido] = useState<number | null>(null)
@@ -58,11 +59,13 @@ export function DialogoMovimento({ m: doMembro, sentido, aberto, aoMudar, tipos:
     const aceites = REUNIOES_QUE_VOTAM[tipo] ?? []
     const reun = new Map((reunioes.data ?? []).map((r) => [r.id, r]))
     const tipoVoto = sentido === 'entrada' ? 'ADMISSAO' : 'REMOCAO'
+    // só os votos que indicam esta pessoa (V53: o voto de outra pessoa não serve)
+    const daPessoa = new Set((pessoasVoto.data ?? []).filter((p) => p.membroId === membroId).map((p) => p.votoId))
     return (votos.data ?? [])
-      .filter((v) => v.estado === 'APROVADO' && reun.has(v.reuniaoId) && aceites.includes(reun.get(v.reuniaoId)!.tipo))
+      .filter((v) => v.estado === 'APROVADO' && daPessoa.has(v.id) && reun.has(v.reuniaoId) && aceites.includes(reun.get(v.reuniaoId)!.tipo))
       .map((v) => ({ v, r: reun.get(v.reuniaoId)! }))
       .sort((a, b) => Number(b.v.tipo === tipoVoto) - Number(a.v.tipo === tipoVoto) || b.r.data.localeCompare(a.r.data))
-  }, [votos.data, reunioes.data, tipo, sentido])
+  }, [votos.data, pessoasVoto.data, membroId, reunioes.data, tipo, sentido])
 
   const submeter = form.handleSubmit(async (v) => {
     setErro(null)
@@ -113,10 +116,10 @@ export function DialogoMovimento({ m: doMembro, sentido, aberto, aoMudar, tipos:
           {precisaVoto && (
             <CampoFormulario rotulo="Voto que autoriza" erro={form.formState.errors.voto?.message} obrigatorio
               ajuda={`Só votos aprovados em ${(REUNIOES_QUE_VOTAM[tipo] ?? []).map((r) => rotulos.tipoReuniao[r].toLowerCase()).join(' ou ')}.`}>
-              {(p) => votos.isPending || reunioes.isPending ? <Barra className="h-9 w-full" />
+              {(p) => votos.isPending || reunioes.isPending || pessoasVoto.isPending ? <Barra className="h-9 w-full" />
                 : opcoes.length === 0 ? (
                   <p {...p} className="rounded-lg border border-warning/30 bg-tint-warning px-3 py-2 text-sm text-warning-text">
-                    Não há votos aprovados que sirvam. Registe primeiro o voto da igreja em <Link to="/reunioes" className="font-medium underline">Reuniões</Link>.
+                    Não há voto aprovado para {m ? `${m.nome} ${m.apelido}` : 'esta pessoa'}. Registe o voto em <Link to="/reunioes" className="font-medium underline">Reuniões</Link> e indique a pessoa em «A quem se refere».
                   </p>
                 ) : (
                   <Seleccao {...p} {...form.register('voto')}>

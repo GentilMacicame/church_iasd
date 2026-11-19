@@ -74,6 +74,29 @@ export function useVotos() {
   })
 }
 
+/** V53 · As pessoas a que cada voto se refere (o livro só aceita o voto da própria pessoa). */
+export interface PessoaVoto { id: number; votoId: number; igrejaId: number; membroId: number; endDate?: string | null }
+export function usePessoasVoto() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...chaves.votos(igreja.id), 'pessoas'],
+    queryFn: async () => (await todas<PessoaVoto>((depois) => dados(api.GET('/v1/secretaria/pessoas-voto' as never, { params: { query: { igrejaId: igreja.id, limite: 200, depois } } } as never))))
+      .filter((p) => !p.endDate),
+  })
+}
+/** Grava as pessoas de um voto: junta as novas e retira as que saíram. */
+export function useGravarPessoasVoto() {
+  const qc = useQueryClient()
+  const igreja = useIgreja()
+  return useMutation({
+    mutationFn: async ({ votoId, actuais, membros }: { votoId: number; actuais: PessoaVoto[]; membros: number[] }) => {
+      for (const p of actuais) if (!membros.includes(p.membroId)) await dados(api.POST('/v1/secretaria/pessoas-voto/{id}/terminar' as never, { params: { path: { id: p.id } } } as never))
+      for (const m of membros) if (!actuais.some((p) => p.membroId === m)) await dados(api.POST('/v1/secretaria/pessoas-voto' as never, { body: { votoId, igrejaId: igreja.id, membroId: m } } as never))
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: chaves.votos(igreja.id) }),
+  })
+}
+
 export function useMovimentos() {
   const igreja = useIgreja()
   return useQuery({

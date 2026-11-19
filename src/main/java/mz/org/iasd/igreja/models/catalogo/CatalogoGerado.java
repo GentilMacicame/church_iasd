@@ -60,6 +60,7 @@ import mz.org.iasd.igreja.models.secretaria.ReuniaoPonto;
 import mz.org.iasd.igreja.models.secretaria.ReuniaoPresenca;
 import mz.org.iasd.igreja.models.secretaria.TransferenciaMembro;
 import mz.org.iasd.igreja.models.secretaria.Voto;
+import mz.org.iasd.igreja.models.secretaria.VotoMembro;
 import mz.org.iasd.igreja.models.tesouraria.Adiantamento;
 import mz.org.iasd.igreja.models.tesouraria.Alvo;
 import mz.org.iasd.igreja.models.tesouraria.CalendarioOferta;
@@ -203,6 +204,7 @@ public final class CatalogoGerado {
             ReuniaoPresenca.class,
             ReuniaoPonto.class,
             Voto.class,
+            VotoMembro.class,
             MovimentoMembro.class,
             TransferenciaMembro.class,
             Disciplina.class,

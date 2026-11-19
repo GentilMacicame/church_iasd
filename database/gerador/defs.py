@@ -187,6 +187,9 @@ M('V4__secretaria', 'secretaria', 'Secretaria',
    ('a_favor', 'SMALLINT'), ('contra', 'SMALLINT'), ('abstencoes', 'SMALLINT')],
    uniq=[['reu_id', 'numero']], checks=[('chk_vot_leitura', '@leitura IN (1, 2)')],
    estado=('resultado_voto_t', "'APROVADO'")),
+ T('voto_membro', 'vtm', 'Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)', [
+   ('vot_id', 'fk:voto', NN), ('igr_id', 'fk:igreja', NN, 'Copiado da reunião do voto'), ('mem_id', 'fk:membro', NN)],
+   uniq=[['vot_id', 'mem_id']]),
  T('movimento_membro', 'mmb', 'Livro de membros: cada entrada e saída, com o voto que a autoriza', [
    ('mem_id', 'fk:membro', NN), ('igr_id', 'fk:igreja', NN), ('tipo', 'tipo_movimento_t', NN),
    ('data', 'DATE', NN), ('vot_id', 'fk:voto', '', 'Obrigatório excepto falecimento'),
@@ -709,7 +712,7 @@ SCOPE = {
  'recibo': ('direct', 'igr_id'), 'remessa': ('direct', 'igr_id'), 'fecho_periodo': ('direct', 'igr_id'),
  'notificacao': ('direct', 'igr_id'), 'acesso_confidencial': ('direct', 'igr_id'),
  'consentimento': ('parent', 'mem_id', 'membro'), 'baptismo': ('parent', 'mem_id', 'membro'),
- 'disciplina': ('parent', 'mem_id', 'membro'), 'voto': ('parent', 'reu_id', 'reuniao'),
+ 'disciplina': ('parent', 'mem_id', 'membro'), 'voto': ('parent', 'reu_id', 'reuniao'), 'voto_membro': ('direct', 'igr_id'),
  'reuniao_presenca': ('parent', 'reu_id', 'reuniao'), 'reuniao_ponto': ('parent', 'reu_id', 'reuniao'),
  'matricula': ('parent', 'ecl_id', 'classe'),
  'actividade': ('custom', ACT_LOCAL.replace('@x', '@ide_id') + ' OR (@dst_id IS NOT NULL AND actividades.fn_acesso_distrito(@dst_id, {C}))'),

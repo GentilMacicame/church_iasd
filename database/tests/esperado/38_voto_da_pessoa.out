@@ -1,0 +1,29 @@
+1. pessoas do voto: a Amélia num voto, o Paulo e a Rosa noutro; repetida e de outra igreja recusadas
+ igreja_copiada 
+----------------
+              1
+(1 row)
+
+psql:database/tests/38_voto_da_pessoa.sql:17: ERROR:  duplicate key value violates unique constraint "uq_vtm_vot_id_mem_id"
+psql:database/tests/38_voto_da_pessoa.sql:18: ERROR:  A pessoa do voto tem de ser membro ou interessado desta igreja
+2. a Rosa com o voto da Amélia: recusado
+psql:database/tests/38_voto_da_pessoa.sql:21: ERROR:  O voto n.º 2026-381 não indica Rosa Macamo entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)
+ mem_estado  
+-------------
+ INTERESSADO
+(1 row)
+
+3. a Rosa e o Paulo com o voto do grupo, a Amélia com o seu: aceites
+ mem_nome | mem_estado 
+----------+------------
+ Rosa     | ACTIVO
+ Amélia   | ACTIVO
+ Paulo    | ACTIVO
+(3 rows)
+
+4. falecimento continua sem voto
+ mem_estado 
+------------
+ FALECIDO
+(1 row)
+

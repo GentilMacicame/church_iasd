@@ -273,6 +273,8 @@ public final class Rotas {
 
         /** VotosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String VOTOS = "/v1/secretaria/votos";
+        /** PessoasVotoController · rotas-padrão (V53: as pessoas a que o voto se refere) */
+        public static final String PESSOAS_VOTO = "/v1/secretaria/pessoas-voto";
     }
 
     /** Escola Sabatina (F-ES). */

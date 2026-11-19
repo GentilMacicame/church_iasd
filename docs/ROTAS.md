@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 584 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 590 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -391,6 +391,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/secretaria/oficiais/{id}/reactivar` | OficiaisController · reactivar | `secretaria.oficial.terminar` |
 | POST | `/v1/secretaria/oficiais/{id}/terminar` | OficiaisController · terminar | `secretaria.oficial.terminar` |
 | GET | `/v1/secretaria/participacao` | RelatoriosSecretariaController · participacao | `secretaria.membro.ler` |
+| GET | `/v1/secretaria/pessoas-voto` | PessoasVotoController · listar | `secretaria.voto_membro.ler` |
+| POST | `/v1/secretaria/pessoas-voto` | PessoasVotoController · criar | `secretaria.voto_membro.criar` |
+| GET | `/v1/secretaria/pessoas-voto/{id}` | PessoasVotoController · obter | `secretaria.voto_membro.ler` |
+| PATCH | `/v1/secretaria/pessoas-voto/{id}` | PessoasVotoController · alterar | `secretaria.voto_membro.alterar` |
+| POST | `/v1/secretaria/pessoas-voto/{id}/reactivar` | PessoasVotoController · reactivar | `secretaria.voto_membro.terminar` |
+| POST | `/v1/secretaria/pessoas-voto/{id}/terminar` | PessoasVotoController · terminar | `secretaria.voto_membro.terminar` |
 | GET | `/v1/secretaria/pontos-agenda` | PontosAgendaController · listar | `secretaria.reuniao_ponto.ler` |
 | POST | `/v1/secretaria/pontos-agenda` | PontosAgendaController · criar | `secretaria.reuniao_ponto.criar` |
 | GET | `/v1/secretaria/pontos-agenda/{id}` | PontosAgendaController · obter | `secretaria.reuniao_ponto.ler` |
