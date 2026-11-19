@@ -136,7 +136,7 @@ export default function PaginaIgrejas() {
               ? <EstadoVazio icone={Church} titulo="Nenhuma igreja com estes filtros" accao={<Button variant="outline" className="alvo" onClick={limparFiltros}>Limpar filtros</Button>}>Mude ou limpe os filtros.</EstadoVazio>
               : <EstadoVazio icone={Church} titulo="Ainda não há igrejas">Registe a primeira igreja e o seu administrador.</EstadoVazio>)
             : (
-              <Tabela>
+              <Tabela procurar={false}>
                 <thead><tr><th className="sm:pl-6">Igreja</th><th className="hidden md:table-cell">Localização</th><th className="hidden xl:table-cell">Associação / distrito pastoral</th><th>Administrador</th><th className="sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
                 <tbody>
                   {lista.map((i) => {
@@ -451,7 +451,7 @@ function ListaAssociacoes() {
         : entidades.isError ? <EstadoErro erro={entidades.error} aoTentar={() => entidades.refetch()} className="mx-6 mb-6" />
         : !lista.length ? <EstadoVazio icone={Landmark} titulo="Ainda não há Associações">Registe a Associação ou Missão a que as igrejas pertencem.</EstadoVazio>
         : (
-          <Tabela>
+          <Tabela procurar={false}>
             <thead><tr><th className="sm:pl-6">Nome</th><th>Tipo</th><th className="hidden md:table-cell">Pertence a</th><th className="num">Distritos</th><th className="num sm:pr-6">Igrejas</th></tr></thead>
             <tbody>
               {lista.map((e) => (

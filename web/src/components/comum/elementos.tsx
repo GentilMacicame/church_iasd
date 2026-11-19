@@ -4,7 +4,7 @@
  */
 import { Children, Fragment, cloneElement, isValidElement, type ComponentType, type ReactElement, type ReactNode, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { dinheiro, iniciais, tomPessoa } from '@/lib/formatos'
 import { t } from '@/i18n/pt-MZ'
@@ -187,11 +187,26 @@ function linhaFixa(el: ReactElement<{ className?: string; 'data-fixa'?: boolean 
   return !!el.props['data-fixa'] || /\bbg-muted\/30\b/.test(el.props.className ?? '')
 }
 
+/** O texto de um elemento React (para a pesquisa nas tabelas): junta os textos e números dos filhos. */
+function textoDe(n: ReactNode): string {
+  if (n == null || typeof n === 'boolean') return ''
+  if (typeof n === 'string' || typeof n === 'number') return String(n)
+  if (Array.isArray(n)) return n.map(textoDe).join(' ')
+  if (isValidElement<{ children?: ReactNode; title?: string; 'aria-label'?: string }>(n)) {
+    const p = n.props
+    return [textoDe(p.children), typeof p.title === 'string' ? p.title : '', typeof p['aria-label'] === 'string' ? p['aria-label'] : ''].join(' ')
+  }
+  return ''
+}
+const semAcentos = (x: string) => x.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+
 /**
- * Tabela no estilo do Design System (cabeçalho com faixa suave, linhas com realce). Pagina sozinha: mostra 10 linhas
- * de cada vez (porPagina) com os controlos por baixo; as linhas de total ficam sempre; ao imprimir, saem todas.
+ * Tabela com cabeçalho discreto, linhas com separador e paginação automática (10 por página). Com mais de uma página,
+ * aparece por cima uma pesquisa que filtra as linhas pelo texto (sem acentos nem maiúsculas). procurar={false} tira-a
+ * (o ecrã já tem a sua); procurar={true} mostra-a sempre.
  */
-export function Tabela({ children, className, porPagina = POR_PAGINA }: { children: ReactNode; className?: string; porPagina?: number | false }) {
+export function Tabela({ children, className, porPagina = POR_PAGINA, procurar }: { children: ReactNode; className?: string; porPagina?: number | false; procurar?: boolean }) {
+  const [busca, setBusca] = useState('')
   // as linhas do <tbody> (achata os .map() e fragmentos)
   const linhas: ReactElement[] = []
   Children.forEach(children, (c) => {
@@ -203,15 +218,21 @@ export function Tabela({ children, className, porPagina = POR_PAGINA }: { childr
       juntar(c.props.children)
     }
   })
-  const paginaveis = linhas.filter((l) => !linhaFixa(l as ReactElement<{ className?: string }>))
   const limite = porPagina === false ? Infinity : porPagina
+  const todas = linhas.filter((l) => !linhaFixa(l as ReactElement<{ className?: string }>))
+  const comPesquisa = procurar ?? todas.length > (Number.isFinite(limite) ? limite : POR_PAGINA)
+  const q = semAcentos(busca.trim())
+  const passa = (l: ReactElement) => !q || semAcentos(textoDe(l)).includes(q)
+  const paginaveis = comPesquisa && q ? todas.filter(passa) : todas
   const p = usePagina(paginaveis.length, Number.isFinite(limite) ? limite : 1_000_000)
   const activa = paginaveis.length > limite
-  const conteudo = !activa ? children : Children.map(children, (c) => {
+  const filtrada = comPesquisa && Boolean(q)
+  const conteudo = !activa && !filtrada ? children : Children.map(children, (c) => {
     if (!(isValidElement<{ children?: ReactNode }>(c) && c.type === 'tbody')) return c
     let i = 0
     const marcar = (l: ReactElement<{ className?: string }>) => {
-      if (linhaFixa(l)) return l
+      if (linhaFixa(l)) return filtrada ? cloneElement(l, { className: cn(l.props.className, 'hidden') }) : l
+      if (filtrada && !passa(l)) return cloneElement(l, { className: cn(l.props.className, 'hidden') })
       const n = i++
       return p.naPagina(n) ? l : cloneElement(l, { className: cn(l.props.className, 'hidden print:table-row') })
     }
@@ -219,6 +240,15 @@ export function Tabela({ children, className, porPagina = POR_PAGINA }: { childr
   })
   return (
     <div className="relative w-full min-w-0">
+      {comPesquisa && (
+        <div className="flex items-center gap-2 border-b px-4 py-2 print:hidden sm:px-6">
+          <Search className="size-4 flex-none text-muted-foreground" aria-hidden />
+          <input type="text" enterKeyHint="search" value={busca} onChange={(e) => { setBusca(e.target.value); p.setPagina(1) }} placeholder="Procurar nesta tabela…" aria-label="Procurar nesta tabela"
+            className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+          {filtrada && <span className="flex-none text-xs text-muted-foreground tabular-nums">{paginaveis.length} de {todas.length}</span>}
+          {busca && <button type="button" onClick={() => setBusca('')} aria-label="Limpar a pesquisa" className="flex size-7 flex-none items-center justify-center rounded-[2px] text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" /></button>}
+        </div>
+      )}
       <div className="relative overflow-x-auto">
         <table className={cn(
           'w-full border-collapse text-sm text-foreground',
@@ -229,6 +259,7 @@ export function Tabela({ children, className, porPagina = POR_PAGINA }: { childr
           {conteudo}
         </table>
       </div>
+      {filtrada && paginaveis.length === 0 && <p className="border-t px-4 py-6 text-center text-sm text-muted-foreground sm:px-6">Nada encontrado com «{busca.trim()}».</p>}
       {activa && <ControlosPaginacao {...p} total={paginaveis.length} />}
     </div>
   )

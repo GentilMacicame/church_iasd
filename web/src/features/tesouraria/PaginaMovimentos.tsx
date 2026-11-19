@@ -1,7 +1,8 @@
 /** Movimentos · "O que entrou e saiu neste mês, e o que falta confirmar ou aprovar?" */
 import { useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Banknote, ChevronLeft, ChevronRight, HandCoins, ListOrdered, ShieldAlert, X } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Banknote, ChevronLeft, ChevronRight, HandCoins, ListOrdered, ShieldAlert } from 'lucide-react'
+import { Seleccao } from '@/components/comum/Seleccao'
 import { Button } from '@/components/ui/button'
 import { Dinheiro, Indicador, Tabela, TituloPagina } from '@/components/comum/elementos'
 import { EstadoErro, EstadoVazio, LinhasACarregar } from '@/components/comum/estados'
@@ -89,11 +90,10 @@ export default function PaginaMovimentos() {
               <span className="min-w-36 text-center text-sm font-medium first-letter:uppercase">{nome}</span>
               <Button variant="outline" size="icon" className="alvo size-9" aria-label="Mês seguinte" disabled={mes >= hojeIso().slice(0, 7)} onClick={() => definir('mes', mudarMes(mes, 1))}><ChevronRight className="size-4" /></Button>
             </div>
-            {contaFiltro != null && (
-              <button type="button" onClick={() => definir('conta')} className="alvo inline-flex items-center gap-1 rounded-[2px] border px-3 py-1 text-xs font-medium" aria-label="Ver todas as contas">
-                Só {contaDe.get(contaFiltro) ?? 'esta conta'} <X className="size-3" />
-              </button>
-            )}
+            <Seleccao aria-label="Conta" value={contaFiltro ? String(contaFiltro) : ''} onChange={(e) => definir('conta', e.target.value || undefined)} className="w-full sm:w-56">
+              <option value="">Todas as contas</option>
+              {(contas.data ?? []).filter((c) => !c.endDate).map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </Seleccao>
             <div role="tablist" aria-label="Filtrar" className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
               {abas.map((a) => (
                 <button key={a.k} role="tab" aria-selected={filtro === a.k} type="button" onClick={() => definir('ver', a.k === 'todos' ? undefined : a.k)}
@@ -107,7 +107,7 @@ export default function PaginaMovimentos() {
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="m-4" />
             : lista.length === 0 ? <EstadoVazio icone={ListOrdered} titulo="Sem movimentos">{filtro === 'todos' ? `Nada registado em ${nome}.` : 'Nada com este filtro neste mês.'}</EstadoVazio>
             : (
-              <Tabela>
+              <Tabela procurar>
                 <thead><tr><th className="hidden sm:table-cell sm:pl-6">Data</th><th>Movimento</th><th className="hidden md:table-cell">Conta</th><th className="hidden sm:table-cell">Estado</th><th className="num sm:pr-6">Valor</th></tr></thead>
                 <tbody>
                   {lista.map((tr) => (

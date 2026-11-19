@@ -62,7 +62,7 @@ export default function PaginaVisitantes() {
             : q.isError ? <EstadoErro erro={q.error} aoTentar={() => q.refetch()} className="mx-6 mb-6" />
             : lista.length === 0 ? <EstadoVazio icone={UserPlus}>{texto ? 'Ninguém com esse nome.' : filtro === 'seguimento' ? 'Nenhum visitante por acompanhar.' : 'Sem visitantes registados.'}</EstadoVazio>
             : (
-              <Tabela>
+              <Tabela procurar={false}>
                 <thead><tr><th className="sm:pl-6">Visitante</th><th className="hidden sm:table-cell">Visitou em</th><th className="hidden md:table-cell">Convidado por</th><th>Situação</th><th className="sm:pr-6" /></tr></thead>
                 <tbody>
                   {lista.map((v) => (

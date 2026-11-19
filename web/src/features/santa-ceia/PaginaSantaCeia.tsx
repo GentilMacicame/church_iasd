@@ -49,6 +49,12 @@ export default function PaginaSantaCeia() {
   const porRegistar = lista.filter((s) => s.estado === 'AGENDADA' && s.data < hoje)
   const recentes = realizadas.slice(-8)
   const anosComNomes = [...new Set(realizadas.filter((s) => (s.nomeados ?? 0) > 0).map((s) => s.ano))].sort((a, b) => b - a)
+  // registar (celebração passada por registar) ou editar (já realizada) os participantes
+  const botaoParticipantes = (s: SantaCeia) => podeGerir && s.estado !== 'CANCELADA' && s.data <= hoje && (
+    <Button size="sm" variant={s.estado === 'REALIZADA' ? 'outline' : 'default'} className="alvo whitespace-nowrap" onClick={() => setParticipantes(s)}>
+      <Users className="size-4" />{s.estado === 'REALIZADA' ? 'Editar participantes' : 'Registar participantes'}
+    </Button>
+  )
   const cancelar = (s: SantaCeia) => alterar.mutate({ id: s.stcId, estado: 'CANCELADA' }, {
     onSuccess: () => toast.success('Santa Ceia cancelada.'), onError: (e) => toast.error(mensagemDe(e)),
   })
@@ -102,28 +108,37 @@ export default function PaginaSantaCeia() {
                   <thead>
                     <tr>
                       <th className="sm:pl-6">Data</th>
-                      <th className="hidden md:table-cell">Local</th>
-                      <th className="hidden lg:table-cell">Responsável</th>
+                      <th className="hidden lg:table-cell">Local</th>
+                      <th className="hidden xl:table-cell">Responsável</th>
                       <th>Estado</th>
-                      <th className="num hidden sm:table-cell">Homens</th>
-                      <th className="num hidden sm:table-cell">Mulheres</th>
-                      <th className="num hidden sm:table-cell">Visitantes</th>
-                      <th className="num">Total</th>
+                      <th className="hidden sm:table-cell">Participantes</th>
+                      <th className="hidden text-right sm:table-cell"><span className="sr-only">Registar ou editar os participantes</span></th>
                       <th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th>
                     </tr>
                   </thead>
                   <tbody>
                     {[...lista].sort((a, b) => b.data.localeCompare(a.data)).map((s) => (
                       <tr key={s.stcId}>
-                        <td className="sm:pl-6"><span className="block font-medium first-letter:uppercase">{dataPorExtenso(s.data)}</span><span className="block text-xs text-muted-foreground">{data(s.data)}{s.hora ? ` · ${s.hora}` : ''}</span></td>
-                        <td className="hidden md:table-cell">{s.local ?? '—'}</td>
-                        <td className="hidden lg:table-cell">{s.responsavel ?? '—'}</td>
+                        <td className="sm:pl-6"><span className="block font-medium first-letter:uppercase sm:whitespace-nowrap">{dataPorExtenso(s.data)}</span><span className="block text-xs text-muted-foreground">{data(s.data)}{s.hora ? ` · ${s.hora}` : ''}</span>
+                          {/* telemóvel: os participantes e o botão por baixo da data */}
+                          <span className="mt-1.5 grid justify-items-start gap-2 sm:hidden">
+                            {s.estado === 'REALIZADA' && <span className="text-sm tabular-nums"><strong className="font-semibold">{s.total}</strong><span className="text-muted-foreground"> · {s.homens ?? 0} H · {s.mulheres ?? 0} M · {s.visitantes ?? 0} visit.</span></span>}
+                            {botaoParticipantes(s)}
+                          </span>
+                        </td>
+                        <td className="hidden lg:table-cell">{s.local ?? '—'}</td>
+                        <td className="hidden xl:table-cell">{s.responsavel ?? '—'}</td>
                         <td><Pilula variante={VARIANTE[s.estado]}>{ROTULO_ESTADO[s.estado]}</Pilula></td>
-                        <td className="num hidden sm:table-cell">{s.homens ?? '—'}</td>
-                        <td className="num hidden sm:table-cell">{s.mulheres ?? '—'}</td>
-                        <td className="num hidden sm:table-cell">{s.visitantes ?? '—'}</td>
-                        <td className="num"><span className="font-semibold">{s.estado === 'REALIZADA' ? s.total : '—'}</span>
-                          {s.estado === 'REALIZADA' && (s.nomeados ?? 0) > 0 && <span className="block text-xs whitespace-nowrap text-muted-foreground">{s.nomeados} pelo nome</span>}</td>
+                        <td className="hidden sm:table-cell">
+                          {s.estado === 'REALIZADA' ? (
+                            <>
+                              <span className="block whitespace-nowrap tabular-nums"><strong className="font-semibold">{s.total}</strong>
+                                <span className="text-muted-foreground"> · {s.homens ?? 0} H · {s.mulheres ?? 0} M · {s.visitantes ?? 0} visit.</span></span>
+                              <span className="block text-xs text-muted-foreground">{s.nomeados ? `${s.nomeados} pelo nome` : 'sem nomes'}</span>
+                            </>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="hidden text-right sm:table-cell">{botaoParticipantes(s)}</td>
                         <td className="sm:pr-6">
                           {podeGerir && s.estado !== 'CANCELADA' && (
                             <DropdownMenu>
@@ -131,8 +146,7 @@ export default function PaginaSantaCeia() {
                                 <Button variant="ghost" size="icon" className="alvo size-9 text-muted-foreground" aria-label={`Acções de ${data(s.data)}`}><MoreHorizontal className="size-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {s.data <= hoje && <DropdownMenuItem onSelect={() => setParticipantes(s)}><Users className="size-4" />{s.estado === 'REALIZADA' ? 'Corrigir participantes' : 'Registar participantes'}</DropdownMenuItem>}
-                                <DropdownMenuItem onSelect={() => setAgendar(s)}><Pencil className="size-4" />Editar</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setAgendar(s)}><Pencil className="size-4" />Editar data e equipa</DropdownMenuItem>
                                 {s.estado === 'AGENDADA' && (<><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive-text" onSelect={() => cancelar(s)}><XCircle className="size-4" />Cancelar</DropdownMenuItem></>)}
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -314,7 +328,7 @@ function DialogoParticipantes({ s, aoFechar }: { s: SantaCeia; aoFechar: () => v
     <Dialog open onOpenChange={(v) => !v && aoFechar()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Participantes da Santa Ceia</DialogTitle>
+          <DialogTitle>{s.estado === 'REALIZADA' ? 'Editar participantes' : 'Registar participantes'}</DialogTitle>
           <DialogDescription className="first-letter:uppercase">{dataPorExtenso(s.data)}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
@@ -362,7 +376,7 @@ function DialogoParticipantes({ s, aoFechar }: { s: SantaCeia; aoFechar: () => v
         </div>
         <DialogFooter>
           <Button variant="outline" className="alvo" onClick={aoFechar}>{t.comum.cancelar}</Button>
-          <Button className="alvo" disabled={aGravar} onClick={gravar}>{aGravar ? t.comum.aGravar : 'Registar'}</Button>
+          <Button className="alvo" disabled={aGravar} onClick={gravar}>{aGravar ? t.comum.aGravar : s.estado === 'REALIZADA' ? t.comum.guardar : 'Registar'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -377,13 +391,13 @@ function ParticipacaoMembros({ anos }: { anos: number[] }) {
   const linhas = q.data ?? []
   const celebracoes = linhas[0]?.celebracoes ?? 0
   const nunca = linhas.filter((l) => l.participacoes === 0)
-  const comFaltas = linhas.filter((l) => l.faltas > 0)
+  const comFaltas = linhas.filter((l) => l.faltas > 0 && l.participacoes > 0)
   const todas = linhas.filter((l) => l.faltas === 0)
   const vistas = filtro === 'nunca' ? nunca : filtro === 'faltas' ? comFaltas : linhas
   const ordenadas = [...vistas].sort((a, b) => a.participacoes - b.participacoes || a.membro.localeCompare(b.membro, 'pt'))
   return (
     <Cartao icone={UserCheck} titulo="Participação dos membros" recolhivel className="print:border-0 print:shadow-none"
-      descricao={celebracoes ? `${celebracoes} celebraç${celebracoes === 1 ? 'ão' : 'ões'} com os nomes registados em ${ano}` : `Só contam as celebrações com os participantes registados pelo nome`}
+      descricao={celebracoes ? `Em quantas das ${celebracoes} Santa${celebracoes === 1 ? '' : 's'} Ceia${celebracoes === 1 ? '' : 's'} de ${ano} cada membro participou` : 'Em quantas Santas Ceias do ano cada membro participou'}
       accoes={(
         <div className="flex items-center gap-2 print:hidden">
           <Seleccao aria-label="Ano" value={String(ano)} onChange={(e) => setAno(Number(e.target.value))} className="w-28">
@@ -410,20 +424,33 @@ function ParticipacaoMembros({ anos }: { anos: number[] }) {
               <thead>
                 <tr>
                   <th className="sm:pl-6">Membro</th>
-                  <th className="num">Participou</th>
-                  <th className="num hidden sm:table-cell">Faltas</th>
-                  <th className="sm:pr-6">Última</th>
+                  <th>Presenças</th>
+                  <th className="hidden sm:table-cell">Situação</th>
+                  <th className="hidden md:table-cell sm:pr-6">Última participação</th>
                 </tr>
               </thead>
               <tbody>
-                {ordenadas.map((l) => (
-                  <tr key={l.membroId}>
-                    <td className="sm:pl-6"><span className="font-medium">{l.membro}</span></td>
-                    <td className="num"><span className={cn('tabular-nums', l.participacoes === 0 && 'font-semibold text-destructive-text')}>{l.participacoes} de {l.celebracoes}</span></td>
-                    <td className="num hidden sm:table-cell">{l.faltas || '—'}</td>
-                    <td className="sm:pr-6">{l.ultima ? data(l.ultima) : <span className="text-muted-foreground">Nunca</span>}</td>
-                  </tr>
-                ))}
+                {ordenadas.map((l) => {
+                  const pct = l.celebracoes ? Math.round((l.participacoes / l.celebracoes) * 100) : 0
+                  const situacao = l.participacoes === 0
+                    ? <Pilula variante="destructive">Nunca participou</Pilula>
+                    : l.faltas === 0 ? <Pilula variante="success">Em todas</Pilula>
+                    : <Pilula variante="warning">Faltou a {l.faltas}</Pilula>
+                  return (
+                    <tr key={l.membroId}>
+                      <td className="sm:pl-6"><span className="font-medium">{l.membro}</span>
+                        <span className="mt-1 block sm:hidden">{situacao}</span></td>
+                      <td>
+                        <span className="block text-sm whitespace-nowrap tabular-nums"><strong className="font-semibold">{l.participacoes}</strong> de {l.celebracoes} Santa{l.celebracoes === 1 ? '' : 's'} Ceia{l.celebracoes === 1 ? '' : 's'}</span>
+                        <span className="mt-1 block h-1.5 w-28 overflow-hidden rounded-[2px] bg-muted" aria-hidden>
+                          <span className={cn('block h-full', pct === 100 ? 'bg-success' : pct === 0 ? 'bg-destructive' : 'bg-warning')} style={{ width: `${Math.max(pct, pct === 0 ? 0 : 6)}%` }} />
+                        </span>
+                      </td>
+                      <td className="hidden sm:table-cell">{situacao}</td>
+                      <td className="hidden md:table-cell sm:pr-6">{l.ultima ? data(l.ultima) : <span className="text-muted-foreground">—</span>}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </Tabela>
           </div>

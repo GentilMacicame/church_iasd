@@ -162,7 +162,7 @@ function AbaUtilizadores() {
           : usuarios.isError ? <EstadoErro erro={usuarios.error} aoTentar={() => usuarios.refetch()} className="m-4" />
           : !visiveis.length ? <EstadoVazio icone={Users}>{lista.length ? 'Nenhum utilizador corresponde ao filtro.' : 'Ainda não há utilizadores.'}</EstadoVazio>
           : (
-            <Tabela>
+            <Tabela procurar={false}>
               <thead><tr><th className="sm:pl-5">Nome</th><th className="hidden md:table-cell">Contacto</th><th>Perfis nesta igreja</th><th className="hidden lg:table-cell">Membro</th><th>Estado</th><th className="sm:pr-5"><span className="sr-only">Acções</span></th></tr></thead>
               <tbody>
                 {visiveis.map((u) => {
@@ -252,7 +252,7 @@ function AbaPerfis({ aoVerPermissoes }: { aoVerPermissoes: (id: number) => void 
             {perfis.isPending ? <LinhasACarregar linhas={6} />
               : perfis.isError ? <EstadoErro erro={perfis.error} aoTentar={() => perfis.refetch()} className="m-4" />
               : (
-                <Tabela>
+                <Tabela procurar={false}>
                   <thead><tr><th className="sm:pl-5">Perfil</th><th className="hidden md:table-cell">Descrição</th><th className="num">Utilizadores</th><th>Estado</th><th className="sm:pr-5"><span className="sr-only">Acções</span></th></tr></thead>
                   <tbody>
                     {visiveis.map((p) => (

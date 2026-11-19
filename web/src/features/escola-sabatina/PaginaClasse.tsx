@@ -226,7 +226,7 @@ function Matriculas({ classe }: { classe: Classe }) {
           const lista = (historico ? antigas : activas).filter((m) => !busca || (nomeDe(m.membroId) ?? '').toLowerCase().includes(busca.toLowerCase()))
           if (!lista.length) return <EstadoVazio icone={UserPlus}>{historico ? 'Ninguém saiu desta classe.' : busca ? 'Nenhum aluno com esse nome.' : 'Ainda ninguém matriculado nesta classe.'}</EstadoVazio>
           return (
-            <Tabela porPagina={15}>
+            <Tabela porPagina={15} procurar={false}>
               <thead><tr><th className="sm:pl-6">Aluno</th><th>Situação</th><th className="num hidden sm:table-cell">Idade</th><th className="hidden md:table-cell">{historico ? 'Período' : 'Desde'}</th><th className="w-12 sm:pr-6"><span className="sr-only">Acções</span></th></tr></thead>
               <tbody>
                 {lista.map((m) => {

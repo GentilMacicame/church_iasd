@@ -90,7 +90,7 @@ export default function PaginaReavivamento() {
                   <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar pessoa…" aria-label="Pesquisar pessoa" className="alvo pl-9" />
                 </div>
               </div>
-              <Tabela porPagina={20}>
+              <Tabela porPagina={20} procurar={false}>
                 <thead><tr><th className="sm:pl-6">Pessoa</th><th className="num">Quota</th><th className="num hidden md:table-cell">Por mês</th><th className="num">Contribuído</th><th className="hidden lg:table-cell">Cumprimento</th><th className="num">Falta</th><th className="w-12 sm:pr-6"><span className="sr-only">Ajustar</span></th></tr></thead>
                 <tbody>
                   {visiveis.map((p) => {

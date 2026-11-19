@@ -62,7 +62,7 @@ export default function PaginaFamilias() {
                 {pesquisa ? 'Experimente outro nome.' : 'Crie uma família e junte-lhe os membros da casa.'}
               </EstadoVazio>
             ) : (
-              <Tabela porPagina={15}>
+              <Tabela porPagina={15} procurar={false}>
                 <thead><tr><th className="sm:pl-6">Família</th><th className="hidden md:table-cell">Chefe</th><th>Membros</th><th className="w-10 sm:pr-6"><span className="sr-only">Abrir</span></th></tr></thead>
                 <tbody>
                   {lista.map((f) => {

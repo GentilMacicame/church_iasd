@@ -121,7 +121,7 @@ export default function PaginaLivro() {
                 {lista.length ? 'Mude o ano, o sentido ou a pesquisa.' : 'Registe o voto em Reuniões e depois a entrada aqui.'}
               </EstadoVazio>
             ) : (
-              <Tabela porPagina={15}>
+              <Tabela porPagina={15} procurar={false}>
                 <thead><tr><th className="sm:pl-6">Data</th><th>Membro</th><th>Movimento</th><th className="hidden md:table-cell sm:pr-6">Voto</th></tr></thead>
                 <tbody>
                   {visiveis.map((m) => {
