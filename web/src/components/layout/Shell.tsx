@@ -327,6 +327,8 @@ function MenuUtilizador() {
   const nome = usuario?.nome ?? '—'
   const iniciais = nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('')
   const perfis = distrito ? ['Pastor do distrito'] : igreja?.perfis?.map((p) => rotulos.perfil[p] ?? p) ?? []
+  // onde está a trabalhar: o distrito pastoral ou a igreja escolhida
+  const onde = distrito?.nome ?? igreja?.nome ?? t.nav.igreja
   return (
     <>
       {sairSeguro.dialogo}
@@ -334,22 +336,28 @@ function MenuUtilizador() {
       <DropdownMenuTrigger asChild>
         <button type="button" className="flex items-center gap-2.5 rounded-md py-1 pr-2 pl-1 text-left transition-colors hover:bg-accent">
           <span className="flex size-8 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">{iniciais}</span>
-          <span className="hidden flex-col leading-tight md:flex">
-            <span className="max-w-40 truncate text-sm font-medium text-foreground">{nome}</span>
-            <span className="max-w-40 truncate text-xs text-muted-foreground">{perfis[0] ?? t.nav.igreja}</span>
+          <span className="hidden min-w-0 flex-col leading-tight md:flex">
+            <span className="max-w-52 truncate text-sm font-medium text-foreground" title={nome}>{nome}</span>
+            <span className="max-w-52 truncate text-xs text-muted-foreground" title={onde}>{onde}</span>
           </span>
           <ChevronsUpDown className="hidden size-4 text-muted-foreground md:block" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <div className="px-2 py-2">
-          <p className="truncate text-sm font-medium">{nome}</p>
-          <p className="truncate text-xs text-muted-foreground">{distrito?.nome ?? igreja?.nome}</p>
-          {perfis.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {perfis.map((p) => <Pilula key={p} variante="info"><ShieldCheck className="size-3" />{p}</Pilula>)}
-            </div>
-          )}
+      <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-1rem)]">
+        <div className="flex items-start gap-3 px-2 py-3">
+          <span className="flex size-10 flex-none items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">{iniciais}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm leading-5 font-semibold break-words">{nome}</p>
+            <p className="mt-0.5 flex items-start gap-1.5 text-xs leading-4 text-muted-foreground">
+              {distrito ? <Network className="mt-px size-3.5 flex-none" /> : <Building2 className="mt-px size-3.5 flex-none" />}
+              <span className="break-words">{onde}</span>
+            </p>
+            {perfis.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {perfis.map((p) => <Pilula key={p} variante="info"><ShieldCheck className="size-3" />{p}</Pilula>)}
+              </div>
+            )}
+          </div>
         </div>
         {distritos.length > 0 && (
           <>
@@ -357,7 +365,7 @@ function MenuUtilizador() {
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Área pastoral</DropdownMenuLabel>
             {distritos.map((d) => (
               <DropdownMenuItem key={d.id} onSelect={() => { escolherDistrito(d.id); navegar('/') }}>
-                <Network className="size-4" /><span className="flex-1 truncate">{d.nome}</span>
+                <Network className="size-4 flex-none" /><span className="flex-1 break-words">{d.nome}</span>
                 {d.id === distrito?.id && <Check className="size-4 text-primary" />}
               </DropdownMenuItem>
             ))}
@@ -369,7 +377,7 @@ function MenuUtilizador() {
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t.nav.mudarIgreja}</DropdownMenuLabel>
             {igrejas.map((i) => (
               <DropdownMenuItem key={i.id} onSelect={() => { escolherIgreja(i.id); navegar('/') }}>
-                <Building2 className="size-4" /><span className="flex-1 truncate">{i.nome}</span>
+                <Building2 className="size-4 flex-none" /><span className="flex-1 break-words">{i.nome}</span>
                 {!distrito && i.id === igreja?.id && <Check className="size-4 text-primary" />}
               </DropdownMenuItem>
             ))}

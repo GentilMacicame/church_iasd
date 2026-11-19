@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { CampoSenha } from '@/components/comum/CampoSenha'
 import { CampoFormulario, ErroFormulario } from '@/components/comum/formulario'
 import { Marca } from '@/components/layout/Marca'
 import { useSessao } from '@/auth/sessao'
@@ -41,7 +42,7 @@ function FormEntrar({ aoEsquecer }: { aoEsquecer: () => void }) {
         {(p) => <Input {...p} {...form.register('login')} autoComplete="username" inputMode="email" autoFocus className="alvo h-11" />}
       </CampoFormulario>
       <CampoFormulario rotulo={t.entrar.senha} erro={form.formState.errors.senha?.message}>
-        {(p) => <Input {...p} {...form.register('senha')} type="password" autoComplete="current-password" className="alvo h-11" />}
+        {(p) => <CampoSenha {...p} {...form.register('senha')} autoComplete="current-password" className="alvo h-11" />}
       </CampoFormulario>
       <Button type="submit" disabled={form.formState.isSubmitting} className="alvo h-12 w-full text-base font-semibold">
         {form.formState.isSubmitting ? t.entrar.aEntrar : t.entrar.botao}
@@ -110,7 +111,7 @@ function FormRecuperar({ aoVoltar }: { aoVoltar: (msg?: string) => void }) {
         {(p) => <Input {...p} {...definir.register('codigo')} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus className="alvo num h-11 tracking-[0.3em]" />}
       </CampoFormulario>
       <CampoFormulario rotulo={t.recuperar.novaSenha} erro={definir.formState.errors.senha?.message}>
-        {(p) => <Input {...p} {...definir.register('senha')} type="password" autoComplete="new-password" className="alvo h-11" />}
+        {(p) => <CampoSenha {...p} {...definir.register('senha')} autoComplete="new-password" className="alvo h-11" />}
       </CampoFormulario>
       <Button type="submit" disabled={definir.formState.isSubmitting} className="alvo h-11">{t.recuperar.definir}</Button>
     </form>
