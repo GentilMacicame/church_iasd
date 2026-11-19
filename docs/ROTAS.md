@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 577 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 584 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -58,6 +58,12 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/actividades/partes-programa/{id}` | PartesProgramaController · alterar | `actividades.programa_parte.alterar` |
 | POST | `/v1/actividades/partes-programa/{id}/reactivar` | PartesProgramaController · reactivar | `actividades.programa_parte.terminar` |
 | POST | `/v1/actividades/partes-programa/{id}/terminar` | PartesProgramaController · terminar | `actividades.programa_parte.terminar` |
+| GET | `/v1/actividades/participantes-santa-ceia` | ParticipantesSantaCeiaController · listar | `actividades.santa_ceia_participante.ler` |
+| POST | `/v1/actividades/participantes-santa-ceia` | ParticipantesSantaCeiaController · criar | `actividades.santa_ceia_participante.criar` |
+| GET | `/v1/actividades/participantes-santa-ceia/{id}` | ParticipantesSantaCeiaController · obter | `actividades.santa_ceia_participante.ler` |
+| PATCH | `/v1/actividades/participantes-santa-ceia/{id}` | ParticipantesSantaCeiaController · alterar | `actividades.santa_ceia_participante.alterar` |
+| POST | `/v1/actividades/participantes-santa-ceia/{id}/reactivar` | ParticipantesSantaCeiaController · reactivar | `actividades.santa_ceia_participante.terminar` |
+| POST | `/v1/actividades/participantes-santa-ceia/{id}/terminar` | ParticipantesSantaCeiaController · terminar | `actividades.santa_ceia_participante.terminar` |
 | GET | `/v1/actividades/planos-escala` | PlanosEscalaController · listar | `actividades.escala_plano.ler` |
 | POST | `/v1/actividades/planos-escala` | PlanosEscalaController · criar | `actividades.escala_plano.criar` |
 | GET | `/v1/actividades/planos-escala/{id}` | PlanosEscalaController · obter | `actividades.escala_plano.ler` |
@@ -81,6 +87,7 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/actividades/responsaveis-actividade/{id}/reactivar` | ResponsaveisActividadeController · reactivar | `actividades.actividade_responsavel.terminar` |
 | POST | `/v1/actividades/responsaveis-actividade/{id}/terminar` | ResponsaveisActividadeController · terminar | `actividades.actividade_responsavel.terminar` |
 | GET | `/v1/actividades/santa-ceia-historico` | RelatoriosActividadesController · santaCeiaHistorico | `actividades.santa_ceia.ler` |
+| GET | `/v1/actividades/santa-ceia-participacao` | RelatoriosActividadesController · santaCeiaParticipacao | `actividades.santa_ceia_participante.ler` |
 | GET | `/v1/actividades/santas-ceias` | SantasCeiasController · listar | `actividades.santa_ceia.ler` |
 | POST | `/v1/actividades/santas-ceias` | SantasCeiasController · criar | `actividades.santa_ceia.criar` |
 | GET | `/v1/actividades/santas-ceias/{id}` | SantasCeiasController · obter | `actividades.santa_ceia.ler` |
