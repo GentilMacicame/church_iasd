@@ -6,6 +6,7 @@ import { Suspense, type ReactNode } from 'react'
 import { pagina } from '@/lib/paginas'
 import { ErroAplicacao } from '@/components/layout/ErroAplicacao'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { PERMISSOES_APROVACOES } from '@/features/aprovacoes/permissoes'
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
@@ -47,6 +48,8 @@ const PaginaRelatorioMensal = pagina(() => import('@/features/tesouraria/PaginaR
 const PaginaEscalas = pagina(() => import('@/features/escalas/PaginaEscalas'))
 const PaginaActividades = pagina(() => import('@/features/actividades/PaginaActividades'))
 const PaginaComunicados = pagina(() => import('@/features/comunicados/PaginaComunicados'))
+const PaginaAprovacoes = pagina(() => import('@/features/aprovacoes/PaginaAprovacoes'))
+const PaginaFluxos = pagina(() => import('@/features/aprovacoes/PaginaFluxos'))
 const PaginaNotificacoes = pagina(() => import('@/features/notificacoes/PaginaNotificacoes'))
 const PaginaSantaCeia = pagina(() => import('@/features/santa-ceia/PaginaSantaCeia'))
 const PaginaAreaPastoral = pagina(() => import('@/features/actividades/PaginaAreaPastoral'))
@@ -188,6 +191,8 @@ export default function App() {
                   <Route path="acessos/utilizadores/novo" element={<Exige permissao="nucleo.usuario.criar"><PaginaUtilizador /></Exige>} />
                   <Route path="acessos/utilizadores/:id" element={<Exige permissao="nucleo.usuario.ler"><PaginaUtilizador /></Exige>} />
                   <Route path="comunicados" element={<PaginaComunicados />} />
+                  <Route path="aprovacoes" element={<Exige permissao={PERMISSOES_APROVACOES}><PaginaAprovacoes /></Exige>} />
+                  <Route path="aprovacoes/fluxos" element={<PaginaFluxos />} />
                   <Route path="notificacoes" element={<Exige permissao="nucleo.notificacao.ler"><PaginaNotificacoes /></Exige>} />
                   <Route path="area-pastoral" element={<Exige permissao="actividades.actividade.ler"><PaginaAreaPastoral /></Exige>} />
                   <Route path="santa-ceia" element={<Exige permissao="actividades.santa_ceia.ler"><PaginaSantaCeia /></Exige>} />

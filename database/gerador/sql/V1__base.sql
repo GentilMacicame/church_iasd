@@ -80,6 +80,10 @@ CREATE TYPE nucleo.tipo_documento_t        AS ENUM ('FACTURA', 'RECIBO', 'COMPRO
 CREATE TYPE nucleo.canal_notificacao_t     AS ENUM ('SMS', 'WHATSAPP', 'EMAIL');
 CREATE TYPE nucleo.estado_notificacao_t    AS ENUM ('PENDENTE', 'ENVIADA', 'FALHADA', 'CANCELADA');
 CREATE TYPE nucleo.estado_comunicado_t     AS ENUM ('RASCUNHO', 'PUBLICADO', 'ARQUIVADO');
+CREATE TYPE nucleo.processo_aprovacao_t    AS ENUM ('DESPESA', 'SAIDA', 'CONTAGEM', 'ORCAMENTO', 'ADMISSAO_MEMBRO', 'REMOCAO_MEMBRO');
+CREATE TYPE nucleo.accao_etapa_t           AS ENUM ('APRECIAR', 'CONFERIR', 'RECOMENDAR', 'APROVAR', 'VOTAR');
+CREATE TYPE nucleo.responsavel_etapa_t     AS ENUM ('PERFIL', 'PERMISSAO', 'ORGAO');
+CREATE TYPE nucleo.estado_aprovacao_t      AS ENUM ('EM_CURSO', 'APROVADO', 'REJEITADO', 'CANCELADO');
 
 -- ---------------------------------------------------------------- funções comuns
 CREATE FUNCTION nucleo.fn_usuario_sessao() RETURNS INT AS $$

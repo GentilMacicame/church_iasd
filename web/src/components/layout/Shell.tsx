@@ -11,7 +11,7 @@ import {
   Bell, Building2, Check, Network, ChevronRight, ChevronsUpDown, LogOut, Menu, Moon, PanelLeft, ShieldCheck, Sun, SunMoon, X,
 } from 'lucide-react'
 import {
-  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, Flame as PhFlame, Table as PhTable, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, type IconWeight,
+  SquaresFour as PhSquaresFour, ChartLineUp as PhChartLineUp, UsersThree as PhUsersThree, BookOpenText as PhBookOpenText, ChatsCircle as PhChatsCircle, UserList as PhUserList, HouseLine as PhHouseLine, ArrowsLeftRight as PhArrowsLeftRight, Gavel as PhGavel, ChartBar as PhChartBar, ChartPieSlice as PhChartPieSlice, ArrowsDownUp as PhArrowsDownUp, Receipt as PhReceipt, Calculator as PhCalculator, Bank as PhBank, FileText as PhFileText, LockSimple as PhLockSimple, Target as PhTarget, ListChecks as PhListChecks, Wallet as PhWallet, HandCoins as PhHandCoins, Flame as PhFlame, Table as PhTable, CalendarDots as PhCalendarDots, CalendarStar as PhCalendarStar, Megaphone as PhMegaphone, Wine as PhWine, ClipboardText as PhClipboardText, MapTrifold as PhMapTrifold, GraduationCap as PhGraduationCap, Notebook as PhNotebook, Chalkboard as PhChalkboard, CalendarCheck as PhCalendarCheck, UserPlus as PhUserPlus, Church as PhChurch, UserGear as PhUserGear, BellRinging as PhBellRinging, SignOut as PhSignOut, SealCheck as PhSealCheck, FlowArrow as PhFlowArrow, type IconWeight,
 } from '@phosphor-icons/react'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -27,13 +27,14 @@ import { Marca } from './Marca'
 import { BarraCarregamento, CarregandoPagina } from './Carregamento'
 import { Inactividade } from './Inactividade'
 import { qtd } from '@/lib/formatos'
+import { PERMISSOES_APROVACOES } from '@/features/aprovacoes/permissoes'
 
 /** Sino de alertas: carregado a pedido (as fontes usam os módulos; não entram no pacote inicial). */
 const Sino = pagina(() => import('@/features/alertas/Sino'))
 
 /** Ícones do menu: Phosphor, linha fina normalmente e cheios no item activo. */
 interface ItemNav {
-  para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string; fim?: boolean
+  para: string; rotulo: string; icone: ComponentType<{ className?: string; weight?: IconWeight }>; permissao?: string | string[]; fim?: boolean
   /** só para quem acompanha várias igrejas (pastor do distrito, Associação, super-administrador) */
   direccao?: boolean
 }
@@ -57,6 +58,7 @@ const NAV: GrupoNav[] = [
     itens: [
       { para: '/', rotulo: t.nav.inicio, icone: PhSquaresFour, fim: true },
       { para: '/comunicados', rotulo: 'Comunicados', icone: PhMegaphone, fim: false },
+      { para: '/aprovacoes', rotulo: 'Aprovações', icone: PhSealCheck, permissao: PERMISSOES_APROVACOES, fim: false },
       { para: '/painel-geral', rotulo: 'Painel geral', icone: PhChartLineUp, permissao: 'organizacao.igreja.ler', fim: true, direccao: true },
     ],
   },
@@ -117,6 +119,7 @@ const NAV: GrupoNav[] = [
       { para: '/igrejas', rotulo: 'Igrejas', icone: PhChurch, permissao: 'organizacao.igreja.criar', fim: true },
       { para: '/acessos', rotulo: t.nav.acessos, icone: PhUserGear, permissao: 'nucleo.usuario.ler', fim: false },
       { para: '/notificacoes', rotulo: 'Notificações', icone: PhBellRinging, permissao: 'nucleo.notificacao.ler', fim: true },
+      { para: '/aprovacoes/fluxos', rotulo: 'Fluxos de aprovação', icone: PhFlowArrow, permissao: 'nucleo.fluxo_aprovacao.criar', fim: true },
     ],
   },
 ]
@@ -133,7 +136,7 @@ function Navegacao({ encolhida, aoEscolher }: { encolhida: boolean; aoEscolher?:
   return (
     <nav aria-label="Principal">
       {(distrito ? NAV_DISTRITO : NAV).map((grupo, i) => {
-        const itens = grupo.itens.filter((it) => (!it.permissao || pode(it.permissao)) && (!it.direccao || direccao))
+        const itens = grupo.itens.filter((it) => (!it.permissao || [it.permissao].flat().some((x) => pode(x))) && (!it.direccao || direccao))
         if (!itens.length) return null
         return (
           <div key={i} className={cn(grupo.rotulo && 'mt-5')}>
@@ -267,6 +270,10 @@ function Caminho() {
     if (pathname === '/tesouraria/relatorio-mensal') partes.push({ rotulo: t.tesouraria.relatorioMensal })
     if (pathname === '/tesouraria/orcamento') partes.push({ rotulo: 'Orçamento anual' })
     if (pathname === '/tesouraria/reconciliacao') partes.push({ rotulo: t.tesouraria.contas, para: '/tesouraria/contas' }, { rotulo: 'Reconciliação' })
+  }
+  if (pathname.startsWith('/aprovacoes')) {
+    partes.push({ rotulo: 'Aprovações', para: '/aprovacoes' })
+    if (pathname === '/aprovacoes/fluxos') partes.push({ rotulo: 'Fluxos de aprovação' })
   }
   if (pathname === '/igrejas') partes.push({ rotulo: t.nav.administracao }, { rotulo: 'Igrejas' })
   if (pathname.startsWith('/acessos')) {

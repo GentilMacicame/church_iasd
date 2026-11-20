@@ -21,7 +21,8 @@ public final class Nomes {
     public static final Map<String, String> TABELA_POR_PREFIXO = Map.ofEntries(
             Map.entry("per", "perfil"), Map.entry("prm", "permissao"), Map.entry("ppe", "perfil_permissao"),
             Map.entry("usu", "usuario"), Map.entry("uig", "usuario_igreja"), Map.entry("uen", "usuario_entidade"),
-            Map.entry("lau", "log_auditoria"), Map.entry("ent", "entidade"), Map.entry("dst", "distrito"),
+            Map.entry("lau", "log_auditoria"), Map.entry("fap", "fluxo_aprovacao"), Map.entry("fae", "fluxo_etapa"),
+            Map.entry("apv", "aprovacao"), Map.entry("apd", "aprovacao_decisao"), Map.entry("ent", "entidade"), Map.entry("dst", "distrito"),
             Map.entry("igr", "igreja"), Map.entry("dep", "departamento"), Map.entry("ide", "igreja_departamento"),
             Map.entry("car", "cargo"), Map.entry("fam", "familia"), Map.entry("mem", "membro"),
             Map.entry("cto", "contacto"), Map.entry("cns", "consentimento"), Map.entry("reu", "reuniao"),

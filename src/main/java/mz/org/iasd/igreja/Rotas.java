@@ -114,8 +114,29 @@ public final class Rotas {
         /** UsuariosController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String USUARIOS = "/v1/nucleo/usuarios";
 
+        /** FluxosAprovacaoController · rotas-padrão (V54): fluxos de aprovação (etapas por natureza do processo e valor) */
+        public static final String FLUXOS_APROVACAO = "/v1/nucleo/fluxos-aprovacao";
+
+        /** EtapasFluxoController · rotas-padrão (V54): etapas de cada fluxo, por ordem */
+        public static final String ETAPAS_FLUXO = "/v1/nucleo/etapas-fluxo";
+
+        /** AprovacoesController · só leitura + decidir (V54): processos de aprovação */
+        public static final String APROVACOES = "/v1/nucleo/aprovacoes";
+
+        /** POST /v1/nucleo/aprovacoes/{id}/decidir  (AprovacoesController.decidir) */
+        public static final String APROVACOES_DECIDIR = "{id: \\d+}/decidir";
+
+        /** DecisoesAprovacaoController · só leitura (V54): decisões de cada etapa */
+        public static final String DECISOES_APROVACAO = "/v1/nucleo/decisoes-aprovacao";
+
         /** RelatoriosNucleoController */
         public static final String RELATORIOS = "/v1/nucleo";
+
+        /** GET /v1/nucleo/acompanhamento-aprovacoes  (RelatoriosNucleoController.acompanhamentoAprovacoes) */
+        public static final String ACOMPANHAMENTO_APROVACOES = "acompanhamento-aprovacoes";
+
+        /** GET /v1/nucleo/etapas-aprovacao  (RelatoriosNucleoController.etapasAprovacao) */
+        public static final String ETAPAS_APROVACAO = "etapas-aprovacao";
 
         /** GET /v1/nucleo/notificacoes-a-enviar  (RelatoriosNucleoController.notificacoesAEnviar) */
         public static final String NOTIFICACOES_A_ENVIAR = "notificacoes-a-enviar";

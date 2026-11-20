@@ -55,6 +55,49 @@ M('V2__nucleo', 'nucleo', 'Núcleo: acesso e auditoria',
    ('usu_id', 'fk:usuario'), ('igr_id', 'fk:igreja', NN), ('tabela', 'VARCHAR(80)', NN), ('registo_id', 'BIGINT', NN),
    ('accao', 'VARCHAR(20)', NN, 'Ex.: LER_MOTIVO')],
    big=True, extra=['CREATE INDEX idx_aco_igr_data ON {t} (@igr_id, @criado_em DESC)']),
+ # V54: fluxos de aprovação configuráveis (etapas por natureza do processo e por valor)
+ T('fluxo_aprovacao', 'fap', 'Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54)', [
+   ('igr_id', 'fk:igreja', '', 'Igreja a que o fluxo se aplica; vazio = modelo da Associação/Missão para todas as igrejas sem fluxo próprio'),
+   ('processo', 'processo_aprovacao_t', NN),
+   ('nome', 'VARCHAR(100)', NN),
+   ('valor_minimo', 'DECIMAL(14,2)', 'NOT NULL DEFAULT 0', 'O fluxo aplica-se a partir deste valor (o de maior valor mínimo que não passe o valor do processo)'),
+   ('descricao', 'VARCHAR(255)')],
+   checks=[('chk_fap_valor_minimo', '@valor_minimo >= 0')],
+   extra=['CREATE UNIQUE INDEX uq_fap_igr_processo_valor ON {t} (COALESCE(@igr_id, 0), @processo, @valor_minimo) WHERE @end_date IS NULL']),
+ T('fluxo_etapa', 'fae', 'Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54)', [
+   ('fap_id', 'fk:fluxo_aprovacao', NN),
+   ('igr_id', 'fk:igreja', '', 'Copiado do fluxo'),
+   ('ordem', 'SMALLINT', NN, '1 = a primeira a decidir'),
+   ('nome', 'VARCHAR(100)', NN),
+   ('accao', 'accao_etapa_t', "NOT NULL DEFAULT 'APROVAR'"),
+   ('responsavel', 'responsavel_etapa_t', NN, 'PERFIL (quem tem esse perfil na igreja), PERMISSAO (quem tem essa permissão) ou ORGAO (o órgão vota em reunião)'),
+   ('per_id', 'fk:perfil', '', 'Perfil que decide (responsavel = PERFIL)'),
+   ('prm_id', 'fk:permissao', '', 'Permissão de quem decide (responsavel = PERMISSAO)'),
+   ('orgao', 'tipo_reuniao_t', '', 'Órgão que vota (responsavel = ORGAO): o voto tem de ser de uma reunião deste tipo'),
+   ('outra_pessoa', 'BOOLEAN', 'NOT NULL DEFAULT TRUE', 'Quem pediu e quem já decidiu outra etapa não decide esta')],
+   uniq=[['fap_id', 'ordem']],
+   checks=[('chk_fae_ordem', '@ordem BETWEEN 1 AND 20'),
+           ('chk_fae_responsavel', "(@responsavel = 'PERFIL' AND @per_id IS NOT NULL) OR (@responsavel = 'PERMISSAO' AND @prm_id IS NOT NULL) "
+                                   "OR (@responsavel = 'ORGAO' AND @orgao IS NOT NULL)")]),
+ T('aprovacao', 'apv', 'Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa em que está (V54)', [
+   ('igr_id', 'fk:igreja', NN), ('fap_id', 'fk:fluxo_aprovacao', NN), ('processo', 'processo_aprovacao_t', NN),
+   ('assunto', 'VARCHAR(255)', NN), ('valor', 'DECIMAL(14,2)'),
+   ('des_id', 'fk:despesa'), ('tra_id', 'fk:transacao'), ('cnu_id', 'fk:contagem_numerario'), ('orc_id', 'fk:orcamento'),
+   ('mem_id', 'fk:membro', '', 'Membro a admitir ou remover'),
+   ('pedido_por_usu_id', 'fk:usuario', '', 'Quem pediu (não decide as etapas com outra_pessoa)'),
+   ('etapa', 'SMALLINT', 'NOT NULL DEFAULT 1', 'Ordem da etapa actual (a próxima a decidir)'),
+   ('concluido_em', 'TIMESTAMPTZ')],
+   checks=[('chk_apv_objecto', 'num_nonnulls(@des_id, @tra_id, @cnu_id, @orc_id, @mem_id) = 1')],
+   estado=('estado_aprovacao_t', "'EM_CURSO'"),
+   extra=["CREATE UNIQUE INDEX uq_apv_em_curso ON {t} (@processo, COALESCE(@des_id, 0), COALESCE(@tra_id, 0), COALESCE(@cnu_id, 0), "
+          "COALESCE(@orc_id, 0), COALESCE(@mem_id, 0)) WHERE @estado = 'EM_CURSO' AND @end_date IS NULL",
+          'CREATE INDEX idx_apv_igr_estado ON {t} (@igr_id, @estado)']),
+ T('aprovacao_decisao', 'apd', 'Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)', [
+   ('apv_id', 'fk:aprovacao', NN), ('igr_id', 'fk:igreja', NN), ('fae_id', 'fk:fluxo_etapa', NN),
+   ('etapa', 'SMALLINT', NN), ('aprovado', 'BOOLEAN', NN), ('usu_id', 'fk:usuario', NN, 'Quem decidiu ou registou a decisão do órgão'),
+   ('vot_id', 'fk:voto', '', 'Voto do órgão (etapas ORGAO)'), ('motivo', 'VARCHAR(255)'),
+   ('valor', 'DECIMAL(14,2)', '', 'Valor aprovado, quando a etapa o reduz')],
+   uniq=[['apv_id', 'etapa']]),
 ])
 
 # ======================================================================= organizacao
@@ -698,6 +741,11 @@ ACT_FILHA = ('EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizac
 # (o autor não entra aqui: o criado_por é preenchido pelo trigger antes da verificação e deixaria qualquer um criar)
 CMC = ('nucleo.fn_comunicado_emissor(@igr_id, @dst_id, @ent_id, {C}) '
        "OR ({C} LIKE '%.ler' AND @estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(@id))")
+def _apv(processo, codigo):
+    return f"(@processo {processo} AND @igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('{codigo}'))::INT[]))"
+APV = ' OR '.join([_apv("= 'DESPESA'", 'tesouraria.despesa.ler'), _apv("= 'SAIDA'", 'tesouraria.transacao.ler'),
+                   _apv("= 'CONTAGEM'", 'tesouraria.contagem_numerario.ler'), _apv("= 'ORCAMENTO'", 'tesouraria.orcamento.ler'),
+                   _apv("IN ('ADMISSAO_MEMBRO', 'REMOCAO_MEMBRO')", 'secretaria.movimento_membro.ler')])
 SCOPE = {
  'igreja': ('direct', 'id'), 'usuario_igreja': ('direct', 'igr_id'), 'familia': ('direct', 'igr_id'),
  'membro': ('direct', 'igr_id'), 'reuniao': ('direct', 'igr_id'), 'movimento_membro': ('direct', 'igr_id'),
@@ -722,6 +770,12 @@ SCOPE = {
  'material': ('custom', ACT_FILHA),
  'actividade_responsavel': ('custom', ACT_FILHA),
  'comunicado': ('custom', CMC),
+ # V54: fluxos da igreja (permissão nela) ou modelos da Associação (igr_id vazio, ver COMUNS_ASSOCIACAO)
+ 'fluxo_aprovacao': ('custom', '@igr_id = ANY ({A}) OR (@igr_id IS NULL AND {G})'),
+ 'fluxo_etapa': ('custom', '@igr_id = ANY ({A}) OR (@igr_id IS NULL AND {G})'),
+ # V54: cada processo lê-se com a permissão de ler o seu objecto (despesas, movimentos, contagens, ...)
+ 'aprovacao': ('custom', APV),
+ 'aprovacao_decisao': ('custom', 'EXISTS (SELECT 1 FROM nucleo.aprovacao a WHERE a.apv_id = @apv_id)'),
  'comunicado_igreja': ('custom', 'EXISTS (SELECT 1 FROM nucleo.comunicado c WHERE c.cmc_id = @cmc_id AND '
                                  'nucleo.fn_comunicado_emissor(c.cmc_igr_id, c.cmc_dst_id, c.cmc_ent_id, {C}))'),
  'fundo': ('custom', '@igr_id = ANY ({A}) OR (@igr_id IS NULL AND {G})'),
@@ -735,12 +789,12 @@ GLOBAL_READ = {'perfil', 'permissao', 'perfil_permissao', 'entidade', 'distrito'
 # V23: tabelas comuns definidas pela Associação/Missão (fundos gerais, plano de contas, calendário, lição). As linhas
 # comuns só se criam, alteram e terminam com a permissão ao nível da Associação (perfil em usuario_entidade) ou como
 # super-administrador; ter a permissão numa igreja não chega (antes chegava: um tesoureiro mudava o plano de todos).
-COMUNS_ASSOCIACAO = {'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config', 'provincia', 'distrito_administrativo'}
+COMUNS_ASSOCIACAO = {'fluxo_aprovacao', 'fluxo_etapa', 'fundo', 'categoria', 'calendario_oferta', 'trimestre', 'sabado', 'pontuacao_config', 'provincia', 'distrito_administrativo'}
 # Colunas confidenciais só de escrita (V41): a API grava-as mas não as lê nas listas; lêem-se por uma função que regista
 # o acesso (ex.: secretaria.fn_disciplina_motivo). A base de dados não dá SELECT nelas a app_igreja.
 SO_ESCRITA = {'dsc_motivo'}
 # Tabelas que só os triggers do sistema escrevem (os utilizadores só lêem)
-SYSTEM_WRITE = {'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria', 'acesso_confidencial'}
+SYSTEM_WRITE = {'aprovacao', 'aprovacao_decisao', 'saldo_diario_conta', 'saldo_diario_fundo', 'log_auditoria', 'acesso_confidencial'}
 
 # O próprio membro vê sempre os seus dados (direito de acesso), mesmo sem perfil
 OWNER_READ = {   # (SELECT ...) = calculado uma vez por consulta
@@ -751,6 +805,7 @@ OWNER_READ = {   # (SELECT ...) = calculado uma vez por consulta
  'transacao_linha': '@tra_id IN (SELECT x.tra_id FROM tesouraria.transacao x WHERE x.tra_mem_id = (SELECT nucleo.fn_membro_sessao()) OR x.tra_fam_id = (SELECT nucleo.fn_familia_sessao()))',
  'recibo': '@tra_id IN (SELECT x.tra_id FROM tesouraria.transacao x WHERE x.tra_mem_id = (SELECT nucleo.fn_membro_sessao()) OR x.tra_fam_id = (SELECT nucleo.fn_familia_sessao()))',
  'fundo': 'TRUE',
+ 'fluxo_aprovacao': 'TRUE', 'fluxo_etapa': 'TRUE',   # V54: os fluxos não são segredo (cada um vê quem decide)
  'matricula': '@mem_id = (SELECT nucleo.fn_membro_sessao())',
  'presenca': '@mem_id = (SELECT nucleo.fn_membro_sessao())',
  'escala': '(SELECT nucleo.fn_membro_sessao()) IN (@mem_id, @substituto_mem_id) OR @eds_id IN (SELECT d.eds_id FROM actividades.escala_dia d)',
@@ -783,11 +838,11 @@ PERFIS = [
    # actos que o Manual reserva ao secretário, tesoureiro e anciãos não são do administrador técnico
    ('-', 'secretaria.membro.validar'), ('-', 'secretaria.transferencia_membro.emitir_carta'),
    ('-', 'secretaria.transferencia_membro.aceitar'), ('-', 'escola_sabatina.relatorio_sabado.fechar'),
-   ('-', 'escola_sabatina.relatorio_sabado.reabrir'), ('+', 'nucleo.comunicado*')]),
+   ('-', 'escola_sabatina.relatorio_sabado.reabrir'), ('+', 'nucleo.comunicado*'), ('+', 'nucleo.fluxo_*')]),
  ('PASTOR', 'IGREJA', 'Pastor: lê tudo da igreja, gere a secretaria e a disciplina, aprova despesas', [
    ('+', '*.ler'), ('-', 'nucleo.log_auditoria.ler'), ('+', 'secretaria.*'), ('+', 'actividades.*'),
    ('+', 'tesouraria.despesa.aprovar'), ('+', 'tesouraria.transacao.aprovar'), ('+', 'tesouraria.orcamento.aprovar'),
-   ('+', 'nucleo.comunicado*')]),
+   ('+', 'nucleo.comunicado*'), ('+', 'nucleo.fluxo_*')]),
  ('ANCIAO', 'IGREJA', 'Ancião: aprova saídas e despesas, fecha e reabre meses, reuniões e votos', [
    ('+', 'secretaria.*.ler'), ('+', 'secretaria.reuniao.*'), ('+', 'secretaria.reuniao_*'), ('+', 'secretaria.voto.*'),
    ('+', 'escola_sabatina.*.ler'), ('+', 'actividades.*'), ('+', 'tesouraria.*.ler'),
@@ -825,7 +880,7 @@ PERFIS = [
    ('+', 'organizacao.*'), ('+', 'nucleo.usuario.*'), ('+', 'nucleo.usuario_igreja.*'), ('+', 'nucleo.usuario_entidade.*'),
    ('+', 'escola_sabatina.trimestre.*'), ('+', 'escola_sabatina.sabado.*'), ('+', 'escola_sabatina.pontuacao_config.*'),
    ('+', 'tesouraria.categoria.*'), ('+', 'tesouraria.fundo.*'), ('+', 'tesouraria.calendario_oferta.*'),
-   ('+', 'nucleo.log_auditoria.ler'), ('+', '*.ler'), ('-', 'secretaria.disciplina.ler'), ('+', 'nucleo.comunicado*')]),
+   ('+', 'nucleo.log_auditoria.ler'), ('+', '*.ler'), ('-', 'secretaria.disciplina.ler'), ('+', 'nucleo.comunicado*'), ('+', 'nucleo.fluxo_*')]),
  ('TESOUREIRO_ASSOCIACAO', 'ENTIDADE', 'Tesoureiro(a) da Associação/Missão: lê as tesourarias e confirma remessas', [
    ('+', 'tesouraria.*.ler'), ('+', 'tesouraria.remessa.confirmar'), ('+', 'tesouraria.remessa.alterar'),
    ('+', 'organizacao.*.ler'), ('+', 'nucleo.comunicado*.ler')]),

@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Sistema de Gestão da Igreja Adventista · esquema completo (script único)
 -- GERADO por scripts/gerar-schema-completo.sh a partir de database/migrations
--- (V1__base.sql … V28__meditacao_hino_e_oracoes_da_reuniao.sql). NÃO EDITAR À MÃO.
+-- (V1__base.sql … V54__fluxos_de_aprovacao.sql). NÃO EDITAR À MÃO.
 -- PostgreSQL 16+, como administrador; depois: scripts/criar-papel-api.sh
 -- =====================================================================
 
@@ -6538,3 +6538,5788 @@ COMMENT ON COLUMN secretaria.reuniao.reu_oracao_final_mem_id IS 'Quem fez a últ
 CREATE INDEX idx_reu_meditacao_mem_id ON secretaria.reuniao (reu_meditacao_mem_id);
 CREATE INDEX idx_reu_oracao_inicial_mem_id ON secretaria.reuniao (reu_oracao_inicial_mem_id);
 CREATE INDEX idx_reu_oracao_final_mem_id ON secretaria.reuniao (reu_oracao_final_mem_id);
+
+-- >>>>> V29__mensagens_das_restricoes.sql
+-- V29 · Mensagens das restrições em português
+--
+-- Até aqui uma recusa por CHECK ou por único chegava ao utilizador como "Valor não permitido (chk_ers_numeros)"
+-- ou "Já existe um registo com estes dados". Agora cada restrição tem a frase no seu COMMENT, e a API lê-as no
+-- arranque (nucleo.fn_mensagens_restricoes) para responder com ela. A base de dados continua a decidir; passa a
+-- explicar também. Quem acrescentar uma restrição deve acrescentar o COMMENT.
+--
+-- Formato do comentário: "[campoJson] Mensagem" (o campo é opcional; com ele o erro aparece junto ao campo).
+-- Os CHECK genéricos "<pfx>_end_date >= <pfx>_criado_em" têm uma frase comum na API.
+
+-- ---------------------------------------------------------------- função lida pela API no arranque
+CREATE FUNCTION nucleo.fn_mensagens_restricoes()
+RETURNS TABLE (nome TEXT, mensagem TEXT)
+LANGUAGE sql STABLE SECURITY INVOKER SET search_path = pg_catalog AS $$
+    SELECT c.conname::text, d.description
+      FROM pg_constraint c
+      JOIN pg_namespace n ON n.oid = c.connamespace
+      JOIN pg_description d ON d.objoid = c.oid AND d.classoid = 'pg_constraint'::regclass
+     WHERE n.nspname IN ('nucleo', 'organizacao', 'secretaria', 'actividades', 'escola_sabatina', 'tesouraria')
+    UNION
+    SELECT i.relname::text, d.description
+      FROM pg_index x
+      JOIN pg_class i ON i.oid = x.indexrelid
+      JOIN pg_namespace n ON n.oid = i.relnamespace
+      JOIN pg_description d ON d.objoid = i.oid AND d.classoid = 'pg_class'::regclass
+     WHERE x.indisunique
+       AND n.nspname IN ('nucleo', 'organizacao', 'secretaria', 'actividades', 'escola_sabatina', 'tesouraria')
+$$;
+COMMENT ON FUNCTION nucleo.fn_mensagens_restricoes() IS
+    'Frase em português de cada restrição (COMMENT ON CONSTRAINT / INDEX), lida pela API para traduzir os erros 23514 e 23505';
+REVOKE ALL ON FUNCTION nucleo.fn_mensagens_restricoes() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION nucleo.fn_mensagens_restricoes() TO app_igreja;
+
+-- ---------------------------------------------------------------- Escola Sabatina
+COMMENT ON CONSTRAINT chk_ers_numeros ON escola_sabatina.relatorio_sabado IS
+    'Os números do relatório não batem: os presentes não podem ser mais do que os matriculados, quem estudou a lição não pode ser mais do que os presentes, e visitantes e filiais não podem ser negativos.';
+COMMENT ON CONSTRAINT chk_ers_ofertas ON escola_sabatina.relatorio_sabado IS
+    'As ofertas não podem ser negativas.';
+COMMENT ON CONSTRAINT chk_epr_estudo ON escola_sabatina.presenca IS
+    'Só quem esteve presente pode ser marcado como tendo estudado a lição.';
+COMMENT ON CONSTRAINT chk_ect_alvos ON escola_sabatina.classe_trimestre IS
+    'Os alvos não podem ser negativos e o alvo de estudo diário tem de estar entre 0% e 100%.';
+COMMENT ON CONSTRAINT chk_ema_datas ON escola_sabatina.matricula IS
+    '[dataSaida] A data de saída da classe não pode ser anterior à data de entrada.';
+COMMENT ON CONSTRAINT chk_epc_soma ON escola_sabatina.pontuacao_config IS
+    'Os quatro pesos da pontuação (presença, estudo, ofertas e visitantes) têm de somar 100%.';
+COMMENT ON CONSTRAINT chk_epc_limite ON escola_sabatina.pontuacao_config IS
+    '[limiteOfertas] O limite das ofertas tem de ser pelo menos 100% do alvo.';
+COMMENT ON CONSTRAINT chk_esa_numero ON escola_sabatina.sabado IS
+    '[numero] O número do sábado tem de estar entre 1 e 14.';
+COMMENT ON CONSTRAINT chk_esa_sabado ON escola_sabatina.sabado IS
+    '[data] A data indicada não é um sábado.';
+COMMENT ON CONSTRAINT chk_etr_datas ON escola_sabatina.trimestre IS
+    '[dataFim] O fim do trimestre tem de ser depois do início.';
+COMMENT ON CONSTRAINT chk_etr_numero ON escola_sabatina.trimestre IS
+    '[numero] O trimestre tem de ser o 1.º, 2.º, 3.º ou 4.º.';
+COMMENT ON CONSTRAINT chk_etr_sabados ON escola_sabatina.trimestre IS
+    'Um trimestre tem 13 ou 14 sábados; confirme as datas de início e de fim.';
+
+COMMENT ON INDEX escola_sabatina.uq_ecl_igr_id_nome IS '[nome] Já existe uma classe com este nome nesta igreja.';
+COMMENT ON INDEX escola_sabatina.uq_ect_ecl_id_etr_id IS 'Esta classe já está configurada para este trimestre.';
+COMMENT ON INDEX escola_sabatina.uq_ema_activa IS '[membroId] Este membro já está matriculado noutra classe; tire-o primeiro dessa classe.';
+COMMENT ON INDEX escola_sabatina.uq_epc_defeito IS 'Já existem pesos por defeito; altere-os em vez de criar outros.';
+COMMENT ON INDEX escola_sabatina.uq_epc_trimestre IS 'Este trimestre já tem pesos próprios; altere-os em vez de criar outros.';
+COMMENT ON INDEX escola_sabatina.uq_epr_ers_id_mem_id IS '[membroId] Este membro já está na chamada deste relatório.';
+COMMENT ON INDEX escola_sabatina.uq_ers_ect_id_esa_id IS 'Esta classe já tem relatório neste sábado.';
+COMMENT ON INDEX escola_sabatina.uq_esa_13 IS 'Este trimestre já tem um 13.º sábado marcado; desmarque-o primeiro.';
+COMMENT ON INDEX escola_sabatina.uq_esa_data IS '[data] Já existe um sábado com esta data.';
+COMMENT ON INDEX escola_sabatina.uq_esa_etr_id_numero IS '[numero] Este trimestre já tem um sábado com este número.';
+COMMENT ON INDEX escola_sabatina.uq_etr_ano_numero IS 'Este trimestre já existe para esse ano.';
+
+-- ---------------------------------------------------------------- Tesouraria
+COMMENT ON CONSTRAINT chk_alv ON tesouraria.alvo IS 'O valor do alvo tem de ser maior que zero e o fim não pode ser antes do início.';
+COMMENT ON CONSTRAINT chk_cnu_contadores_diferentes ON tesouraria.contagem_numerario IS
+    '[contador2MembroId] A contagem exige dois contadores diferentes.';
+COMMENT ON CONSTRAINT chk_cnu_partes ON tesouraria.contagem_numerario IS
+    'As partes da contagem (dízimos, ofertas, Escola Sabatina, outras) têm de somar o total contado.';
+COMMENT ON CONSTRAINT chk_cnu_total ON tesouraria.contagem_numerario IS '[totalContado] O total contado não pode ser negativo.';
+COMMENT ON CONSTRAINT chk_des_aprovacao ON tesouraria.despesa IS 'Uma despesa aprovada ou paga tem de ter quem a aprovou e o valor aprovado.';
+COMMENT ON CONSTRAINT chk_des_quem_pede_nao_aprova ON tesouraria.despesa IS 'Quem pede a despesa não a pode aprovar.';
+COMMENT ON CONSTRAINT chk_des_rejeicao ON tesouraria.despesa IS '[motivoRejeicao] Para rejeitar a despesa, indique o motivo.';
+COMMENT ON CONSTRAINT chk_des_valores ON tesouraria.despesa IS 'Os valores da despesa têm de ser maiores que zero e o aprovado não pode passar o pedido.';
+COMMENT ON CONSTRAINT chk_doc_dono ON tesouraria.documento IS 'O comprovativo tem de estar ligado a um movimento ou a uma despesa.';
+COMMENT ON CONSTRAINT chk_fpe_mes ON tesouraria.fecho_periodo IS '[mes] O mês tem de estar entre 1 e 12.';
+COMMENT ON CONSTRAINT chk_fun_associacao ON tesouraria.fundo IS 'Dízimo, oferta missionária e ofertas da Escola Sabatina para as missões são fundos da Associação, não da igreja.';
+COMMENT ON CONSTRAINT chk_fun_da_igreja ON tesouraria.fundo IS 'Um fundo próprio da igreja fica 100% na igreja: não tem parte da Missão nem destino.';
+COMMENT ON CONSTRAINT chk_fun_local ON tesouraria.fundo IS 'Este tipo de fundo só pode ser da igreja.';
+COMMENT ON CONSTRAINT chk_fun_remessa ON tesouraria.fundo IS '[percentagemRemessa] A parte da Missão tem de estar entre 0% e 100%.';
+COMMENT ON CONSTRAINT chk_orc_aprovado ON tesouraria.orcamento IS 'Para aprovar o orçamento é preciso o voto da igreja.';
+COMMENT ON CONSTRAINT chk_orl_valor ON tesouraria.orcamento_linha IS '[valorPrevisto] O valor previsto não pode ser negativo.';
+COMMENT ON CONSTRAINT chk_pmp_direccao ON tesouraria.pagamento_mpesa IS 'Direcção do pagamento M-Pesa inválida.';
+COMMENT ON CONSTRAINT chk_rem_mes ON tesouraria.remessa IS '[mes] O mês tem de estar entre 1 e 12.';
+COMMENT ON CONSTRAINT chk_rml_valor ON tesouraria.remessa_linha IS '[valor] O valor não pode ser negativo.';
+COMMENT ON CONSTRAINT chk_tli_valor ON tesouraria.transacao_linha IS '[valor] Cada linha tem de ter um valor maior que zero.';
+COMMENT ON CONSTRAINT chk_tra_anonimo ON tesouraria.transacao IS 'Uma contribuição anónima não pode ter membro nem família.';
+COMMENT ON CONSTRAINT chk_tra_contagem ON tesouraria.transacao IS 'Só uma entrada em numerário pode ficar ligada a uma contagem.';
+COMMENT ON CONSTRAINT chk_tra_despesa ON tesouraria.transacao IS 'Só uma saída pode pagar uma despesa.';
+COMMENT ON CONSTRAINT chk_tra_quem_regista_nao_aprova ON tesouraria.transacao IS 'Quem regista o movimento não o pode aprovar; tem de ser outra pessoa.';
+COMMENT ON CONSTRAINT chk_tra_transferencia ON tesouraria.transacao IS 'Uma transferência precisa da conta de destino, diferente da de origem.';
+COMMENT ON CONSTRAINT chk_tra_valor ON tesouraria.transacao IS '[valorTotal] O valor tem de ser maior que zero.';
+
+COMMENT ON INDEX tesouraria.uq_cat_codigo IS '[codigo] Já existe uma categoria com este código.';
+COMMENT ON INDEX tesouraria.uq_cfi_igr_id_nome IS '[nome] Já existe uma conta com este nome nesta igreja.';
+COMMENT ON INDEX tesouraria.uq_fpe_igr_id_ano_mes IS 'Este mês já foi fechado.';
+COMMENT ON INDEX tesouraria.uq_fun_codigo IS '[codigo] Já existe um fundo com este código.';
+COMMENT ON INDEX tesouraria.uq_orc IS 'Já existe um orçamento para este ano.';
+COMMENT ON INDEX tesouraria.uq_orl_orc_id_cat_id IS '[categoriaId] Esta categoria já está no orçamento.';
+COMMENT ON INDEX tesouraria.uq_rec_tra_id IS 'Este movimento já tem recibo.';
+COMMENT ON INDEX tesouraria.uq_rem_preparada IS 'Já existe um depósito à Missão por enviar para este mês.';
+COMMENT ON INDEX tesouraria.uq_rml_rem_id_fun_id IS '[fundoId] Este fundo já está neste depósito.';
+COMMENT ON INDEX tesouraria.uq_ext_cfi_id_data_referencia_valor IS 'Esta linha do extracto já foi importada.';
+
+-- ---------------------------------------------------------------- Secretaria
+COMMENT ON CONSTRAINT chk_cto_dono ON secretaria.contacto IS 'O contacto tem de ser de um membro ou da igreja (não dos dois).';
+COMMENT ON CONSTRAINT chk_dsc_duracao ON secretaria.disciplina IS '[dataFim] A censura dura de 1 dia a 12 meses: o fim tem de ser depois do início e até um ano depois.';
+COMMENT ON CONSTRAINT chk_mem_encarregado ON secretaria.membro IS '[encarregadoMembroId] O membro não pode ser o seu próprio encarregado de educação.';
+COMMENT ON CONSTRAINT chk_mmb_voto ON secretaria.movimento_membro IS '[votoId] Este movimento no livro de membros exige o voto que o autoriza.';
+COMMENT ON CONSTRAINT chk_ofi_datas ON secretaria.oficial IS '[dataFim] O fim do mandato não pode ser antes do início.';
+COMMENT ON CONSTRAINT chk_ofi_fim_previsto ON secretaria.oficial IS '[fimPrevisto] O fim previsto do mandato não pode ser antes do início.';
+COMMENT ON CONSTRAINT chk_reu_meditacao ON secretaria.reuniao IS 'A meditação é de um membro ou de um convidado, não dos dois.';
+COMMENT ON CONSTRAINT chk_rpt_contagens ON secretaria.reuniao_ponto IS 'Os votos a favor, contra e abstenções não podem ser negativos.';
+COMMENT ON CONSTRAINT chk_rpt_votacao ON secretaria.reuniao_ponto IS 'Só um ponto votado pode ter votos a favor, contra ou abstenções.';
+COMMENT ON CONSTRAINT chk_tme_carta ON secretaria.transferencia_membro IS 'A carta de transferência tem de ter a data e o voto em que foi emitida.';
+COMMENT ON CONSTRAINT chk_tme_conclusao ON secretaria.transferencia_membro IS 'A transferência só se conclui depois de aceite pela igreja de destino.';
+COMMENT ON CONSTRAINT chk_tme_destino ON secretaria.transferencia_membro IS 'Indique a igreja de destino (do sistema ou de fora).';
+COMMENT ON CONSTRAINT chk_tme_diferente ON secretaria.transferencia_membro IS '[destinoIgrejaId] A igreja de destino tem de ser diferente da de origem.';
+COMMENT ON CONSTRAINT chk_tme_validade ON secretaria.transferencia_membro IS 'A carta de transferência só é válida 6 meses: já não pode ser aceite.';
+COMMENT ON CONSTRAINT chk_vot_leitura ON secretaria.voto IS '[leitura] A leitura do voto é a 1.ª ou a 2.ª.';
+
+COMMENT ON INDEX secretaria.uq_bap_mem IS 'Este membro já tem o baptismo registado.';
+COMMENT ON INDEX secretaria.uq_reu_igr_id_numero IS '[numero] Já existe uma reunião com este número.';
+COMMENT ON INDEX secretaria.uq_rpr_reu_id_mem_id IS '[membroId] Este membro já está nas presenças desta reunião.';
+COMMENT ON INDEX secretaria.uq_vot_reu_id_numero IS '[numero] Já existe um voto com este número nesta reunião.';
+
+-- ---------------------------------------------------------------- Actividades, organização e núcleo
+COMMENT ON CONSTRAINT chk_act_datas ON actividades.actividade IS '[dataFim] O fim da actividade não pode ser antes do início.';
+COMMENT ON CONSTRAINT chk_epl_datas ON actividades.escala_plano IS '[dataFim] O fim da escala não pode ser antes do início.';
+COMMENT ON CONSTRAINT chk_car_mandato ON organizacao.cargo IS '[mandatoAnos] O mandato do cargo é de 1 ou 2 anos.';
+COMMENT ON CONSTRAINT chk_igr_mae ON organizacao.igreja IS '[maeIgrejaId] Um grupo ou filial precisa da igreja-mãe.';
+COMMENT ON CONSTRAINT chk_igr_mandato ON organizacao.igreja IS '[mandatoAnos] A duração dos mandatos tem de estar entre 1 e 5 anos.';
+COMMENT ON CONSTRAINT chk_per_ambito ON nucleo.perfil IS '[ambito] O âmbito do perfil é a igreja ou a Associação.';
+COMMENT ON CONSTRAINT chk_usu_contacto ON nucleo.usuario IS 'O utilizador precisa de e-mail ou telefone para entrar.';
+
+COMMENT ON INDEX actividades.uq_eds_epl_id_data IS '[data] Esta escala já tem este dia.';
+COMMENT ON INDEX actividades.uq_esc_igr_id_data_funcao_mem_id IS 'Este membro já está escalado nesta função neste dia.';
+COMMENT ON INDEX organizacao.uq_car_nome IS '[nome] Já existe um cargo com este nome.';
+COMMENT ON INDEX organizacao.uq_dep_nome IS '[nome] Já existe um departamento com este nome.';
+COMMENT ON INDEX organizacao.uq_dst_ent_id_nome IS '[nome] Já existe um distrito com este nome nesta Associação.';
+COMMENT ON INDEX organizacao.uq_ide_igr_id_dep_id IS 'Este departamento já está nesta igreja.';
+COMMENT ON INDEX nucleo.uq_per_nome IS '[nome] Já existe um perfil com este nome.';
+COMMENT ON INDEX nucleo.uq_usu_email IS '[email] Já existe um utilizador com este e-mail.';
+COMMENT ON INDEX nucleo.uq_usu_email_ci IS '[email] Já existe um utilizador com este e-mail.';
+COMMENT ON INDEX nucleo.uq_usu_telefone IS '[telefone] Já existe um utilizador com este telefone.';
+COMMENT ON INDEX nucleo.uq_usu_mem_id IS '[membroId] Este membro já tem uma conta de utilizador.';
+COMMENT ON INDEX nucleo.uq_uig_usu_id_igr_id_per_id IS 'O utilizador já tem este perfil nesta igreja.';
+COMMENT ON INDEX nucleo.uq_uen_usu_id_ent_id_per_id IS 'O utilizador já tem este perfil nesta Associação.';
+
+-- >>>>> V30__painel_geral_das_igrejas.sql
+-- V30 · Painel geral das igrejas (direcção: Associação/Missão, pastor do distrito, super-administrador)
+--
+-- Uma linha por igreja com os indicadores-chave (membros, transferências, dizimistas, situação financeira) e a série
+-- dos últimos 12 meses, para comparar as igrejas. As vistas correm com os direitos de quem consulta
+-- (security_invoker): cada utilizador só vê as igrejas a que tem acesso. O pastor do distrito tem o perfil PASTOR
+-- em todas as igrejas do seu distrito (nucleo.fn_igrejas_com_permissao), por isso vê só essas; a Associação vê as
+-- suas; o super-administrador, todas. Nada se calcula na API: a base de dados decide quem vê o quê.
+--
+-- Os números de cada área só contam onde o utilizador as pode ler; ve_membros e ve_tesouraria dizem se pode
+-- (para o ecrã mostrar "sem acesso" em vez de zero).
+
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- indicadores por igreja
+CREATE VIEW organizacao.vw_painel_igrejas WITH (security_invoker = true) AS
+WITH ref AS (
+    SELECT date_trunc('year',  now() AT TIME ZONE 'Africa/Maputo')::date AS ini_ano,
+           date_trunc('month', now() AT TIME ZONE 'Africa/Maputo')::date AS ini_mes
+),
+acesso AS (
+    SELECT (SELECT nucleo.fn_igrejas_com_permissao('secretaria.membro.ler'))   AS membros,
+           (SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transacao.ler')) AS tesouraria
+),
+membros AS (
+    SELECT m.mem_igr_id AS igr_id,
+           COUNT(*) FILTER (WHERE m.mem_estado = 'ACTIVO')                       AS activos,
+           COUNT(*) FILTER (WHERE m.mem_estado = 'INTERESSADO')                  AS interessados,
+           COUNT(*) FILTER (WHERE m.mem_estado = 'TRANSFERIDO')                  AS transferidos,
+           COUNT(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_sexo = 'F')  AS mulheres,
+           COUNT(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_sexo = 'M')  AS homens
+    FROM secretaria.membro m
+    WHERE m.mem_end_date IS NULL
+    GROUP BY 1
+),
+livro AS (
+    SELECT l.mmb_igr_id AS igr_id,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE')) AS admissoes_ano,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_ENTRADA')                    AS transf_entrada_ano,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_SAIDA')                      AS transf_saida_ano,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('FALECIMENTO', 'REMOCAO_DISCIPLINA', 'REMOCAO_PEDIDO', 'DESAPARECIDO')) AS outras_saidas_ano
+    FROM secretaria.movimento_membro l, ref
+    WHERE l.mmb_end_date IS NULL AND l.mmb_data >= ref.ini_ano
+    GROUP BY 1
+),
+pendentes AS (
+    SELECT t.tme_origem_igr_id AS igr_id, COUNT(*) AS transf_pendentes
+    FROM secretaria.transferencia_membro t
+    WHERE t.tme_end_date IS NULL AND t.tme_estado IN ('PEDIDA', 'CARTA_EMITIDA')
+    GROUP BY 1
+),
+-- dinheiro da igreja: entradas e saídas confirmadas nas contas da igreja (não a conta da Missão)
+dinheiro AS (
+    SELECT t.tra_igr_id AS igr_id,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'ENTRADA' AND t.tra_data_hora >= (ref.ini_mes::timestamp AT TIME ZONE 'Africa/Maputo')) AS entradas_mes,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'SAIDA'   AND t.tra_data_hora >= (ref.ini_mes::timestamp AT TIME ZONE 'Africa/Maputo')) AS saidas_mes,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'ENTRADA') AS entradas_ano,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'SAIDA')   AS saidas_ano
+    FROM tesouraria.transacao t
+    JOIN tesouraria.conta_financeira c ON c.cfi_id = t.tra_cfi_id AND c.cfi_ent_id IS NULL, ref
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo IN ('ENTRADA', 'SAIDA')
+      AND t.tra_data_hora >= (ref.ini_ano::timestamp AT TIME ZONE 'Africa/Maputo')
+    GROUP BY 1
+),
+-- dizimistas: membros (e famílias) com dízimo confirmado este ano, também os pagos directamente na Missão
+dizimo AS (
+    SELECT t.tra_igr_id AS igr_id,
+           COUNT(DISTINCT t.tra_mem_id) AS dizimistas,
+           COUNT(DISTINCT t.tra_fam_id) AS familias_dizimistas,
+           SUM(l.tli_valor) AS dizimos_ano,
+           SUM(l.tli_valor) FILTER (WHERE t.tra_data_hora >= (ref.ini_mes::timestamp AT TIME ZONE 'Africa/Maputo')) AS dizimos_mes
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id AND f.fun_tipo = 'DIZIMO', ref
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+      AND t.tra_data_hora >= (ref.ini_ano::timestamp AT TIME ZONE 'Africa/Maputo')
+    GROUP BY 1
+),
+saldo AS (
+    SELECT s.cfi_igr_id AS igr_id, SUM(s.saldo) AS saldo
+    FROM tesouraria.vw_saldo_conta s
+    WHERE s.entidade_id IS NULL
+    GROUP BY 1
+),
+-- o que falta depositar na conta da Missão, dos meses já terminados
+remeter AS (
+    SELECT d.igr_id, SUM(GREATEST(d.em_falta, 0)) AS por_remeter
+    FROM tesouraria.vw_remessa_devida d, ref
+    WHERE make_date(d.ano, d.mes, 1) < ref.ini_mes
+    GROUP BY 1
+)
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_tipo AS tipo, i.igr_ent_id AS entidade_id, e.ent_nome AS entidade,
+       i.igr_dst_id AS distrito_pastoral_id, d.dst_nome AS distrito_pastoral, p.prv_nome AS provincia,
+       (i.igr_id = ANY (a.membros))    AS ve_membros,
+       (i.igr_id = ANY (a.tesouraria)) AS ve_tesouraria,
+       COALESCE(m.activos, 0)       AS membros_activos,
+       COALESCE(m.interessados, 0)  AS interessados,
+       COALESCE(m.mulheres, 0)      AS mulheres,
+       COALESCE(m.homens, 0)        AS homens,
+       COALESCE(m.transferidos, 0)  AS transferidos,
+       COALESCE(l.transf_saida_ano, 0)   AS transf_saida_ano,
+       COALESCE(l.transf_entrada_ano, 0) AS transf_entrada_ano,
+       COALESCE(pd.transf_pendentes, 0)  AS transf_pendentes,
+       COALESCE(l.admissoes_ano, 0)      AS admissoes_ano,
+       COALESCE(l.outras_saidas_ano, 0)  AS outras_saidas_ano,
+       COALESCE(z.dizimistas, 0)          AS dizimistas,
+       COALESCE(z.familias_dizimistas, 0) AS familias_dizimistas,
+       ROUND(COALESCE(z.dizimistas, 0)::NUMERIC / NULLIF(m.activos, 0), 4) AS pct_dizimistas,
+       COALESCE(z.dizimos_ano, 0) AS dizimos_ano,
+       COALESCE(z.dizimos_mes, 0) AS dizimos_mes,
+       COALESCE(dn.entradas_mes, 0) AS entradas_mes,
+       COALESCE(dn.saidas_mes, 0)   AS saidas_mes,
+       COALESCE(dn.entradas_ano, 0) AS entradas_ano,
+       COALESCE(dn.saidas_ano, 0)   AS saidas_ano,
+       COALESCE(dn.entradas_ano, 0) - COALESCE(dn.saidas_ano, 0) AS resultado_ano,
+       COALESCE(s.saldo, 0)         AS saldo,
+       COALESCE(r.por_remeter, 0)   AS por_remeter
+FROM organizacao.igreja i
+CROSS JOIN acesso a
+JOIN organizacao.entidade e          ON e.ent_id = i.igr_ent_id
+LEFT JOIN organizacao.distrito d     ON d.dst_id = i.igr_dst_id
+LEFT JOIN organizacao.provincia p    ON p.prv_id = i.igr_prv_id
+LEFT JOIN membros m   ON m.igr_id = i.igr_id
+LEFT JOIN livro l     ON l.igr_id = i.igr_id
+LEFT JOIN pendentes pd ON pd.igr_id = i.igr_id
+LEFT JOIN dinheiro dn ON dn.igr_id = i.igr_id
+LEFT JOIN dizimo z    ON z.igr_id = i.igr_id
+LEFT JOIN saldo s     ON s.igr_id = i.igr_id
+LEFT JOIN remeter r   ON r.igr_id = i.igr_id
+WHERE i.igr_end_date IS NULL;
+COMMENT ON VIEW organizacao.vw_painel_igrejas IS
+    'Painel geral: por igreja visível ao utilizador, membros, transferências, dizimistas e situação financeira do ano (V30)';
+GRANT SELECT ON organizacao.vw_painel_igrejas TO app_igreja;
+
+-- ---------------------------------------------------------------- últimos 12 meses por igreja (gráficos)
+CREATE VIEW organizacao.vw_painel_igrejas_mensal WITH (security_invoker = true) AS
+WITH meses AS (
+    SELECT g::date AS ini, (g + INTERVAL '1 month')::date AS fim,
+           EXTRACT(YEAR FROM g)::INT AS ano, EXTRACT(MONTH FROM g)::INT AS mes
+    FROM generate_series(date_trunc('month', now() AT TIME ZONE 'Africa/Maputo') - INTERVAL '11 months',
+                         date_trunc('month', now() AT TIME ZONE 'Africa/Maputo'), INTERVAL '1 month') g
+),
+desde AS (SELECT (MIN(ini)::timestamp AT TIME ZONE 'Africa/Maputo') AS t, MIN(ini) AS d FROM meses),
+dinheiro AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'ENTRADA') AS entradas,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'SAIDA')   AS saidas
+    FROM tesouraria.transacao t
+    JOIN tesouraria.conta_financeira c ON c.cfi_id = t.tra_cfi_id AND c.cfi_ent_id IS NULL, desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo IN ('ENTRADA', 'SAIDA') AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+dizimo AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(l.tli_valor) AS dizimos, COUNT(DISTINCT t.tra_mem_id) AS dizimistas
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id AND f.fun_tipo = 'DIZIMO', desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+      AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+livro AS (
+    SELECT l.mmb_igr_id AS igr_id, EXTRACT(YEAR FROM l.mmb_data)::INT AS ano, EXTRACT(MONTH FROM l.mmb_data)::INT AS mes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE')) AS admissoes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_ENTRADA') AS transf_entrada,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_SAIDA')   AS transf_saida
+    FROM secretaria.movimento_membro l, desde
+    WHERE l.mmb_end_date IS NULL AND l.mmb_data >= desde.d
+    GROUP BY 1, 2, 3
+)
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_ent_id AS entidade_id, i.igr_dst_id AS distrito_pastoral_id, ms.ano, ms.mes,
+       COALESCE(dn.entradas, 0) AS entradas, COALESCE(dn.saidas, 0) AS saidas,
+       COALESCE(z.dizimos, 0) AS dizimos, COALESCE(z.dizimistas, 0) AS dizimistas,
+       COALESCE(l.admissoes, 0) AS admissoes, COALESCE(l.transf_entrada, 0) AS transf_entrada, COALESCE(l.transf_saida, 0) AS transf_saida
+FROM organizacao.igreja i
+CROSS JOIN meses ms
+LEFT JOIN dinheiro dn ON dn.igr_id = i.igr_id AND dn.ano = ms.ano AND dn.mes = ms.mes
+LEFT JOIN dizimo z    ON z.igr_id = i.igr_id AND z.ano = ms.ano AND z.mes = ms.mes
+LEFT JOIN livro l     ON l.igr_id = i.igr_id AND l.ano = ms.ano AND l.mes = ms.mes
+WHERE i.igr_end_date IS NULL;
+COMMENT ON VIEW organizacao.vw_painel_igrejas_mensal IS
+    'Painel geral: últimos 12 meses por igreja visível (entradas, saídas, dízimos, dizimistas, admissões, transferências) (V30)';
+GRANT SELECT ON organizacao.vw_painel_igrejas_mensal TO app_igreja;
+
+-- >>>>> V31__mandatos_conselho_e_direccao.sql
+-- V31 · Mandatos, conselho e direcção
+--
+-- Um mandato é o período (com a duração) em que servem os oficiais eleitos; dentro dele, cada oficial pertence a um
+-- órgão: CONSELHO (conselho da igreja / junta directiva) ou DIRECCAO (direcção e departamentos).
+--   Mandato 2026–2027 ─┬─ Conselho da igreja: anciãos, secretário, tesoureiro, ...
+--                      └─ Direcção: directores de departamento, ...
+-- Regras (na base de dados):
+--   * mandatos da mesma igreja não se sobrepõem; o fim é depois do início;
+--   * o oficial de um mandato é da mesma igreja; o início e o fim previsto vêm do mandato (se não se indicarem);
+--   * o órgão, se não se indicar, vem do cargo (cargo do conselho → CONSELHO; os outros → DIRECCAO);
+--   * mudar as datas do mandato actualiza o fim previsto dos oficiais que ainda o seguem.
+-- Os oficiais que já existiam ficam num mandato criado para o seu período (um por período distinto em cada igreja).
+
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- tabela secretaria.mandato (gerada: gen.py)
+CREATE TABLE secretaria.mandato (
+    mdt_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    mdt_igr_id INT NOT NULL,
+    mdt_nome VARCHAR(100) NOT NULL,
+    mdt_data_inicio DATE NOT NULL,
+    mdt_data_fim DATE NOT NULL,
+    mdt_vot_id INT,
+    mdt_observacoes VARCHAR(255),
+    mdt_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    mdt_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    mdt_criado_por INT,
+    mdt_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    mdt_modificado_por INT,
+    mdt_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_mdt_igr_id FOREIGN KEY (mdt_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_mdt_vot_id FOREIGN KEY (mdt_vot_id) REFERENCES secretaria.voto(vot_id),
+    CONSTRAINT chk_mdt_datas CHECK (mdt_data_fim > mdt_data_inicio),
+    CONSTRAINT chk_mdt_end_date CHECK (mdt_end_date IS NULL OR mdt_end_date >= mdt_criado_em)
+);
+COMMENT ON TABLE secretaria.mandato IS 'Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos (V31)';
+COMMENT ON COLUMN secretaria.mandato.mdt_nome IS 'Ex.: Mandato 2026–2027';
+COMMENT ON COLUMN secretaria.mandato.mdt_data_fim IS 'Último dia do mandato';
+COMMENT ON COLUMN secretaria.mandato.mdt_vot_id IS 'Voto da igreja que elegeu os oficiais deste mandato';
+CREATE UNIQUE INDEX uq_mdt_igr_id_nome ON secretaria.mandato (mdt_igr_id, mdt_nome) WHERE mdt_end_date IS NULL;
+CREATE INDEX idx_mdt_vot_id ON secretaria.mandato (mdt_vot_id);
+CREATE INDEX idx_mdt_igr_pagina ON secretaria.mandato (mdt_igr_id, mdt_id);
+
+CREATE TRIGGER trg_mdt_00_padrao BEFORE INSERT OR UPDATE ON secretaria.mandato FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('mdt', 'secretaria.mandato', 'mdt_igr_id');
+CREATE TRIGGER trg_mdt_00_sem_delete BEFORE DELETE ON secretaria.mandato FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('mdt');
+CREATE TRIGGER trg_mdt_00_sem_truncate BEFORE TRUNCATE ON secretaria.mandato FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('mdt');
+CREATE TRIGGER trg_mdt_99_log AFTER UPDATE ON secretaria.mandato FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('mdt');
+ALTER TABLE secretaria.mandato ADD CONSTRAINT fk_mdt_criado_por FOREIGN KEY (mdt_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE secretaria.mandato ADD CONSTRAINT fk_mdt_modificado_por FOREIGN KEY (mdt_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE secretaria.mandato ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_mdt_ler ON secretaria.mandato FOR SELECT USING (mdt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.mandato.ler'))::INT[]));
+CREATE POLICY pol_mdt_criar ON secretaria.mandato FOR INSERT WITH CHECK (mdt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.mandato.criar'))::INT[]));
+CREATE POLICY pol_mdt_alterar ON secretaria.mandato FOR UPDATE USING (mdt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.mandato.alterar'))::INT[])) WITH CHECK (mdt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.mandato.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON secretaria.mandato TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA secretaria TO app_igreja;
+
+-- ---------------------------------------------------------------- oficial: mandato e órgão
+ALTER TABLE secretaria.oficial ADD COLUMN ofi_mdt_id INT;
+ALTER TABLE secretaria.oficial ADD COLUMN ofi_orgao VARCHAR(10);
+ALTER TABLE secretaria.oficial ADD CONSTRAINT fk_ofi_mdt_id FOREIGN KEY (ofi_mdt_id) REFERENCES secretaria.mandato(mdt_id);
+ALTER TABLE secretaria.oficial ADD CONSTRAINT chk_ofi_orgao CHECK (ofi_orgao IS NULL OR ofi_orgao IN ('CONSELHO', 'DIRECCAO'));
+CREATE INDEX idx_ofi_mdt_id ON secretaria.oficial (ofi_mdt_id);
+COMMENT ON COLUMN secretaria.oficial.ofi_mdt_id IS 'Mandato a que pertence (V31): dá o início e o fim previsto';
+COMMENT ON COLUMN secretaria.oficial.ofi_orgao IS 'CONSELHO (conselho da igreja) ou DIRECCAO (direcção / departamentos); vazio = pelo cargo (V31)';
+
+-- frases das restrições novas (V29: a API responde com elas)
+COMMENT ON CONSTRAINT chk_mdt_datas ON secretaria.mandato IS '[dataFim] O fim do mandato tem de ser depois do início.';
+COMMENT ON CONSTRAINT chk_ofi_orgao ON secretaria.oficial IS '[orgao] O órgão é o Conselho da igreja ou a Direcção.';
+COMMENT ON INDEX secretaria.uq_mdt_igr_id_nome IS '[nome] Já existe um mandato com este nome nesta igreja.';
+
+-- ---------------------------------------------------------------- permissões (os mesmos perfis que gerem os oficiais)
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('secretaria.mandato.ler', 'Ler: Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos'),
+  ('secretaria.mandato.criar', 'Criar: Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos'),
+  ('secretaria.mandato.alterar', 'Alterar: Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos'),
+  ('secretaria.mandato.terminar', 'Terminar (end_date): Mandatos da igreja: o período (com a duração) em que servem os oficiais eleitos');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'secretaria.oficial.%'
+  JOIN nucleo.permissao novo   ON novo.prm_codigo = replace(antigo.prm_codigo, 'secretaria.oficial.', 'secretaria.mandato.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- oficiais que já existiam: órgão pelo cargo e um mandato por período
+UPDATE secretaria.oficial o SET ofi_orgao = CASE WHEN c.car_conselho THEN 'CONSELHO' ELSE 'DIRECCAO' END
+  FROM organizacao.cargo c WHERE c.car_id = o.ofi_car_id AND o.ofi_orgao IS NULL;
+
+WITH periodos AS (
+    SELECT DISTINCT o.ofi_igr_id AS igr, o.ofi_data_inicio AS ini,
+           COALESCE(o.ofi_fim_previsto, o.ofi_data_fim, (o.ofi_data_inicio + INTERVAL '1 year' - INTERVAL '1 day')::date) AS fim
+      FROM secretaria.oficial o
+     WHERE o.ofi_end_date IS NULL AND o.ofi_mdt_id IS NULL
+)
+INSERT INTO secretaria.mandato (mdt_igr_id, mdt_nome, mdt_data_inicio, mdt_data_fim)
+SELECT igr,
+       CASE WHEN to_char(ini, 'MM-DD') = '01-01' AND to_char(fim, 'MM-DD') = '12-31'
+            THEN 'Mandato ' || to_char(ini, 'YYYY') || CASE WHEN to_char(fim, 'YYYY') <> to_char(ini, 'YYYY') THEN '–' || to_char(fim, 'YYYY') ELSE '' END
+            ELSE 'Mandato de ' || to_char(ini, 'DD/MM/YYYY') || ' a ' || to_char(fim, 'DD/MM/YYYY') END,
+       ini, GREATEST(fim, ini + 1)
+  FROM periodos;
+
+UPDATE secretaria.oficial o SET ofi_mdt_id = m.mdt_id
+  FROM secretaria.mandato m
+ WHERE o.ofi_end_date IS NULL AND o.ofi_mdt_id IS NULL AND m.mdt_igr_id = o.ofi_igr_id AND m.mdt_data_inicio = o.ofi_data_inicio
+   AND m.mdt_data_fim = GREATEST(COALESCE(o.ofi_fim_previsto, o.ofi_data_fim, (o.ofi_data_inicio + INTERVAL '1 year' - INTERVAL '1 day')::date), o.ofi_data_inicio + 1);
+
+-- ---------------------------------------------------------------- regras
+-- Mandato: os da mesma igreja não se sobrepõem (só os activos)
+CREATE FUNCTION secretaria.fn_mdt_validar() RETURNS trigger AS $$
+DECLARE v_outro TEXT;
+BEGIN
+    -- datas ao contrário: fica para a CHECK chk_mdt_datas (com a sua frase)
+    IF NEW.mdt_end_date IS NULL AND NEW.mdt_data_fim > NEW.mdt_data_inicio THEN
+        SELECT mdt_nome INTO v_outro FROM secretaria.mandato
+         WHERE mdt_igr_id = NEW.mdt_igr_id AND mdt_id <> NEW.mdt_id AND mdt_end_date IS NULL
+           AND daterange(mdt_data_inicio, mdt_data_fim, '[]') && daterange(NEW.mdt_data_inicio, NEW.mdt_data_fim, '[]')
+         LIMIT 1;
+        IF FOUND THEN
+            RAISE EXCEPTION 'O mandato coincide com o "%"; os mandatos da mesma igreja não se sobrepõem', v_outro;
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_mdt_10_validar
+    BEFORE INSERT OR UPDATE ON secretaria.mandato
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mdt_validar();
+
+-- Mudar as datas do mandato: os oficiais que seguiam o mandato acompanham-no (início e fim previsto)
+CREATE FUNCTION secretaria.fn_mdt_propagar() RETURNS trigger AS $$
+BEGIN
+    UPDATE secretaria.oficial
+       SET ofi_fim_previsto = CASE WHEN ofi_fim_previsto = OLD.mdt_data_fim THEN NEW.mdt_data_fim ELSE ofi_fim_previsto END,
+           ofi_data_inicio  = CASE WHEN ofi_data_inicio = OLD.mdt_data_inicio THEN NEW.mdt_data_inicio ELSE ofi_data_inicio END
+     WHERE ofi_mdt_id = NEW.mdt_id AND ofi_end_date IS NULL AND ofi_data_fim IS NULL;
+    RETURN NULL;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_mdt_20_propagar
+    AFTER UPDATE OF mdt_data_inicio, mdt_data_fim ON secretaria.mandato
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mdt_propagar();
+
+-- Oficial: o mandato é da mesma igreja e dá o início e o fim previsto; o órgão vem do cargo se não se indicar.
+-- Corre antes de trg_ofi_05_fim_previsto (que só calcula pela duração da igreja quando não há fim previsto).
+CREATE FUNCTION secretaria.fn_ofi_mandato() RETURNS trigger AS $$
+DECLARE m RECORD;
+BEGIN
+    IF NEW.ofi_mdt_id IS NOT NULL
+       AND (TG_OP = 'INSERT' OR NEW.ofi_mdt_id IS DISTINCT FROM OLD.ofi_mdt_id) THEN
+        SELECT mdt_igr_id, mdt_data_inicio, mdt_data_fim, mdt_end_date INTO m FROM secretaria.mandato WHERE mdt_id = NEW.ofi_mdt_id;
+        IF NOT FOUND OR m.mdt_end_date IS NOT NULL THEN
+            RAISE EXCEPTION 'O mandato indicado não existe ou foi terminado';
+        END IF;
+        IF m.mdt_igr_id <> NEW.ofi_igr_id THEN
+            RAISE EXCEPTION 'O mandato é de outra igreja';
+        END IF;
+        NEW.ofi_data_inicio := COALESCE(NEW.ofi_data_inicio, m.mdt_data_inicio);
+        IF NEW.ofi_fim_previsto IS NULL OR TG_OP = 'UPDATE' THEN
+            NEW.ofi_fim_previsto := GREATEST(m.mdt_data_fim, NEW.ofi_data_inicio);
+        END IF;
+    END IF;
+    IF NEW.ofi_orgao IS NULL THEN
+        SELECT CASE WHEN car_conselho THEN 'CONSELHO' ELSE 'DIRECCAO' END INTO NEW.ofi_orgao
+          FROM organizacao.cargo WHERE car_id = NEW.ofi_car_id;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_ofi_04_mandato
+    BEFORE INSERT OR UPDATE ON secretaria.oficial
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_ofi_mandato();
+
+-- ---------------------------------------------------------------- vistas
+-- Conselho e direcção: as colunas de antes e, no fim, o mandato e o órgão
+CREATE OR REPLACE VIEW secretaria.vw_conselho WITH (security_invoker = true) AS
+SELECT o.ofi_id, o.ofi_igr_id, o.ofi_mem_id, m.mem_nome || ' ' || m.mem_apelido AS membro,
+       c.car_id AS cargo_id, c.car_nome AS cargo, c.car_conselho AS do_conselho,
+       o.ofi_data_inicio, o.ofi_fim_previsto, o.ofi_data_fim,
+       (SELECT ct.cto_valor FROM secretaria.contacto ct
+         WHERE ct.cto_mem_id = o.ofi_mem_id AND ct.cto_end_date IS NULL
+         ORDER BY ct.cto_principal DESC, (ct.cto_tipo = 'TELEFONE') DESC, ct.cto_id LIMIT 1) AS contacto,
+       CASE WHEN o.ofi_data_inicio > CURRENT_DATE THEN 'FUTURO'
+            WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE THEN 'TERMINADO'
+            WHEN COALESCE(o.ofi_data_fim, o.ofi_fim_previsto) < CURRENT_DATE + 60 THEN 'A_TERMINAR'
+            ELSE 'ACTIVO' END AS estado_mandato,
+       o.ofi_mdt_id AS mandato_id, md.mdt_nome AS mandato, COALESCE(o.ofi_orgao, CASE WHEN c.car_conselho THEN 'CONSELHO' ELSE 'DIRECCAO' END) AS orgao
+FROM secretaria.oficial o
+JOIN organizacao.cargo c   ON c.car_id = o.ofi_car_id
+JOIN secretaria.membro m   ON m.mem_id = o.ofi_mem_id
+LEFT JOIN secretaria.mandato md ON md.mdt_id = o.ofi_mdt_id
+WHERE o.ofi_end_date IS NULL;
+
+-- >>>>> V32__codigos_fixos_e_super_admin.sql
+-- =====================================================================
+-- V32 · Códigos fixos em vez de nomes, e permissões do super-administrador intocáveis
+--
+--   1. Perfis: código fixo (per_codigo). O acesso do pastor do distrito dependia do NOME do perfil
+--      (per_nome = 'PASTOR', em nucleo.fn_igrejas_com_permissao, chamada em todas as verificações de permissão):
+--      mudar o nome do perfil tirava o acesso aos pastores sem qualquer erro. Agora depende do código, que não muda.
+--      O nome passa a ser só o texto mostrado. Os perfis do sistema (com código) não se terminam nem mudam de âmbito.
+--   2. Códigos das categorias e das permissões não se alteram depois de criados. As regras e a API identificam
+--      categorias pelo código (D1 remessas, D9 outras despesas, R3 ofertas da Escola Sabatina) e as permissões pelo
+--      código (secretaria.membro.ler, ...): o código é o identificador estável; o nome/descrição pode mudar.
+--   3. Super-administrador: as suas permissões não se alteram pelo sistema. Ninguém (nem outro super-administrador,
+--      nem o próprio) lhe retira o acesso total, o inactiva ou o termina. Só a manutenção da base (sem utilizador
+--      na sessão, como dono das tabelas) o pode fazer, por exemplo quando a pessoa sai da organização.
+--
+-- Nota sobre os ENUM (tra_tipo = 'ENTRADA', mmb_tipo = 'BAPTISMO', ...): não são pesquisas por nome. Cada linha guarda
+-- o identificador interno do valor (4 bytes) e a comparação é tão rápida como entre inteiros; não mudam aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- 1. código fixo dos perfis (gerado: gen.py)
+ALTER TABLE nucleo.perfil ADD COLUMN per_codigo VARCHAR(30);
+COMMENT ON COLUMN nucleo.perfil.per_codigo IS 'Código fixo dos perfis do sistema (ADMIN, PASTOR, ...): não muda, ao contrário do nome; vazio nos perfis criados pelos utilizadores (V32)';
+CREATE UNIQUE INDEX uq_per_codigo ON nucleo.perfil (per_codigo) WHERE per_end_date IS NULL;
+COMMENT ON INDEX nucleo.uq_per_codigo IS '[codigo] Já existe um perfil com este código.';
+
+-- os 13 perfis do sistema: o código é o nome que tinham (carga única)
+UPDATE nucleo.perfil SET per_codigo = per_nome
+ WHERE per_end_date IS NULL
+   AND per_nome IN ('ADMIN', 'PASTOR', 'ANCIAO', 'SECRETARIO', 'TESOUREIRO', 'DIRECTOR_ES', 'SECRETARIO_ES',
+                    'DIRECTOR_DEPARTAMENTO', 'MEMBRO', 'ADMIN_ASSOCIACAO', 'TESOUREIRO_ASSOCIACAO',
+                    'SECRETARIO_ASSOCIACAO', 'INTEGRACAO');
+
+CREATE FUNCTION nucleo.fn_per_proteger() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.per_codigo IS NOT NULL AND nucleo.fn_usuario_sessao() IS NOT NULL THEN
+            RAISE EXCEPTION 'O código de um perfil do sistema só é definido pelo sistema (deixe o código vazio)';
+        END IF;
+        RETURN NEW;
+    END IF;
+    IF NEW.per_codigo IS DISTINCT FROM OLD.per_codigo THEN
+        RAISE EXCEPTION 'O código de um perfil não se altera';
+    END IF;
+    IF OLD.per_codigo IS NOT NULL AND nucleo.fn_usuario_sessao() IS NOT NULL THEN
+        IF NEW.per_end_date IS NOT NULL AND OLD.per_end_date IS NULL THEN
+            RAISE EXCEPTION 'Os perfis do sistema não se terminam';
+        END IF;
+        IF NEW.per_ambito IS DISTINCT FROM OLD.per_ambito THEN
+            RAISE EXCEPTION 'O âmbito de um perfil do sistema não se altera';
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$;
+
+CREATE TRIGGER trg_per_10_proteger BEFORE INSERT OR UPDATE ON nucleo.perfil
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_per_proteger();
+
+-- igual à de V1, com uma diferença: o pastor do distrito reconhece-se pelo código do perfil, não pelo nome
+CREATE OR REPLACE FUNCTION nucleo.fn_igrejas_com_permissao(p_codigo TEXT) RETURNS INT[]
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_usr INT := nucleo.fn_usuario_sessao();
+BEGIN
+    IF v_usr IS NULL THEN RETURN ARRAY[]::INT[]; END IF;
+    IF nucleo.fn_e_super_admin() THEN
+        RETURN ARRAY(SELECT igr_id FROM organizacao.igreja WHERE igr_end_date IS NULL);
+    END IF;
+    RETURN ARRAY(
+        WITH perm AS (
+            SELECT pp.ppe_per_id AS per_id
+            FROM nucleo.permissao pm
+            JOIN nucleo.perfil_permissao pp ON pp.ppe_prm_id = pm.prm_id AND pp.ppe_end_date IS NULL
+            WHERE pm.prm_codigo = p_codigo AND pm.prm_end_date IS NULL
+        )
+        SELECT u.uig_igr_id
+          FROM nucleo.usuario_igreja u JOIN perm ON perm.per_id = u.uig_per_id
+         WHERE u.uig_usu_id = v_usr AND u.uig_estado = 'ACTIVO' AND u.uig_end_date IS NULL
+        UNION
+        SELECT i.igr_id
+          FROM organizacao.distrito d
+          JOIN organizacao.igreja i ON i.igr_dst_id = d.dst_id AND i.igr_end_date IS NULL
+         WHERE d.dst_pastor_usu_id = v_usr AND d.dst_end_date IS NULL
+           AND EXISTS (SELECT 1 FROM nucleo.perfil pf JOIN perm ON perm.per_id = pf.per_id
+                        WHERE pf.per_codigo = 'PASTOR' AND pf.per_end_date IS NULL)
+        UNION
+        SELECT i.igr_id
+          FROM nucleo.fn_entidades_com_permissao(p_codigo) e
+          JOIN organizacao.igreja i ON i.igr_ent_id = e AND i.igr_end_date IS NULL);
+END $$;
+
+-- ---------------------------------------------------------------- 2. códigos de categorias e permissões
+CREATE FUNCTION nucleo.fn_codigo_imutavel() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_coluna TEXT := TG_ARGV[0];
+BEGIN
+    IF (to_jsonb(NEW) ->> v_coluna) IS DISTINCT FROM (to_jsonb(OLD) ->> v_coluna) THEN
+        RAISE EXCEPTION 'O código não se altera depois de criado (é o identificador usado pelas regras): termine este registo e crie outro';
+    END IF;
+    RETURN NEW;
+END $$;
+
+CREATE TRIGGER trg_cat_10_codigo_fixo BEFORE UPDATE OF cat_codigo ON tesouraria.categoria
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_codigo_imutavel('cat_codigo');
+CREATE TRIGGER trg_prm_10_codigo_fixo BEFORE UPDATE OF prm_codigo ON nucleo.permissao
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_codigo_imutavel('prm_codigo');
+
+-- ---------------------------------------------------------------- 3. super-administrador
+-- igual à de V2, com uma regra nova no início das alterações: o super-administrador fica como está
+CREATE OR REPLACE FUNCTION nucleo.fn_usu_proteger() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_usr INT := nucleo.fn_usuario_sessao();
+BEGIN
+    IF v_usr IS NULL THEN
+        PERFORM nucleo.fn_exigir('nucleo.usuario.criar');      -- só passa na instalação/manutenção
+        RETURN NEW;
+    END IF;
+    IF NEW.usu_super_admin AND (TG_OP = 'INSERT' OR NOT OLD.usu_super_admin) AND NOT nucleo.fn_e_super_admin() THEN
+        RAISE EXCEPTION 'Só um super-administrador pode criar outro';
+    END IF;
+    IF TG_OP = 'INSERT' THEN
+        PERFORM nucleo.fn_exigir('nucleo.usuario.criar');
+        RETURN NEW;
+    END IF;
+    -- V32: as permissões do super-administrador não se alteram (nem pelo próprio, nem por outro super-administrador)
+    IF OLD.usu_super_admin AND (NEW.usu_super_admin IS DISTINCT FROM OLD.usu_super_admin
+                                OR NEW.usu_estado IS DISTINCT FROM OLD.usu_estado
+                                OR (NEW.usu_end_date IS NOT NULL AND OLD.usu_end_date IS NULL)) THEN
+        RAISE EXCEPTION 'As permissões do super-administrador não podem ser alteradas (nem o acesso total, nem o estado)'
+            USING ERRCODE = 'insufficient_privilege';
+    END IF;
+    IF OLD.usu_id = v_usr THEN
+        -- a própria pessoa muda nome, contactos e senha, mas não o estado nem a ligação ao membro
+        IF (NEW.usu_estado, NEW.usu_mem_id, NEW.usu_super_admin) IS DISTINCT FROM (OLD.usu_estado, OLD.usu_mem_id, OLD.usu_super_admin)
+           AND NOT nucleo.fn_e_super_admin() THEN
+            RAISE EXCEPTION 'Não pode alterar o seu próprio estado, membro ou nível de acesso';
+        END IF;
+        RETURN NEW;
+    END IF;
+    PERFORM nucleo.fn_exigir('nucleo.usuario.alterar');
+    IF NOT nucleo.fn_e_super_admin() THEN
+        IF OLD.usu_super_admin THEN
+            RAISE EXCEPTION 'Só um super-administrador altera outro super-administrador';
+        END IF;
+        IF EXISTS (SELECT 1 FROM nucleo.usuario_igreja u
+                   WHERE u.uig_usu_id = OLD.usu_id AND u.uig_end_date IS NULL
+                     AND NOT nucleo.fn_tem_permissao('nucleo.usuario.alterar', u.uig_igr_id)) THEN
+            RAISE EXCEPTION 'Este utilizador tem perfis em igrejas que não administra';
+        END IF;
+        IF EXISTS (SELECT 1 FROM nucleo.usuario_entidade e
+                   WHERE e.uen_usu_id = OLD.usu_id AND e.uen_end_date IS NULL
+                     AND e.uen_ent_id NOT IN (SELECT nucleo.fn_entidades_com_permissao('nucleo.usuario.alterar'))) THEN
+            RAISE EXCEPTION 'Este utilizador tem perfis numa Associação/Missão que não administra';
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$;
+
+-- >>>>> V33__ficha_do_membro_conjuge_e_duplicados.sql
+-- =====================================================================
+-- V33 · Ficha completa do membro (F-SEC-01): cônjuge ligado, casamento, trabalho, endereço postal,
+--       conversão, ex-membro, telefone fixo e aviso de registos parecidos (possíveis duplicados)
+--
+--   membro     colunas novas, todas opcionais (ex_membro tem FALSE por defeito): os registos existentes
+--              não mudam. O baptismo anterior de um ex-membro é uma linha de secretaria.baptismo sem
+--              rebaptismo (o baptismo actual fica como rebaptismo): não há coluna nova para ele.
+--   cônjuge    mem_conjuge_mem_id liga dois registos de membros (não se cria outro registo para o cônjuge).
+--              A ligação é recíproca: ao ligar A → B, B fica ligado a A (se B estiver livre); ao desligar,
+--              desliga-se dos dois lados. Um membro já ligado a outro cônjuge não pode ser escolhido.
+--   contacto   novo tipo TELEFONE_FIXO. TELEFONE continua a ser o telemóvel (celular), o único que recebe SMS.
+--   parecidos  nucleo.fn_membros_parecidos(...): membros visíveis com o mesmo documento, ou nome parecido e a
+--              mesma data de nascimento / local de nascimento. Só avisa (a API devolve a lista e o
+--              utilizador confirma); não bloqueia o registo.
+--   vistas     vw_membro_basico ganha estado civil, data de nascimento e cônjuge (indicadores e escolha do
+--              cônjuge); vw_membros_lista é a lista para exportar (CSV/PDF).
+--
+-- Permissões: não mudam. Quem lê ou altera o membro (RLS por igreja) lê ou altera estes campos.
+-- Gerado com database/gerador (defs.py, sql/V1__base.sql); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TYPE nucleo.tipo_contacto_t ADD VALUE IF NOT EXISTS 'TELEFONE_FIXO';
+
+-- ---------------------------------------------------------------- membro
+ALTER TABLE secretaria.membro
+    ADD COLUMN mem_outro_documento VARCHAR(100),
+    ADD COLUMN mem_ex_membro BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN mem_endereco_postal VARCHAR(150),
+    ADD COLUMN mem_codigo_postal VARCHAR(20),
+    ADD COLUMN mem_local_trabalho VARCHAR(150),
+    ADD COLUMN mem_data_casamento DATE,
+    ADD COLUMN mem_conjuge_mem_id INT,
+    ADD COLUMN mem_nome_conjuge VARCHAR(150),
+    ADD COLUMN mem_dependentes SMALLINT,
+    ADD COLUMN mem_religiao_anterior VARCHAR(100),
+    ADD COLUMN mem_metodo_conversao VARCHAR(100),
+    ADD CONSTRAINT fk_mem_conjuge_mem_id FOREIGN KEY (mem_conjuge_mem_id) REFERENCES secretaria.membro(mem_id),
+    ADD CONSTRAINT chk_mem_conjuge CHECK (mem_conjuge_mem_id IS NULL OR mem_conjuge_mem_id <> mem_id),
+    ADD CONSTRAINT chk_mem_dependentes CHECK (mem_dependentes IS NULL OR mem_dependentes BETWEEN 0 AND 50),
+    ADD CONSTRAINT chk_mem_casamento CHECK (mem_data_casamento IS NULL OR mem_data_nascimento IS NULL OR mem_data_casamento > mem_data_nascimento);
+
+COMMENT ON COLUMN secretaria.membro.mem_outro_documento IS 'Outro documento além do principal (tipo e número, ex.: NUIT 400123456)';
+COMMENT ON COLUMN secretaria.membro.mem_ex_membro IS 'Já foi membro da IASD (o baptismo anterior fica em baptismo, sem rebaptismo) (V33)';
+COMMENT ON COLUMN secretaria.membro.mem_endereco_postal IS 'Endereço para correspondência (caixa postal, rua)';
+COMMENT ON COLUMN secretaria.membro.mem_local_trabalho IS 'Onde trabalha (empresa ou instituição)';
+COMMENT ON COLUMN secretaria.membro.mem_conjuge_mem_id IS 'Cônjuge que é membro (no sistema): liga os dois registos, sem criar outro (V33)';
+COMMENT ON COLUMN secretaria.membro.mem_nome_conjuge IS 'Nome do cônjuge que não está no sistema';
+COMMENT ON COLUMN secretaria.membro.mem_dependentes IS 'Número de dependentes a cargo';
+COMMENT ON COLUMN secretaria.membro.mem_metodo_conversao IS 'Como conheceu a mensagem (estudo bíblico, evangelismo, família, rádio/TV, ...)';
+
+COMMENT ON CONSTRAINT chk_mem_conjuge ON secretaria.membro IS '[conjugeMembroId] O membro não pode ser o seu próprio cônjuge.';
+COMMENT ON CONSTRAINT chk_mem_dependentes ON secretaria.membro IS '[dependentes] O número de dependentes tem de estar entre 0 e 50.';
+COMMENT ON CONSTRAINT chk_mem_casamento ON secretaria.membro IS '[dataCasamento] A data do casamento tem de ser depois da data de nascimento.';
+
+CREATE INDEX idx_mem_conjuge_mem_id ON secretaria.membro (mem_conjuge_mem_id);
+-- procura de registos parecidos: pelo documento (sem espaços nem traços) e pela data de nascimento
+CREATE INDEX idx_mem_documento ON secretaria.membro (upper(regexp_replace(mem_numero_identificacao, '[^A-Za-z0-9]', '', 'g')))
+    WHERE mem_numero_identificacao IS NOT NULL AND mem_end_date IS NULL;
+CREATE INDEX idx_mem_nascimento ON secretaria.membro (mem_data_nascimento)
+    WHERE mem_data_nascimento IS NOT NULL AND mem_end_date IS NULL;
+
+-- ---------------------------------------------------------------- cônjuge: escolha válida e ligação recíproca
+CREATE FUNCTION secretaria.fn_mem_conjuge_validar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_outro INT;
+    v_nome  TEXT;
+BEGIN
+    IF NEW.mem_conjuge_mem_id IS NULL
+       OR (TG_OP = 'UPDATE' AND NEW.mem_conjuge_mem_id IS NOT DISTINCT FROM OLD.mem_conjuge_mem_id) THEN
+        RETURN NEW;
+    END IF;
+    SELECT mem_conjuge_mem_id, mem_nome || ' ' || mem_apelido INTO v_outro, v_nome
+      FROM secretaria.membro WHERE mem_id = NEW.mem_conjuge_mem_id;
+    IF v_outro IS NOT NULL AND v_outro <> NEW.mem_id THEN
+        RAISE EXCEPTION '% já está ligado(a) a outro cônjuge. Desligue primeiro esse registo.', v_nome
+            USING COLUMN = 'mem_conjuge_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+
+CREATE TRIGGER trg_mem_15_conjuge
+    BEFORE INSERT OR UPDATE OF mem_conjuge_mem_id ON secretaria.membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mem_conjuge_validar();
+
+-- Liga (ou desliga) o outro lado. Corre com as permissões de quem altera: se não puder ver ou alterar o
+-- registo do cônjuge (outra igreja), esse lado fica como estava.
+CREATE FUNCTION secretaria.fn_mem_conjuge_reciproco() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' AND OLD.mem_conjuge_mem_id IS NOT NULL
+       AND OLD.mem_conjuge_mem_id IS DISTINCT FROM NEW.mem_conjuge_mem_id THEN
+        UPDATE secretaria.membro SET mem_conjuge_mem_id = NULL
+         WHERE mem_id = OLD.mem_conjuge_mem_id AND mem_conjuge_mem_id = NEW.mem_id;
+    END IF;
+    IF NEW.mem_conjuge_mem_id IS NOT NULL THEN
+        UPDATE secretaria.membro SET mem_conjuge_mem_id = NEW.mem_id
+         WHERE mem_id = NEW.mem_conjuge_mem_id AND mem_conjuge_mem_id IS NULL;
+    END IF;
+    RETURN NULL;
+END $$;
+
+CREATE TRIGGER trg_mem_50_conjuge_reciproco
+    AFTER INSERT OR UPDATE OF mem_conjuge_mem_id ON secretaria.membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mem_conjuge_reciproco();
+
+-- ---------------------------------------------------------------- registos parecidos (possíveis duplicados)
+-- Pontos: mesmo documento 100; nome igual ou muito parecido 40 (parecido 20); mesma data de nascimento 30;
+-- mesmo local de nascimento 10. Devolve os que somam 40 ou mais (os mais parecidos primeiro, até 10).
+-- SECURITY INVOKER: cada utilizador só compara com os membros que pode ver (RLS).
+CREATE FUNCTION nucleo.fn_membros_parecidos(p_nome TEXT, p_apelido TEXT, p_data_nascimento DATE DEFAULT NULL,
+                                            p_naturalidade TEXT DEFAULT NULL, p_numero_identificacao TEXT DEFAULT NULL,
+                                            p_excluir_mem_id INT DEFAULT NULL)
+RETURNS TABLE (mem_id INT, mem_igr_id INT, nome TEXT, data_nascimento DATE, naturalidade TEXT,
+               numero_identificacao TEXT, estado nucleo.estado_membro_t, pontos INT, motivos TEXT[])
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH p AS (
+        SELECT lower(trim(coalesce(p_nome, '') || ' ' || coalesce(p_apelido, ''))) AS nome,
+               nullif(upper(regexp_replace(coalesce(p_numero_identificacao, ''), '[^A-Za-z0-9]', '', 'g')), '') AS doc,
+               nullif(lower(trim(coalesce(p_naturalidade, ''))), '') AS nat
+    ), candidatos AS (
+        SELECT m.*, similarity(lower(m.mem_nome || ' ' || m.mem_apelido), p.nome) AS sim,
+               (p.doc IS NOT NULL AND length(p.doc) >= 5
+                AND upper(regexp_replace(m.mem_numero_identificacao, '[^A-Za-z0-9]', '', 'g')) = p.doc) AS mesmo_doc,
+               (p_data_nascimento IS NOT NULL AND m.mem_data_nascimento = p_data_nascimento) AS mesma_data,
+               (p.nat IS NOT NULL AND lower(trim(m.mem_naturalidade)) = p.nat) AS mesmo_local
+          FROM secretaria.membro m, p
+         WHERE m.mem_end_date IS NULL
+           AND m.mem_id IS DISTINCT FROM p_excluir_mem_id
+           AND ((m.mem_nome || ' ' || m.mem_apelido) % (coalesce(p_nome, '') || ' ' || coalesce(p_apelido, ''))
+                OR (p.doc IS NOT NULL AND upper(regexp_replace(m.mem_numero_identificacao, '[^A-Za-z0-9]', '', 'g')) = p.doc)
+                OR (p_data_nascimento IS NOT NULL AND m.mem_data_nascimento = p_data_nascimento))
+    ), pontuados AS (
+        SELECT c.*,
+               (CASE WHEN c.mesmo_doc THEN 100 ELSE 0 END
+              + CASE WHEN c.sim >= 0.6 THEN 40 WHEN c.sim >= 0.45 THEN 20 ELSE 0 END
+              + CASE WHEN c.mesma_data THEN 30 ELSE 0 END
+              + CASE WHEN c.mesmo_local THEN 10 ELSE 0 END) AS pts,
+               array_remove(ARRAY[
+                 CASE WHEN c.mesmo_doc THEN 'Mesmo número de documento' END,
+                 CASE WHEN c.sim >= 0.6 THEN 'Nome igual ou muito parecido' WHEN c.sim >= 0.45 THEN 'Nome parecido' END,
+                 CASE WHEN c.mesma_data THEN 'Mesma data de nascimento' END,
+                 CASE WHEN c.mesmo_local THEN 'Mesmo local de nascimento' END], NULL) AS mot
+          FROM candidatos c
+    )
+    SELECT x.mem_id, x.mem_igr_id, (x.mem_nome || ' ' || x.mem_apelido)::TEXT, x.mem_data_nascimento,
+           x.mem_naturalidade::TEXT, x.mem_numero_identificacao::TEXT, x.mem_estado, x.pts, x.mot
+      FROM pontuados x
+     WHERE x.pts >= 40
+     ORDER BY x.pts DESC, x.mem_apelido, x.mem_nome
+     LIMIT 10
+$$;
+COMMENT ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT) IS
+    'Registos de membros parecidos (possíveis duplicados) entre os que o utilizador vê: só aviso, não bloqueia (V33)';
+REVOKE ALL ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- vistas
+-- Colunas novas só no fim (CREATE OR REPLACE mantém as que já existem)
+CREATE OR REPLACE VIEW secretaria.vw_membro_basico WITH (security_invoker = true) AS
+SELECT mem_id, mem_igr_id, mem_fam_id, mem_nome, mem_apelido, mem_sexo, mem_estado,
+       mem_estado_civil, mem_data_nascimento, mem_conjuge_mem_id
+FROM secretaria.membro WHERE mem_end_date IS NULL;
+
+-- Lista dos membros para exportar (CSV/PDF): os campos mais usados, o contacto principal e o baptismo
+CREATE VIEW secretaria.vw_membros_lista WITH (security_invoker = true) AS
+SELECT m.mem_id, m.mem_igr_id,
+       m.mem_nome || ' ' || m.mem_apelido AS nome,
+       m.mem_sexo AS sexo, m.mem_data_nascimento AS data_nascimento,
+       date_part('year', age(m.mem_data_nascimento))::INT AS idade,
+       m.mem_estado_civil AS estado_civil, m.mem_estado AS estado,
+       (SELECT c.cto_valor FROM secretaria.contacto c
+         WHERE c.cto_mem_id = m.mem_id AND c.cto_end_date IS NULL AND c.cto_tipo IN ('TELEFONE', 'WHATSAPP')
+         ORDER BY c.cto_principal DESC, c.cto_id LIMIT 1) AS telemovel,
+       (SELECT c.cto_valor FROM secretaria.contacto c
+         WHERE c.cto_mem_id = m.mem_id AND c.cto_end_date IS NULL AND c.cto_tipo = 'EMAIL'
+         ORDER BY c.cto_principal DESC, c.cto_id LIMIT 1) AS email,
+       m.mem_bairro AS bairro, m.mem_cidade_distrito AS cidade,
+       m.mem_profissao AS profissao,
+       f.fam_nome AS familia,
+       (SELECT min(b.bap_data) FROM secretaria.baptismo b WHERE b.bap_mem_id = m.mem_id AND b.bap_end_date IS NULL) AS data_baptismo,
+       m.mem_data_entrada AS data_entrada
+FROM secretaria.membro m
+LEFT JOIN secretaria.familia f ON f.fam_id = m.mem_fam_id
+WHERE m.mem_end_date IS NULL;
+COMMENT ON VIEW secretaria.vw_membros_lista IS 'Lista dos membros para exportar (V33); RLS das tabelas por baixo';
+GRANT SELECT ON secretaria.vw_membros_lista TO app_igreja;
+
+-- >>>>> V34__actividades_responsaveis_conflitos_e_execucao.sql
+-- =====================================================================
+-- V34 · Actividades dos departamentos (F-ACT): objectivos, vários responsáveis, conflitos de calendário e
+--       execução financeira (programa anual da igreja)
+--
+--   actividade               objectivos (texto). O responsável principal continua em act_responsavel_mem_id.
+--   actividade_responsavel   tabela nova: outros responsáveis e a função de cada um; o membro é da mesma igreja.
+--   conflitos                actividades.fn_conflitos_actividade(igreja, início, fim, excluir): as actividades da
+--                            mesma igreja (não canceladas) cujo horário se sobrepõe. Só informa: a actividade pode
+--                            gravar-se mesmo com conflito (quem a regista confirma).
+--                            actividades.fn_datas_alternativas(...): os dias seguintes, à mesma hora, sem conflito.
+--   execução                actividades.vw_actividades_execucao: previsto, material, despesas pedidas e aprovadas e
+--                            o que já saiu da tesouraria (saídas confirmadas ligadas à actividade, menos estornos).
+--
+-- Permissões: as da tabela nova seguem os perfis que gerem o material das actividades (actividades.material.*).
+-- As vistas e funções são SECURITY INVOKER: cada um só vê as actividades, despesas e movimentos que pode ler.
+-- Gerado com database/gerador (defs.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- actividade: objectivos
+ALTER TABLE actividades.actividade ADD COLUMN act_objectivos TEXT;
+COMMENT ON COLUMN actividades.actividade.act_objectivos IS 'O que a actividade pretende alcançar (V34)';
+-- listagem por departamento e procura de conflitos por data
+CREATE INDEX idx_act_inicio ON actividades.actividade (act_data_inicio) WHERE act_end_date IS NULL;
+
+-- ---------------------------------------------------------------- tabela actividades.actividade_responsavel (gerada: gen.py)
+CREATE TABLE actividades.actividade_responsavel (
+    acr_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    acr_act_id INT NOT NULL,
+    acr_mem_id INT NOT NULL,
+    acr_funcao VARCHAR(100),
+    acr_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    acr_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    acr_criado_por INT,
+    acr_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    acr_modificado_por INT,
+    acr_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_acr_act_id FOREIGN KEY (acr_act_id) REFERENCES actividades.actividade(act_id),
+    CONSTRAINT fk_acr_mem_id FOREIGN KEY (acr_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_acr_end_date CHECK (acr_end_date IS NULL OR acr_end_date >= acr_criado_em)
+);
+COMMENT ON TABLE actividades.actividade_responsavel IS 'Responsáveis de uma actividade, além do principal, e a função de cada um (V34)';
+COMMENT ON COLUMN actividades.actividade_responsavel.acr_funcao IS 'Ex.: coordenação, logística, programa, finanças';
+CREATE UNIQUE INDEX uq_acr_act_id_mem_id ON actividades.actividade_responsavel (acr_act_id, acr_mem_id) WHERE acr_end_date IS NULL;
+COMMENT ON INDEX actividades.uq_acr_act_id_mem_id IS '[membroId] Este membro já é responsável por esta actividade.';
+CREATE INDEX idx_acr_mem_id ON actividades.actividade_responsavel (acr_mem_id);
+
+CREATE TRIGGER trg_acr_00_padrao BEFORE INSERT OR UPDATE ON actividades.actividade_responsavel FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('acr', 'actividades.actividade_responsavel', '');
+CREATE TRIGGER trg_acr_00_sem_delete BEFORE DELETE ON actividades.actividade_responsavel FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('acr');
+CREATE TRIGGER trg_acr_00_sem_truncate BEFORE TRUNCATE ON actividades.actividade_responsavel FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('acr');
+CREATE TRIGGER trg_acr_99_log AFTER UPDATE ON actividades.actividade_responsavel FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('acr');
+ALTER TABLE actividades.actividade_responsavel ADD CONSTRAINT fk_acr_criado_por FOREIGN KEY (acr_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.actividade_responsavel ADD CONSTRAINT fk_acr_modificado_por FOREIGN KEY (acr_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE actividades.actividade_responsavel ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_acr_ler ON actividades.actividade_responsavel FOR SELECT USING (EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.ler'))::INT[]))));
+CREATE POLICY pol_acr_criar ON actividades.actividade_responsavel FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.criar'))::INT[]))));
+CREATE POLICY pol_acr_alterar ON actividades.actividade_responsavel FOR UPDATE USING (EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.alterar'))::INT[])))) WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.alterar'))::INT[]))));
+GRANT SELECT, INSERT, UPDATE ON actividades.actividade_responsavel TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+
+-- ---------------------------------------------------------------- permissões (os perfis que gerem o material)
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('actividades.actividade_responsavel.ler', 'Ler: Responsáveis de uma actividade, além do principal, e a função de cada um'),
+  ('actividades.actividade_responsavel.criar', 'Criar: Responsáveis de uma actividade, além do principal, e a função de cada um'),
+  ('actividades.actividade_responsavel.alterar', 'Alterar: Responsáveis de uma actividade, além do principal, e a função de cada um'),
+  ('actividades.actividade_responsavel.terminar', 'Terminar (end_date): Responsáveis de uma actividade, além do principal, e a função de cada um');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'actividades.material.%'
+  JOIN nucleo.permissao novo   ON novo.prm_codigo = replace(antigo.prm_codigo, 'actividades.material.', 'actividades.actividade_responsavel.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- regra: o responsável é membro da igreja da actividade
+CREATE FUNCTION actividades.fn_acr_validar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_igr_act INT;
+    v_igr_mem INT;
+BEGIN
+    IF TG_OP = 'UPDATE' AND (NEW.acr_act_id, NEW.acr_mem_id) IS NOT DISTINCT FROM (OLD.acr_act_id, OLD.acr_mem_id) THEN
+        RETURN NEW;
+    END IF;
+    SELECT d.ide_igr_id INTO v_igr_act FROM actividades.actividade a
+      JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = NEW.acr_act_id;
+    SELECT mem_igr_id INTO v_igr_mem FROM secretaria.membro WHERE mem_id = NEW.acr_mem_id;
+    IF v_igr_mem IS DISTINCT FROM v_igr_act THEN
+        RAISE EXCEPTION 'O responsável tem de ser membro da igreja da actividade' USING COLUMN = 'acr_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_acr_10_validar
+    BEFORE INSERT OR UPDATE ON actividades.actividade_responsavel
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_acr_validar();
+
+-- ---------------------------------------------------------------- conflitos de calendário
+-- Sem hora de fim, conta-se uma actividade de 2 horas. Canceladas e terminadas não contam.
+CREATE FUNCTION actividades.fn_conflitos_actividade(p_igr INT, p_inicio TIMESTAMPTZ, p_fim TIMESTAMPTZ DEFAULT NULL,
+                                                   p_excluir_act_id INT DEFAULT NULL)
+RETURNS TABLE (act_id INT, nome TEXT, departamento TEXT, data_inicio TIMESTAMPTZ, data_fim TIMESTAMPTZ, local TEXT)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT a.act_id, a.act_nome::TEXT, dp.dep_nome::TEXT, a.act_data_inicio, a.act_data_fim, a.act_local::TEXT
+      FROM actividades.actividade a
+      JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id
+      JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+     WHERE d.ide_igr_id = p_igr
+       AND a.act_end_date IS NULL AND a.act_estado <> 'CANCELADA'
+       AND a.act_id IS DISTINCT FROM p_excluir_act_id
+       AND a.act_data_inicio < coalesce(p_fim, p_inicio + INTERVAL '2 hours')
+       AND p_inicio < coalesce(a.act_data_fim, a.act_data_inicio + INTERVAL '2 hours')
+     ORDER BY a.act_data_inicio
+$$;
+
+-- Os primeiros p_n dias seguintes (até 60), à mesma hora e com a mesma duração, sem conflito
+CREATE FUNCTION actividades.fn_datas_alternativas(p_igr INT, p_inicio TIMESTAMPTZ, p_fim TIMESTAMPTZ DEFAULT NULL,
+                                                 p_excluir_act_id INT DEFAULT NULL, p_n INT DEFAULT 3)
+RETURNS TABLE (data_inicio TIMESTAMPTZ, data_fim TIMESTAMPTZ)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT p_inicio + (k * INTERVAL '1 day'), p_fim + (k * INTERVAL '1 day')
+      FROM generate_series(1, 60) k
+     WHERE NOT EXISTS (SELECT 1 FROM actividades.fn_conflitos_actividade(p_igr, p_inicio + (k * INTERVAL '1 day'),
+                                                                         p_fim + (k * INTERVAL '1 day'), p_excluir_act_id))
+     ORDER BY k
+     LIMIT p_n
+$$;
+REVOKE ALL ON FUNCTION actividades.fn_conflitos_actividade(INT, TIMESTAMPTZ, TIMESTAMPTZ, INT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION actividades.fn_datas_alternativas(INT, TIMESTAMPTZ, TIMESTAMPTZ, INT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION actividades.fn_conflitos_actividade(INT, TIMESTAMPTZ, TIMESTAMPTZ, INT) TO app_igreja;
+GRANT EXECUTE ON FUNCTION actividades.fn_datas_alternativas(INT, TIMESTAMPTZ, TIMESTAMPTZ, INT, INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- programa anual e execução financeira
+CREATE VIEW actividades.vw_actividades_execucao WITH (security_invoker = true) AS
+SELECT a.act_id, d.ide_igr_id AS igreja_id, a.act_ide_id AS departamento_igreja_id, dp.dep_nome AS departamento,
+       a.act_nome AS nome, a.act_descricao AS descricao, a.act_objectivos AS objectivos, a.act_local AS local,
+       a.act_data_inicio AS data_inicio, a.act_data_fim AS data_fim, a.act_estado AS estado,
+       EXTRACT(YEAR FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT  AS ano,
+       EXTRACT(MONTH FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+       a.act_responsavel_mem_id AS responsavel_mem_id,
+       (SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = a.act_responsavel_mem_id) AS responsavel,
+       (SELECT count(*) FROM actividades.actividade_responsavel r WHERE r.acr_act_id = a.act_id AND r.acr_end_date IS NULL)::INT AS outros_responsaveis,
+       a.act_valor_previsto AS valor_previsto,
+       coalesce((SELECT sum(x.mat_quantidade * x.mat_preco_unitario) FROM actividades.material x
+                  WHERE x.mat_act_id = a.act_id AND x.mat_end_date IS NULL), 0)::DECIMAL(14,2) AS material_previsto,
+       coalesce((SELECT sum(x.des_valor_solicitado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('SUBMETIDA', 'APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_pedidas,
+       coalesce((SELECT sum(x.des_valor_aprovado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_aprovadas,
+       coalesce((SELECT sum(CASE WHEN t.tra_tipo = 'SAIDA' THEN l.tli_valor ELSE -l.tli_valor END)
+                   FROM tesouraria.transacao_linha l JOIN tesouraria.transacao t ON t.tra_id = l.tli_tra_id
+                  WHERE l.tli_act_id = a.act_id AND l.tli_end_date IS NULL AND t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA'
+                    AND (t.tra_tipo = 'SAIDA' OR (t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NOT NULL))), 0)::DECIMAL(14,2) AS executado
+FROM actividades.actividade a
+JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id
+JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+WHERE a.act_end_date IS NULL;
+COMMENT ON VIEW actividades.vw_actividades_execucao IS
+    'Programa anual: actividades da igreja com o previsto e o executado (V34); cada um só vê o que pode ler';
+GRANT SELECT ON actividades.vw_actividades_execucao TO app_igreja;
+
+-- >>>>> V35__actividades_da_area_pastoral.sql
+-- =====================================================================
+-- V35 · Actividades da área pastoral (F-ACT, F-ORG): actividades do distrito pastoral nos calendários das igrejas
+--
+--   actividade   pertence OU a um departamento de uma igreja (act_ide_id: actividade local) OU a um distrito
+--                pastoral (act_dst_id: área pastoral) — nunca aos dois nem a nenhum (chk_act_origem).
+--   acesso       actividades.fn_acesso_distrito(distrito, permissão):
+--                  ler     → quem tem a permissão numa igreja do distrito (aparecem no calendário de todas elas);
+--                  criar, alterar, terminar → o pastor do distrito (perfil PASTOR com a permissão), quem a tem ao
+--                            nível da Associação/Missão do distrito, ou o super-administrador.
+--                Um director de departamento de uma igreja não cria nem altera actividades do distrito.
+--   políticas    actividade, material e actividade_responsavel: a regra local de antes OU a do distrito.
+--   regras       responsável de uma actividade do distrito: membro de uma igreja do distrito.
+--   conflitos    as actividades do distrito contam nos conflitos de cada igreja do distrito.
+--   programa     vw_actividades_execucao inclui, para cada igreja, as actividades do seu distrito, com a origem
+--                (IGREJA ou AREA_PASTORAL) e o distrito (colunas novas no fim).
+--
+-- Gerado com database/gerador (defs.py, seguranca_gen.py: marcador {C}); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- acesso às actividades de um distrito
+CREATE FUNCTION actividades.fn_acesso_distrito(p_dst INT, p_codigo TEXT) RETURNS BOOLEAN
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_usr INT := nucleo.fn_usuario_sessao();
+BEGIN
+    IF v_usr IS NULL OR p_dst IS NULL THEN RETURN FALSE; END IF;
+    IF nucleo.fn_e_super_admin() THEN RETURN TRUE; END IF;
+    -- ler: as igrejas do distrito vêem as actividades da área pastoral
+    IF p_codigo LIKE '%.ler' AND EXISTS (
+        SELECT 1 FROM organizacao.igreja i
+         WHERE i.igr_dst_id = p_dst AND i.igr_end_date IS NULL
+           AND i.igr_id = ANY (nucleo.fn_igrejas_com_permissao(p_codigo))) THEN
+        RETURN TRUE;
+    END IF;
+    -- o pastor do distrito (se o perfil PASTOR tiver a permissão)
+    IF EXISTS (SELECT 1 FROM organizacao.distrito d
+                WHERE d.dst_id = p_dst AND d.dst_end_date IS NULL AND d.dst_pastor_usu_id = v_usr)
+       AND EXISTS (SELECT 1 FROM nucleo.perfil pf
+                     JOIN nucleo.perfil_permissao pp ON pp.ppe_per_id = pf.per_id AND pp.ppe_end_date IS NULL
+                     JOIN nucleo.permissao pm ON pm.prm_id = pp.ppe_prm_id AND pm.prm_end_date IS NULL
+                    WHERE pf.per_codigo = 'PASTOR' AND pf.per_end_date IS NULL AND pm.prm_codigo = p_codigo) THEN
+        RETURN TRUE;
+    END IF;
+    -- quem tem a permissão ao nível da Associação/Missão do distrito
+    RETURN EXISTS (SELECT 1 FROM organizacao.distrito d
+                    WHERE d.dst_id = p_dst AND d.dst_ent_id IN (SELECT nucleo.fn_entidades_com_permissao(p_codigo)));
+END $$;
+COMMENT ON FUNCTION actividades.fn_acesso_distrito(INT, TEXT) IS
+    'V35: acesso às actividades da área pastoral (ler: igrejas do distrito; escrever: pastor do distrito, Associação, super-administrador)';
+REVOKE ALL ON FUNCTION actividades.fn_acesso_distrito(INT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION actividades.fn_acesso_distrito(INT, TEXT) TO app_igreja;
+
+-- ---------------------------------------------------------------- actividade: local ou da área pastoral
+ALTER TABLE actividades.actividade ALTER COLUMN act_ide_id DROP NOT NULL;
+ALTER TABLE actividades.actividade ADD COLUMN act_dst_id INT;
+ALTER TABLE actividades.actividade ADD CONSTRAINT fk_act_dst_id FOREIGN KEY (act_dst_id) REFERENCES organizacao.distrito(dst_id);
+ALTER TABLE actividades.actividade ADD CONSTRAINT chk_act_origem CHECK ((act_ide_id IS NULL) <> (act_dst_id IS NULL));
+COMMENT ON COLUMN actividades.actividade.act_ide_id IS 'Departamento da igreja (actividade local); vazio nas da área pastoral (V35)';
+COMMENT ON COLUMN actividades.actividade.act_dst_id IS 'Distrito pastoral: actividade da área pastoral, nos calendários de todas as igrejas do distrito (V35)';
+COMMENT ON CONSTRAINT chk_act_origem ON actividades.actividade IS
+    'A actividade é de um departamento da igreja ou da área pastoral (distrito), não das duas nem de nenhuma.';
+CREATE INDEX idx_act_dst_id ON actividades.actividade (act_dst_id);
+
+-- ---------------------------------------------------------------- políticas (geradas: gen.py)
+DROP POLICY pol_act_ler ON actividades.actividade;
+DROP POLICY pol_act_criar ON actividades.actividade;
+DROP POLICY pol_act_alterar ON actividades.actividade;
+DROP POLICY pol_mat_ler ON actividades.material;
+DROP POLICY pol_mat_criar ON actividades.material;
+DROP POLICY pol_mat_alterar ON actividades.material;
+DROP POLICY pol_acr_ler ON actividades.actividade_responsavel;
+DROP POLICY pol_acr_criar ON actividades.actividade_responsavel;
+DROP POLICY pol_acr_alterar ON actividades.actividade_responsavel;
+CREATE POLICY pol_act_ler ON actividades.actividade FOR SELECT USING ((act_ide_id IS NOT NULL AND EXISTS (SELECT 1 FROM organizacao.igreja_departamento d WHERE d.ide_id = act_ide_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade.ler'))::INT[])))) OR (act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(act_dst_id, 'actividades.actividade.ler')));
+CREATE POLICY pol_act_criar ON actividades.actividade FOR INSERT WITH CHECK ((act_ide_id IS NOT NULL AND EXISTS (SELECT 1 FROM organizacao.igreja_departamento d WHERE d.ide_id = act_ide_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade.criar'))::INT[])))) OR (act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(act_dst_id, 'actividades.actividade.criar')));
+CREATE POLICY pol_act_alterar ON actividades.actividade FOR UPDATE USING ((act_ide_id IS NOT NULL AND EXISTS (SELECT 1 FROM organizacao.igreja_departamento d WHERE d.ide_id = act_ide_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade.alterar'))::INT[])))) OR (act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(act_dst_id, 'actividades.actividade.alterar'))) WITH CHECK ((act_ide_id IS NOT NULL AND EXISTS (SELECT 1 FROM organizacao.igreja_departamento d WHERE d.ide_id = act_ide_id AND d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade.alterar'))::INT[])))) OR (act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(act_dst_id, 'actividades.actividade.alterar')));
+CREATE POLICY pol_mat_ler ON actividades.material FOR SELECT USING (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = mat_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.material.ler'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.material.ler')))));
+CREATE POLICY pol_mat_criar ON actividades.material FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = mat_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.material.criar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.material.criar')))));
+CREATE POLICY pol_mat_alterar ON actividades.material FOR UPDATE USING (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = mat_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.material.alterar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.material.alterar'))))) WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = mat_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.material.alterar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.material.alterar')))));
+CREATE POLICY pol_acr_ler ON actividades.actividade_responsavel FOR SELECT USING (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.ler'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.actividade_responsavel.ler')))));
+CREATE POLICY pol_acr_criar ON actividades.actividade_responsavel FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.criar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.actividade_responsavel.criar')))));
+CREATE POLICY pol_acr_alterar ON actividades.actividade_responsavel FOR UPDATE USING (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.alterar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.actividade_responsavel.alterar'))))) WITH CHECK (EXISTS (SELECT 1 FROM actividades.actividade a LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id WHERE a.act_id = acr_act_id AND (d.ide_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('actividades.actividade_responsavel.alterar'))::INT[])) OR (a.act_dst_id IS NOT NULL AND actividades.fn_acesso_distrito(a.act_dst_id, 'actividades.actividade_responsavel.alterar')))));
+
+-- ---------------------------------------------------------------- responsável: membro da igreja (ou do distrito)
+CREATE OR REPLACE FUNCTION actividades.fn_acr_validar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_ide INT;
+    v_dst INT;
+    v_igr_mem INT;
+BEGIN
+    IF TG_OP = 'UPDATE' AND (NEW.acr_act_id, NEW.acr_mem_id) IS NOT DISTINCT FROM (OLD.acr_act_id, OLD.acr_mem_id) THEN
+        RETURN NEW;
+    END IF;
+    SELECT act_ide_id, act_dst_id INTO v_ide, v_dst FROM actividades.actividade WHERE act_id = NEW.acr_act_id;
+    SELECT mem_igr_id INTO v_igr_mem FROM secretaria.membro WHERE mem_id = NEW.acr_mem_id;
+    IF v_dst IS NOT NULL THEN
+        IF NOT EXISTS (SELECT 1 FROM organizacao.igreja WHERE igr_id = v_igr_mem AND igr_dst_id = v_dst) THEN
+            RAISE EXCEPTION 'O responsável tem de ser membro de uma igreja do distrito' USING COLUMN = 'acr_mem_id';
+        END IF;
+    ELSIF v_igr_mem IS DISTINCT FROM (SELECT ide_igr_id FROM organizacao.igreja_departamento WHERE ide_id = v_ide) THEN
+        RAISE EXCEPTION 'O responsável tem de ser membro da igreja da actividade' USING COLUMN = 'acr_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+
+-- ---------------------------------------------------------------- conflitos: também as actividades do distrito
+CREATE OR REPLACE FUNCTION actividades.fn_conflitos_actividade(p_igr INT, p_inicio TIMESTAMPTZ, p_fim TIMESTAMPTZ DEFAULT NULL,
+                                                              p_excluir_act_id INT DEFAULT NULL)
+RETURNS TABLE (act_id INT, nome TEXT, departamento TEXT, data_inicio TIMESTAMPTZ, data_fim TIMESTAMPTZ, local TEXT)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT a.act_id, a.act_nome::TEXT,
+           coalesce(dp.dep_nome, 'Área pastoral (' || ds.dst_nome || ')')::TEXT,
+           a.act_data_inicio, a.act_data_fim, a.act_local::TEXT
+      FROM actividades.actividade a
+      LEFT JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id
+      LEFT JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+      LEFT JOIN organizacao.distrito ds ON ds.dst_id = a.act_dst_id
+     WHERE (d.ide_igr_id = p_igr
+            OR a.act_dst_id = (SELECT i.igr_dst_id FROM organizacao.igreja i WHERE i.igr_id = p_igr))
+       AND a.act_end_date IS NULL AND a.act_estado <> 'CANCELADA'
+       AND a.act_id IS DISTINCT FROM p_excluir_act_id
+       AND a.act_data_inicio < coalesce(p_fim, p_inicio + INTERVAL '2 hours')
+       AND p_inicio < coalesce(a.act_data_fim, a.act_data_inicio + INTERVAL '2 hours')
+     ORDER BY a.act_data_inicio
+$$;
+
+-- ---------------------------------------------------------------- programa: locais e da área pastoral
+-- Mesmas colunas de V34 e, no fim, a origem e o distrito. As do distrito aparecem em cada igreja do distrito.
+CREATE OR REPLACE VIEW actividades.vw_actividades_execucao WITH (security_invoker = true) AS
+WITH base AS (
+    SELECT a.*, d.ide_igr_id AS igreja_id, dp.dep_nome AS departamento, 'IGREJA'::TEXT AS origem, NULL::INT AS distrito_id, NULL::TEXT AS distrito
+      FROM actividades.actividade a
+      JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id
+      JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+     WHERE a.act_end_date IS NULL
+    UNION ALL
+    SELECT a.*, i.igr_id, 'Área pastoral', 'AREA_PASTORAL', ds.dst_id, ds.dst_nome::TEXT
+      FROM actividades.actividade a
+      JOIN organizacao.distrito ds ON ds.dst_id = a.act_dst_id
+      JOIN organizacao.igreja i ON i.igr_dst_id = ds.dst_id AND i.igr_end_date IS NULL
+     WHERE a.act_end_date IS NULL
+)
+SELECT a.act_id, a.igreja_id, a.act_ide_id AS departamento_igreja_id, a.departamento::VARCHAR(100) AS departamento,
+       a.act_nome AS nome, a.act_descricao AS descricao, a.act_objectivos AS objectivos, a.act_local AS local,
+       a.act_data_inicio AS data_inicio, a.act_data_fim AS data_fim, a.act_estado AS estado,
+       EXTRACT(YEAR FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT  AS ano,
+       EXTRACT(MONTH FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+       a.act_responsavel_mem_id AS responsavel_mem_id,
+       (SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = a.act_responsavel_mem_id) AS responsavel,
+       (SELECT count(*) FROM actividades.actividade_responsavel r WHERE r.acr_act_id = a.act_id AND r.acr_end_date IS NULL)::INT AS outros_responsaveis,
+       a.act_valor_previsto AS valor_previsto,
+       coalesce((SELECT sum(x.mat_quantidade * x.mat_preco_unitario) FROM actividades.material x
+                  WHERE x.mat_act_id = a.act_id AND x.mat_end_date IS NULL), 0)::DECIMAL(14,2) AS material_previsto,
+       coalesce((SELECT sum(x.des_valor_solicitado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('SUBMETIDA', 'APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_pedidas,
+       coalesce((SELECT sum(x.des_valor_aprovado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_aprovadas,
+       coalesce((SELECT sum(CASE WHEN t.tra_tipo = 'SAIDA' THEN l.tli_valor ELSE -l.tli_valor END)
+                   FROM tesouraria.transacao_linha l JOIN tesouraria.transacao t ON t.tra_id = l.tli_tra_id
+                  WHERE l.tli_act_id = a.act_id AND l.tli_end_date IS NULL AND t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA'
+                    AND (t.tra_tipo = 'SAIDA' OR (t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NOT NULL))), 0)::DECIMAL(14,2) AS executado,
+       a.origem, a.distrito_id, a.distrito
+FROM base a;
+
+-- >>>>> V36__participacao_contribuicoes_e_metas.sql
+-- =====================================================================
+-- V36 · Decisões pendentes do plano: participação (membros inactivos), contribuições lançadas duas vezes
+--       (membro e família), estado civil "noivo" e metas anuais com +5% (ex.: obra de reavivamento)
+--
+--   estado civil   novo valor NOIVO.
+--   participação   secretaria.fn_participacao_membros(igreja): para cada membro, a data da última participação
+--                  (presença na Escola Sabatina ou contribuição dele ou da família) e se está INACTIVO: estado
+--                  ACTIVO no livro sem participação nos últimos 6 meses. O estado no livro não muda (só por voto).
+--                  Só para quem lê os membros da igreja; devolve datas, nunca valores.
+--   duplicados     tesouraria.fn_contribuicoes_sobrepostas(membro, família, data): dízimos do mesmo mês já lançados
+--                  em nome da família do membro (ou, para uma família, em nome dos seus membros). Só avisa.
+--   metas          tesouraria.fn_alvo_sugerido(igreja, fundo, ano): o alvo do ano anterior + 5% (o utilizador
+--                  pode ajustar). O histórico é o próprio alvo de cada ano (e o log de auditoria).
+--                  tesouraria.vw_fundo_mensal: o arrecadado por fundo, mês a mês (registo mensal e acumulado no ano).
+--
+-- A obra de reavivamento é um fundo próprio da igreja (Fundos e ofertas) com um alvo por ano: não há tabela nova.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TYPE nucleo.estado_civil_t ADD VALUE IF NOT EXISTS 'NOIVO';
+
+-- ---------------------------------------------------------------- participação dos membros
+CREATE FUNCTION secretaria.fn_participacao_membros(p_igr INT, p_meses INT DEFAULT 6)
+RETURNS TABLE (mem_id INT, ultima_participacao DATE, inactivo BOOLEAN)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH membros AS (
+        SELECT m.mem_id, m.mem_fam_id, m.mem_estado
+          FROM secretaria.membro m
+         WHERE m.mem_igr_id = p_igr AND m.mem_end_date IS NULL
+           AND p_igr = ANY (nucleo.fn_igrejas_com_permissao('secretaria.membro.ler'))
+    ), datas AS (
+        SELECT x.mem_id, x.mem_estado,
+               greatest(
+                 (SELECT max(s.esa_data) FROM escola_sabatina.presenca p
+                    JOIN escola_sabatina.relatorio_sabado r ON r.ers_id = p.epr_ers_id
+                    JOIN escola_sabatina.sabado s ON s.esa_id = r.ers_esa_id
+                   WHERE p.epr_mem_id = x.mem_id AND p.epr_presente AND p.epr_end_date IS NULL),
+                 (SELECT max((t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::DATE) FROM tesouraria.transacao t
+                   WHERE (t.tra_mem_id = x.mem_id OR (x.mem_fam_id IS NOT NULL AND t.tra_fam_id = x.mem_fam_id))
+                     AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+                     AND t.tra_estado IN ('PENDENTE', 'CONFIRMADA') AND t.tra_end_date IS NULL)) AS ultima
+          FROM membros x
+    )
+    SELECT d.mem_id, d.ultima,
+           d.mem_estado = 'ACTIVO' AND (d.ultima IS NULL OR d.ultima < (current_date - make_interval(months => p_meses)))
+      FROM datas d
+$$;
+COMMENT ON FUNCTION secretaria.fn_participacao_membros(INT, INT) IS
+    'V36: membros ACTIVO sem presença na ES nem contribuição nos últimos meses = inactivos (indicador; o estado no livro não muda)';
+REVOKE ALL ON FUNCTION secretaria.fn_participacao_membros(INT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION secretaria.fn_participacao_membros(INT, INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- dízimo do mesmo mês em nome do membro e da família
+-- SECURITY INVOKER: só encontra os movimentos que o utilizador pode ler (RLS).
+CREATE FUNCTION tesouraria.fn_contribuicoes_sobrepostas(p_mem INT, p_fam INT, p_data DATE)
+RETURNS TABLE (tra_id BIGINT, data_hora TIMESTAMPTZ, quem TEXT, dizimo DECIMAL(14,2), recibo TEXT)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT t.tra_id, t.tra_data_hora,
+           coalesce((SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = t.tra_mem_id),
+                    (SELECT f.fam_nome FROM secretaria.familia f WHERE f.fam_id = t.tra_fam_id))::TEXT,
+           sum(l.tli_valor)::DECIMAL(14,2),
+           (SELECT r.rec_numero || '/' || r.rec_ano FROM tesouraria.recibo r WHERE r.rec_tra_id = t.tra_id AND r.rec_end_date IS NULL)
+      FROM tesouraria.transacao t
+      JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+      JOIN tesouraria.fundo fu ON fu.fun_id = l.tli_fun_id AND fu.fun_tipo = 'DIZIMO'
+     WHERE t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL AND t.tra_end_date IS NULL
+       AND t.tra_estado IN ('PENDENTE', 'CONFIRMADA')
+       AND date_trunc('month', t.tra_data_hora AT TIME ZONE 'Africa/Maputo') = date_trunc('month', p_data::TIMESTAMP)
+       AND (
+            -- a contribuir um membro: a família dele já entregou o dízimo neste mês
+            (p_mem IS NOT NULL AND t.tra_fam_id = (SELECT m.mem_fam_id FROM secretaria.membro m WHERE m.mem_id = p_mem))
+            -- a contribuir uma família: um dos membros dela já entregou em nome próprio
+         OR (p_fam IS NOT NULL AND t.tra_mem_id IN (SELECT m.mem_id FROM secretaria.membro m
+                                                     WHERE m.mem_fam_id = p_fam AND m.mem_end_date IS NULL)))
+     GROUP BY t.tra_id
+     ORDER BY t.tra_data_hora
+$$;
+COMMENT ON FUNCTION tesouraria.fn_contribuicoes_sobrepostas(INT, INT, DATE) IS
+    'V36: dízimos do mesmo mês já lançados em nome da família do membro (ou dos membros da família): só aviso';
+REVOKE ALL ON FUNCTION tesouraria.fn_contribuicoes_sobrepostas(INT, INT, DATE) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tesouraria.fn_contribuicoes_sobrepostas(INT, INT, DATE) TO app_igreja;
+
+-- ---------------------------------------------------------------- metas anuais: +5% sobre o alvo do ano anterior
+CREATE FUNCTION tesouraria.fn_alvo_sugerido(p_igr INT, p_fun INT, p_ano INT)
+RETURNS DECIMAL(14,2)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT round(a.alv_valor_alvo * 1.05, 2)
+      FROM tesouraria.alvo a
+     WHERE a.alv_igr_id = p_igr AND a.alv_fun_id = p_fun AND a.alv_end_date IS NULL
+       AND EXTRACT(YEAR FROM a.alv_data_inicio) = p_ano - 1
+     ORDER BY a.alv_data_inicio DESC, a.alv_id DESC
+     LIMIT 1
+$$;
+COMMENT ON FUNCTION tesouraria.fn_alvo_sugerido(INT, INT, INT) IS
+    'V36: meta do ano = alvo do ano anterior + 5% (sugestão; o utilizador autorizado pode ajustar)';
+REVOKE ALL ON FUNCTION tesouraria.fn_alvo_sugerido(INT, INT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tesouraria.fn_alvo_sugerido(INT, INT, INT) TO app_igreja;
+
+-- arrecadado por fundo, mês a mês (sem estornos)
+CREATE VIEW tesouraria.vw_fundo_mensal WITH (security_invoker = true) AS
+SELECT s.sdf_igr_id AS igreja_id, s.sdf_fun_id AS fundo_id, f.fun_nome AS fundo,
+       EXTRACT(YEAR FROM s.sdf_data)::INT AS ano, EXTRACT(MONTH FROM s.sdf_data)::INT AS mes,
+       sum(s.sdf_entradas - s.sdf_estornos_entradas)::DECIMAL(14,2) AS arrecadado
+  FROM tesouraria.saldo_diario_fundo s
+  JOIN tesouraria.fundo f ON f.fun_id = s.sdf_fun_id
+ WHERE s.sdf_end_date IS NULL
+ GROUP BY s.sdf_igr_id, s.sdf_fun_id, f.fun_nome, EXTRACT(YEAR FROM s.sdf_data), EXTRACT(MONTH FROM s.sdf_data);
+COMMENT ON VIEW tesouraria.vw_fundo_mensal IS 'V36: arrecadado por fundo e mês (ex.: obra de reavivamento: registo mensal e acumulado no ano)';
+GRANT SELECT ON tesouraria.vw_fundo_mensal TO app_igreja;
+
+-- >>>>> V37__comunicados.sql
+-- =====================================================================
+-- V37 · Comunicados e anúncios (F-COM): de uma igreja, do distrito pastoral ou da Associação/Missão
+--
+--   comunicado          título, conteúdo, público (MEMBROS = todos os membros; LIDERANCA = só quem tem perfil nas
+--                       igrejas), publicar em, válido até e estado (RASCUNHO, PUBLICADO, ARQUIVADO). Tem um e um só
+--                       emissor: a igreja (cmc_igr_id), o distrito pastoral (cmc_dst_id) ou a Associação (cmc_ent_id).
+--   comunicado_igreja   para o distrito e a Associação: um conjunto de igrejas (sem linhas = todas as do emissor).
+--                       As igrejas têm de ser do distrito / da Associação que publica.
+--   quem publica        nucleo.fn_comunicado_emissor: a igreja → quem tem a permissão nela; o distrito → o pastor do
+--                       distrito (perfil PASTOR com a permissão); a Associação → quem a tem lá; o super-administrador.
+--                       Os rascunhos só os vê quem os pode editar.
+--   quem lê             nucleo.fn_comunicado_para_mim: publicado, já em vigor e ainda válido, para uma igreja em que o
+--                       utilizador tem nucleo.comunicado.ler (liderança) ou, se o público for MEMBROS, a igreja do
+--                       membro com sessão.
+--   directório          vw_directorio_igrejas ganha o distrito pastoral (escolher as igrejas do distrito).
+--
+-- Permissões novas (nucleo.comunicado.*, nucleo.comunicado_igreja.*): publicam ADMIN, PASTOR, ANCIAO, SECRETARIO,
+-- ADMIN_ASSOCIACAO e SECRETARIO_ASSOCIACAO; lêem TESOUREIRO, DIRECTOR_ES, SECRETARIO_ES, DIRECTOR_DEPARTAMENTO e
+-- TESOUREIRO_ASSOCIACAO. Gerado com database/gerador (defs.py, seguranca_gen.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+CREATE TYPE nucleo.estado_comunicado_t AS ENUM ('RASCUNHO', 'PUBLICADO', 'ARQUIVADO');
+
+-- ---------------------------------------------------------------- tabelas (geradas: gen.py)
+CREATE TABLE nucleo.comunicado (
+    cmc_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    cmc_igr_id INT,
+    cmc_dst_id INT,
+    cmc_ent_id INT,
+    cmc_titulo VARCHAR(200) NOT NULL,
+    cmc_conteudo TEXT NOT NULL,
+    cmc_publico VARCHAR(10) NOT NULL DEFAULT 'MEMBROS',
+    cmc_publicar_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cmc_valido_ate TIMESTAMPTZ,
+    cmc_estado estado_comunicado_t NOT NULL DEFAULT 'RASCUNHO',
+    cmc_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cmc_criado_por INT,
+    cmc_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cmc_modificado_por INT,
+    cmc_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_cmc_igr_id FOREIGN KEY (cmc_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_cmc_dst_id FOREIGN KEY (cmc_dst_id) REFERENCES organizacao.distrito(dst_id),
+    CONSTRAINT fk_cmc_ent_id FOREIGN KEY (cmc_ent_id) REFERENCES organizacao.entidade(ent_id),
+    CONSTRAINT chk_cmc_emissor CHECK ((cmc_igr_id IS NOT NULL)::INT + (cmc_dst_id IS NOT NULL)::INT + (cmc_ent_id IS NOT NULL)::INT = 1),
+    CONSTRAINT chk_cmc_publico CHECK (cmc_publico IN ('MEMBROS', 'LIDERANCA')),
+    CONSTRAINT chk_cmc_validade CHECK (cmc_valido_ate IS NULL OR cmc_valido_ate > cmc_publicar_em),
+    CONSTRAINT chk_cmc_end_date CHECK (cmc_end_date IS NULL OR cmc_end_date >= cmc_criado_em)
+);
+COMMENT ON TABLE nucleo.comunicado IS 'Comunicados e anúncios: de uma igreja, do distrito pastoral ou da Associação/Missão (V37)';
+COMMENT ON COLUMN nucleo.comunicado.cmc_igr_id IS 'Publicado por esta igreja (para os seus membros)';
+COMMENT ON COLUMN nucleo.comunicado.cmc_dst_id IS 'Publicado pelo distrito pastoral (para as igrejas do distrito)';
+COMMENT ON COLUMN nucleo.comunicado.cmc_ent_id IS 'Publicado pela Associação/Missão (para as suas igrejas)';
+COMMENT ON COLUMN nucleo.comunicado.cmc_publico IS 'MEMBROS (todos os membros) ou LIDERANCA (só quem tem perfil nas igrejas)';
+COMMENT ON COLUMN nucleo.comunicado.cmc_publicar_em IS 'A partir de quando aparece';
+COMMENT ON COLUMN nucleo.comunicado.cmc_valido_ate IS 'Deixa de aparecer depois desta data (vazio = sem fim)';
+CREATE INDEX idx_cmc_igr_id ON nucleo.comunicado (cmc_igr_id);
+CREATE INDEX idx_cmc_dst_id ON nucleo.comunicado (cmc_dst_id);
+CREATE INDEX idx_cmc_ent_id ON nucleo.comunicado (cmc_ent_id);
+CREATE INDEX idx_cmc_publicar ON nucleo.comunicado (cmc_publicar_em DESC) WHERE cmc_end_date IS NULL;
+
+-- Igrejas a que se dirige um comunicado do distrito ou da Associação (sem linhas = todas) (V37)
+CREATE TABLE nucleo.comunicado_igreja (
+    cmi_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    cmi_cmc_id INT NOT NULL,
+    cmi_igr_id INT NOT NULL,
+    cmi_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    cmi_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cmi_criado_por INT,
+    cmi_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cmi_modificado_por INT,
+    cmi_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_cmi_cmc_id FOREIGN KEY (cmi_cmc_id) REFERENCES nucleo.comunicado(cmc_id),
+    CONSTRAINT fk_cmi_igr_id FOREIGN KEY (cmi_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_cmi_end_date CHECK (cmi_end_date IS NULL OR cmi_end_date >= cmi_criado_em)
+);
+COMMENT ON TABLE nucleo.comunicado_igreja IS 'Igrejas a que se dirige um comunicado do distrito ou da Associação (sem linhas = todas) (V37)';
+CREATE UNIQUE INDEX uq_cmi_cmc_id_igr_id ON nucleo.comunicado_igreja (cmi_cmc_id, cmi_igr_id) WHERE cmi_end_date IS NULL;
+CREATE INDEX idx_cmi_igr_id ON nucleo.comunicado_igreja (cmi_igr_id);
+
+CREATE TRIGGER trg_cmc_00_padrao BEFORE INSERT OR UPDATE ON nucleo.comunicado FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('cmc', 'nucleo.comunicado', '');
+CREATE TRIGGER trg_cmc_00_sem_delete BEFORE DELETE ON nucleo.comunicado FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('cmc');
+CREATE TRIGGER trg_cmc_00_sem_truncate BEFORE TRUNCATE ON nucleo.comunicado FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('cmc');
+CREATE TRIGGER trg_cmc_99_log AFTER UPDATE ON nucleo.comunicado FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('cmc');
+ALTER TABLE nucleo.comunicado ADD CONSTRAINT fk_cmc_criado_por FOREIGN KEY (cmc_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.comunicado ADD CONSTRAINT fk_cmc_modificado_por FOREIGN KEY (cmc_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_cmi_00_padrao BEFORE INSERT OR UPDATE ON nucleo.comunicado_igreja FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('cmi', 'nucleo.comunicado_igreja', '');
+CREATE TRIGGER trg_cmi_00_sem_delete BEFORE DELETE ON nucleo.comunicado_igreja FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('cmi');
+CREATE TRIGGER trg_cmi_00_sem_truncate BEFORE TRUNCATE ON nucleo.comunicado_igreja FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('cmi');
+CREATE TRIGGER trg_cmi_99_log AFTER UPDATE ON nucleo.comunicado_igreja FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('cmi');
+ALTER TABLE nucleo.comunicado_igreja ADD CONSTRAINT fk_cmi_criado_por FOREIGN KEY (cmi_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.comunicado_igreja ADD CONSTRAINT fk_cmi_modificado_por FOREIGN KEY (cmi_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+COMMENT ON CONSTRAINT chk_cmc_emissor ON nucleo.comunicado IS 'O comunicado é publicado por uma igreja, um distrito pastoral ou uma Associação (um e só um).';
+COMMENT ON CONSTRAINT chk_cmc_publico ON nucleo.comunicado IS '[publico] O público é MEMBROS (todos os membros) ou LIDERANCA.';
+COMMENT ON CONSTRAINT chk_cmc_validade ON nucleo.comunicado IS '[validoAte] A validade tem de terminar depois da data de publicação.';
+COMMENT ON INDEX nucleo.uq_cmi_cmc_id_igr_id IS '[igrejaId] Esta igreja já está nos destinatários.';
+
+-- ---------------------------------------------------------------- quem publica e quem lê
+CREATE FUNCTION nucleo.fn_comunicado_emissor(p_igr INT, p_dst INT, p_ent INT, p_codigo TEXT) RETURNS BOOLEAN
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_usr INT := nucleo.fn_usuario_sessao();
+    -- ver como emissor (incluindo rascunhos) é para quem pode editar; os outros lêem só o que foi publicado
+    v_cod TEXT := CASE WHEN p_codigo LIKE '%.ler' THEN regexp_replace(p_codigo, '\.ler$', '.alterar') ELSE p_codigo END;
+BEGIN
+    IF v_usr IS NULL THEN RETURN FALSE; END IF;
+    IF nucleo.fn_e_super_admin() THEN RETURN TRUE; END IF;
+    IF p_igr IS NOT NULL THEN
+        RETURN p_igr = ANY (nucleo.fn_igrejas_com_permissao(v_cod));
+    END IF;
+    IF p_dst IS NOT NULL THEN
+        RETURN (EXISTS (SELECT 1 FROM organizacao.distrito d
+                         WHERE d.dst_id = p_dst AND d.dst_end_date IS NULL AND d.dst_pastor_usu_id = v_usr)
+                AND EXISTS (SELECT 1 FROM nucleo.perfil pf
+                              JOIN nucleo.perfil_permissao pp ON pp.ppe_per_id = pf.per_id AND pp.ppe_end_date IS NULL
+                              JOIN nucleo.permissao pm ON pm.prm_id = pp.ppe_prm_id AND pm.prm_end_date IS NULL
+                             WHERE pf.per_codigo = 'PASTOR' AND pf.per_end_date IS NULL AND pm.prm_codigo = v_cod))
+            OR EXISTS (SELECT 1 FROM organizacao.distrito d
+                        WHERE d.dst_id = p_dst AND d.dst_ent_id IN (SELECT nucleo.fn_entidades_com_permissao(v_cod)));
+    END IF;
+    RETURN p_ent IN (SELECT nucleo.fn_entidades_com_permissao(v_cod));
+END $$;
+COMMENT ON FUNCTION nucleo.fn_comunicado_emissor(INT, INT, INT, TEXT) IS
+    'V37: quem publica (e vê os rascunhos de) um comunicado da igreja, do distrito ou da Associação';
+
+-- As igrejas a que o comunicado se dirige: as escolhidas (comunicado_igreja) ou todas as do emissor
+CREATE FUNCTION nucleo.fn_comunicado_igrejas(p_cmc INT) RETURNS SETOF INT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT ci.cmi_igr_id FROM nucleo.comunicado_igreja ci WHERE ci.cmi_cmc_id = p_cmc AND ci.cmi_end_date IS NULL
+    UNION
+    SELECT i.igr_id
+      FROM nucleo.comunicado c
+      JOIN organizacao.igreja i ON i.igr_end_date IS NULL
+       AND (i.igr_id = c.cmc_igr_id OR i.igr_dst_id = c.cmc_dst_id OR i.igr_ent_id = c.cmc_ent_id)
+     WHERE c.cmc_id = p_cmc
+       AND NOT EXISTS (SELECT 1 FROM nucleo.comunicado_igreja ci WHERE ci.cmi_cmc_id = p_cmc AND ci.cmi_end_date IS NULL)
+$$;
+
+CREATE FUNCTION nucleo.fn_comunicado_para_mim(p_cmc INT) RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM nucleo.comunicado c
+         WHERE c.cmc_id = p_cmc AND c.cmc_end_date IS NULL AND c.cmc_estado = 'PUBLICADO'
+           AND c.cmc_publicar_em <= now() AND (c.cmc_valido_ate IS NULL OR c.cmc_valido_ate >= now())
+           AND EXISTS (SELECT 1 FROM nucleo.fn_comunicado_igrejas(p_cmc) g(igr_id)
+                        WHERE g.igr_id = ANY (nucleo.fn_igrejas_com_permissao('nucleo.comunicado.ler'))
+                           OR (c.cmc_publico = 'MEMBROS' AND g.igr_id = (SELECT m.mem_igr_id FROM secretaria.membro m
+                                                                          WHERE m.mem_id = nucleo.fn_membro_sessao()))))
+$$;
+COMMENT ON FUNCTION nucleo.fn_comunicado_para_mim(INT) IS
+    'V37: o comunicado publicado e em vigor dirige-se a uma igreja do utilizador (liderança) ou, para MEMBROS, à do membro';
+REVOKE ALL ON FUNCTION nucleo.fn_comunicado_emissor(INT, INT, INT, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION nucleo.fn_comunicado_igrejas(INT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION nucleo.fn_comunicado_para_mim(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION nucleo.fn_comunicado_emissor(INT, INT, INT, TEXT) TO app_igreja;
+GRANT EXECUTE ON FUNCTION nucleo.fn_comunicado_igrejas(INT) TO app_igreja;
+GRANT EXECUTE ON FUNCTION nucleo.fn_comunicado_para_mim(INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- regras: destinatários do emissor
+CREATE FUNCTION nucleo.fn_cmi_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE c nucleo.comunicado%ROWTYPE;
+BEGIN
+    SELECT * INTO c FROM nucleo.comunicado WHERE cmc_id = NEW.cmi_cmc_id;
+    IF c.cmc_igr_id IS NOT NULL THEN
+        RAISE EXCEPTION 'O comunicado de uma igreja é para os membros dessa igreja: não se escolhem outras igrejas';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM organizacao.igreja i WHERE i.igr_id = NEW.cmi_igr_id
+                      AND (i.igr_dst_id = c.cmc_dst_id OR i.igr_ent_id = c.cmc_ent_id)) THEN
+        RAISE EXCEPTION 'Esta igreja não é % que publica o comunicado',
+            CASE WHEN c.cmc_dst_id IS NOT NULL THEN 'do distrito' ELSE 'da Associação/Missão' END
+            USING COLUMN = 'cmi_igr_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_cmi_10_validar BEFORE INSERT OR UPDATE OF cmi_cmc_id, cmi_igr_id ON nucleo.comunicado_igreja
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_cmi_validar();
+
+-- ---------------------------------------------------------------- segurança (gerada: gen.py)
+ALTER TABLE nucleo.comunicado ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_cmc_ler ON nucleo.comunicado FOR SELECT USING (nucleo.fn_comunicado_emissor(cmc_igr_id, cmc_dst_id, cmc_ent_id, 'nucleo.comunicado.ler') OR ('nucleo.comunicado.ler' LIKE '%.ler' AND cmc_estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(cmc_id)));
+CREATE POLICY pol_cmc_criar ON nucleo.comunicado FOR INSERT WITH CHECK (nucleo.fn_comunicado_emissor(cmc_igr_id, cmc_dst_id, cmc_ent_id, 'nucleo.comunicado.criar') OR ('nucleo.comunicado.criar' LIKE '%.ler' AND cmc_estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(cmc_id)));
+CREATE POLICY pol_cmc_alterar ON nucleo.comunicado FOR UPDATE USING (nucleo.fn_comunicado_emissor(cmc_igr_id, cmc_dst_id, cmc_ent_id, 'nucleo.comunicado.alterar') OR ('nucleo.comunicado.alterar' LIKE '%.ler' AND cmc_estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(cmc_id))) WITH CHECK (nucleo.fn_comunicado_emissor(cmc_igr_id, cmc_dst_id, cmc_ent_id, 'nucleo.comunicado.alterar') OR ('nucleo.comunicado.alterar' LIKE '%.ler' AND cmc_estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(cmc_id)));
+ALTER TABLE nucleo.comunicado_igreja ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_cmi_ler ON nucleo.comunicado_igreja FOR SELECT USING (EXISTS (SELECT 1 FROM nucleo.comunicado c WHERE c.cmc_id = cmi_cmc_id AND nucleo.fn_comunicado_emissor(c.cmc_igr_id, c.cmc_dst_id, c.cmc_ent_id, 'nucleo.comunicado_igreja.ler')));
+CREATE POLICY pol_cmi_criar ON nucleo.comunicado_igreja FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM nucleo.comunicado c WHERE c.cmc_id = cmi_cmc_id AND nucleo.fn_comunicado_emissor(c.cmc_igr_id, c.cmc_dst_id, c.cmc_ent_id, 'nucleo.comunicado_igreja.criar')));
+CREATE POLICY pol_cmi_alterar ON nucleo.comunicado_igreja FOR UPDATE USING (EXISTS (SELECT 1 FROM nucleo.comunicado c WHERE c.cmc_id = cmi_cmc_id AND nucleo.fn_comunicado_emissor(c.cmc_igr_id, c.cmc_dst_id, c.cmc_ent_id, 'nucleo.comunicado_igreja.alterar'))) WITH CHECK (EXISTS (SELECT 1 FROM nucleo.comunicado c WHERE c.cmc_id = cmi_cmc_id AND nucleo.fn_comunicado_emissor(c.cmc_igr_id, c.cmc_dst_id, c.cmc_ent_id, 'nucleo.comunicado_igreja.alterar')));
+GRANT SELECT, INSERT, UPDATE ON nucleo.comunicado, nucleo.comunicado_igreja TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA nucleo TO app_igreja;
+
+-- ---------------------------------------------------------------- permissões
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('nucleo.comunicado.ler', 'Ler: Comunicados e anúncios'),
+  ('nucleo.comunicado.criar', 'Criar: Comunicados e anúncios'),
+  ('nucleo.comunicado.alterar', 'Alterar: Comunicados e anúncios'),
+  ('nucleo.comunicado.terminar', 'Terminar (end_date): Comunicados e anúncios'),
+  ('nucleo.comunicado_igreja.ler', 'Ler: Igrejas destinatárias de um comunicado'),
+  ('nucleo.comunicado_igreja.criar', 'Criar: Igrejas destinatárias de um comunicado'),
+  ('nucleo.comunicado_igreja.alterar', 'Alterar: Igrejas destinatárias de um comunicado'),
+  ('nucleo.comunicado_igreja.terminar', 'Terminar (end_date): Igrejas destinatárias de um comunicado');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pf.per_id, pm.prm_id
+  FROM nucleo.perfil pf, nucleo.permissao pm
+ WHERE pm.prm_codigo LIKE 'nucleo.comunicado%'
+   AND ((pf.per_codigo IN ('ADMIN', 'PASTOR', 'ANCIAO', 'SECRETARIO', 'ADMIN_ASSOCIACAO', 'SECRETARIO_ASSOCIACAO'))
+        OR (pf.per_codigo IN ('TESOUREIRO', 'DIRECTOR_ES', 'SECRETARIO_ES', 'DIRECTOR_DEPARTAMENTO', 'TESOUREIRO_ASSOCIACAO')
+            AND pm.prm_codigo LIKE '%.ler'));
+
+-- ---------------------------------------------------------------- directório: o distrito pastoral de cada igreja (no fim)
+CREATE OR REPLACE VIEW organizacao.vw_directorio_igrejas AS
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_tipo AS tipo, i.igr_ent_id, e.ent_nome AS entidade,
+       p.prv_nome AS provincia, d.dad_nome AS distrito, i.igr_localidade AS localidade,
+       i.igr_dst_id
+FROM organizacao.igreja i
+JOIN organizacao.entidade e ON e.ent_id = i.igr_ent_id
+LEFT JOIN organizacao.provincia p ON p.prv_id = i.igr_prv_id
+LEFT JOIN organizacao.distrito_administrativo d ON d.dad_id = i.igr_dad_id
+WHERE i.igr_end_date IS NULL AND nucleo.fn_usuario_sessao() IS NOT NULL;
+
+-- >>>>> V38__painel_por_periodo.sql
+-- =====================================================================
+-- V38 · Dashboard geral por período (F-ORG, P-13): membros activos e inactivos, dízimos, ofertas, obra de
+--       reavivamento, fidelidade contributiva e movimento de membros, igreja a igreja
+--
+--   fundo        novo tipo REAVIVAMENTO: fundo próprio da igreja (100% da igreja) para a obra de reavivamento, com
+--                alvo anual (V36: +5%). Assim soma-se e compara-se entre igrejas.
+--   período      organizacao.fn_painel_periodo(início, fim): uma linha por igreja visível (RLS), no período escolhido:
+--                  membros        estado ACTIVO no livro;
+--                  inactivos      membros sem presença na ES nem contribuição há 6 meses (V36); activos = o resto;
+--                  dízimos        entradas confirmadas no fundo DIZIMO (também as pagas directamente na Missão);
+--                  ofertas        as outras entradas confirmadas, menos o reavivamento (sem estornos);
+--                  reavivamento   entradas no fundo REAVIVAMENTO;
+--                  contribuintes  membros ACTIVO que contribuíram (eles ou a família) no período: fidelidade =
+--                                 contribuintes / membros;
+--                  entradas e perdas de membros no livro (baptismo, profissão de fé, transferência; transferência,
+--                  falecimento, remoção, desaparecido).
+--                SECURITY INVOKER: cada número só conta o que o utilizador pode ler (ve_membros, ve_tesouraria dizem
+--                se pode, para o ecrã mostrar "sem acesso" em vez de zero).
+--   mensal       vw_painel_igrejas_mensal ganha as ofertas e o reavivamento (colunas no fim).
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- O valor novo não se usa nesta transacção (só como texto): o db-migrar aplica cada migração numa transacção.
+ALTER TYPE nucleo.tipo_fundo_t ADD VALUE IF NOT EXISTS 'REAVIVAMENTO';
+
+ALTER TABLE tesouraria.fundo DROP CONSTRAINT chk_fun_da_igreja;
+ALTER TABLE tesouraria.fundo ADD CONSTRAINT chk_fun_da_igreja
+    CHECK (fun_igr_id IS NULL OR (fun_percentagem_remessa = 0 AND fun_destino_ent_id IS NULL
+                                  AND fun_tipo::TEXT IN ('OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO')));
+COMMENT ON CONSTRAINT chk_fun_da_igreja ON tesouraria.fundo IS
+    '[tipo] Um fundo próprio da igreja é uma oferta especial, um projecto ou a obra de reavivamento, e fica todo na igreja.';
+
+-- ---------------------------------------------------------------- painel por período
+CREATE FUNCTION organizacao.fn_painel_periodo(p_inicio DATE, p_fim DATE)
+RETURNS TABLE (igr_id INT, nome TEXT, entidade_id INT, entidade TEXT, distrito_pastoral_id INT, distrito_pastoral TEXT,
+               ve_membros BOOLEAN, ve_tesouraria BOOLEAN,
+               membros INT, activos INT, inactivos INT, interessados INT,
+               dizimos DECIMAL(14,2), ofertas DECIMAL(14,2), reavivamento DECIMAL(14,2), contribuintes INT,
+               entradas_membros INT, perdas_membros INT)
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH per AS (
+        SELECT (p_inicio::timestamp AT TIME ZONE 'Africa/Maputo') AS de,
+               ((p_fim + 1)::timestamp AT TIME ZONE 'Africa/Maputo') AS ate
+    ),
+    acesso AS (
+        SELECT nucleo.fn_igrejas_com_permissao('secretaria.membro.ler')   AS membros,
+               nucleo.fn_igrejas_com_permissao('tesouraria.transacao.ler') AS tesouraria
+    ),
+    mem AS (
+        SELECT m.mem_igr_id AS igr_id,
+               count(*) FILTER (WHERE m.mem_estado = 'ACTIVO')      AS membros,
+               count(*) FILTER (WHERE m.mem_estado = 'INTERESSADO') AS interessados
+          FROM secretaria.membro m WHERE m.mem_end_date IS NULL GROUP BY 1
+    ),
+    linhas AS (
+        SELECT t.tra_igr_id AS igr_id, t.tra_mem_id, t.tra_fam_id, f.fun_tipo::TEXT AS tipo, l.tli_valor AS valor
+          FROM tesouraria.transacao t
+          JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+          JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id, per
+         WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+           AND t.tra_data_hora >= per.de AND t.tra_data_hora < per.ate
+    ),
+    din AS (
+        SELECT igr_id,
+               sum(valor) FILTER (WHERE tipo = 'DIZIMO') AS dizimos,
+               sum(valor) FILTER (WHERE tipo NOT IN ('DIZIMO', 'REAVIVAMENTO')) AS ofertas,
+               sum(valor) FILTER (WHERE tipo = 'REAVIVAMENTO') AS reavivamento
+          FROM linhas GROUP BY 1
+    ),
+    contrib AS (
+        SELECT m.mem_igr_id AS igr_id, count(DISTINCT m.mem_id) AS contribuintes
+          FROM secretaria.membro m
+         WHERE m.mem_end_date IS NULL AND m.mem_estado = 'ACTIVO'
+           AND EXISTS (SELECT 1 FROM linhas x WHERE x.tra_mem_id = m.mem_id OR (m.mem_fam_id IS NOT NULL AND x.tra_fam_id = m.mem_fam_id))
+         GROUP BY 1
+    ),
+    livro AS (
+        SELECT l.mmb_igr_id AS igr_id,
+               count(*) FILTER (WHERE l.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE', 'TRANSFERENCIA_ENTRADA')) AS entradas,
+               count(*) FILTER (WHERE l.mmb_tipo IN ('TRANSFERENCIA_SAIDA', 'FALECIMENTO', 'REMOCAO_DISCIPLINA', 'REMOCAO_PEDIDO', 'DESAPARECIDO')) AS perdas
+          FROM secretaria.movimento_membro l
+         WHERE l.mmb_end_date IS NULL AND l.mmb_data BETWEEN p_inicio AND p_fim
+         GROUP BY 1
+    )
+    SELECT i.igr_id, i.igr_nome::TEXT, i.igr_ent_id, e.ent_nome::TEXT, i.igr_dst_id, d.dst_nome::TEXT,
+           i.igr_id = ANY (a.membros), i.igr_id = ANY (a.tesouraria),
+           coalesce(m.membros, 0)::INT,
+           (coalesce(m.membros, 0) - coalesce(ina.n, 0))::INT,
+           coalesce(ina.n, 0)::INT,
+           coalesce(m.interessados, 0)::INT,
+           coalesce(dn.dizimos, 0)::DECIMAL(14,2), coalesce(dn.ofertas, 0)::DECIMAL(14,2), coalesce(dn.reavivamento, 0)::DECIMAL(14,2),
+           coalesce(c.contribuintes, 0)::INT,
+           coalesce(lv.entradas, 0)::INT, coalesce(lv.perdas, 0)::INT
+      FROM organizacao.igreja i
+      CROSS JOIN acesso a
+      JOIN organizacao.entidade e ON e.ent_id = i.igr_ent_id
+      LEFT JOIN organizacao.distrito d ON d.dst_id = i.igr_dst_id
+      LEFT JOIN mem m ON m.igr_id = i.igr_id
+      LEFT JOIN din dn ON dn.igr_id = i.igr_id
+      LEFT JOIN contrib c ON c.igr_id = i.igr_id
+      LEFT JOIN livro lv ON lv.igr_id = i.igr_id
+      LEFT JOIN LATERAL (SELECT count(*) AS n FROM secretaria.fn_participacao_membros(i.igr_id) p WHERE p.inactivo) ina ON i.igr_id = ANY (a.membros)
+     WHERE i.igr_end_date IS NULL
+     ORDER BY i.igr_nome
+$$;
+COMMENT ON FUNCTION organizacao.fn_painel_periodo(DATE, DATE) IS
+    'V38: dashboard por igreja visível no período (membros, activos, inactivos, dízimos, ofertas, reavivamento, contribuintes, entradas e perdas)';
+REVOKE ALL ON FUNCTION organizacao.fn_painel_periodo(DATE, DATE) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION organizacao.fn_painel_periodo(DATE, DATE) TO app_igreja;
+
+-- ---------------------------------------------------------------- últimos 12 meses: também ofertas e reavivamento
+CREATE OR REPLACE VIEW organizacao.vw_painel_igrejas_mensal WITH (security_invoker = true) AS
+WITH meses AS (
+    SELECT g::date AS ini, (g + INTERVAL '1 month')::date AS fim,
+           EXTRACT(YEAR FROM g)::INT AS ano, EXTRACT(MONTH FROM g)::INT AS mes
+    FROM generate_series(date_trunc('month', now() AT TIME ZONE 'Africa/Maputo') - INTERVAL '11 months',
+                         date_trunc('month', now() AT TIME ZONE 'Africa/Maputo'), INTERVAL '1 month') g
+),
+desde AS (SELECT (MIN(ini)::timestamp AT TIME ZONE 'Africa/Maputo') AS t, MIN(ini) AS d FROM meses),
+dinheiro AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'ENTRADA') AS entradas,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'SAIDA')   AS saidas
+    FROM tesouraria.transacao t
+    JOIN tesouraria.conta_financeira c ON c.cfi_id = t.tra_cfi_id AND c.cfi_ent_id IS NULL, desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo IN ('ENTRADA', 'SAIDA') AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+fundos AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'DIZIMO') AS dizimos,
+           COUNT(DISTINCT t.tra_mem_id) FILTER (WHERE f.fun_tipo::TEXT = 'DIZIMO') AS dizimistas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT NOT IN ('DIZIMO', 'REAVIVAMENTO')) AS ofertas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'REAVIVAMENTO') AS reavivamento
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id, desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+      AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+livro AS (
+    SELECT l.mmb_igr_id AS igr_id, EXTRACT(YEAR FROM l.mmb_data)::INT AS ano, EXTRACT(MONTH FROM l.mmb_data)::INT AS mes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE')) AS admissoes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_ENTRADA') AS transf_entrada,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_SAIDA')   AS transf_saida
+    FROM secretaria.movimento_membro l, desde
+    WHERE l.mmb_end_date IS NULL AND l.mmb_data >= desde.d
+    GROUP BY 1, 2, 3
+)
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_ent_id AS entidade_id, i.igr_dst_id AS distrito_pastoral_id, ms.ano, ms.mes,
+       COALESCE(dn.entradas, 0) AS entradas, COALESCE(dn.saidas, 0) AS saidas,
+       COALESCE(z.dizimos, 0) AS dizimos, COALESCE(z.dizimistas, 0) AS dizimistas,
+       COALESCE(l.admissoes, 0) AS admissoes, COALESCE(l.transf_entrada, 0) AS transf_entrada, COALESCE(l.transf_saida, 0) AS transf_saida,
+       COALESCE(z.ofertas, 0) AS ofertas, COALESCE(z.reavivamento, 0) AS reavivamento
+FROM organizacao.igreja i
+CROSS JOIN meses ms
+LEFT JOIN dinheiro dn ON dn.igr_id = i.igr_id AND dn.ano = ms.ano AND dn.mes = ms.mes
+LEFT JOIN fundos z    ON z.igr_id = i.igr_id AND z.ano = ms.ano AND z.mes = ms.mes
+LEFT JOIN livro l     ON l.igr_id = i.igr_id AND l.ano = ms.ano AND l.mes = ms.mes
+WHERE i.igr_end_date IS NULL;
+
+-- >>>>> V39__santa_ceia.sql
+-- =====================================================================
+-- V39 · Santa Ceia (F-ACT): agendamento e participantes
+--
+--   santa_ceia   igreja, data, hora, local, responsável (quem oficia), observações; depois de realizada, os
+--                participantes: homens, mulheres e visitantes. Estado AGENDADA, REALIZADA ou CANCELADA.
+--   regras       uma Santa Ceia por igreja e dia; números não negativos e obrigatórios quando REALIZADA;
+--                não se marca como realizada uma data futura; o responsável é membro da igreja.
+--   histórico    actividades.vw_santa_ceia: cada celebração com o total de participantes (para o Início, o painel
+--                e a comparação entre igrejas).
+--
+-- Permissões novas (actividades.santa_ceia.*): gerem ADMIN, PASTOR, ANCIAO e SECRETARIO; lêem DIRECTOR_DEPARTAMENTO e
+-- ADMIN_ASSOCIACAO. Gerado com database/gerador (defs.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+CREATE TYPE nucleo.estado_santa_ceia_t AS ENUM ('AGENDADA', 'REALIZADA', 'CANCELADA');
+
+-- ---------------------------------------------------------------- tabela (gerada: gen.py)
+CREATE TABLE actividades.santa_ceia (
+    stc_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    stc_igr_id INT NOT NULL,
+    stc_data DATE NOT NULL,
+    stc_hora VARCHAR(5),
+    stc_local VARCHAR(150),
+    stc_responsavel_mem_id INT,
+    stc_observacoes VARCHAR(500),
+    stc_homens SMALLINT,
+    stc_mulheres SMALLINT,
+    stc_visitantes SMALLINT,
+    stc_estado estado_santa_ceia_t NOT NULL DEFAULT 'AGENDADA',
+    stc_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    stc_criado_por INT,
+    stc_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    stc_modificado_por INT,
+    stc_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_stc_igr_id FOREIGN KEY (stc_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_stc_responsavel_mem_id FOREIGN KEY (stc_responsavel_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_stc_numeros CHECK (coalesce(stc_homens, 0) >= 0 AND coalesce(stc_mulheres, 0) >= 0 AND coalesce(stc_visitantes, 0) >= 0),
+    CONSTRAINT chk_stc_hora CHECK (stc_hora IS NULL OR stc_hora ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),
+    CONSTRAINT chk_stc_realizada CHECK (stc_estado <> 'REALIZADA' OR (stc_homens IS NOT NULL AND stc_mulheres IS NOT NULL AND stc_visitantes IS NOT NULL)),
+    CONSTRAINT chk_stc_end_date CHECK (stc_end_date IS NULL OR stc_end_date >= stc_criado_em)
+);
+COMMENT ON TABLE actividades.santa_ceia IS 'Santa Ceia: agendamento (data, hora, local, responsável) e participantes depois de realizada (V39)';
+COMMENT ON COLUMN actividades.santa_ceia.stc_hora IS 'Hora (hh:mm)';
+COMMENT ON COLUMN actividades.santa_ceia.stc_responsavel_mem_id IS 'Quem oficia (pastor ou ancião)';
+COMMENT ON COLUMN actividades.santa_ceia.stc_homens IS 'Participantes: homens (depois de realizada)';
+COMMENT ON COLUMN actividades.santa_ceia.stc_mulheres IS 'Participantes: mulheres';
+COMMENT ON COLUMN actividades.santa_ceia.stc_visitantes IS 'Participantes: visitantes';
+CREATE UNIQUE INDEX uq_stc_igr_id_data ON actividades.santa_ceia (stc_igr_id, stc_data) WHERE stc_end_date IS NULL;
+CREATE INDEX idx_stc_responsavel_mem_id ON actividades.santa_ceia (stc_responsavel_mem_id);
+
+CREATE TRIGGER trg_stc_00_padrao BEFORE INSERT OR UPDATE ON actividades.santa_ceia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('stc', 'actividades.santa_ceia', 'stc_igr_id');
+CREATE TRIGGER trg_stc_00_sem_delete BEFORE DELETE ON actividades.santa_ceia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('stc');
+CREATE TRIGGER trg_stc_00_sem_truncate BEFORE TRUNCATE ON actividades.santa_ceia FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('stc');
+CREATE TRIGGER trg_stc_99_log AFTER UPDATE ON actividades.santa_ceia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('stc');
+ALTER TABLE actividades.santa_ceia ADD CONSTRAINT fk_stc_criado_por FOREIGN KEY (stc_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.santa_ceia ADD CONSTRAINT fk_stc_modificado_por FOREIGN KEY (stc_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE actividades.santa_ceia ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_stc_ler ON actividades.santa_ceia FOR SELECT USING (stc_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia.ler'))::INT[]));
+CREATE POLICY pol_stc_criar ON actividades.santa_ceia FOR INSERT WITH CHECK (stc_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia.criar'))::INT[]));
+CREATE POLICY pol_stc_alterar ON actividades.santa_ceia FOR UPDATE USING (stc_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia.alterar'))::INT[])) WITH CHECK (stc_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON actividades.santa_ceia TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+CREATE INDEX idx_stc_igr_pagina ON actividades.santa_ceia (stc_igr_id, stc_id);
+
+COMMENT ON CONSTRAINT chk_stc_numeros ON actividades.santa_ceia IS 'Os números de participantes não podem ser negativos.';
+COMMENT ON CONSTRAINT chk_stc_hora ON actividades.santa_ceia IS '[hora] Escreva a hora como hh:mm (ex.: 09:30).';
+COMMENT ON CONSTRAINT chk_stc_realizada ON actividades.santa_ceia IS '[homens] Para marcar como realizada, indique os homens, as mulheres e os visitantes.';
+COMMENT ON INDEX actividades.uq_stc_igr_id_data IS '[data] Já há uma Santa Ceia nesta igreja neste dia.';
+
+-- ---------------------------------------------------------------- permissões
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('actividades.santa_ceia.ler', 'Ler: Santa Ceia (agendamento e participantes)'),
+  ('actividades.santa_ceia.criar', 'Criar: Santa Ceia (agendamento e participantes)'),
+  ('actividades.santa_ceia.alterar', 'Alterar: Santa Ceia (agendamento e participantes)'),
+  ('actividades.santa_ceia.terminar', 'Terminar (end_date): Santa Ceia (agendamento e participantes)');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pf.per_id, pm.prm_id
+  FROM nucleo.perfil pf, nucleo.permissao pm
+ WHERE pm.prm_codigo LIKE 'actividades.santa_ceia.%'
+   AND (pf.per_codigo IN ('ADMIN', 'PASTOR', 'ANCIAO', 'SECRETARIO')
+        OR (pf.per_codigo IN ('DIRECTOR_DEPARTAMENTO', 'ADMIN_ASSOCIACAO') AND pm.prm_codigo LIKE '%.ler'));
+
+-- ---------------------------------------------------------------- regras
+CREATE FUNCTION actividades.fn_stc_validar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.stc_estado = 'REALIZADA' AND NEW.stc_data > (now() AT TIME ZONE 'Africa/Maputo')::DATE THEN
+        RAISE EXCEPTION 'Só se marca como realizada depois do dia da Santa Ceia' USING COLUMN = 'stc_estado';
+    END IF;
+    IF NEW.stc_responsavel_mem_id IS NOT NULL
+       AND (TG_OP = 'INSERT' OR NEW.stc_responsavel_mem_id IS DISTINCT FROM OLD.stc_responsavel_mem_id)
+       AND NOT EXISTS (SELECT 1 FROM secretaria.membro m WHERE m.mem_id = NEW.stc_responsavel_mem_id AND m.mem_igr_id = NEW.stc_igr_id) THEN
+        RAISE EXCEPTION 'O responsável tem de ser membro desta igreja' USING COLUMN = 'stc_responsavel_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_stc_10_validar BEFORE INSERT OR UPDATE ON actividades.santa_ceia
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_stc_validar();
+
+-- ---------------------------------------------------------------- histórico
+CREATE VIEW actividades.vw_santa_ceia WITH (security_invoker = true) AS
+SELECT s.stc_id, s.stc_igr_id AS igreja_id, i.igr_nome AS igreja, s.stc_data AS data, s.stc_hora AS hora, s.stc_local AS local,
+       s.stc_estado AS estado, EXTRACT(YEAR FROM s.stc_data)::INT AS ano,
+       (SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = s.stc_responsavel_mem_id) AS responsavel,
+       s.stc_homens AS homens, s.stc_mulheres AS mulheres, s.stc_visitantes AS visitantes,
+       (coalesce(s.stc_homens, 0) + coalesce(s.stc_mulheres, 0) + coalesce(s.stc_visitantes, 0))::INT AS total
+  FROM actividades.santa_ceia s
+  JOIN organizacao.igreja i ON i.igr_id = s.stc_igr_id
+ WHERE s.stc_end_date IS NULL;
+COMMENT ON VIEW actividades.vw_santa_ceia IS 'V39: celebrações da Santa Ceia com os participantes (cada um só vê as igrejas que pode ler)';
+GRANT SELECT ON actividades.vw_santa_ceia TO app_igreja;
+
+-- >>>>> V40__parentesco_na_familia.sql
+-- =====================================================================
+-- V40 · Relações familiares (F-SEC-03): o parentesco de cada membro com o chefe da família
+--
+--   membro.mem_parentesco   CHEFE, CONJUGE, FILHO, PAI_MAE, IRMAO, NETO ou OUTRO; só para quem está numa família;
+--                           um só chefe por família. Ao mudar de família (ou sair), o parentesco antigo é limpo.
+--   vw_membro_basico        ganha o parentesco (no fim), para a ficha da família.
+--
+-- As permissões não mudam: quem altera o membro altera o parentesco. Gerado com database/gerador (defs.py).
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TABLE secretaria.membro ADD COLUMN mem_parentesco VARCHAR(10);
+ALTER TABLE secretaria.membro ADD CONSTRAINT chk_mem_parentesco
+    CHECK (mem_parentesco IS NULL OR (mem_fam_id IS NOT NULL AND mem_parentesco IN ('CHEFE', 'CONJUGE', 'FILHO', 'PAI_MAE', 'IRMAO', 'NETO', 'OUTRO')));
+COMMENT ON COLUMN secretaria.membro.mem_parentesco IS 'Relação com o chefe da família: CHEFE, CONJUGE, FILHO, PAI_MAE, IRMAO, NETO, OUTRO (V40)';
+COMMENT ON CONSTRAINT chk_mem_parentesco ON secretaria.membro IS '[parentesco] O parentesco só existe para quem está numa família (chefe, cônjuge, filho, pai/mãe, irmão, neto ou outro).';
+CREATE UNIQUE INDEX uq_mem_chefe_familia ON secretaria.membro (mem_fam_id) WHERE mem_parentesco = 'CHEFE' AND mem_end_date IS NULL;
+COMMENT ON INDEX secretaria.uq_mem_chefe_familia IS '[parentesco] Esta família já tem chefe: mude primeiro o parentesco do actual.';
+
+-- mudar de família (ou sair dela) limpa o parentesco, que era em relação ao chefe da outra família
+CREATE FUNCTION secretaria.fn_mem_parentesco() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.mem_fam_id IS DISTINCT FROM OLD.mem_fam_id AND NEW.mem_parentesco IS NOT DISTINCT FROM OLD.mem_parentesco THEN
+        NEW.mem_parentesco := NULL;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_mem_12_parentesco BEFORE UPDATE OF mem_fam_id ON secretaria.membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mem_parentesco();
+
+CREATE OR REPLACE VIEW secretaria.vw_membro_basico WITH (security_invoker = true) AS
+SELECT mem_id, mem_igr_id, mem_fam_id, mem_nome, mem_apelido, mem_sexo, mem_estado,
+       mem_estado_civil, mem_data_nascimento, mem_conjuge_mem_id, mem_parentesco
+FROM secretaria.membro WHERE mem_end_date IS NULL;
+
+-- >>>>> V41__disciplina_confidencial_e_acessos.sql
+-- =====================================================================
+-- V41 · Disciplina eclesiástica (F-SEC-07, P-03): motivo confidencial com auditoria de acessos
+--
+--   motivo        secretaria.disciplina.dsc_motivo deixa de ser legível directamente (como o hash das senhas):
+--                 grava-se como antes, mas lê-se só por secretaria.fn_disciplina_motivo(id), que confirma a permissão
+--                 (secretaria.disciplina.ler na igreja do membro) e regista a consulta.
+--   acessos       nucleo.acesso_confidencial (tabela nova, escrita só pelo sistema): quem consultou que dado
+--                 confidencial e quando. Lêem-na o pastor e a administração da Associação.
+--   histórico     o log de auditoria (fn_log_auditoria) já guardava as alterações da disciplina; passa a guardar só que o
+--                 motivo mudou, sem o texto (e os registos antigos são limpos), como as senhas.
+--
+-- Gerado com database/gerador (defs.py: tabela acesso_confidencial, SO_ESCRITA = dsc_motivo); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- tabela nucleo.acesso_confidencial (gerada: gen.py)
+CREATE TABLE nucleo.acesso_confidencial (
+    aco_id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    aco_usu_id INT,
+    aco_igr_id INT NOT NULL,
+    aco_tabela VARCHAR(80) NOT NULL,
+    aco_registo_id BIGINT NOT NULL,
+    aco_accao VARCHAR(20) NOT NULL,
+    aco_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    aco_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    aco_criado_por INT,
+    aco_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    aco_modificado_por INT,
+    aco_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_aco_usu_id FOREIGN KEY (aco_usu_id) REFERENCES nucleo.usuario(usu_id),
+    CONSTRAINT fk_aco_igr_id FOREIGN KEY (aco_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_aco_end_date CHECK (aco_end_date IS NULL OR aco_end_date >= aco_criado_em)
+);
+COMMENT ON TABLE nucleo.acesso_confidencial IS 'Consultas a dados confidenciais (ex.: o motivo de uma censura): quem, quando, que registo (V41)';
+COMMENT ON COLUMN nucleo.acesso_confidencial.aco_accao IS 'Ex.: LER_MOTIVO';
+CREATE INDEX idx_aco_usu_id ON nucleo.acesso_confidencial (aco_usu_id);
+CREATE INDEX idx_aco_igr_pagina ON nucleo.acesso_confidencial (aco_igr_id, aco_id);
+CREATE INDEX idx_aco_igr_data ON nucleo.acesso_confidencial (aco_igr_id, aco_criado_em DESC);
+
+CREATE TRIGGER trg_aco_00_padrao BEFORE INSERT OR UPDATE ON nucleo.acesso_confidencial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('aco', '', 'aco_igr_id');
+CREATE TRIGGER trg_aco_00_sem_delete BEFORE DELETE ON nucleo.acesso_confidencial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('aco');
+CREATE TRIGGER trg_aco_00_sem_truncate BEFORE TRUNCATE ON nucleo.acesso_confidencial FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('aco');
+CREATE TRIGGER trg_aco_99_log AFTER UPDATE ON nucleo.acesso_confidencial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('aco');
+ALTER TABLE nucleo.acesso_confidencial ADD CONSTRAINT fk_aco_criado_por FOREIGN KEY (aco_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.acesso_confidencial ADD CONSTRAINT fk_aco_modificado_por FOREIGN KEY (aco_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+GRANT SELECT ON nucleo.acesso_confidencial TO app_igreja;              -- escrita só pelo sistema
+ALTER TABLE nucleo.acesso_confidencial ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_aco_ler ON nucleo.acesso_confidencial FOR SELECT USING (aco_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('nucleo.acesso_confidencial.ler'))::INT[]));
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('nucleo.acesso_confidencial.ler', 'Ler: consultas a dados confidenciais (quem, quando, que registo)'),
+  ('nucleo.acesso_confidencial.criar', 'Criar: consultas a dados confidenciais (só o sistema)'),
+  ('nucleo.acesso_confidencial.alterar', 'Alterar: consultas a dados confidenciais (só o sistema)'),
+  ('nucleo.acesso_confidencial.terminar', 'Terminar (end_date): consultas a dados confidenciais (só o sistema)');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pf.per_id, pm.prm_id FROM nucleo.perfil pf, nucleo.permissao pm
+ WHERE pm.prm_codigo = 'nucleo.acesso_confidencial.ler' AND pf.per_codigo IN ('PASTOR', 'ADMIN_ASSOCIACAO');
+
+-- ---------------------------------------------------------------- o motivo da censura deixa de ser legível directamente
+REVOKE SELECT ON secretaria.disciplina FROM app_igreja;
+GRANT SELECT (dsc_id, dsc_mem_id, dsc_vot_id, dsc_data_inicio, dsc_data_fim, dsc_encarregado_notificado, dsc_estado,
+              dsc_criado_em, dsc_criado_por, dsc_modificado_em, dsc_modificado_por, dsc_end_date) ON secretaria.disciplina TO app_igreja;
+COMMENT ON COLUMN secretaria.disciplina.dsc_motivo IS
+    'Dado sensível: grava-se como as outras colunas, mas lê-se só por secretaria.fn_disciplina_motivo (o acesso fica registado) (V41)';
+
+CREATE FUNCTION secretaria.fn_disciplina_motivo(p_dsc INT) RETURNS TEXT
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_igr    INT;
+    v_motivo TEXT;
+BEGIN
+    SELECT m.mem_igr_id, d.dsc_motivo INTO v_igr, v_motivo
+      FROM secretaria.disciplina d JOIN secretaria.membro m ON m.mem_id = d.dsc_mem_id
+     WHERE d.dsc_id = p_dsc;
+    -- não existe, ou existe mas não é visível: a mesma resposta (a API devolve 404)
+    IF v_igr IS NULL OR NOT (v_igr = ANY (nucleo.fn_igrejas_com_permissao('secretaria.disciplina.ler'))) THEN
+        RAISE EXCEPTION 'Registo de disciplina não encontrado' USING ERRCODE = 'no_data_found';
+    END IF;
+    INSERT INTO nucleo.acesso_confidencial (aco_usu_id, aco_igr_id, aco_tabela, aco_registo_id, aco_accao)
+    VALUES (nucleo.fn_usuario_sessao(), v_igr, 'secretaria.disciplina', p_dsc, 'LER_MOTIVO');
+    RETURN v_motivo;
+END $$;
+COMMENT ON FUNCTION secretaria.fn_disciplina_motivo(INT) IS
+    'V41: o motivo de uma censura, só para quem lê a disciplina na igreja do membro; cada consulta fica em nucleo.acesso_confidencial';
+REVOKE ALL ON FUNCTION secretaria.fn_disciplina_motivo(INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION secretaria.fn_disciplina_motivo(INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- o histórico não guarda o texto do motivo
+CREATE OR REPLACE FUNCTION nucleo.fn_log_auditoria() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    p      TEXT  := TG_ARGV[0];
+    n      JSONB := to_jsonb(NEW);
+    o      JSONB;
+    antes  JSONB := NULL;
+    depois JSONB := n;
+    accao  TEXT  := TG_OP;
+    k      TEXT;
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        o := to_jsonb(OLD);
+        SELECT jsonb_object_agg(x, o -> x), jsonb_object_agg(x, n -> x)
+          INTO antes, depois
+          FROM jsonb_object_keys(n) x
+         WHERE (o -> x) IS DISTINCT FROM (n -> x)
+           AND x NOT IN (p || '_modificado_em', p || '_modificado_por');
+        IF depois IS NULL THEN
+            RETURN NULL;                              -- nada mudou de facto
+        END IF;
+        IF o ->> (p || '_end_date') IS NULL AND n ->> (p || '_end_date') IS NOT NULL THEN
+            accao := 'TERMINO';
+        END IF;
+        IF current_setting('app.anonimizacao', true) = 'on' THEN
+            antes := NULL;                            -- dados pessoais apagados: não ficam no histórico (V15)
+        END IF;
+    END IF;
+    -- hashes de senhas e dados confidenciais nunca ficam no histórico: fica só a indicação de que mudaram (V16, V41)
+    FOREACH k IN ARRAY ARRAY[p || '_senha_hash', 'dsc_motivo'] LOOP
+        IF depois ? k THEN
+            depois := jsonb_set(depois, ARRAY[k], CASE WHEN k = 'dsc_motivo' THEN '"(confidencial: alterado)"' ELSE '"(alterada)"' END::JSONB);
+        END IF;
+        IF antes ? k THEN
+            antes := antes - k;
+        END IF;
+    END LOOP;
+    INSERT INTO nucleo.log_auditoria (lau_usu_id, lau_tabela, lau_registo_id, lau_accao, lau_dados_antes, lau_dados_depois)
+    VALUES (nucleo.fn_usuario_sessao(), TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME,
+            (n ->> (p || '_id'))::BIGINT, accao, antes, depois);
+    RETURN NULL;
+END $$;
+
+-- limpar os motivos que já estão no log (o log é imutável: o trigger que o protege é desligado só aqui)
+DO $$
+DECLARE t regclass;
+BEGIN
+    FOR t IN SELECT 'nucleo.log_auditoria'::regclass
+             UNION ALL SELECT inhrelid::regclass FROM pg_inherits WHERE inhparent = 'nucleo.log_auditoria'::regclass LOOP
+        EXECUTE format('ALTER TABLE %s DISABLE TRIGGER trg_lau_00_imutavel', t);
+    END LOOP;
+    UPDATE nucleo.log_auditoria
+       SET lau_dados_antes  = lau_dados_antes - 'dsc_motivo',
+           lau_dados_depois = CASE WHEN lau_dados_depois ? 'dsc_motivo'
+                                   THEN jsonb_set(lau_dados_depois, '{dsc_motivo}', '"(confidencial: alterado)"')
+                                   ELSE lau_dados_depois END
+     WHERE lau_tabela = 'secretaria.disciplina'
+       AND (lau_dados_antes ? 'dsc_motivo' OR lau_dados_depois ? 'dsc_motivo');
+    FOR t IN SELECT 'nucleo.log_auditoria'::regclass
+             UNION ALL SELECT inhrelid::regclass FROM pg_inherits WHERE inhparent = 'nucleo.log_auditoria'::regclass LOOP
+        EXECUTE format('ALTER TABLE %s ENABLE TRIGGER trg_lau_00_imutavel', t);
+    END LOOP;
+END $$;
+
+-- >>>>> V42__tesouraria_maneio_contagem_e_sms.sql
+-- =====================================================================
+-- V42 · Tesouraria (F-TES): fundo de maneio, participantes da contagem e SMS com o resumo da contribuição
+--
+--   fundo de maneio   novo tipo de conta FUNDO_MANEIO (dinheiro à mão para despesas urgentes): valor inicial
+--                     (saldo inicial), reposições (transferência de outra conta), despesas (saídas, com quem as fez e os
+--                     comprovativos), saldo e histórico como qualquer conta; nunca é conta da Missão.
+--   contagem          tesouraria.contagem_participante: quem participou na contagem e com que função (tesoureiro,
+--                     Escola Sabatina, diácono, ancião, outro), além dos dois contadores; membro da igreja da contagem.
+--   SMS               ao emitir o recibo, a mensagem leva o resumo por fundo (ex.: Dízimo 1 000,00; Oferta 500,00) e uma
+--                     chave por recibo: a mesma contribuição nunca gera dois SMS (falhas de comunicação repetem o envio da
+--                     fila, não o registo financeiro). Continua a exigir o consentimento do membro.
+--
+-- Permissões novas (tesouraria.contagem_participante.*): as mesmas das contagens. Gerado com database/gerador.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TYPE nucleo.tipo_conta_t ADD VALUE IF NOT EXISTS 'FUNDO_MANEIO';
+
+-- o fundo de maneio, como o caixa, é dinheiro da igreja: nunca uma conta da Missão (compara como texto: o valor novo
+-- não se usa na mesma transacção em que é criado)
+CREATE OR REPLACE FUNCTION tesouraria.fn_cfi_validar() RETURNS trigger AS $$
+BEGIN
+    IF NEW.cfi_ent_id IS NOT NULL THEN
+        IF NEW.cfi_tipo::TEXT IN ('CAIXA', 'FUNDO_MANEIO') THEN
+            RAISE EXCEPTION 'Uma conta da Missão é uma conta bancária ou de carteira móvel, não um caixa nem um fundo de maneio';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM tesouraria.fundo WHERE fun_destino_ent_id = NEW.cfi_ent_id AND fun_end_date IS NULL) THEN
+            RAISE EXCEPTION 'A entidade % não recebe nenhum fundo: não pode ter uma conta da Missão', NEW.cfi_ent_id;
+        END IF;
+    END IF;
+    IF TG_OP = 'UPDATE' AND NEW.cfi_ent_id IS DISTINCT FROM OLD.cfi_ent_id
+       AND EXISTS (SELECT 1 FROM tesouraria.transacao WHERE tra_cfi_id = NEW.cfi_id OR tra_destino_cfi_id = NEW.cfi_id) THEN
+        RAISE EXCEPTION 'A conta "%" já tem movimentos: não pode passar a ser (ou deixar de ser) uma conta da Missão', NEW.cfi_nome;
+    END IF;
+    RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------------------------- participantes da contagem (gerada: gen.py)
+CREATE TABLE tesouraria.contagem_participante (
+    cpa_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    cpa_cnu_id INT NOT NULL,
+    cpa_mem_id INT NOT NULL,
+    cpa_funcao VARCHAR(20) NOT NULL,
+    cpa_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    cpa_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cpa_criado_por INT,
+    cpa_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cpa_modificado_por INT,
+    cpa_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_cpa_cnu_id FOREIGN KEY (cpa_cnu_id) REFERENCES tesouraria.contagem_numerario(cnu_id),
+    CONSTRAINT fk_cpa_mem_id FOREIGN KEY (cpa_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_cpa_funcao CHECK (cpa_funcao IN ('TESOUREIRO', 'ESCOLA_SABATINA', 'DIACONO', 'ANCIAO', 'OUTRO')),
+    CONSTRAINT chk_cpa_end_date CHECK (cpa_end_date IS NULL OR cpa_end_date >= cpa_criado_em)
+);
+COMMENT ON TABLE tesouraria.contagem_participante IS 'Quem participou na contagem do numerário e com que função (tesoureiro, Escola Sabatina, diácono, ancião) (V42)';
+COMMENT ON COLUMN tesouraria.contagem_participante.cpa_funcao IS 'TESOUREIRO, ESCOLA_SABATINA, DIACONO, ANCIAO ou OUTRO';
+CREATE UNIQUE INDEX uq_cpa_cnu_id_mem_id ON tesouraria.contagem_participante (cpa_cnu_id, cpa_mem_id) WHERE cpa_end_date IS NULL;
+CREATE INDEX idx_cpa_mem_id ON tesouraria.contagem_participante (cpa_mem_id);
+
+CREATE TRIGGER trg_cpa_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.contagem_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('cpa', 'tesouraria.contagem_participante', '');
+CREATE TRIGGER trg_cpa_00_sem_delete BEFORE DELETE ON tesouraria.contagem_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('cpa');
+CREATE TRIGGER trg_cpa_00_sem_truncate BEFORE TRUNCATE ON tesouraria.contagem_participante FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('cpa');
+CREATE TRIGGER trg_cpa_99_log AFTER UPDATE ON tesouraria.contagem_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('cpa');
+ALTER TABLE tesouraria.contagem_participante ADD CONSTRAINT fk_cpa_criado_por FOREIGN KEY (cpa_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.contagem_participante ADD CONSTRAINT fk_cpa_modificado_por FOREIGN KEY (cpa_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE tesouraria.contagem_participante ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_cpa_ler ON tesouraria.contagem_participante FOR SELECT USING (EXISTS (SELECT 1 FROM tesouraria.contagem_numerario x WHERE x.cnu_id = cpa_cnu_id AND x.cnu_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.contagem_participante.ler'))::INT[])));
+CREATE POLICY pol_cpa_criar ON tesouraria.contagem_participante FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM tesouraria.contagem_numerario x WHERE x.cnu_id = cpa_cnu_id AND x.cnu_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.contagem_participante.criar'))::INT[])));
+CREATE POLICY pol_cpa_alterar ON tesouraria.contagem_participante FOR UPDATE USING (EXISTS (SELECT 1 FROM tesouraria.contagem_numerario x WHERE x.cnu_id = cpa_cnu_id AND x.cnu_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.contagem_participante.alterar'))::INT[]))) WITH CHECK (EXISTS (SELECT 1 FROM tesouraria.contagem_numerario x WHERE x.cnu_id = cpa_cnu_id AND x.cnu_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.contagem_participante.alterar'))::INT[])));
+GRANT SELECT, INSERT, UPDATE ON tesouraria.contagem_participante TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA tesouraria TO app_igreja;
+COMMENT ON CONSTRAINT chk_cpa_funcao ON tesouraria.contagem_participante IS '[funcao] A função é tesoureiro, Escola Sabatina, diácono, ancião ou outro.';
+COMMENT ON INDEX tesouraria.uq_cpa_cnu_id_mem_id IS '[membroId] Este membro já está nesta contagem.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao) VALUES
+  ('tesouraria.contagem_participante.ler', 'Ler: participantes da contagem do numerário'),
+  ('tesouraria.contagem_participante.criar', 'Criar: participantes da contagem do numerário'),
+  ('tesouraria.contagem_participante.alterar', 'Alterar: participantes da contagem do numerário'),
+  ('tesouraria.contagem_participante.terminar', 'Terminar (end_date): participantes da contagem do numerário');
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'tesouraria.contagem_numerario.%'
+  JOIN nucleo.permissao novo   ON novo.prm_codigo = replace(antigo.prm_codigo, 'tesouraria.contagem_numerario.', 'tesouraria.contagem_participante.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- o participante é membro da igreja da contagem (corre com os direitos do dono: quem não vê a contagem recebe a recusa
+-- da RLS, "sem permissão", e não esta mensagem)
+CREATE FUNCTION tesouraria.fn_cpa_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM tesouraria.contagem_numerario c JOIN secretaria.membro m ON m.mem_igr_id = c.cnu_igr_id
+                    WHERE c.cnu_id = NEW.cpa_cnu_id AND m.mem_id = NEW.cpa_mem_id) THEN
+        RAISE EXCEPTION 'O participante tem de ser membro da igreja da contagem' USING COLUMN = 'cpa_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_cpa_10_validar BEFORE INSERT OR UPDATE OF cpa_cnu_id, cpa_mem_id ON tesouraria.contagem_participante
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cpa_validar();
+
+-- ---------------------------------------------------------------- dinheiro em texto: "1 400,00" (sem depender da língua do servidor)
+CREATE FUNCTION nucleo.fn_texto_mt(p NUMERIC) RETURNS TEXT
+LANGUAGE sql IMMUTABLE
+AS $$ SELECT translate(regexp_replace(to_char(p, 'FM999999999990.00'), '([0-9])(?=([0-9]{3})+[.])', '\1 ', 'g'), '.', ',') $$;
+GRANT EXECUTE ON FUNCTION nucleo.fn_texto_mt(NUMERIC) TO app_igreja;
+
+-- ---------------------------------------------------------------- SMS do recibo: o resumo por fundo, uma vez por recibo
+CREATE OR REPLACE FUNCTION nucleo.fn_rec_notificar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_mem    INT;
+    v_valor  NUMERIC;
+    v_igreja TEXT;
+    v_resumo TEXT;
+    c        secretaria.contacto%ROWTYPE;
+    v_canal  nucleo.canal_notificacao_t;
+BEGIN
+    SELECT t.tra_mem_id, t.tra_valor_total, i.igr_nome INTO v_mem, v_valor, v_igreja
+      FROM tesouraria.transacao t JOIN organizacao.igreja i ON i.igr_id = t.tra_igr_id
+     WHERE t.tra_id = NEW.rec_tra_id;
+    IF v_mem IS NULL THEN RETURN NULL; END IF;
+
+    SELECT * INTO c FROM secretaria.contacto
+     WHERE cto_mem_id = v_mem AND cto_end_date IS NULL AND cto_estado = 'ACTIVO'
+       AND cto_tipo::TEXT IN ('WHATSAPP', 'TELEFONE', 'EMAIL')
+     ORDER BY cto_principal DESC, cto_id LIMIT 1;
+    IF NOT FOUND THEN RETURN NULL; END IF;
+
+    v_canal := CASE c.cto_tipo::TEXT WHEN 'WHATSAPP' THEN 'WHATSAPP' WHEN 'EMAIL' THEN 'EMAIL' ELSE 'SMS' END;
+    IF NOT EXISTS (SELECT 1 FROM secretaria.consentimento
+                    WHERE cns_mem_id = v_mem AND cns_end_date IS NULL AND cns_concedido
+                      AND cns_tipo = ('CONTACTO_' || v_canal)::nucleo.tipo_consentimento_t) THEN
+        RETURN NULL;
+    END IF;
+
+    -- o resumo por fundo (os 4 maiores), ex.: "Dízimo 1 000,00; Oferta 500,00"
+    SELECT string_agg(x.nome || ' ' || nucleo.fn_texto_mt(x.valor), '; ' ORDER BY x.valor DESC)
+      INTO v_resumo
+      FROM (SELECT f.fun_nome AS nome, sum(l.tli_valor) AS valor
+              FROM tesouraria.transacao_linha l JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id
+             WHERE l.tli_tra_id = NEW.rec_tra_id AND l.tli_end_date IS NULL
+             GROUP BY f.fun_nome ORDER BY sum(l.tli_valor) DESC LIMIT 4) x;
+
+    INSERT INTO nucleo.notificacao (ntf_igr_id, ntf_mem_id, ntf_canal, ntf_destino, ntf_assunto, ntf_mensagem,
+                                    ntf_origem_tabela, ntf_origem_id, ntf_chave)
+    VALUES (NEW.rec_igr_id, v_mem, v_canal, c.cto_valor, 'Recibo ' || NEW.rec_numero || '/' || NEW.rec_ano,
+            v_igreja || ': recebemos a sua contribuição de ' || nucleo.fn_texto_mt(v_valor) || ' MT'
+            || coalesce(' (' || v_resumo || ')', '') || '. Recibo n.º ' || NEW.rec_numero || '/' || NEW.rec_ano || '. Deus o abençoe.',
+            'tesouraria.recibo', NEW.rec_id, 'recibo:' || NEW.rec_id)
+    ON CONFLICT (ntf_chave) WHERE ntf_end_date IS NULL DO NOTHING;
+    RETURN NULL;
+END $$;
+
+-- >>>>> V43__membro_unico_e_contagem_minima.sql
+-- =====================================================================
+-- V43 · Membro único (F-SEC-01, 4.4 e 18) e contagem com o mínimo de participantes (F-TES, 14.4)
+--
+--   membro       Antes de registar procura-se o membro em TODAS as igrejas, não só nas que o utilizador vê:
+--                nucleo.fn_membro_existente (SECURITY DEFINER) devolve o mesmo membro já registado — mesmo número de
+--                documento, ou o mesmo nome completo com a mesma data de nascimento. Das igrejas que o utilizador não
+--                vê só diz o nome e a igreja (para pedir a transferência), nunca a ficha.
+--                A base de dados recusa um segundo registo nesses casos (trigger trg_mem_05_unico, ao registar e ao
+--                mudar o nome, a data de nascimento ou o documento). Nome só parecido continua a ser aviso: quem tem
+--                permissão para registar confere e confirma (nada se bloqueia só pela semelhança do nome).
+--                Os registos que já existam em duplicado não são tocados (o trigger só olha para o que muda).
+--   contagem     Para conferir uma contagem, tem de ter pelo menos o tesoureiro, um representante da Escola Sabatina
+--                e um diácono (o ancião é opcional). Depois de conferida, os participantes ficam como estavam.
+--   reuniões     O ponto da agenda ganha a discussão (rpt_discussao), separada da descrição (rpt_detalhes) (17.3).
+--                Gerado com database/gerador (defs.py).
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- nome comparável: minúsculas, sem acentos nem espaços a mais
+CREATE FUNCTION nucleo.fn_nome_comparavel(p TEXT) RETURNS TEXT
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+    SELECT nullif(regexp_replace(trim(translate(lower(coalesce(p, '')),
+                  'áàâãäéèêëíìîïóòôõöúùûüçñ', 'aaaaaeeeeiiiiooooouuuucn')), '\s+', ' ', 'g'), '')
+$$;
+COMMENT ON FUNCTION nucleo.fn_nome_comparavel(TEXT) IS 'Nome para comparar: minúsculas, sem acentos, um espaço entre palavras (V43)';
+
+-- ---------------------------------------------------------------- o mesmo membro já registado (em qualquer igreja)
+CREATE FUNCTION nucleo.fn_membro_existente(p_nome TEXT, p_apelido TEXT, p_data_nascimento DATE DEFAULT NULL,
+                                           p_numero_identificacao TEXT DEFAULT NULL, p_excluir_mem_id INT DEFAULT NULL)
+RETURNS TABLE (mem_id INT, igr_id INT, igreja TEXT, nome TEXT, motivo TEXT, visivel BOOLEAN)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH p AS (
+        SELECT nullif(upper(regexp_replace(coalesce(p_numero_identificacao, ''), '[^A-Za-z0-9]', '', 'g')), '') AS doc,
+               nucleo.fn_nome_comparavel(coalesce(p_nome, '') || ' ' || coalesce(p_apelido, '')) AS nome,
+               coalesce(nucleo.fn_igrejas_com_permissao('secretaria.membro.ler'), '{}') AS vejo
+    ), achados AS (
+        -- mesmo documento (5 caracteres ou mais, escrito de qualquer forma)
+        SELECT m.mem_id, 'Mesmo número de documento'::TEXT AS motivo
+          FROM secretaria.membro m, p
+         WHERE p.doc IS NOT NULL AND length(p.doc) >= 5 AND m.mem_end_date IS NULL AND m.mem_numero_identificacao IS NOT NULL
+           AND upper(regexp_replace(m.mem_numero_identificacao::TEXT, '[^A-Za-z0-9]', '', 'g')) = p.doc
+        UNION
+        -- mesmo nome completo e mesma data de nascimento
+        SELECT m.mem_id, 'Mesmo nome e data de nascimento'
+          FROM secretaria.membro m, p
+         WHERE p_data_nascimento IS NOT NULL AND p.nome IS NOT NULL AND m.mem_end_date IS NULL
+           AND m.mem_data_nascimento IS NOT NULL AND m.mem_data_nascimento = p_data_nascimento
+           AND nucleo.fn_nome_comparavel(m.mem_nome || ' ' || m.mem_apelido) = p.nome
+    )
+    SELECT CASE WHEN m.mem_igr_id = ANY (p.vejo) THEN m.mem_id END, m.mem_igr_id, i.igr_nome::TEXT,
+           (m.mem_nome || ' ' || m.mem_apelido)::TEXT, string_agg(a.motivo, '; ' ORDER BY a.motivo), m.mem_igr_id = ANY (p.vejo)
+      FROM achados a
+      JOIN secretaria.membro m ON m.mem_id = a.mem_id
+      JOIN organizacao.igreja i ON i.igr_id = m.mem_igr_id
+     CROSS JOIN p
+     WHERE m.mem_id IS DISTINCT FROM p_excluir_mem_id
+     GROUP BY m.mem_id, m.mem_igr_id, i.igr_nome, m.mem_nome, m.mem_apelido, p.vejo
+     ORDER BY m.mem_apelido, m.mem_nome
+     LIMIT 5
+$$;
+COMMENT ON FUNCTION nucleo.fn_membro_existente(TEXT, TEXT, DATE, TEXT, INT) IS
+    'O mesmo membro já registado em qualquer igreja (mesmo documento, ou mesmo nome e data de nascimento); das igrejas que o utilizador não vê só o nome e a igreja (V43)';
+REVOKE ALL ON FUNCTION nucleo.fn_membro_existente(TEXT, TEXT, DATE, TEXT, INT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION nucleo.fn_membro_existente(TEXT, TEXT, DATE, TEXT, INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- recusa o segundo registo da mesma pessoa
+CREATE FUNCTION secretaria.fn_mem_unico() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    r RECORD;
+BEGIN
+    IF NEW.mem_end_date IS NOT NULL THEN RETURN NEW; END IF;
+    IF TG_OP = 'UPDATE' AND NEW.mem_nome IS NOT DISTINCT FROM OLD.mem_nome AND NEW.mem_apelido IS NOT DISTINCT FROM OLD.mem_apelido
+       AND NEW.mem_data_nascimento IS NOT DISTINCT FROM OLD.mem_data_nascimento
+       AND NEW.mem_numero_identificacao IS NOT DISTINCT FROM OLD.mem_numero_identificacao
+       AND OLD.mem_end_date IS NULL THEN
+        RETURN NEW;
+    END IF;
+    SELECT * INTO r FROM nucleo.fn_membro_existente(NEW.mem_nome, NEW.mem_apelido, NEW.mem_data_nascimento,
+                                                    NEW.mem_numero_identificacao, NEW.mem_id) LIMIT 1;
+    IF FOUND THEN
+        RAISE EXCEPTION 'Este membro já existe: % (%), com o %. Abra o registo existente%.', r.nome, r.igreja, lower(r.motivo),
+              CASE WHEN r.igr_id = NEW.mem_igr_id THEN '' ELSE ' ou peça a transferência a essa igreja' END
+              USING COLUMN = CASE WHEN r.motivo LIKE 'Mesmo número%' THEN 'mem_numero_identificacao' ELSE 'mem_nome' END;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_mem_05_unico BEFORE INSERT OR UPDATE OF mem_nome, mem_apelido, mem_data_nascimento, mem_numero_identificacao, mem_end_date
+    ON secretaria.membro FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mem_unico();
+
+-- ---------------------------------------------------------------- contagem: tesoureiro, Escola Sabatina e diácono para conferir
+CREATE FUNCTION tesouraria.fn_cnu_participantes_minimos() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_falta TEXT;
+BEGIN
+    IF NEW.cnu_estado::TEXT = 'CONFERIDA' AND OLD.cnu_estado::TEXT = 'ABERTA' THEN
+        SELECT string_agg(f.rotulo, ', ' ORDER BY f.ordem) INTO v_falta
+          FROM (VALUES (1, 'TESOUREIRO', 'o tesoureiro'), (2, 'ESCOLA_SABATINA', 'o representante da Escola Sabatina'),
+                       (3, 'DIACONO', 'o diácono')) AS f(ordem, funcao, rotulo)
+         WHERE NOT EXISTS (SELECT 1 FROM tesouraria.contagem_participante p
+                            WHERE p.cpa_cnu_id = NEW.cnu_id AND p.cpa_funcao = f.funcao AND p.cpa_end_date IS NULL);
+        IF v_falta IS NOT NULL THEN
+            RAISE EXCEPTION 'Para conferir, a contagem tem de ter pelo menos o tesoureiro, o representante da Escola Sabatina e o diácono. Falta: %.', v_falta;
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_cnu_20_participantes BEFORE UPDATE OF cnu_estado ON tesouraria.contagem_numerario
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cnu_participantes_minimos();
+
+-- depois de conferida (ou depositada), os participantes não mudam: ficam no histórico como estavam
+CREATE OR REPLACE FUNCTION tesouraria.fn_cpa_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM tesouraria.contagem_numerario c JOIN secretaria.membro m ON m.mem_igr_id = c.cnu_igr_id
+                    WHERE c.cnu_id = NEW.cpa_cnu_id AND m.mem_id = NEW.cpa_mem_id) THEN
+        RAISE EXCEPTION 'O participante tem de ser membro da igreja da contagem' USING COLUMN = 'cpa_mem_id';
+    END IF;
+    IF EXISTS (SELECT 1 FROM tesouraria.contagem_numerario c WHERE c.cnu_id = NEW.cpa_cnu_id AND c.cnu_estado::TEXT <> 'ABERTA') THEN
+        RAISE EXCEPTION 'A contagem já foi conferida: os participantes ficam como estavam';
+    END IF;
+    RETURN NEW;
+END $$;
+DROP TRIGGER trg_cpa_10_validar ON tesouraria.contagem_participante;
+CREATE TRIGGER trg_cpa_10_validar BEFORE INSERT OR UPDATE ON tesouraria.contagem_participante
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cpa_validar();
+
+-- ---------------------------------------------------------------- reuniões: a discussão de cada ponto (17.3)
+ALTER TABLE secretaria.reuniao_ponto ADD COLUMN rpt_discussao TEXT;
+COMMENT ON COLUMN secretaria.reuniao_ponto.rpt_discussao IS 'Resumo da discussão do ponto (o que se disse); a descrição fica em detalhes (V43)';
+
+-- >>>>> V44__escala_do_culto_e_programacao_do_dia.sql
+-- =====================================================================
+-- V44 · Escala com as funções da programação do culto e a programação do dia (F-ACT)
+--
+--   escala        funções novas, com os nomes da programação: apresentador da Escola Sabatina, apresentador do culto,
+--                 Sermão da criança, oração inicial, oração final, apresentador e meditação da JA (o pregador é o
+--                 "Sermão principal"); o dia da escala ganha a família responsável pela Escola Sabatina (eds_fam_id).
+--   programação   actividades.programa_dia (um por igreja e dia), programa_parte (Escola Sabatina, Transição, Culto
+--                 Divino, JA…, com o apresentador) e programa_item (horas, actividade, responsável: membro, família,
+--                 departamento ou texto, e destaque). Partes e itens podem estar ligados a uma função da escala
+--                 (escala = PREGADOR, TRADUTOR, FAMILIA_ES…): actividades.fn_programa_preencher põe lá quem está
+--                 escalado nesse dia. actividades.fn_programa_preparar cria a programação de um dia a partir do
+--                 modelo (como a folha da igreja) ou copiando outro dia, e preenche-a pela escala.
+--
+-- Permissões novas (actividades.programa_dia/parte/item.*): as mesmas da escala (actividades.escala_plano.*).
+-- Gerado com database/gerador (defs.py).
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- escala: funções da programação do culto
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'APRESENTADOR_ES';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'APRESENTADOR_CULTO';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'SERMAO_CRIANCA';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'ORACAO_INICIAL';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'ORACAO_FINAL';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'APRESENTADOR_JA';
+ALTER TYPE nucleo.funcao_escala_t ADD VALUE IF NOT EXISTS 'MEDITACAO_JA';
+
+-- nome de cada função nos lembretes por SMS (compara como texto: os valores novos são desta transacção)
+CREATE OR REPLACE FUNCTION actividades.fn_funcao_escala_nome(p_funcao nucleo.funcao_escala_t) RETURNS TEXT
+LANGUAGE sql IMMUTABLE AS $$
+    SELECT CASE p_funcao::text
+        WHEN 'PREGADOR' THEN 'pregador(a) do Sermão principal'
+        WHEN 'ANCIAO_DO_DIA' THEN 'ancião do dia'
+        WHEN 'DIACONO' THEN 'diácono'
+        WHEN 'DIACONISA' THEN 'diaconisa'
+        WHEN 'RECEPCAO' THEN 'recepção'
+        WHEN 'MUSICA' THEN 'música'
+        WHEN 'SONOPLASTIA' THEN 'sonoplastia'
+        WHEN 'PROFESSOR_ES' THEN 'professor(a) da Escola Sabatina'
+        WHEN 'DIRECTOR_ES' THEN 'director(a) da Escola Sabatina'
+        WHEN 'LIMPEZA' THEN 'limpeza'
+        WHEN 'TRADUTOR' THEN 'tradutor(a)'
+        WHEN 'ACOMPANHANTE_VISITAS' THEN 'acompanhante (visitas e 2.ª oração)'
+        WHEN 'ACOMPANHANTE_OFERTAS' THEN 'acompanhante (dízimos e ofertas)'
+        WHEN 'ACOMPANHANTE_BOAS_VINDAS' THEN 'acompanhante (boas-vindas e 1.ª oração)'
+        WHEN 'APRESENTADOR_ES' THEN 'apresentador(a) da Escola Sabatina'
+        WHEN 'APRESENTADOR_CULTO' THEN 'apresentador(a) do Culto Divino'
+        WHEN 'SERMAO_CRIANCA' THEN 'responsável pelo Sermão da criança'
+        WHEN 'ORACAO_INICIAL' THEN 'oração inicial do culto'
+        WHEN 'ORACAO_FINAL' THEN 'oração final do culto'
+        WHEN 'APRESENTADOR_JA' THEN 'apresentador(a) da JA'
+        WHEN 'MEDITACAO_JA' THEN 'meditação da JA'
+        ELSE 'serviço' END;
+$$;
+
+-- o dia da escala: a família que faz a programação da Escola Sabatina
+ALTER TABLE actividades.escala_dia ADD COLUMN eds_fam_id INT;
+ALTER TABLE actividades.escala_dia ADD CONSTRAINT fk_eds_fam_id FOREIGN KEY (eds_fam_id) REFERENCES secretaria.familia(fam_id);
+COMMENT ON COLUMN actividades.escala_dia.eds_fam_id IS 'Família responsável pela programação da Escola Sabatina (V44)';
+CREATE INDEX idx_eds_fam_id ON actividades.escala_dia (eds_fam_id);
+
+CREATE FUNCTION actividades.fn_eds_familia() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.eds_fam_id IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM secretaria.familia f JOIN actividades.escala_plano p ON p.epl_id = NEW.eds_epl_id
+         WHERE f.fam_id = NEW.eds_fam_id AND f.fam_igr_id = p.epl_igr_id) THEN
+        RAISE EXCEPTION 'A família tem de ser da igreja da escala' USING COLUMN = 'eds_fam_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_eds_10_familia BEFORE INSERT OR UPDATE OF eds_fam_id ON actividades.escala_dia
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_eds_familia();
+
+-- ---------------------------------------------------------------- programação do dia (gerada: gen.py)
+CREATE TABLE actividades.programa_dia (
+    pgd_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    pgd_igr_id INT NOT NULL,
+    pgd_data DATE NOT NULL,
+    pgd_titulo VARCHAR(150),
+    pgd_observacoes VARCHAR(500),
+    pgd_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    pgd_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pgd_criado_por INT,
+    pgd_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pgd_modificado_por INT,
+    pgd_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_pgd_igr_id FOREIGN KEY (pgd_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_pgd_end_date CHECK (pgd_end_date IS NULL OR pgd_end_date >= pgd_criado_em)
+);
+
+COMMENT ON COLUMN actividades.programa_dia.pgd_titulo IS 'Título da folha; por defeito, a data por extenso';
+COMMENT ON COLUMN actividades.programa_dia.pgd_observacoes IS 'Nota no fim da folha (ex.: passível de ajustes e simplificação)';
+CREATE UNIQUE INDEX uq_pgd_igr_id_data ON actividades.programa_dia (pgd_igr_id, pgd_data) WHERE pgd_end_date IS NULL;
+
+CREATE TABLE actividades.programa_parte (
+    ppa_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    ppa_pgd_id INT NOT NULL,
+    ppa_ordem SMALLINT NOT NULL DEFAULT 1,
+    ppa_titulo VARCHAR(100) NOT NULL,
+    ppa_rotulo VARCHAR(30) NOT NULL DEFAULT 'Apresentador',
+    ppa_apresentador_mem_id INT,
+    ppa_apresentador_fam_id INT,
+    ppa_apresentador_texto VARCHAR(150),
+    ppa_escala VARCHAR(20),
+    ppa_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    ppa_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ppa_criado_por INT,
+    ppa_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ppa_modificado_por INT,
+    ppa_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_ppa_pgd_id FOREIGN KEY (ppa_pgd_id) REFERENCES actividades.programa_dia(pgd_id),
+    CONSTRAINT fk_ppa_apresentador_mem_id FOREIGN KEY (ppa_apresentador_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT fk_ppa_apresentador_fam_id FOREIGN KEY (ppa_apresentador_fam_id) REFERENCES secretaria.familia(fam_id),
+    CONSTRAINT chk_ppa_apresentador CHECK (num_nonnulls(ppa_apresentador_mem_id, ppa_apresentador_fam_id, ppa_apresentador_texto) <= 1),
+    CONSTRAINT chk_ppa_escala CHECK (ppa_escala IS NULL OR ppa_escala IN ('APRESENTADOR_ES', 'APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL', 'APRESENTADOR_JA', 'MEDITACAO_JA', 'FAMILIA_ES')),
+    CONSTRAINT chk_ppa_end_date CHECK (ppa_end_date IS NULL OR ppa_end_date >= ppa_criado_em)
+);
+
+COMMENT ON COLUMN actividades.programa_parte.ppa_titulo IS 'Ex.: Programação do Culto Divino';
+COMMENT ON COLUMN actividades.programa_parte.ppa_rotulo IS 'Cabeçalho da coluna do apresentador (ex.: Apresentador, Transição)';
+COMMENT ON COLUMN actividades.programa_parte.ppa_apresentador_mem_id IS 'Apresentador (membro)';
+COMMENT ON COLUMN actividades.programa_parte.ppa_apresentador_fam_id IS 'Apresentador (família, ex.: Família Magaia)';
+COMMENT ON COLUMN actividades.programa_parte.ppa_apresentador_texto IS 'Apresentador escrito (visitante, grupo)';
+COMMENT ON COLUMN actividades.programa_parte.ppa_escala IS 'Função da escala que preenche o apresentador (ex.: APRESENTADOR_CULTO, FAMILIA_ES)';
+CREATE INDEX idx_ppa_pgd_id ON actividades.programa_parte (ppa_pgd_id);
+CREATE INDEX idx_ppa_apresentador_mem_id ON actividades.programa_parte (ppa_apresentador_mem_id);
+CREATE INDEX idx_ppa_apresentador_fam_id ON actividades.programa_parte (ppa_apresentador_fam_id);
+
+CREATE TABLE actividades.programa_item (
+    pit_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    pit_pgd_id INT NOT NULL,
+    pit_ppa_id INT NOT NULL,
+    pit_ordem SMALLINT NOT NULL DEFAULT 1,
+    pit_hora_inicio VARCHAR(5),
+    pit_hora_fim VARCHAR(5),
+    pit_actividade VARCHAR(200) NOT NULL,
+    pit_responsavel_mem_id INT,
+    pit_responsavel_fam_id INT,
+    pit_responsavel_ide_id INT,
+    pit_responsavel_texto VARCHAR(150),
+    pit_escala VARCHAR(20),
+    pit_destaque BOOLEAN NOT NULL DEFAULT FALSE,
+    pit_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    pit_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pit_criado_por INT,
+    pit_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pit_modificado_por INT,
+    pit_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_pit_pgd_id FOREIGN KEY (pit_pgd_id) REFERENCES actividades.programa_dia(pgd_id),
+    CONSTRAINT fk_pit_ppa_id FOREIGN KEY (pit_ppa_id) REFERENCES actividades.programa_parte(ppa_id),
+    CONSTRAINT fk_pit_responsavel_mem_id FOREIGN KEY (pit_responsavel_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT fk_pit_responsavel_fam_id FOREIGN KEY (pit_responsavel_fam_id) REFERENCES secretaria.familia(fam_id),
+    CONSTRAINT fk_pit_responsavel_ide_id FOREIGN KEY (pit_responsavel_ide_id) REFERENCES organizacao.igreja_departamento(ide_id),
+    CONSTRAINT chk_pit_responsavel CHECK (num_nonnulls(pit_responsavel_mem_id, pit_responsavel_fam_id, pit_responsavel_ide_id, pit_responsavel_texto) <= 1),
+    CONSTRAINT chk_pit_horas CHECK ((pit_hora_inicio IS NULL OR pit_hora_inicio ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$') AND (pit_hora_fim IS NULL OR pit_hora_fim ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$')),
+    CONSTRAINT chk_pit_escala CHECK (pit_escala IS NULL OR pit_escala IN ('APRESENTADOR_ES', 'APRESENTADOR_CULTO', 'PREGADOR', 'TRADUTOR', 'SERMAO_CRIANCA', 'ORACAO_INICIAL', 'ORACAO_FINAL', 'APRESENTADOR_JA', 'MEDITACAO_JA', 'FAMILIA_ES')),
+    CONSTRAINT chk_pit_end_date CHECK (pit_end_date IS NULL OR pit_end_date >= pit_criado_em)
+);
+
+COMMENT ON COLUMN actividades.programa_item.pit_hora_inicio IS 'Hora (hh:mm)';
+COMMENT ON COLUMN actividades.programa_item.pit_hora_fim IS 'Hora (hh:mm)';
+COMMENT ON COLUMN actividades.programa_item.pit_actividade IS 'Ex.: Hino inicial (H.A 509)';
+COMMENT ON COLUMN actividades.programa_item.pit_responsavel_mem_id IS 'Responsável (membro)';
+COMMENT ON COLUMN actividades.programa_item.pit_responsavel_fam_id IS 'Responsável (família)';
+COMMENT ON COLUMN actividades.programa_item.pit_responsavel_ide_id IS 'Responsável (departamento, ex.: Mulher Adventista)';
+COMMENT ON COLUMN actividades.programa_item.pit_responsavel_texto IS 'Responsável escrito (ex.: Todos, Diáconos, Monitores, um visitante)';
+COMMENT ON COLUMN actividades.programa_item.pit_escala IS 'Função da escala que preenche o responsável (ex.: PREGADOR, TRADUTOR, FAMILIA_ES)';
+COMMENT ON COLUMN actividades.programa_item.pit_destaque IS 'Linha em destaque na folha (ex.: Sermão principal)';
+CREATE INDEX idx_pit_pgd_id ON actividades.programa_item (pit_pgd_id);
+CREATE INDEX idx_pit_ppa_id ON actividades.programa_item (pit_ppa_id);
+CREATE INDEX idx_pit_responsavel_mem_id ON actividades.programa_item (pit_responsavel_mem_id);
+CREATE INDEX idx_pit_responsavel_fam_id ON actividades.programa_item (pit_responsavel_fam_id);
+CREATE INDEX idx_pit_responsavel_ide_id ON actividades.programa_item (pit_responsavel_ide_id);
+
+CREATE TRIGGER trg_pgd_00_padrao BEFORE INSERT OR UPDATE ON actividades.programa_dia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('pgd', 'actividades.programa_dia', 'pgd_igr_id');
+CREATE TRIGGER trg_pgd_00_sem_delete BEFORE DELETE ON actividades.programa_dia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('pgd');
+CREATE TRIGGER trg_pgd_00_sem_truncate BEFORE TRUNCATE ON actividades.programa_dia FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('pgd');
+CREATE TRIGGER trg_pgd_99_log AFTER UPDATE ON actividades.programa_dia FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('pgd');
+ALTER TABLE actividades.programa_dia ADD CONSTRAINT fk_pgd_criado_por FOREIGN KEY (pgd_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.programa_dia ADD CONSTRAINT fk_pgd_modificado_por FOREIGN KEY (pgd_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_ppa_00_padrao BEFORE INSERT OR UPDATE ON actividades.programa_parte FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('ppa', 'actividades.programa_parte', '');
+CREATE TRIGGER trg_ppa_00_sem_delete BEFORE DELETE ON actividades.programa_parte FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('ppa');
+CREATE TRIGGER trg_ppa_00_sem_truncate BEFORE TRUNCATE ON actividades.programa_parte FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('ppa');
+CREATE TRIGGER trg_ppa_99_log AFTER UPDATE ON actividades.programa_parte FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('ppa');
+ALTER TABLE actividades.programa_parte ADD CONSTRAINT fk_ppa_criado_por FOREIGN KEY (ppa_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.programa_parte ADD CONSTRAINT fk_ppa_modificado_por FOREIGN KEY (ppa_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_pit_00_padrao BEFORE INSERT OR UPDATE ON actividades.programa_item FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('pit', 'actividades.programa_item', '');
+CREATE TRIGGER trg_pit_00_sem_delete BEFORE DELETE ON actividades.programa_item FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('pit');
+CREATE TRIGGER trg_pit_00_sem_truncate BEFORE TRUNCATE ON actividades.programa_item FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('pit');
+CREATE TRIGGER trg_pit_99_log AFTER UPDATE ON actividades.programa_item FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('pit');
+ALTER TABLE actividades.programa_item ADD CONSTRAINT fk_pit_criado_por FOREIGN KEY (pit_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.programa_item ADD CONSTRAINT fk_pit_modificado_por FOREIGN KEY (pit_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE actividades.programa_dia ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_pgd_ler ON actividades.programa_dia FOR SELECT USING (pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_dia.ler'))::INT[]));
+CREATE POLICY pol_pgd_criar ON actividades.programa_dia FOR INSERT WITH CHECK (pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_dia.criar'))::INT[]));
+CREATE POLICY pol_pgd_alterar ON actividades.programa_dia FOR UPDATE USING (pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_dia.alterar'))::INT[])) WITH CHECK (pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_dia.alterar'))::INT[]));
+ALTER TABLE actividades.programa_parte ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_ppa_ler ON actividades.programa_parte FOR SELECT USING (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = ppa_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_parte.ler'))::INT[])));
+CREATE POLICY pol_ppa_criar ON actividades.programa_parte FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = ppa_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_parte.criar'))::INT[])));
+CREATE POLICY pol_ppa_alterar ON actividades.programa_parte FOR UPDATE USING (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = ppa_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_parte.alterar'))::INT[]))) WITH CHECK (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = ppa_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_parte.alterar'))::INT[])));
+ALTER TABLE actividades.programa_item ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_pit_ler ON actividades.programa_item FOR SELECT USING (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = pit_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_item.ler'))::INT[])));
+CREATE POLICY pol_pit_criar ON actividades.programa_item FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = pit_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_item.criar'))::INT[])));
+CREATE POLICY pol_pit_alterar ON actividades.programa_item FOR UPDATE USING (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = pit_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_item.alterar'))::INT[]))) WITH CHECK (EXISTS (SELECT 1 FROM actividades.programa_dia x WHERE x.pgd_id = pit_pgd_id AND x.pgd_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.programa_item.alterar'))::INT[])));
+
+COMMENT ON TABLE actividades.programa_dia IS 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)';
+COMMENT ON TABLE actividades.programa_parte IS 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)';
+COMMENT ON TABLE actividades.programa_item IS 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)';
+GRANT SELECT, INSERT, UPDATE ON actividades.programa_dia, actividades.programa_parte, actividades.programa_item TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+COMMENT ON INDEX actividades.uq_pgd_igr_id_data IS '[data] Já há uma programação desta igreja para este dia.';
+COMMENT ON CONSTRAINT chk_ppa_apresentador ON actividades.programa_parte IS '[apresentadorMembroId] Indique só um apresentador: um membro, uma família ou o nome escrito.';
+COMMENT ON CONSTRAINT chk_ppa_escala ON actividades.programa_parte IS '[escala] Função da escala desconhecida.';
+COMMENT ON CONSTRAINT chk_pit_responsavel ON actividades.programa_item IS '[responsavelMembroId] Indique só um responsável: um membro, uma família, um departamento ou o nome escrito.';
+COMMENT ON CONSTRAINT chk_pit_horas ON actividades.programa_item IS '[horaInicio] Escreva as horas como hh:mm (ex.: 10:30).';
+COMMENT ON CONSTRAINT chk_pit_escala ON actividades.programa_item IS '[escala] Função da escala desconhecida.';
+
+-- permissões: as mesmas da escala
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'actividades.' || t.tabela || '.' || a.accao, a.rotulo || t.descricao
+  FROM (VALUES ('programa_dia', 'Programação do dia (ex.: sábado): as partes e os itens com horas e responsáveis, para imprimir (V44)'),
+               ('programa_parte', 'Parte da programação do dia (ex.: Programação da Escola Sabatina, Transição, Culto Divino, JA) e o apresentador (V44)'),
+               ('programa_item', 'Item da programação do dia: horas, actividade e responsável (membro, família, departamento ou texto) (V44)')) t(tabela, descricao),
+       (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'actividades.escala_plano.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo IN (replace(antigo.prm_codigo, 'escala_plano', 'programa_dia'),
+                                                    replace(antigo.prm_codigo, 'escala_plano', 'programa_parte'),
+                                                    replace(antigo.prm_codigo, 'escala_plano', 'programa_item'))
+ WHERE pp.ppe_end_date IS NULL;
+
+-- o item pertence a uma parte do mesmo dia
+CREATE FUNCTION actividades.fn_pit_validar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM actividades.programa_parte WHERE ppa_id = NEW.pit_ppa_id AND ppa_pgd_id = NEW.pit_pgd_id) THEN
+        RAISE EXCEPTION 'A parte não é desta programação' USING COLUMN = 'pit_ppa_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_pit_10_validar BEFORE INSERT OR UPDATE OF pit_pgd_id, pit_ppa_id ON actividades.programa_item
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_pit_validar();
+
+-- ---------------------------------------------------------------- preencher pela escala do dia
+-- Partes e itens com "escala" recebem quem está escalado nessa função nesse dia (o substituto, se houver); com
+-- FAMILIA_ES, a família do dia da escala. Sem ninguém escalado, fica o que lá estava. Devolve quantos mudaram.
+CREATE FUNCTION actividades.fn_programa_preencher(p_pgd INT) RETURNS INT
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_igr  INT;
+    v_data DATE;
+    v_fam  INT;
+    v_n    INT := 0;
+    v_k    INT;
+BEGIN
+    SELECT pgd_igr_id, pgd_data INTO v_igr, v_data FROM actividades.programa_dia WHERE pgd_id = p_pgd AND pgd_end_date IS NULL;
+    IF NOT FOUND THEN RAISE EXCEPTION 'Programação % não encontrada', p_pgd USING ERRCODE = 'P0002'; END IF;
+
+    SELECT d.eds_fam_id INTO v_fam
+      FROM actividades.escala_dia d JOIN actividades.escala_plano p ON p.epl_id = d.eds_epl_id
+     WHERE p.epl_igr_id = v_igr AND d.eds_data = v_data AND d.eds_end_date IS NULL AND p.epl_end_date IS NULL
+       AND d.eds_fam_id IS NOT NULL
+     ORDER BY p.epl_publicada DESC, d.eds_id DESC LIMIT 1;
+
+    -- quem está escalado em cada função nesse dia (o substituto, se houver; o primeiro, se houver mais de um)
+    UPDATE actividades.programa_parte x
+       SET ppa_apresentador_mem_id = t.mem_id, ppa_apresentador_fam_id = NULL, ppa_apresentador_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_funcao::text) e.esc_funcao::text AS funcao, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_funcao::text, e.esc_id) t
+     WHERE x.ppa_pgd_id = p_pgd AND x.ppa_end_date IS NULL AND x.ppa_escala = t.funcao
+       AND x.ppa_apresentador_mem_id IS DISTINCT FROM t.mem_id;
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+    UPDATE actividades.programa_item x
+       SET pit_responsavel_mem_id = t.mem_id, pit_responsavel_fam_id = NULL, pit_responsavel_ide_id = NULL, pit_responsavel_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_funcao::text) e.esc_funcao::text AS funcao, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_funcao::text, e.esc_id) t
+     WHERE x.pit_pgd_id = p_pgd AND x.pit_end_date IS NULL AND x.pit_escala = t.funcao
+       AND x.pit_responsavel_mem_id IS DISTINCT FROM t.mem_id;
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+
+    IF v_fam IS NOT NULL THEN
+        UPDATE actividades.programa_parte
+           SET ppa_apresentador_fam_id = v_fam, ppa_apresentador_mem_id = NULL, ppa_apresentador_texto = NULL
+         WHERE ppa_pgd_id = p_pgd AND ppa_end_date IS NULL AND ppa_escala = 'FAMILIA_ES' AND ppa_apresentador_fam_id IS DISTINCT FROM v_fam;
+        GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+        UPDATE actividades.programa_item
+           SET pit_responsavel_fam_id = v_fam, pit_responsavel_mem_id = NULL, pit_responsavel_ide_id = NULL, pit_responsavel_texto = NULL
+         WHERE pit_pgd_id = p_pgd AND pit_end_date IS NULL AND pit_escala = 'FAMILIA_ES' AND pit_responsavel_fam_id IS DISTINCT FROM v_fam;
+        GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+    END IF;
+    RETURN v_n;
+END $$;
+COMMENT ON FUNCTION actividades.fn_programa_preencher(INT) IS 'Põe nas partes e itens ligados à escala quem está escalado nesse dia (V44)';
+GRANT EXECUTE ON FUNCTION actividades.fn_programa_preencher(INT) TO app_igreja;
+
+-- ---------------------------------------------------------------- preparar a programação de um dia
+-- A partir de outro dia (copia as partes e os itens) ou, sem origem, do modelo da folha da igreja (Escola Sabatina,
+-- Transição, Culto Divino, JA); depois preenche pela escala. Corre com as permissões de quem pede (RLS).
+CREATE FUNCTION actividades.fn_programa_preparar(p_igr INT, p_data DATE, p_origem INT DEFAULT NULL) RETURNS INT
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_pgd   INT;
+    v_parte INT;
+    r       RECORD;
+BEGIN
+    IF p_origem IS NOT NULL AND NOT EXISTS (SELECT 1 FROM actividades.programa_dia WHERE pgd_id = p_origem AND pgd_igr_id = p_igr AND pgd_end_date IS NULL) THEN
+        RAISE EXCEPTION 'A programação a copiar não existe nesta igreja' USING COLUMN = 'pgd_id';
+    END IF;
+    INSERT INTO actividades.programa_dia (pgd_igr_id, pgd_data, pgd_observacoes)
+    VALUES (p_igr, p_data, CASE WHEN p_origem IS NULL THEN 'Passível de ajustes e simplificação'
+                                ELSE (SELECT pgd_observacoes FROM actividades.programa_dia WHERE pgd_id = p_origem) END)
+    RETURNING pgd_id INTO v_pgd;
+
+    IF p_origem IS NOT NULL THEN
+        FOR r IN SELECT * FROM actividades.programa_parte WHERE ppa_pgd_id = p_origem AND ppa_end_date IS NULL ORDER BY ppa_ordem, ppa_id LOOP
+            INSERT INTO actividades.programa_parte (ppa_pgd_id, ppa_ordem, ppa_titulo, ppa_rotulo, ppa_apresentador_mem_id,
+                                                   ppa_apresentador_fam_id, ppa_apresentador_texto, ppa_escala)
+            VALUES (v_pgd, r.ppa_ordem, r.ppa_titulo, r.ppa_rotulo, r.ppa_apresentador_mem_id, r.ppa_apresentador_fam_id,
+                    r.ppa_apresentador_texto, r.ppa_escala)
+            RETURNING ppa_id INTO v_parte;
+            INSERT INTO actividades.programa_item (pit_pgd_id, pit_ppa_id, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade,
+                                                   pit_responsavel_mem_id, pit_responsavel_fam_id, pit_responsavel_ide_id,
+                                                   pit_responsavel_texto, pit_escala, pit_destaque)
+            SELECT v_pgd, v_parte, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade, pit_responsavel_mem_id,
+                   pit_responsavel_fam_id, pit_responsavel_ide_id, pit_responsavel_texto, pit_escala, pit_destaque
+              FROM actividades.programa_item WHERE pit_ppa_id = r.ppa_id AND pit_end_date IS NULL;
+        END LOOP;
+    ELSE
+        FOR r IN SELECT * FROM (VALUES
+            (1, 'Programação da Escola Sabatina', 'Apresentador', 'FAMILIA_ES'),
+            (2, 'Transição', 'Transição', NULL),
+            (3, 'Programação do Culto Divino', 'Apresentador', 'APRESENTADOR_CULTO'),
+            (4, 'JA', 'Apresentador', 'APRESENTADOR_JA')) AS m(ordem, titulo, rotulo, escala) LOOP
+            INSERT INTO actividades.programa_parte (ppa_pgd_id, ppa_ordem, ppa_titulo, ppa_rotulo, ppa_escala)
+            VALUES (v_pgd, r.ordem, r.titulo, r.rotulo, r.escala) RETURNING ppa_id INTO v_parte;
+            INSERT INTO actividades.programa_item (pit_pgd_id, pit_ppa_id, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade,
+                                                   pit_responsavel_texto, pit_escala, pit_destaque)
+            SELECT v_pgd, v_parte, i.ordem, i.inicio, i.fim, i.actividade, i.texto, i.escala, i.destaque
+              FROM (VALUES
+                (1, 1, '08:50', '09:00', 'Momento de louvor', 'Todos', NULL, FALSE),
+                (1, 2, '09:00', '09:05', 'Hino inicial', 'Todos', NULL, FALSE),
+                (1, 3, '09:05', '09:10', 'Oração inicial', NULL, 'FAMILIA_ES', FALSE),
+                (1, 4, '09:10', '09:15', 'Música especial', NULL, 'FAMILIA_ES', FALSE),
+                (1, 5, '09:15', '09:25', '28 Crenças', NULL, 'FAMILIA_ES', FALSE),
+                (1, 6, '09:25', '09:30', 'Carta missionária', NULL, 'FAMILIA_ES', FALSE),
+                (1, 7, '09:30', '09:35', 'Capítulo do dia', NULL, 'FAMILIA_ES', FALSE),
+                (1, 8, '09:35', '09:40', 'Momento de testemunho / gratidão', 'Todos', NULL, FALSE),
+                (1, 9, '09:40', '10:15', 'Resumo das lições', 'Monitores', NULL, TRUE),
+                (1, 10, NULL, NULL, 'Oração final', NULL, 'FAMILIA_ES', FALSE),
+                (2, 1, '10:15', '10:20', 'Devolução de envelopes', 'Tesouraria', NULL, FALSE),
+                (2, 2, '10:20', '10:25', 'Minuto saúde', NULL, NULL, FALSE),
+                (2, 3, '10:25', '10:30', 'Momento de louvor', 'Departamento de Música', NULL, FALSE),
+                (3, 1, '10:30', '10:35', 'Entrada da tribuna e doxologia', 'Todos', NULL, FALSE),
+                (3, 2, '10:35', '10:40', 'Boas-vindas e anúncios', 'Secretaria', NULL, FALSE),
+                (3, 3, '10:40', '10:45', 'Hino inicial', 'Todos', NULL, FALSE),
+                (3, 4, '10:45', '10:50', 'Oração inicial', NULL, 'ORACAO_INICIAL', FALSE),
+                (3, 5, '10:50', '10:55', 'Marca de um mordomo', 'Tesouraria', NULL, FALSE),
+                (3, 6, '10:55', '11:00', 'Música especial', NULL, NULL, FALSE),
+                (3, 7, '11:00', '11:05', 'Recolha das ofertas e dízimos', 'Diáconos', NULL, FALSE),
+                (3, 8, '11:05', '11:10', 'Sermão da criança', NULL, 'SERMAO_CRIANCA', FALSE),
+                (3, 9, '11:15', '12:15', 'Sermão principal', NULL, 'PREGADOR', TRUE),
+                (3, 10, '11:15', '12:15', 'Tradutor', NULL, 'TRADUTOR', TRUE),
+                (3, 11, '12:15', '12:20', 'Hino final', 'Todos', NULL, TRUE),
+                (3, 12, '12:20', '12:25', 'Oração final', NULL, 'ORACAO_FINAL', FALSE),
+                (3, 13, '12:30', NULL, 'Despedida', NULL, 'APRESENTADOR_CULTO', FALSE),
+                (4, 1, '14:30', '14:40', 'Momento de louvor', 'Todos', NULL, TRUE),
+                (4, 2, '14:40', '14:45', 'Hino inicial', 'Todos', NULL, FALSE),
+                (4, 3, '14:45', '14:50', 'Oração inicial', NULL, NULL, FALSE),
+                (4, 4, '14:50', '14:55', 'Hino especial', 'Jovens', NULL, FALSE),
+                (4, 5, '14:55', '15:00', 'Meditação', NULL, 'MEDITACAO_JA', FALSE),
+                (4, 6, '15:00', '15:05', 'Hino especial', NULL, NULL, FALSE),
+                (4, 7, '15:05', '16:05', 'Tema da tarde', NULL, NULL, FALSE),
+                (4, 8, '16:05', '16:10', 'Introdução da lição', NULL, NULL, FALSE),
+                (4, 9, '16:10', '16:15', 'Oração final', NULL, NULL, FALSE),
+                (4, 10, '16:15', '16:20', 'Hino final', 'Todos', NULL, FALSE),
+                (4, 11, '16:20', NULL, 'Despedida', NULL, 'APRESENTADOR_JA', FALSE)
+              ) AS i(parte, ordem, inicio, fim, actividade, texto, escala, destaque)
+             WHERE i.parte = r.ordem;
+        END LOOP;
+    END IF;
+
+    PERFORM actividades.fn_programa_preencher(v_pgd);
+    RETURN v_pgd;
+END $$;
+COMMENT ON FUNCTION actividades.fn_programa_preparar(INT, DATE, INT) IS 'Cria a programação de um dia a partir do modelo ou de outro dia e preenche-a pela escala (V44)';
+GRANT EXECUTE ON FUNCTION actividades.fn_programa_preparar(INT, DATE, INT) TO app_igreja;
+
+-- >>>>> V45__escalas_da_escola_sabatina_e_ja.sql
+-- =====================================================================
+-- V45 · Escalas da Escola Sabatina e da JA, definidas por cada igreja (F-ACT)
+--
+--   escala do culto   volta a ser só do Culto Divino (apresentador, Sermão principal, tradutor, Sermão da criança,
+--                     orações) e do grupo coral: a família e as funções da ES e da JA saem da grelha.
+--   tipos de escala   escala_plano.epl_tipo: CULTO, ESCOLA_SABATINA ou JA.
+--   colunas           actividades.escala_coluna: cada igreja define as colunas da sua escala da Escola Sabatina e da
+--                     JA (nome, ordem e se se escala um membro ou uma família) — cada igreja tem o seu modelo.
+--                     A escala (actividades.escala) ganha esc_ecn_id (a coluna) e esc_fam_id (a família); o membro
+--                     deixa de ser obrigatório (membro ou família, um dos dois).
+--   programação       partes e itens podem ligar-se a uma coluna (ecn_id): "preencher pela escala" põe lá quem está
+--                     escalado nessa coluna nesse dia. O modelo deixa a ES e a JA sem ligação (cada igreja liga a sua).
+--   lembretes         nas colunas da ES/JA o SMS diz o nome da coluna (ex.: "apresentador da Escola Sabatina").
+--
+-- Nada se apaga: o tipo dos planos existentes é CULTO; eds_fam_id (V44) fica, sem uso na grelha.
+-- Permissões novas (actividades.escala_coluna.*): as mesmas da escala. Gerado com database/gerador (defs.py).
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- tipo de escala
+ALTER TABLE actividades.escala_plano ADD COLUMN epl_tipo VARCHAR(20) NOT NULL DEFAULT 'CULTO';
+ALTER TABLE actividades.escala_plano ADD CONSTRAINT chk_epl_tipo CHECK (epl_tipo IN ('CULTO', 'ESCOLA_SABATINA', 'JA'));
+COMMENT ON COLUMN actividades.escala_plano.epl_tipo IS 'CULTO (Culto Divino), ESCOLA_SABATINA ou JA (V45)';
+COMMENT ON CONSTRAINT chk_epl_tipo ON actividades.escala_plano IS '[tipo] A escala é do Culto Divino, da Escola Sabatina ou da JA.';
+
+-- ---------------------------------------------------------------- colunas da escala da ES e da JA (gerada: gen.py)
+CREATE TABLE actividades.escala_coluna (
+    ecn_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    ecn_igr_id INT NOT NULL,
+    ecn_tipo VARCHAR(20) NOT NULL,
+    ecn_ordem SMALLINT NOT NULL DEFAULT 1,
+    ecn_nome VARCHAR(80) NOT NULL,
+    ecn_responsavel VARCHAR(10) NOT NULL DEFAULT 'MEMBRO',
+    ecn_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    ecn_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ecn_criado_por INT,
+    ecn_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ecn_modificado_por INT,
+    ecn_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_ecn_igr_id FOREIGN KEY (ecn_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_ecn_tipo CHECK (ecn_tipo IN ('ESCOLA_SABATINA', 'JA')),
+    CONSTRAINT chk_ecn_responsavel CHECK (ecn_responsavel IN ('MEMBRO', 'FAMILIA')),
+    CONSTRAINT chk_ecn_end_date CHECK (ecn_end_date IS NULL OR ecn_end_date >= ecn_criado_em)
+);
+
+COMMENT ON TABLE actividades.escala_coluna IS 'Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (ex.: Apresentador, Carta missionária) (V45)';
+COMMENT ON COLUMN actividades.escala_coluna.ecn_tipo IS 'ESCOLA_SABATINA ou JA';
+COMMENT ON COLUMN actividades.escala_coluna.ecn_nome IS 'Ex.: Apresentador, Oração, Carta missionária';
+COMMENT ON COLUMN actividades.escala_coluna.ecn_responsavel IS 'Quem se escala nesta coluna: MEMBRO ou FAMILIA';
+CREATE UNIQUE INDEX uq_ecn_igr_id_tipo_nome ON actividades.escala_coluna (ecn_igr_id, ecn_tipo, ecn_nome) WHERE ecn_end_date IS NULL;
+CREATE TRIGGER trg_ecn_00_padrao BEFORE INSERT OR UPDATE ON actividades.escala_coluna FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('ecn', 'actividades.escala_coluna', 'ecn_igr_id');
+CREATE TRIGGER trg_ecn_00_sem_delete BEFORE DELETE ON actividades.escala_coluna FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('ecn');
+CREATE TRIGGER trg_ecn_00_sem_truncate BEFORE TRUNCATE ON actividades.escala_coluna FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('ecn');
+CREATE TRIGGER trg_ecn_99_log AFTER UPDATE ON actividades.escala_coluna FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('ecn');
+ALTER TABLE actividades.escala_coluna ADD CONSTRAINT fk_ecn_criado_por FOREIGN KEY (ecn_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.escala_coluna ADD CONSTRAINT fk_ecn_modificado_por FOREIGN KEY (ecn_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.escala_coluna ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_ecn_ler ON actividades.escala_coluna FOR SELECT USING (ecn_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.escala_coluna.ler'))::INT[]));
+CREATE POLICY pol_ecn_criar ON actividades.escala_coluna FOR INSERT WITH CHECK (ecn_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.escala_coluna.criar'))::INT[]));
+CREATE POLICY pol_ecn_alterar ON actividades.escala_coluna FOR UPDATE USING (ecn_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.escala_coluna.alterar'))::INT[])) WITH CHECK (ecn_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.escala_coluna.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON actividades.escala_coluna TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+COMMENT ON INDEX actividades.uq_ecn_igr_id_tipo_nome IS '[nome] Esta escala já tem uma coluna com este nome.';
+COMMENT ON CONSTRAINT chk_ecn_tipo ON actividades.escala_coluna IS '[tipo] As colunas são da escala da Escola Sabatina ou da JA.';
+COMMENT ON CONSTRAINT chk_ecn_responsavel ON actividades.escala_coluna IS '[responsavel] Escala-se um membro ou uma família.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'actividades.escala_coluna.' || a.accao, a.rotulo || 'Coluna da escala da Escola Sabatina ou da JA, como cada igreja a organiza (V45)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'actividades.escala_plano.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, 'escala_plano', 'escala_coluna')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- a escala: coluna, família, membro ou família
+ALTER TABLE actividades.escala ADD COLUMN esc_ecn_id INT;
+ALTER TABLE actividades.escala ADD COLUMN esc_fam_id INT;
+ALTER TABLE actividades.escala ADD CONSTRAINT fk_esc_ecn_id FOREIGN KEY (esc_ecn_id) REFERENCES actividades.escala_coluna(ecn_id);
+ALTER TABLE actividades.escala ADD CONSTRAINT fk_esc_fam_id FOREIGN KEY (esc_fam_id) REFERENCES secretaria.familia(fam_id);
+COMMENT ON COLUMN actividades.escala.esc_ecn_id IS 'Coluna da escala da Escola Sabatina ou da JA (definida pela igreja) (V45)';
+COMMENT ON COLUMN actividades.escala.esc_fam_id IS 'Família escalada, nas colunas por família (V45)';
+COMMENT ON COLUMN actividades.escala.esc_mem_id IS 'Membro escalado (ou a família, nas colunas por família)';
+CREATE INDEX idx_esc_ecn_id ON actividades.escala (esc_ecn_id);
+CREATE INDEX idx_esc_fam_id ON actividades.escala (esc_fam_id);
+ALTER TABLE actividades.escala ALTER COLUMN esc_mem_id DROP NOT NULL;
+ALTER TABLE actividades.escala ADD CONSTRAINT chk_esc_quem CHECK (num_nonnulls(esc_mem_id, esc_fam_id) = 1);
+COMMENT ON CONSTRAINT chk_esc_quem ON actividades.escala IS '[membroId] Escale um membro ou uma família (um dos dois).';
+-- a mesma pessoa pode estar em duas colunas diferentes no mesmo dia; na mesma coluna e função, não
+DROP INDEX actividades.uq_esc_igr_id_data_funcao_mem_id;
+CREATE UNIQUE INDEX uq_esc_unico ON actividades.escala (esc_igr_id, esc_data, esc_funcao, COALESCE(esc_ecn_id, 0), COALESCE(esc_mem_id, 0), COALESCE(esc_fam_id, 0))
+    WHERE esc_end_date IS NULL;
+COMMENT ON INDEX actividades.uq_esc_unico IS '[membroId] Já está escalado(a) nesta função (ou coluna) neste dia.';
+
+-- a coluna é da igreja e do tipo da escala; membro ou família conforme a coluna; a escala da ES/JA usa as colunas
+CREATE FUNCTION actividades.fn_esc_coluna() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_tipo TEXT;
+    c      actividades.escala_coluna%ROWTYPE;
+BEGIN
+    SELECT p.epl_tipo INTO v_tipo FROM actividades.escala_dia d JOIN actividades.escala_plano p ON p.epl_id = d.eds_epl_id
+     WHERE d.eds_id = NEW.esc_eds_id;
+    IF NEW.esc_ecn_id IS NULL THEN
+        IF coalesce(v_tipo, 'CULTO') <> 'CULTO' THEN
+            RAISE EXCEPTION 'Na escala da Escola Sabatina ou da JA escolha a coluna' USING COLUMN = 'esc_ecn_id';
+        END IF;
+        IF NEW.esc_fam_id IS NOT NULL THEN
+            RAISE EXCEPTION 'Na escala do culto escala-se um membro' USING COLUMN = 'esc_mem_id';
+        END IF;
+        RETURN NEW;
+    END IF;
+    SELECT * INTO c FROM actividades.escala_coluna WHERE ecn_id = NEW.esc_ecn_id AND ecn_end_date IS NULL;
+    IF NOT FOUND OR c.ecn_igr_id <> NEW.esc_igr_id OR c.ecn_tipo IS DISTINCT FROM v_tipo THEN
+        RAISE EXCEPTION 'A coluna não é desta escala' USING COLUMN = 'esc_ecn_id';
+    END IF;
+    IF NEW.esc_funcao::text <> 'OUTRA' THEN
+        RAISE EXCEPTION 'Nas colunas da escala a função é OUTRA (o nome é o da coluna)' USING COLUMN = 'esc_funcao';
+    END IF;
+    IF c.ecn_responsavel = 'FAMILIA' AND NEW.esc_fam_id IS NULL THEN
+        RAISE EXCEPTION 'Na coluna "%" escala-se uma família', c.ecn_nome USING COLUMN = 'esc_fam_id';
+    END IF;
+    IF c.ecn_responsavel = 'MEMBRO' AND NEW.esc_mem_id IS NULL THEN
+        RAISE EXCEPTION 'Na coluna "%" escala-se um membro', c.ecn_nome USING COLUMN = 'esc_mem_id';
+    END IF;
+    IF NEW.esc_fam_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM secretaria.familia WHERE fam_id = NEW.esc_fam_id AND fam_igr_id = NEW.esc_igr_id) THEN
+        RAISE EXCEPTION 'A família tem de ser desta igreja' USING COLUMN = 'esc_fam_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_esc_10_coluna BEFORE INSERT OR UPDATE OF esc_ecn_id, esc_mem_id, esc_fam_id, esc_eds_id, esc_funcao ON actividades.escala
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_esc_coluna();
+
+-- ---------------------------------------------------------------- programação: ligar partes e itens às colunas
+ALTER TABLE actividades.programa_parte ADD COLUMN ppa_ecn_id INT;
+ALTER TABLE actividades.programa_parte ADD CONSTRAINT fk_ppa_ecn_id FOREIGN KEY (ppa_ecn_id) REFERENCES actividades.escala_coluna(ecn_id);
+COMMENT ON COLUMN actividades.programa_parte.ppa_ecn_id IS 'Coluna da escala da Escola Sabatina ou da JA que preenche o apresentador (V45)';
+CREATE INDEX idx_ppa_ecn_id ON actividades.programa_parte (ppa_ecn_id);
+ALTER TABLE actividades.programa_item ADD COLUMN pit_ecn_id INT;
+ALTER TABLE actividades.programa_item ADD CONSTRAINT fk_pit_ecn_id FOREIGN KEY (pit_ecn_id) REFERENCES actividades.escala_coluna(ecn_id);
+COMMENT ON COLUMN actividades.programa_item.pit_ecn_id IS 'Coluna da escala da Escola Sabatina ou da JA que preenche o responsável (V45)';
+CREATE INDEX idx_pit_ecn_id ON actividades.programa_item (pit_ecn_id);
+
+CREATE OR REPLACE FUNCTION actividades.fn_programa_preencher(p_pgd INT) RETURNS INT
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_igr  INT;
+    v_data DATE;
+    v_fam  INT;
+    v_n    INT := 0;
+    v_k    INT;
+BEGIN
+    SELECT pgd_igr_id, pgd_data INTO v_igr, v_data FROM actividades.programa_dia WHERE pgd_id = p_pgd AND pgd_end_date IS NULL;
+    IF NOT FOUND THEN RAISE EXCEPTION 'Programação % não encontrada', p_pgd USING ERRCODE = 'P0002'; END IF;
+
+    SELECT d.eds_fam_id INTO v_fam
+      FROM actividades.escala_dia d JOIN actividades.escala_plano p ON p.epl_id = d.eds_epl_id
+     WHERE p.epl_igr_id = v_igr AND d.eds_data = v_data AND d.eds_end_date IS NULL AND p.epl_end_date IS NULL
+       AND d.eds_fam_id IS NOT NULL
+     ORDER BY p.epl_publicada DESC, d.eds_id DESC LIMIT 1;
+
+    -- quem está escalado em cada função nesse dia (o substituto, se houver; o primeiro, se houver mais de um)
+    UPDATE actividades.programa_parte x
+       SET ppa_apresentador_mem_id = t.mem_id, ppa_apresentador_fam_id = NULL, ppa_apresentador_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_funcao::text) e.esc_funcao::text AS funcao, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_ecn_id IS NULL AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_funcao::text, e.esc_id) t
+     WHERE x.ppa_pgd_id = p_pgd AND x.ppa_end_date IS NULL AND x.ppa_escala = t.funcao
+       AND x.ppa_apresentador_mem_id IS DISTINCT FROM t.mem_id;
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+    UPDATE actividades.programa_item x
+       SET pit_responsavel_mem_id = t.mem_id, pit_responsavel_fam_id = NULL, pit_responsavel_ide_id = NULL, pit_responsavel_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_funcao::text) e.esc_funcao::text AS funcao, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_ecn_id IS NULL AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_funcao::text, e.esc_id) t
+     WHERE x.pit_pgd_id = p_pgd AND x.pit_end_date IS NULL AND x.pit_escala = t.funcao
+       AND x.pit_responsavel_mem_id IS DISTINCT FROM t.mem_id;
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+
+    -- as colunas das escalas da Escola Sabatina e da JA (definidas pela igreja): o membro ou a família escalados
+    UPDATE actividades.programa_parte x
+       SET ppa_apresentador_mem_id = t.mem_id, ppa_apresentador_fam_id = t.fam_id, ppa_apresentador_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_ecn_id) e.esc_ecn_id AS ecn_id, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id, e.esc_fam_id AS fam_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_ecn_id IS NOT NULL
+               AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_ecn_id, e.esc_id) t
+     WHERE x.ppa_pgd_id = p_pgd AND x.ppa_end_date IS NULL AND x.ppa_ecn_id = t.ecn_id
+       AND (x.ppa_apresentador_mem_id, x.ppa_apresentador_fam_id) IS DISTINCT FROM (t.mem_id, t.fam_id);
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+    UPDATE actividades.programa_item x
+       SET pit_responsavel_mem_id = t.mem_id, pit_responsavel_fam_id = t.fam_id, pit_responsavel_ide_id = NULL, pit_responsavel_texto = NULL
+      FROM (SELECT DISTINCT ON (e.esc_ecn_id) e.esc_ecn_id AS ecn_id, COALESCE(e.esc_substituto_mem_id, e.esc_mem_id) AS mem_id, e.esc_fam_id AS fam_id
+              FROM actividades.escala e
+             WHERE e.esc_igr_id = v_igr AND e.esc_data = v_data AND e.esc_end_date IS NULL AND e.esc_ecn_id IS NOT NULL
+               AND e.esc_estado::text <> 'FALTOU'
+             ORDER BY e.esc_ecn_id, e.esc_id) t
+     WHERE x.pit_pgd_id = p_pgd AND x.pit_end_date IS NULL AND x.pit_ecn_id = t.ecn_id
+       AND (x.pit_responsavel_mem_id, x.pit_responsavel_fam_id) IS DISTINCT FROM (t.mem_id, t.fam_id);
+    GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+
+    IF v_fam IS NOT NULL THEN
+        UPDATE actividades.programa_parte
+           SET ppa_apresentador_fam_id = v_fam, ppa_apresentador_mem_id = NULL, ppa_apresentador_texto = NULL
+         WHERE ppa_pgd_id = p_pgd AND ppa_end_date IS NULL AND ppa_escala = 'FAMILIA_ES' AND ppa_apresentador_fam_id IS DISTINCT FROM v_fam;
+        GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+        UPDATE actividades.programa_item
+           SET pit_responsavel_fam_id = v_fam, pit_responsavel_mem_id = NULL, pit_responsavel_ide_id = NULL, pit_responsavel_texto = NULL
+         WHERE pit_pgd_id = p_pgd AND pit_end_date IS NULL AND pit_escala = 'FAMILIA_ES' AND pit_responsavel_fam_id IS DISTINCT FROM v_fam;
+        GET DIAGNOSTICS v_k = ROW_COUNT; v_n := v_n + v_k;
+    END IF;
+    RETURN v_n;
+END $$;
+
+CREATE OR REPLACE FUNCTION actividades.fn_programa_preparar(p_igr INT, p_data DATE, p_origem INT DEFAULT NULL) RETURNS INT
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_pgd   INT;
+    v_parte INT;
+    r       RECORD;
+BEGIN
+    IF p_origem IS NOT NULL AND NOT EXISTS (SELECT 1 FROM actividades.programa_dia WHERE pgd_id = p_origem AND pgd_igr_id = p_igr AND pgd_end_date IS NULL) THEN
+        RAISE EXCEPTION 'A programação a copiar não existe nesta igreja' USING COLUMN = 'pgd_id';
+    END IF;
+    INSERT INTO actividades.programa_dia (pgd_igr_id, pgd_data, pgd_observacoes)
+    VALUES (p_igr, p_data, CASE WHEN p_origem IS NULL THEN 'Passível de ajustes e simplificação'
+                                ELSE (SELECT pgd_observacoes FROM actividades.programa_dia WHERE pgd_id = p_origem) END)
+    RETURNING pgd_id INTO v_pgd;
+
+    IF p_origem IS NOT NULL THEN
+        FOR r IN SELECT * FROM actividades.programa_parte WHERE ppa_pgd_id = p_origem AND ppa_end_date IS NULL ORDER BY ppa_ordem, ppa_id LOOP
+            INSERT INTO actividades.programa_parte (ppa_pgd_id, ppa_ordem, ppa_titulo, ppa_rotulo, ppa_apresentador_mem_id,
+                                                   ppa_apresentador_fam_id, ppa_apresentador_texto, ppa_escala, ppa_ecn_id)
+            VALUES (v_pgd, r.ppa_ordem, r.ppa_titulo, r.ppa_rotulo, r.ppa_apresentador_mem_id, r.ppa_apresentador_fam_id,
+                    r.ppa_apresentador_texto, r.ppa_escala, r.ppa_ecn_id)
+            RETURNING ppa_id INTO v_parte;
+            INSERT INTO actividades.programa_item (pit_pgd_id, pit_ppa_id, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade,
+                                                   pit_responsavel_mem_id, pit_responsavel_fam_id, pit_responsavel_ide_id,
+                                                   pit_responsavel_texto, pit_escala, pit_destaque, pit_ecn_id)
+            SELECT v_pgd, v_parte, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade, pit_responsavel_mem_id,
+                   pit_responsavel_fam_id, pit_responsavel_ide_id, pit_responsavel_texto, pit_escala, pit_destaque, pit_ecn_id
+              FROM actividades.programa_item WHERE pit_ppa_id = r.ppa_id AND pit_end_date IS NULL;
+        END LOOP;
+    ELSE
+        FOR r IN SELECT * FROM (VALUES
+            (1, 'Programação da Escola Sabatina', 'Apresentador', NULL),
+            (2, 'Transição', 'Transição', NULL),
+            (3, 'Programação do Culto Divino', 'Apresentador', 'APRESENTADOR_CULTO'),
+            (4, 'JA', 'Apresentador', NULL)) AS m(ordem, titulo, rotulo, escala) LOOP
+            INSERT INTO actividades.programa_parte (ppa_pgd_id, ppa_ordem, ppa_titulo, ppa_rotulo, ppa_escala)
+            VALUES (v_pgd, r.ordem, r.titulo, r.rotulo, r.escala) RETURNING ppa_id INTO v_parte;
+            INSERT INTO actividades.programa_item (pit_pgd_id, pit_ppa_id, pit_ordem, pit_hora_inicio, pit_hora_fim, pit_actividade,
+                                                   pit_responsavel_texto, pit_escala, pit_destaque)
+            SELECT v_pgd, v_parte, i.ordem, i.inicio, i.fim, i.actividade, i.texto, i.escala, i.destaque
+              FROM (VALUES
+                (1, 1, '08:50', '09:00', 'Momento de louvor', 'Todos', NULL, FALSE),
+                (1, 2, '09:00', '09:05', 'Hino inicial', 'Todos', NULL, FALSE),
+                (1, 3, '09:05', '09:10', 'Oração inicial', NULL, NULL, FALSE),
+                (1, 4, '09:10', '09:15', 'Música especial', NULL, NULL, FALSE),
+                (1, 5, '09:15', '09:25', '28 Crenças', NULL, NULL, FALSE),
+                (1, 6, '09:25', '09:30', 'Carta missionária', NULL, NULL, FALSE),
+                (1, 7, '09:30', '09:35', 'Capítulo do dia', NULL, NULL, FALSE),
+                (1, 8, '09:35', '09:40', 'Momento de testemunho / gratidão', 'Todos', NULL, FALSE),
+                (1, 9, '09:40', '10:15', 'Resumo das lições', 'Monitores', NULL, TRUE),
+                (1, 10, NULL, NULL, 'Oração final', NULL, NULL, FALSE),
+                (2, 1, '10:15', '10:20', 'Devolução de envelopes', 'Tesouraria', NULL, FALSE),
+                (2, 2, '10:20', '10:25', 'Minuto saúde', NULL, NULL, FALSE),
+                (2, 3, '10:25', '10:30', 'Momento de louvor', 'Departamento de Música', NULL, FALSE),
+                (3, 1, '10:30', '10:35', 'Entrada da tribuna e doxologia', 'Todos', NULL, FALSE),
+                (3, 2, '10:35', '10:40', 'Boas-vindas e anúncios', 'Secretaria', NULL, FALSE),
+                (3, 3, '10:40', '10:45', 'Hino inicial', 'Todos', NULL, FALSE),
+                (3, 4, '10:45', '10:50', 'Oração inicial', NULL, 'ORACAO_INICIAL', FALSE),
+                (3, 5, '10:50', '10:55', 'Marca de um mordomo', 'Tesouraria', NULL, FALSE),
+                (3, 6, '10:55', '11:00', 'Música especial', NULL, NULL, FALSE),
+                (3, 7, '11:00', '11:05', 'Recolha das ofertas e dízimos', 'Diáconos', NULL, FALSE),
+                (3, 8, '11:05', '11:10', 'Sermão da criança', NULL, 'SERMAO_CRIANCA', FALSE),
+                (3, 9, '11:15', '12:15', 'Sermão principal', NULL, 'PREGADOR', TRUE),
+                (3, 10, '11:15', '12:15', 'Tradutor', NULL, 'TRADUTOR', TRUE),
+                (3, 11, '12:15', '12:20', 'Hino final', 'Todos', NULL, TRUE),
+                (3, 12, '12:20', '12:25', 'Oração final', NULL, 'ORACAO_FINAL', FALSE),
+                (3, 13, '12:30', NULL, 'Despedida', NULL, 'APRESENTADOR_CULTO', FALSE),
+                (4, 1, '14:30', '14:40', 'Momento de louvor', 'Todos', NULL, TRUE),
+                (4, 2, '14:40', '14:45', 'Hino inicial', 'Todos', NULL, FALSE),
+                (4, 3, '14:45', '14:50', 'Oração inicial', NULL, NULL, FALSE),
+                (4, 4, '14:50', '14:55', 'Hino especial', 'Jovens', NULL, FALSE),
+                (4, 5, '14:55', '15:00', 'Meditação', NULL, NULL, FALSE),
+                (4, 6, '15:00', '15:05', 'Hino especial', NULL, NULL, FALSE),
+                (4, 7, '15:05', '16:05', 'Tema da tarde', NULL, NULL, FALSE),
+                (4, 8, '16:05', '16:10', 'Introdução da lição', NULL, NULL, FALSE),
+                (4, 9, '16:10', '16:15', 'Oração final', NULL, NULL, FALSE),
+                (4, 10, '16:15', '16:20', 'Hino final', 'Todos', NULL, FALSE),
+                (4, 11, '16:20', NULL, 'Despedida', NULL, NULL, FALSE)
+              ) AS i(parte, ordem, inicio, fim, actividade, texto, escala, destaque)
+             WHERE i.parte = r.ordem;
+        END LOOP;
+    END IF;
+
+    PERFORM actividades.fn_programa_preencher(v_pgd);
+    RETURN v_pgd;
+END $$;
+
+-- ---------------------------------------------------------------- lembretes com o nome da coluna
+CREATE OR REPLACE FUNCTION actividades.fn_lembretes_escala(p_agora timestamp with time zone DEFAULT now())
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'nucleo', 'organizacao', 'secretaria', 'actividades', 'escola_sabatina', 'tesouraria', 'public'
+AS $function$
+DECLARE
+    v_local  TIMESTAMP := p_agora AT TIME ZONE 'Africa/Maputo';
+    v_hoje   DATE := (p_agora AT TIME ZONE 'Africa/Maputo')::date;
+    v_dia    INT := EXTRACT(ISODOW FROM (p_agora AT TIME ZONE 'Africa/Maputo'));
+    v_sabado DATE;
+    v_envio  TIMESTAMPTZ;
+    n INT;
+BEGIN
+    IF v_dia NOT IN (3, 5) OR v_local::time >= TIME '20:00' THEN
+        RETURN 0;
+    END IF;
+    v_sabado := v_hoje + (6 - v_dia);
+    v_envio := GREATEST(p_agora, (v_hoje + TIME '18:00') AT TIME ZONE 'Africa/Maputo');
+    INSERT INTO nucleo.notificacao (ntf_igr_id, ntf_mem_id, ntf_canal, ntf_destino, ntf_assunto, ntf_mensagem,
+                                         ntf_agendada_para, ntf_origem_tabela, ntf_origem_id, ntf_chave)
+    SELECT e.esc_igr_id, x.mem_id, 'SMS', x.telefone, 'Escala de ' || to_char(v_sabado, 'DD/MM'),
+           left(i.igr_nome, 40) || ': lembrete - no sábado ' || to_char(v_sabado, 'DD/MM') || ' está escalado(a) como '
+               || COALESCE(lower(c2.ecn_nome) || CASE p.epl_tipo WHEN 'ESCOLA_SABATINA' THEN ' da Escola Sabatina' WHEN 'JA' THEN ' da JA' ELSE '' END,
+                           actividades.fn_funcao_escala_nome(e.esc_funcao)) || '. Deus o(a) abençoe.',
+           v_envio, 'actividades.escala', e.esc_id, 'escala:' || e.esc_id || ':' || v_hoje
+    FROM actividades.escala e
+    JOIN organizacao.igreja i ON i.igr_id = e.esc_igr_id
+    LEFT JOIN actividades.escala_dia d ON d.eds_id = e.esc_eds_id
+    LEFT JOIN actividades.escala_plano p ON p.epl_id = d.eds_epl_id
+    LEFT JOIN actividades.escala_coluna c2 ON c2.ecn_id = e.esc_ecn_id
+    CROSS JOIN LATERAL (
+        SELECT c.cto_mem_id AS mem_id, c.cto_valor AS telefone
+        FROM secretaria.contacto c
+        WHERE c.cto_mem_id = COALESCE(e.esc_substituto_mem_id, e.esc_mem_id)
+          AND c.cto_end_date IS NULL AND c.cto_estado = 'ACTIVO' AND c.cto_tipo IN ('TELEFONE', 'WHATSAPP')
+        ORDER BY c.cto_principal DESC, c.cto_id LIMIT 1) x
+    WHERE e.esc_data = v_sabado AND e.esc_end_date IS NULL
+      AND e.esc_estado IN ('PREVISTA', 'CONFIRMADA', 'SUBSTITUIDA')
+      AND (e.esc_eds_id IS NULL
+           OR (p.epl_publicada AND p.epl_end_date IS NULL AND d.eds_end_date IS NULL AND d.eds_evento IS NULL))
+      AND EXISTS (SELECT 1 FROM secretaria.consentimento s
+                  WHERE s.cns_mem_id = x.mem_id AND s.cns_end_date IS NULL AND s.cns_concedido
+                    AND s.cns_tipo = 'CONTACTO_SMS')
+    ON CONFLICT (ntf_chave) WHERE ntf_end_date IS NULL DO NOTHING;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RETURN n;
+END $function$;
+
+-- =====================================================================
+-- Fundo de construção (F-TES): tipo de fundo próprio, parte da contagem e linha das ofertas especiais
+-- =====================================================================
+ALTER TYPE nucleo.tipo_fundo_t ADD VALUE IF NOT EXISTS 'CONSTRUCAO';
+
+-- um fundo próprio da igreja pode ser o da construção (compara como texto: o valor novo é desta transacção)
+ALTER TABLE tesouraria.fundo DROP CONSTRAINT chk_fun_da_igreja;
+ALTER TABLE tesouraria.fundo ADD CONSTRAINT chk_fun_da_igreja
+    CHECK (fun_igr_id IS NULL OR (fun_percentagem_remessa = 0 AND fun_destino_ent_id IS NULL
+                                  AND fun_tipo::TEXT IN ('OFERTA_ESPECIAL', 'PROJECTO', 'REAVIVAMENTO', 'CONSTRUCAO')));
+COMMENT ON CONSTRAINT chk_fun_da_igreja ON tesouraria.fundo IS
+    '[tipo] Um fundo próprio da igreja é uma oferta especial, um projecto, a obra de reavivamento ou a construção, e fica todo na igreja.';
+
+-- a contagem ganha a parte do fundo de construção (as contagens antigas ficam sem ela)
+ALTER TABLE tesouraria.contagem_numerario ADD COLUMN cnu_construcao DECIMAL(14,2);
+COMMENT ON COLUMN tesouraria.contagem_numerario.cnu_construcao IS 'Parte do contado: fundo de construção (V45)';
+ALTER TABLE tesouraria.contagem_numerario DROP CONSTRAINT chk_cnu_partes;
+ALTER TABLE tesouraria.contagem_numerario ADD CONSTRAINT chk_cnu_partes CHECK (
+    (cnu_dizimos IS NULL AND cnu_ofertas IS NULL AND cnu_escola_sabatina IS NULL AND cnu_outras IS NULL AND cnu_construcao IS NULL) OR
+    (cnu_dizimos >= 0 AND cnu_ofertas >= 0 AND cnu_escola_sabatina >= 0 AND cnu_outras >= 0 AND COALESCE(cnu_construcao, 0) >= 0 AND
+     cnu_dizimos + cnu_ofertas + cnu_escola_sabatina + cnu_outras + COALESCE(cnu_construcao, 0) = cnu_total_contado));
+COMMENT ON CONSTRAINT chk_cnu_partes ON tesouraria.contagem_numerario IS
+    'As partes da contagem (dízimos, ofertas, Escola Sabatina, construção, outras) têm de somar o total contado.';
+
+-- a conferência: o lançado no fundo de construção conta à parte (sai das "outras")
+CREATE OR REPLACE VIEW tesouraria.vw_contagem_conferencia WITH (security_invoker = true) AS
+SELECT c.cnu_id, c.cnu_igr_id, c.cnu_data, c.cnu_ocasiao, c.cnu_total_contado,
+       COALESCE(x.total, 0)                       AS total_lancado,
+       c.cnu_total_contado - COALESCE(x.total, 0) AS diferenca,
+       c.cnu_estado,
+       c.cnu_dizimos, c.cnu_ofertas, c.cnu_escola_sabatina, c.cnu_outras,
+       COALESCE(x.dizimos, 0)         AS dizimos_lancado,
+       COALESCE(x.ofertas, 0)         AS ofertas_lancado,
+       COALESCE(x.escola_sabatina, 0) AS escola_sabatina_lancado,
+       COALESCE(x.outras, 0)          AS outras_lancado,
+       -- V45: o fundo de construção
+       c.cnu_construcao,
+       COALESCE(x.construcao, 0)      AS construcao_lancado
+FROM tesouraria.contagem_numerario c
+LEFT JOIN LATERAL (
+    SELECT SUM(l.tli_valor) AS total,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'DIZIMO') AS dizimos,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT IN ('OFERTA_COMBINADA', 'OFERTA_MISSIONARIA')) AS ofertas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT IN ('ES_MISSOES', 'ES_13_SABADO', 'ES_DESPESAS')) AS escola_sabatina,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT NOT IN ('DIZIMO', 'OFERTA_COMBINADA', 'OFERTA_MISSIONARIA',
+                                                                  'ES_MISSOES', 'ES_13_SABADO', 'ES_DESPESAS', 'CONSTRUCAO')) AS outras,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'CONSTRUCAO') AS construcao
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id
+    WHERE t.tra_cnu_id = c.cnu_id AND t.tra_estado = 'CONFIRMADA' AND t.tra_end_date IS NULL
+) x ON TRUE
+WHERE c.cnu_end_date IS NULL;
+
+-- =====================================================================
+-- Procura de membros antes de registar (F-SEC-01): nomes escritos de outra forma e o telemóvel
+-- =====================================================================
+-- Nome como se ouve: sem acentos, h mudo, ph→f, y→i, w→u, k/qu→c, z/ss→s, letras dobradas uma só
+-- (ex.: "Cossa" e "Cosa", "Felisberto" e "Phelisberto", "Zacarias" e "Sacarias").
+CREATE FUNCTION nucleo.fn_nome_fonetico(p TEXT) RETURNS TEXT
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+    SELECT regexp_replace(                                                  -- letras dobradas: uma só
+             regexp_replace(                                                -- h no início de uma palavra
+               regexp_replace(                                              -- h mudo (fica ch, nh, lh)
+                 translate(replace(replace(coalesce(nucleo.fn_nome_comparavel(p), ''), 'ph', 'f'), 'qu', 'c'),
+                           'ykwz', 'icus'),
+                 '([^cnl ])h', '\1', 'g'),
+               '(^| )h', '\1', 'g'),
+             '(.)\1+', '\1', 'g')
+$$;
+COMMENT ON FUNCTION nucleo.fn_nome_fonetico(TEXT) IS 'Nome como se ouve, para achar o mesmo nome escrito de outra forma (V45)';
+
+-- Os parecidos: agora também com o nome e o apelido trocados, escritos de outra forma (como se ouvem), o mesmo
+-- apelido com a mesma data, e o mesmo telemóvel. Continua SECURITY INVOKER (só os membros que o utilizador vê).
+DROP FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT);
+CREATE FUNCTION nucleo.fn_membros_parecidos(p_nome TEXT, p_apelido TEXT, p_data_nascimento DATE DEFAULT NULL,
+                                            p_naturalidade TEXT DEFAULT NULL, p_numero_identificacao TEXT DEFAULT NULL,
+                                            p_excluir_mem_id INT DEFAULT NULL, p_telefone TEXT DEFAULT NULL)
+RETURNS TABLE (mem_id INT, mem_igr_id INT, nome TEXT, data_nascimento DATE, naturalidade TEXT,
+               numero_identificacao TEXT, estado nucleo.estado_membro_t, pontos INT, motivos TEXT[])
+LANGUAGE sql STABLE
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH p AS (
+        SELECT nucleo.fn_nome_fonetico(coalesce(p_nome, '') || ' ' || coalesce(p_apelido, '')) AS fon,
+               nucleo.fn_nome_fonetico(coalesce(p_apelido, '') || ' ' || coalesce(p_nome, '')) AS fon_trocado,
+               nucleo.fn_nome_fonetico(p_apelido) AS apelido,
+               nullif(upper(regexp_replace(coalesce(p_numero_identificacao, ''), '[^A-Za-z0-9]', '', 'g')), '') AS doc,
+               nullif(lower(trim(coalesce(p_naturalidade, ''))), '') AS nat,
+               nullif(right(regexp_replace(coalesce(p_telefone, ''), '[^0-9]', '', 'g'), 9), '') AS tel
+    ), candidatos AS (
+        SELECT m.*,
+               greatest(similarity(nucleo.fn_nome_fonetico(m.mem_nome || ' ' || m.mem_apelido), p.fon),
+                        similarity(nucleo.fn_nome_fonetico(m.mem_nome || ' ' || m.mem_apelido), p.fon_trocado)) AS sim,
+               (p.doc IS NOT NULL AND length(p.doc) >= 5
+                AND upper(regexp_replace(m.mem_numero_identificacao, '[^A-Za-z0-9]', '', 'g')) = p.doc) AS mesmo_doc,
+               (p_data_nascimento IS NOT NULL AND m.mem_data_nascimento = p_data_nascimento) AS mesma_data,
+               (p.nat IS NOT NULL AND lower(trim(m.mem_naturalidade)) = p.nat) AS mesmo_local,
+               (p.apelido <> '' AND nucleo.fn_nome_fonetico(m.mem_apelido) = p.apelido) AS mesmo_apelido,
+               (p.tel IS NOT NULL AND length(p.tel) >= 8 AND EXISTS (
+                    SELECT 1 FROM secretaria.contacto c
+                     WHERE c.cto_mem_id = m.mem_id AND c.cto_end_date IS NULL AND c.cto_tipo::TEXT IN ('TELEFONE', 'WHATSAPP')
+                       AND right(regexp_replace(c.cto_valor, '[^0-9]', '', 'g'), 9) = p.tel)) AS mesmo_tel
+          FROM secretaria.membro m, p
+         WHERE m.mem_end_date IS NULL
+           AND m.mem_id IS DISTINCT FROM p_excluir_mem_id
+           AND ((m.mem_nome || ' ' || m.mem_apelido) % (coalesce(p_nome, '') || ' ' || coalesce(p_apelido, ''))
+                OR (m.mem_nome || ' ' || m.mem_apelido) % (coalesce(p_apelido, '') || ' ' || coalesce(p_nome, ''))
+                OR (p.doc IS NOT NULL AND upper(regexp_replace(m.mem_numero_identificacao, '[^A-Za-z0-9]', '', 'g')) = p.doc)
+                OR (p_data_nascimento IS NOT NULL AND m.mem_data_nascimento = p_data_nascimento)
+                OR (p.tel IS NOT NULL AND m.mem_id IN (SELECT c.cto_mem_id FROM secretaria.contacto c
+                                                         WHERE c.cto_end_date IS NULL AND c.cto_tipo::TEXT IN ('TELEFONE', 'WHATSAPP')
+                                                           AND right(regexp_replace(c.cto_valor, '[^0-9]', '', 'g'), 9) = p.tel)))
+    ), pontuados AS (
+        SELECT c.*,
+               (CASE WHEN c.mesmo_doc THEN 100 ELSE 0 END
+              + CASE WHEN c.sim >= 0.6 THEN 40 WHEN c.sim >= 0.45 THEN 20 ELSE 0 END
+              + CASE WHEN c.mesma_data THEN 30 ELSE 0 END
+              + CASE WHEN c.mesma_data AND c.mesmo_apelido AND c.sim < 0.6 THEN 20 ELSE 0 END
+              + CASE WHEN c.mesmo_local THEN 10 ELSE 0 END
+              + CASE WHEN c.mesmo_tel THEN 40 ELSE 0 END) AS pts,
+               array_remove(ARRAY[
+                 CASE WHEN c.mesmo_doc THEN 'Mesmo número de documento' END,
+                 CASE WHEN c.sim >= 0.6 THEN 'Nome igual ou muito parecido' WHEN c.sim >= 0.45 THEN 'Nome parecido' END,
+                 CASE WHEN c.mesma_data THEN 'Mesma data de nascimento' END,
+                 CASE WHEN c.mesma_data AND c.mesmo_apelido AND c.sim < 0.6 THEN 'Mesmo apelido' END,
+                 CASE WHEN c.mesmo_local THEN 'Mesmo local de nascimento' END,
+                 CASE WHEN c.mesmo_tel THEN 'Mesmo telemóvel' END], NULL) AS mot
+          FROM candidatos c
+    )
+    SELECT x.mem_id, x.mem_igr_id, (x.mem_nome || ' ' || x.mem_apelido)::TEXT, x.mem_data_nascimento,
+           x.mem_naturalidade::TEXT, x.mem_numero_identificacao::TEXT, x.mem_estado, x.pts, x.mot
+      FROM pontuados x
+     WHERE x.pts >= 40
+     ORDER BY x.pts DESC, x.mem_apelido, x.mem_nome
+     LIMIT 10
+$$;
+COMMENT ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT, TEXT) IS
+    'Registos de membros parecidos (possíveis duplicados) entre os que o utilizador vê: nome como se ouve e trocado, data, documento, local e telemóvel; só aviso (V33, V45)';
+REVOKE ALL ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION nucleo.fn_membros_parecidos(TEXT, TEXT, DATE, TEXT, TEXT, INT, TEXT) TO app_igreja;
+
+-- >>>>> V46__painel_dos_membros.sql
+-- =====================================================================
+-- V46 · Painel dos membros por igreja (F-ORG, pontos 9, 12 e 16): a composição dos membros para o Painel geral
+--
+--   organizacao.vw_painel_membros   por igreja visível: membros (no livro como activos), interessados, sexo, faixas
+--                                   etárias, estado civil (casados, união de facto, solteiros, viúvos, viúvas,
+--                                   divorciados, noivos, sem estado civil) e membros sem família.
+--   vw_painel_igrejas_mensal        ganha outras_saidas (falecimento, remoção, desaparecido) em cada mês: o gráfico das
+--                                   entradas e saídas de membros passa a bater com as perdas do período.
+-- SECURITY INVOKER: cada utilizador só conta os membros das igrejas que pode ver (RLS de secretaria.membro).
+-- Os nomes das colunas não começam por três letras e "_" (a API tiraria esse "prefixo").
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+CREATE VIEW organizacao.vw_painel_membros WITH (security_invoker = true) AS
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_ent_id AS entidade_id, i.igr_dst_id AS distrito_pastoral_id,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO')                                       AS membros,
+       count(*) FILTER (WHERE m.mem_estado = 'INTERESSADO')                                  AS interessados,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_sexo = 'M')                  AS homens,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_sexo = 'F')                  AS mulheres,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_fam_id IS NULL)              AS activos_sem_familia,
+       -- faixas etárias (membros com a data de nascimento)
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND age(m.mem_data_nascimento) <  INTERVAL '18 years') AS menores,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND age(m.mem_data_nascimento) >= INTERVAL '18 years'
+                                                   AND age(m.mem_data_nascimento) <  INTERVAL '36 years') AS jovens,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND age(m.mem_data_nascimento) >= INTERVAL '36 years'
+                                                   AND age(m.mem_data_nascimento) <  INTERVAL '60 years') AS adultos,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND age(m.mem_data_nascimento) >= INTERVAL '60 years') AS idosos,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_data_nascimento IS NULL)    AS idade_desconhecida,
+       -- estado civil
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'CASADO')      AS casados,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'UNIAO_FACTO') AS uniao_facto,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'SOLTEIRO')    AS solteiros,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'VIUVO' AND m.mem_sexo = 'M') AS viuvos,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'VIUVO' AND m.mem_sexo = 'F') AS viuvas,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'DIVORCIADO')  AS divorciados,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil::TEXT = 'NOIVO')       AS noivos,
+       count(*) FILTER (WHERE m.mem_estado = 'ACTIVO' AND m.mem_estado_civil IS NULL)               AS estado_civil_vazio
+FROM organizacao.igreja i
+JOIN secretaria.membro m ON m.mem_igr_id = i.igr_id AND m.mem_end_date IS NULL
+WHERE i.igr_end_date IS NULL
+GROUP BY i.igr_id, i.igr_nome, i.igr_ent_id, i.igr_dst_id;
+COMMENT ON VIEW organizacao.vw_painel_membros IS
+    'Composição dos membros por igreja visível: sexo, idades, estado civil e sem família (V46); RLS de secretaria.membro';
+GRANT SELECT ON organizacao.vw_painel_membros TO app_igreja;
+
+-- ---------------------------------------------------------------- últimos 12 meses: também as outras saídas do livro
+CREATE OR REPLACE VIEW organizacao.vw_painel_igrejas_mensal WITH (security_invoker = true) AS
+WITH meses AS (
+    SELECT g::date AS ini, (g + INTERVAL '1 month')::date AS fim,
+           EXTRACT(YEAR FROM g)::INT AS ano, EXTRACT(MONTH FROM g)::INT AS mes
+    FROM generate_series(date_trunc('month', now() AT TIME ZONE 'Africa/Maputo') - INTERVAL '11 months',
+                         date_trunc('month', now() AT TIME ZONE 'Africa/Maputo'), INTERVAL '1 month') g
+),
+desde AS (SELECT (MIN(ini)::timestamp AT TIME ZONE 'Africa/Maputo') AS t, MIN(ini) AS d FROM meses),
+dinheiro AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'ENTRADA') AS entradas,
+           SUM(t.tra_valor_total) FILTER (WHERE t.tra_tipo = 'SAIDA')   AS saidas
+    FROM tesouraria.transacao t
+    JOIN tesouraria.conta_financeira c ON c.cfi_id = t.tra_cfi_id AND c.cfi_ent_id IS NULL, desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo IN ('ENTRADA', 'SAIDA') AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+fundos AS (
+    SELECT t.tra_igr_id AS igr_id,
+           EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano,
+           EXTRACT(MONTH FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'DIZIMO') AS dizimos,
+           COUNT(DISTINCT t.tra_mem_id) FILTER (WHERE f.fun_tipo::TEXT = 'DIZIMO') AS dizimistas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT NOT IN ('DIZIMO', 'REAVIVAMENTO')) AS ofertas,
+           SUM(l.tli_valor) FILTER (WHERE f.fun_tipo::TEXT = 'REAVIVAMENTO') AS reavivamento
+    FROM tesouraria.transacao t
+    JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+    JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id, desde
+    WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NULL
+      AND t.tra_data_hora >= desde.t
+    GROUP BY 1, 2, 3
+),
+livro AS (
+    SELECT l.mmb_igr_id AS igr_id, EXTRACT(YEAR FROM l.mmb_data)::INT AS ano, EXTRACT(MONTH FROM l.mmb_data)::INT AS mes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE')) AS admissoes,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_ENTRADA') AS transf_entrada,
+           COUNT(*) FILTER (WHERE l.mmb_tipo = 'TRANSFERENCIA_SAIDA')   AS transf_saida,
+           COUNT(*) FILTER (WHERE l.mmb_tipo IN ('FALECIMENTO', 'REMOCAO_DISCIPLINA', 'REMOCAO_PEDIDO', 'DESAPARECIDO')) AS outras_saidas
+    FROM secretaria.movimento_membro l, desde
+    WHERE l.mmb_end_date IS NULL AND l.mmb_data >= desde.d
+    GROUP BY 1, 2, 3
+)
+SELECT i.igr_id, i.igr_nome AS nome, i.igr_ent_id AS entidade_id, i.igr_dst_id AS distrito_pastoral_id, ms.ano, ms.mes,
+       COALESCE(dn.entradas, 0) AS entradas, COALESCE(dn.saidas, 0) AS saidas,
+       COALESCE(z.dizimos, 0) AS dizimos, COALESCE(z.dizimistas, 0) AS dizimistas,
+       COALESCE(l.admissoes, 0) AS admissoes, COALESCE(l.transf_entrada, 0) AS transf_entrada, COALESCE(l.transf_saida, 0) AS transf_saida,
+       COALESCE(z.ofertas, 0) AS ofertas, COALESCE(z.reavivamento, 0) AS reavivamento,
+       -- V46: as outras saídas do livro (falecimento, remoção, desaparecido), para o gráfico bater com as perdas
+       COALESCE(l.outras_saidas, 0) AS outras_saidas
+FROM organizacao.igreja i
+CROSS JOIN meses ms
+LEFT JOIN dinheiro dn ON dn.igr_id = i.igr_id AND dn.ano = ms.ano AND dn.mes = ms.mes
+LEFT JOIN fundos z    ON z.igr_id = i.igr_id AND z.ano = ms.ano AND z.mes = ms.mes
+LEFT JOIN livro l     ON l.igr_id = i.igr_id AND l.ano = ms.ano AND l.mes = ms.mes
+WHERE i.igr_end_date IS NULL;
+
+-- >>>>> V47__escola_sabatina_metas_e_semanas.sql
+-- =====================================================================
+-- V47 · Escola Sabatina (F-ES, ponto 15): metas individuais, contribuições individuais e colectivas, semanas especiais
+--
+--   presenca.epr_oferta              a oferta missionária de cada aluno na chamada (contribuição individual); a da
+--                                    classe continua no relatório do sábado (contribuição colectiva).
+--   meta_individual                  a meta de cada aluno da classe no trimestre; a meta da classe calcula-se sozinha
+--                                    (alvo da oferta por sábado = soma das metas ÷ sábados do trimestre).
+--   vw_metas_alunos / vw_metas_classes  o acompanhamento: meta, contribuído, identificado, presenças e cumprimento.
+--   semana_especial                  semana de oração, da família, de evangelismo… com datas, para os alertas.
+-- Permissões novas: as mesmas dos alvos das classes (escola_sabatina.classe_trimestre.*). Gerado com database/gerador.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- a oferta de cada aluno na chamada
+ALTER TABLE escola_sabatina.presenca ADD COLUMN epr_oferta DECIMAL(12,2);
+ALTER TABLE escola_sabatina.presenca ADD CONSTRAINT chk_epr_oferta CHECK (epr_oferta IS NULL OR epr_oferta >= 0);
+COMMENT ON COLUMN escola_sabatina.presenca.epr_oferta IS 'Oferta missionária do aluno neste sábado (contribuição individual; V47)';
+COMMENT ON CONSTRAINT chk_epr_oferta ON escola_sabatina.presenca IS '[oferta] A oferta não pode ser negativa.';
+
+-- ---------------------------------------------------------------- metas individuais e semanas especiais (geradas: gen.py)
+CREATE TABLE escola_sabatina.meta_individual (
+    emt_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    emt_ect_id INT NOT NULL,
+    emt_mem_id INT NOT NULL,
+    emt_igr_id INT NOT NULL,
+    emt_alvo_oferta DECIMAL(12,2) NOT NULL,
+    emt_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    emt_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    emt_criado_por INT,
+    emt_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    emt_modificado_por INT,
+    emt_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_emt_ect_id FOREIGN KEY (emt_ect_id) REFERENCES escola_sabatina.classe_trimestre(ect_id),
+    CONSTRAINT fk_emt_mem_id FOREIGN KEY (emt_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT fk_emt_igr_id FOREIGN KEY (emt_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_emt_alvo CHECK (emt_alvo_oferta >= 0),
+    CONSTRAINT chk_emt_end_date CHECK (emt_end_date IS NULL OR emt_end_date >= emt_criado_em)
+);
+
+COMMENT ON TABLE escola_sabatina.meta_individual IS 'Meta de oferta missionária de cada aluno da classe no trimestre; a da classe é a soma (V47)';
+COMMENT ON COLUMN escola_sabatina.meta_individual.emt_igr_id IS 'Copiado da classe (segurança e desempenho)';
+COMMENT ON COLUMN escola_sabatina.meta_individual.emt_alvo_oferta IS 'Meta do aluno para o trimestre';
+CREATE UNIQUE INDEX uq_emt_ect_id_mem_id ON escola_sabatina.meta_individual (emt_ect_id, emt_mem_id) WHERE emt_end_date IS NULL;
+CREATE INDEX idx_emt_mem_id ON escola_sabatina.meta_individual (emt_mem_id);
+CREATE INDEX idx_emt_igr_pagina ON escola_sabatina.meta_individual (emt_igr_id, emt_id);
+
+CREATE TABLE escola_sabatina.semana_especial (
+    ese_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    ese_igr_id INT NOT NULL,
+    ese_tipo VARCHAR(20) NOT NULL,
+    ese_nome VARCHAR(150) NOT NULL,
+    ese_data_inicio DATE NOT NULL,
+    ese_data_fim DATE NOT NULL,
+    ese_observacoes VARCHAR(500),
+    ese_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    ese_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ese_criado_por INT,
+    ese_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ese_modificado_por INT,
+    ese_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_ese_igr_id FOREIGN KEY (ese_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_ese_tipo CHECK (ese_tipo IN ('ORACAO', 'FAMILIA', 'EVANGELISMO', 'JOVENS', 'MORDOMIA', 'OUTRO')),
+    CONSTRAINT chk_ese_datas CHECK (ese_data_fim >= ese_data_inicio),
+    CONSTRAINT chk_ese_end_date CHECK (ese_end_date IS NULL OR ese_end_date >= ese_criado_em)
+);
+
+COMMENT ON TABLE escola_sabatina.semana_especial IS 'Programas especiais da semana (semana de oração, da família, de evangelismo…), com alerta (V47)';
+COMMENT ON COLUMN escola_sabatina.semana_especial.ese_tipo IS 'ORACAO, FAMILIA, EVANGELISMO, JOVENS, MORDOMIA ou OUTRO';
+COMMENT ON COLUMN escola_sabatina.semana_especial.ese_nome IS 'Ex.: Semana de Oração';
+CREATE INDEX idx_ese_igr_pagina ON escola_sabatina.semana_especial (ese_igr_id, ese_id);
+CREATE INDEX idx_ese_igr_datas ON escola_sabatina.semana_especial (ese_igr_id, ese_data_inicio) WHERE ese_end_date IS NULL;
+
+CREATE TRIGGER trg_emt_00_padrao BEFORE INSERT OR UPDATE ON escola_sabatina.meta_individual FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('emt', 'escola_sabatina.meta_individual', 'emt_igr_id');
+CREATE TRIGGER trg_emt_00_sem_delete BEFORE DELETE ON escola_sabatina.meta_individual FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('emt');
+CREATE TRIGGER trg_emt_00_sem_truncate BEFORE TRUNCATE ON escola_sabatina.meta_individual FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('emt');
+CREATE TRIGGER trg_emt_99_log AFTER UPDATE ON escola_sabatina.meta_individual FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('emt');
+ALTER TABLE escola_sabatina.meta_individual ADD CONSTRAINT fk_emt_criado_por FOREIGN KEY (emt_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE escola_sabatina.meta_individual ADD CONSTRAINT fk_emt_modificado_por FOREIGN KEY (emt_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_ese_00_padrao BEFORE INSERT OR UPDATE ON escola_sabatina.semana_especial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('ese', 'escola_sabatina.semana_especial', 'ese_igr_id');
+CREATE TRIGGER trg_ese_00_sem_delete BEFORE DELETE ON escola_sabatina.semana_especial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('ese');
+CREATE TRIGGER trg_ese_00_sem_truncate BEFORE TRUNCATE ON escola_sabatina.semana_especial FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('ese');
+CREATE TRIGGER trg_ese_99_log AFTER UPDATE ON escola_sabatina.semana_especial FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('ese');
+ALTER TABLE escola_sabatina.semana_especial ADD CONSTRAINT fk_ese_criado_por FOREIGN KEY (ese_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE escola_sabatina.semana_especial ADD CONSTRAINT fk_ese_modificado_por FOREIGN KEY (ese_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE escola_sabatina.meta_individual ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_emt_ler ON escola_sabatina.meta_individual FOR SELECT USING (emt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.meta_individual.ler'))::INT[]));
+CREATE POLICY pol_emt_criar ON escola_sabatina.meta_individual FOR INSERT WITH CHECK (emt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.meta_individual.criar'))::INT[]));
+CREATE POLICY pol_emt_alterar ON escola_sabatina.meta_individual FOR UPDATE USING (emt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.meta_individual.alterar'))::INT[])) WITH CHECK (emt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.meta_individual.alterar'))::INT[]));
+ALTER TABLE escola_sabatina.semana_especial ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_ese_ler ON escola_sabatina.semana_especial FOR SELECT USING (ese_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.semana_especial.ler'))::INT[]));
+CREATE POLICY pol_ese_criar ON escola_sabatina.semana_especial FOR INSERT WITH CHECK (ese_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.semana_especial.criar'))::INT[]));
+CREATE POLICY pol_ese_alterar ON escola_sabatina.semana_especial FOR UPDATE USING (ese_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.semana_especial.alterar'))::INT[])) WITH CHECK (ese_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('escola_sabatina.semana_especial.alterar'))::INT[]));
+
+GRANT SELECT, INSERT, UPDATE ON escola_sabatina.meta_individual, escola_sabatina.semana_especial TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA escola_sabatina TO app_igreja;
+COMMENT ON INDEX escola_sabatina.uq_emt_ect_id_mem_id IS '[membroId] Este aluno já tem meta nesta classe e trimestre.';
+COMMENT ON CONSTRAINT chk_emt_alvo ON escola_sabatina.meta_individual IS '[alvoOferta] A meta não pode ser negativa.';
+COMMENT ON CONSTRAINT chk_ese_tipo ON escola_sabatina.semana_especial IS '[tipo] Tipo de programa desconhecido.';
+COMMENT ON CONSTRAINT chk_ese_datas ON escola_sabatina.semana_especial IS '[dataFim] O fim tem de ser no mesmo dia ou depois do início.';
+
+-- permissões: as mesmas dos alvos das classes (escola_sabatina.classe_trimestre.*)
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'escola_sabatina.' || t.tabela || '.' || a.accao, a.rotulo || t.descricao
+  FROM (VALUES ('meta_individual', 'Meta de oferta missionária de cada aluno da classe no trimestre (V47)'),
+               ('semana_especial', 'Programas especiais da semana (semana de oração, da família, de evangelismo…) (V47)')) t(tabela, descricao),
+       (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'escola_sabatina.classe_trimestre.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo IN (replace(antigo.prm_codigo, 'classe_trimestre', 'meta_individual'),
+                                                    replace(antigo.prm_codigo, 'classe_trimestre', 'semana_especial'))
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- meta individual: aluno da classe; a igreja vem da classe
+CREATE FUNCTION escola_sabatina.fn_emt_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_ecl INT;
+BEGIN
+    SELECT ect_ecl_id, ect_igr_id INTO v_ecl, NEW.emt_igr_id FROM escola_sabatina.classe_trimestre WHERE ect_id = NEW.emt_ect_id;
+    IF v_ecl IS NULL THEN
+        RAISE EXCEPTION 'A classe deste trimestre não existe' USING COLUMN = 'emt_ect_id';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM escola_sabatina.matricula WHERE ema_ecl_id = v_ecl AND ema_mem_id = NEW.emt_mem_id AND ema_end_date IS NULL AND ema_data_saida IS NULL) THEN
+        RAISE EXCEPTION 'O membro não está matriculado nesta classe' USING COLUMN = 'emt_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_emt_05_validar BEFORE INSERT OR UPDATE OF emt_ect_id, emt_mem_id ON escola_sabatina.meta_individual
+    FOR EACH ROW EXECUTE FUNCTION escola_sabatina.fn_emt_validar();
+
+-- a meta da classe é calculada: o alvo da oferta por sábado = soma das metas individuais ÷ sábados do trimestre
+CREATE FUNCTION escola_sabatina.fn_emt_meta_da_classe() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_ect INT := COALESCE(NEW.emt_ect_id, OLD.emt_ect_id);
+BEGIN
+    UPDATE escola_sabatina.classe_trimestre ct
+       SET ect_alvo_oferta_sabado = round(COALESCE((SELECT sum(m.emt_alvo_oferta) FROM escola_sabatina.meta_individual m
+                                                     WHERE m.emt_ect_id = v_ect AND m.emt_end_date IS NULL), 0)
+                                          / (SELECT t.etr_num_sabados FROM escola_sabatina.trimestre t WHERE t.etr_id = ct.ect_etr_id), 2)
+     WHERE ct.ect_id = v_ect;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_emt_50_meta_da_classe AFTER INSERT OR UPDATE OF emt_alvo_oferta, emt_end_date, emt_ect_id ON escola_sabatina.meta_individual
+    FOR EACH ROW EXECUTE FUNCTION escola_sabatina.fn_emt_meta_da_classe();
+
+-- ---------------------------------------------------------------- acompanhamento: por aluno e por classe
+-- Por aluno da classe no trimestre: a meta, o que deu (as ofertas dele na chamada) e os sábados em que esteve.
+CREATE VIEW escola_sabatina.vw_metas_alunos WITH (security_invoker = true) AS
+WITH dado AS (
+    SELECT r.ers_ect_id AS ect_id, p.epr_mem_id AS mem_id, sum(p.epr_oferta) AS contribuido,
+           count(*) FILTER (WHERE p.epr_presente) AS presencas
+      FROM escola_sabatina.presenca p
+      JOIN escola_sabatina.relatorio_sabado r ON r.ers_id = p.epr_ers_id AND r.ers_end_date IS NULL
+     WHERE p.epr_end_date IS NULL
+     GROUP BY 1, 2
+), alunos AS (
+    SELECT ct.ect_id, m.ema_mem_id AS mem_id
+      FROM escola_sabatina.classe_trimestre ct
+      JOIN escola_sabatina.matricula m ON m.ema_ecl_id = ct.ect_ecl_id AND m.ema_end_date IS NULL AND m.ema_data_saida IS NULL
+     WHERE ct.ect_end_date IS NULL
+    UNION
+    SELECT emt_ect_id, emt_mem_id FROM escola_sabatina.meta_individual WHERE emt_end_date IS NULL
+    UNION
+    SELECT ect_id, mem_id FROM dado
+)
+SELECT ct.ect_igr_id AS igreja_id, ct.ect_etr_id AS trimestre_id, a.ect_id AS classe_trimestre_id, a.mem_id AS membro_id,
+       mb.mem_nome || ' ' || mb.mem_apelido AS nome,
+       mt.emt_id AS meta_id, mt.emt_alvo_oferta AS meta, COALESCE(d.contribuido, 0) AS contribuido, COALESCE(d.presencas, 0) AS presencas,
+       CASE WHEN mt.emt_alvo_oferta > 0 THEN round(COALESCE(d.contribuido, 0) / mt.emt_alvo_oferta, 4) END AS cumprimento
+  FROM alunos a
+  JOIN escola_sabatina.classe_trimestre ct ON ct.ect_id = a.ect_id
+  JOIN secretaria.membro mb ON mb.mem_id = a.mem_id
+  LEFT JOIN escola_sabatina.meta_individual mt ON mt.emt_ect_id = a.ect_id AND mt.emt_mem_id = a.mem_id AND mt.emt_end_date IS NULL
+  LEFT JOIN dado d ON d.ect_id = a.ect_id AND d.mem_id = a.mem_id;
+COMMENT ON VIEW escola_sabatina.vw_metas_alunos IS 'Meta individual, contribuição (chamada) e presenças de cada aluno da classe no trimestre (V47)';
+GRANT SELECT ON escola_sabatina.vw_metas_alunos TO app_igreja;
+
+-- Por classe no trimestre: a meta (a soma das individuais, ou o alvo por sábado × sábados), o contribuído (relatórios)
+-- e quanto disso está identificado por aluno.
+CREATE VIEW escola_sabatina.vw_metas_classes WITH (security_invoker = true) AS
+SELECT ct.ect_igr_id AS igreja_id, ct.ect_etr_id AS trimestre_id, ct.ect_id AS classe_trimestre_id, c.ecl_nome AS classe,
+       c.ecl_divisao AS divisao,
+       (SELECT count(*) FROM escola_sabatina.matricula m WHERE m.ema_ecl_id = ct.ect_ecl_id AND m.ema_end_date IS NULL AND m.ema_data_saida IS NULL) AS alunos,
+       (SELECT count(*) FROM escola_sabatina.meta_individual m WHERE m.emt_ect_id = ct.ect_id AND m.emt_end_date IS NULL) AS com_meta,
+       COALESCE((SELECT sum(m.emt_alvo_oferta) FROM escola_sabatina.meta_individual m WHERE m.emt_ect_id = ct.ect_id AND m.emt_end_date IS NULL),
+                ct.ect_alvo_oferta_sabado * t.etr_num_sabados) AS meta,
+       COALESCE((SELECT sum(r.ers_oferta) FROM escola_sabatina.relatorio_sabado r WHERE r.ers_ect_id = ct.ect_id AND r.ers_end_date IS NULL), 0) AS contribuido,
+       COALESCE((SELECT sum(p.epr_oferta) FROM escola_sabatina.presenca p JOIN escola_sabatina.relatorio_sabado r ON r.ers_id = p.epr_ers_id
+                  WHERE r.ers_ect_id = ct.ect_id AND r.ers_end_date IS NULL AND p.epr_end_date IS NULL), 0) AS identificado,
+       (SELECT count(*) FROM escola_sabatina.relatorio_sabado r WHERE r.ers_ect_id = ct.ect_id AND r.ers_end_date IS NULL) AS sabados_com_relatorio,
+       t.etr_num_sabados AS sabados
+  FROM escola_sabatina.classe_trimestre ct
+  JOIN escola_sabatina.classe c ON c.ecl_id = ct.ect_ecl_id
+  JOIN escola_sabatina.trimestre t ON t.etr_id = ct.ect_etr_id
+ WHERE ct.ect_end_date IS NULL;
+COMMENT ON VIEW escola_sabatina.vw_metas_classes IS 'Meta da classe (soma das individuais), contribuído e identificado por aluno, no trimestre (V47)';
+GRANT SELECT ON escola_sabatina.vw_metas_classes TO app_igreja;
+
+-- >>>>> V48__acompanhamento_das_actividades.sql
+-- =====================================================================
+-- V48 · Acompanhamento das actividades (F-ACT): o motivo do cancelamento
+--
+--   actividade.act_motivo_cancelamento   obrigatório ao cancelar (o trigger recusa cancelar sem ele): as canceladas
+--                                        ficam explicadas no acompanhamento da igreja e da área pastoral.
+--   vw_actividades_execucao              ganha motivo_cancelamento e actualizada_em (colunas no fim).
+-- Nada se apaga: as canceladas antes desta versão ficam sem motivo.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+ALTER TABLE actividades.actividade ADD COLUMN act_motivo_cancelamento VARCHAR(255);
+COMMENT ON COLUMN actividades.actividade.act_motivo_cancelamento IS 'Porque foi cancelada (obrigatório ao cancelar; V48)';
+
+CREATE FUNCTION actividades.fn_act_cancelar() RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.act_estado::TEXT = 'CANCELADA' AND OLD.act_estado::TEXT <> 'CANCELADA'
+       AND coalesce(trim(NEW.act_motivo_cancelamento), '') = '' THEN
+        RAISE EXCEPTION 'Diga porque a actividade é cancelada' USING COLUMN = 'act_motivo_cancelamento';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_act_20_cancelar BEFORE UPDATE OF act_estado ON actividades.actividade
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_act_cancelar();
+
+-- ---------------------------------------------------------------- o programa com o motivo e a última mudança
+CREATE OR REPLACE VIEW actividades.vw_actividades_execucao WITH (security_invoker = true) AS
+WITH base AS (
+    SELECT a.*, d.ide_igr_id AS igreja_id, dp.dep_nome AS departamento, 'IGREJA'::TEXT AS origem, NULL::INT AS distrito_id, NULL::TEXT AS distrito
+      FROM actividades.actividade a
+      JOIN organizacao.igreja_departamento d ON d.ide_id = a.act_ide_id
+      JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+     WHERE a.act_end_date IS NULL
+    UNION ALL
+    SELECT a.*, i.igr_id, 'Área pastoral', 'AREA_PASTORAL', ds.dst_id, ds.dst_nome::TEXT
+      FROM actividades.actividade a
+      JOIN organizacao.distrito ds ON ds.dst_id = a.act_dst_id
+      JOIN organizacao.igreja i ON i.igr_dst_id = ds.dst_id AND i.igr_end_date IS NULL
+     WHERE a.act_end_date IS NULL
+)
+SELECT a.act_id, a.igreja_id, a.act_ide_id AS departamento_igreja_id, a.departamento::VARCHAR(100) AS departamento,
+       a.act_nome AS nome, a.act_descricao AS descricao, a.act_objectivos AS objectivos, a.act_local AS local,
+       a.act_data_inicio AS data_inicio, a.act_data_fim AS data_fim, a.act_estado AS estado,
+       EXTRACT(YEAR FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT  AS ano,
+       EXTRACT(MONTH FROM a.act_data_inicio AT TIME ZONE 'Africa/Maputo')::INT AS mes,
+       a.act_responsavel_mem_id AS responsavel_mem_id,
+       (SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = a.act_responsavel_mem_id) AS responsavel,
+       (SELECT count(*) FROM actividades.actividade_responsavel r WHERE r.acr_act_id = a.act_id AND r.acr_end_date IS NULL)::INT AS outros_responsaveis,
+       a.act_valor_previsto AS valor_previsto,
+       coalesce((SELECT sum(x.mat_quantidade * x.mat_preco_unitario) FROM actividades.material x
+                  WHERE x.mat_act_id = a.act_id AND x.mat_end_date IS NULL), 0)::DECIMAL(14,2) AS material_previsto,
+       coalesce((SELECT sum(x.des_valor_solicitado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('SUBMETIDA', 'APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_pedidas,
+       coalesce((SELECT sum(x.des_valor_aprovado) FROM tesouraria.despesa x
+                  WHERE x.des_act_id = a.act_id AND x.des_end_date IS NULL AND x.des_estado IN ('APROVADA', 'PAGA')), 0)::DECIMAL(14,2) AS despesas_aprovadas,
+       coalesce((SELECT sum(CASE WHEN t.tra_tipo = 'SAIDA' THEN l.tli_valor ELSE -l.tli_valor END)
+                   FROM tesouraria.transacao_linha l JOIN tesouraria.transacao t ON t.tra_id = l.tli_tra_id
+                  WHERE l.tli_act_id = a.act_id AND l.tli_end_date IS NULL AND t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA'
+                    AND (t.tra_tipo = 'SAIDA' OR (t.tra_tipo = 'ENTRADA' AND t.tra_estorno_tra_id IS NOT NULL))), 0)::DECIMAL(14,2) AS executado,
+       a.origem, a.distrito_id, a.distrito,
+       -- V48: porque foi cancelada e quando mudou pela última vez (acompanhamento)
+       a.act_motivo_cancelamento AS motivo_cancelamento, a.act_modificado_em AS actualizada_em
+FROM base a;
+
+-- >>>>> V49__reavivamento_por_pessoa.sql
+-- =====================================================================
+-- V49 · Reavivamento por pessoa: o alvo da igreja repartido por adultos e crianças, com quota ajustável
+--   quota_reavivamento        a quota de uma pessoa no ano, quando o tesoureiro a muda à mão (ex.: sem rendimento).
+--   vw_reavivamento_pessoas   por igreja, ano e pessoa: a quota (a ajustada, ou a parte igual do que sobra do alvo),
+--                             o que já deu no fundo REAVIVAMENTO e o que falta.
+-- Quem conta: os membros activos e as crianças (menos de 18 anos) registadas na igreja, activas ou interessadas.
+-- O alvo é o dos "Alvos" no fundo REAVIVAMENTO desse ano (somados, se houver mais de um).
+-- Permissões novas: as mesmas dos alvos (tesouraria.alvo.*). Gerado com database/gerador.
+-- Também: o cartão de eleitor como tipo de documento da ficha do membro.
+-- =====================================================================
+
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- documento novo na ficha do membro: cartão de eleitor
+ALTER TYPE nucleo.tipo_identificacao_t ADD VALUE IF NOT EXISTS 'CARTAO_ELEITOR';
+
+-- ---------------------------------------------------------------- tabela (gerada: gen.py)
+CREATE TABLE tesouraria.quota_reavivamento (
+    qrv_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    qrv_igr_id INT NOT NULL,
+    qrv_mem_id INT NOT NULL,
+    qrv_ano SMALLINT NOT NULL,
+    qrv_valor DECIMAL(12,2) NOT NULL,
+    qrv_motivo VARCHAR(255),
+    qrv_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    qrv_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    qrv_criado_por INT,
+    qrv_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    qrv_modificado_por INT,
+    qrv_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_qrv_igr_id FOREIGN KEY (qrv_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_qrv_mem_id FOREIGN KEY (qrv_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_qrv_valor CHECK (qrv_valor >= 0),
+    CONSTRAINT chk_qrv_ano CHECK (qrv_ano BETWEEN 2000 AND 2100),
+    CONSTRAINT chk_qrv_end_date CHECK (qrv_end_date IS NULL OR qrv_end_date >= qrv_criado_em)
+);
+COMMENT ON TABLE tesouraria.quota_reavivamento IS 'Quota do reavivamento de uma pessoa no ano, ajustada à mão (as outras repartem o alvo; V49)';
+COMMENT ON COLUMN tesouraria.quota_reavivamento.qrv_igr_id IS 'Copiado do membro (segurança e desempenho)';
+COMMENT ON COLUMN tesouraria.quota_reavivamento.qrv_valor IS 'Quota da pessoa no ano';
+COMMENT ON COLUMN tesouraria.quota_reavivamento.qrv_motivo IS 'Ex.: sem rendimento';
+CREATE UNIQUE INDEX uq_qrv_mem_id_ano ON tesouraria.quota_reavivamento (qrv_mem_id, qrv_ano) WHERE qrv_end_date IS NULL;
+CREATE INDEX idx_qrv_igr_pagina ON tesouraria.quota_reavivamento (qrv_igr_id, qrv_id);
+
+CREATE TRIGGER trg_qrv_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.quota_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('qrv', 'tesouraria.quota_reavivamento', 'qrv_igr_id');
+CREATE TRIGGER trg_qrv_00_sem_delete BEFORE DELETE ON tesouraria.quota_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('qrv');
+CREATE TRIGGER trg_qrv_00_sem_truncate BEFORE TRUNCATE ON tesouraria.quota_reavivamento FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('qrv');
+CREATE TRIGGER trg_qrv_99_log AFTER UPDATE ON tesouraria.quota_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('qrv');
+ALTER TABLE tesouraria.quota_reavivamento ADD CONSTRAINT fk_qrv_criado_por FOREIGN KEY (qrv_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.quota_reavivamento ADD CONSTRAINT fk_qrv_modificado_por FOREIGN KEY (qrv_modificado_por) REFERENCES nucleo.usuario(usu_id);
+
+ALTER TABLE tesouraria.quota_reavivamento ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_qrv_ler ON tesouraria.quota_reavivamento FOR SELECT USING (qrv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_reavivamento.ler'))::INT[]));
+CREATE POLICY pol_qrv_criar ON tesouraria.quota_reavivamento FOR INSERT WITH CHECK (qrv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_reavivamento.criar'))::INT[]));
+CREATE POLICY pol_qrv_alterar ON tesouraria.quota_reavivamento FOR UPDATE USING (qrv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_reavivamento.alterar'))::INT[])) WITH CHECK (qrv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_reavivamento.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON tesouraria.quota_reavivamento TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA tesouraria TO app_igreja;
+COMMENT ON INDEX tesouraria.uq_qrv_mem_id_ano IS '[membroId] Esta pessoa já tem quota ajustada neste ano.';
+COMMENT ON CONSTRAINT chk_qrv_valor ON tesouraria.quota_reavivamento IS '[valor] A quota não pode ser negativa.';
+COMMENT ON CONSTRAINT chk_qrv_ano ON tesouraria.quota_reavivamento IS '[ano] Ano inválido.';
+
+-- permissões: as mesmas dos alvos (tesouraria.alvo.*)
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'tesouraria.quota_reavivamento.' || a.accao, a.rotulo || 'Quota do reavivamento de uma pessoa no ano (V49)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'tesouraria.alvo.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, 'tesouraria.alvo.', 'tesouraria.quota_reavivamento.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- a quota é de uma pessoa da igreja; a igreja vem do membro
+CREATE FUNCTION tesouraria.fn_qrv_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT mem_igr_id INTO NEW.qrv_igr_id FROM secretaria.membro WHERE mem_id = NEW.qrv_mem_id AND mem_end_date IS NULL;
+    IF NEW.qrv_igr_id IS NULL THEN
+        RAISE EXCEPTION 'A pessoa não existe' USING COLUMN = 'qrv_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_qrv_05_validar BEFORE INSERT OR UPDATE OF qrv_mem_id ON tesouraria.quota_reavivamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_qrv_validar();
+
+-- ---------------------------------------------------------------- por pessoa: quota, contribuído e falta
+-- quota = a ajustada, ou (alvo − soma das ajustadas) ÷ pessoas sem ajuste, para que a soma das quotas dê o alvo.
+CREATE VIEW tesouraria.vw_reavivamento_pessoas WITH (security_invoker = true) AS
+WITH alvos AS (
+    SELECT a.alv_igr_id AS igr_id, EXTRACT(YEAR FROM a.alv_data_inicio)::INT AS ano, SUM(a.alv_valor_alvo) AS alvo
+      FROM tesouraria.alvo a
+      JOIN tesouraria.fundo f ON f.fun_id = a.alv_fun_id AND f.fun_tipo::TEXT = 'REAVIVAMENTO'
+     WHERE a.alv_end_date IS NULL
+     GROUP BY 1, 2
+),
+pessoas AS (
+    SELECT m.mem_igr_id AS igr_id, m.mem_id, m.mem_nome, m.mem_apelido, m.mem_data_nascimento,
+           (m.mem_data_nascimento IS NOT NULL AND m.mem_data_nascimento > current_date - INTERVAL '18 years') AS menor
+      FROM secretaria.membro m
+     WHERE m.mem_end_date IS NULL
+       AND (m.mem_estado::TEXT = 'ACTIVO'
+            OR (m.mem_estado::TEXT = 'INTERESSADO' AND m.mem_data_nascimento > current_date - INTERVAL '18 years'))
+),
+base AS (
+    SELECT p.*, a.ano, a.alvo, q.qrv_id, q.qrv_valor, q.qrv_motivo
+      FROM pessoas p
+      JOIN alvos a ON a.igr_id = p.igr_id
+      LEFT JOIN tesouraria.quota_reavivamento q ON q.qrv_mem_id = p.mem_id AND q.qrv_ano = a.ano AND q.qrv_end_date IS NULL
+),
+partilha AS (
+    SELECT igr_id, ano,
+           GREATEST(MAX(alvo) - COALESCE(SUM(qrv_valor), 0), 0) AS resto,
+           COUNT(*) FILTER (WHERE qrv_id IS NULL) AS sem_ajuste
+      FROM base GROUP BY 1, 2
+),
+dado AS (
+    SELECT t.tra_mem_id AS mem_id, EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano, SUM(l.tli_valor) AS valor
+      FROM tesouraria.transacao t
+      JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+      JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id AND f.fun_tipo::TEXT = 'REAVIVAMENTO'
+     WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA'
+       AND t.tra_estorno_tra_id IS NULL AND t.tra_mem_id IS NOT NULL
+     GROUP BY 1, 2
+)
+SELECT b.igr_id AS igreja_id, b.ano, b.mem_id AS membro_id, b.mem_nome AS nome, b.mem_apelido AS apelido,
+       b.mem_data_nascimento AS data_nascimento, b.menor, b.alvo AS alvo_igreja,
+       b.qrv_id AS quota_id, b.qrv_valor AS quota_ajustada, b.qrv_motivo AS motivo,
+       ROUND(COALESCE(b.qrv_valor, p.resto / NULLIF(p.sem_ajuste, 0), 0), 2) AS quota,
+       COALESCE(d.valor, 0) AS contribuido,
+       GREATEST(ROUND(COALESCE(b.qrv_valor, p.resto / NULLIF(p.sem_ajuste, 0), 0), 2) - COALESCE(d.valor, 0), 0) AS falta
+  FROM base b
+  JOIN partilha p ON p.igr_id = b.igr_id AND p.ano = b.ano
+  LEFT JOIN dado d ON d.mem_id = b.mem_id AND d.ano = b.ano;
+COMMENT ON VIEW tesouraria.vw_reavivamento_pessoas IS 'Reavivamento por pessoa e ano: quota (ajustada ou parte igual do alvo), contribuído e falta (V49)';
+GRANT SELECT ON tesouraria.vw_reavivamento_pessoas TO app_igreja;
+
+-- >>>>> V50__extractos_departamentos_e_fundos.sql
+-- =====================================================================
+-- V50 · Extractos por departamento e por fundo (mês, trimestre, semestre ou ano)
+--   percentagem_departamento    a parte de cada departamento no ano (a soma não passa de 100%): reparte a doação distribuída.
+--   transferencia_departamento  saldo passado de um departamento para outro.
+--   adiantamento                dinheiro adiantado a um responsável do departamento, que presta contas depois.
+--   fn_extracto_departamentos   por departamento: % , saldo inicial, doação directa, doação distribuída, despesas,
+--                               transferências (saída e entrada), estornos, adiantamentos e saldo final.
+--   fn_extracto_fundos          por fundo: saldo inicial, entradas, saídas e saldo final.
+-- Doação directa = entradas com o departamento na linha. Doação distribuída = a parte da igreja nas entradas sem
+-- departamento da oferta combinada e do orçamento da igreja local, repartida pela % de cada departamento nesse ano.
+-- Despesas = saídas com o departamento. Estornos = movimentos de estorno com o departamento.
+-- Permissões novas: as mesmas do orçamento (tesouraria.orcamento.*). Gerado com database/gerador.
+-- =====================================================================
+
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- tabelas (geradas: gen.py)
+CREATE TABLE tesouraria.percentagem_departamento (
+    dpp_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    dpp_igr_id INT NOT NULL,
+    dpp_ide_id INT NOT NULL,
+    dpp_ano SMALLINT NOT NULL,
+    dpp_percentagem DECIMAL(5,2) NOT NULL,
+    dpp_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    dpp_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    dpp_criado_por INT,
+    dpp_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    dpp_modificado_por INT,
+    dpp_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_dpp_igr_id FOREIGN KEY (dpp_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_dpp_ide_id FOREIGN KEY (dpp_ide_id) REFERENCES organizacao.igreja_departamento(ide_id),
+    CONSTRAINT chk_dpp_percentagem CHECK (dpp_percentagem BETWEEN 0 AND 100),
+    CONSTRAINT chk_dpp_ano CHECK (dpp_ano BETWEEN 2000 AND 2100),
+    CONSTRAINT chk_dpp_end_date CHECK (dpp_end_date IS NULL OR dpp_end_date >= dpp_criado_em)
+);
+COMMENT ON TABLE tesouraria.percentagem_departamento IS 'Parte de cada departamento no ano: reparte a doação distribuída (V50)';
+COMMENT ON COLUMN tesouraria.percentagem_departamento.dpp_igr_id IS 'Copiado do departamento';
+CREATE UNIQUE INDEX uq_dpp_ide_id_ano ON tesouraria.percentagem_departamento (dpp_ide_id, dpp_ano) WHERE dpp_end_date IS NULL;
+CREATE INDEX idx_dpp_igr_pagina ON tesouraria.percentagem_departamento (dpp_igr_id, dpp_id);
+
+CREATE TABLE tesouraria.transferencia_departamento (
+    tdp_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    tdp_igr_id INT NOT NULL,
+    tdp_origem_ide_id INT NOT NULL,
+    tdp_destino_ide_id INT NOT NULL,
+    tdp_data DATE NOT NULL,
+    tdp_valor DECIMAL(14,2) NOT NULL,
+    tdp_descricao VARCHAR(255),
+    tdp_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    tdp_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    tdp_criado_por INT,
+    tdp_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    tdp_modificado_por INT,
+    tdp_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_tdp_igr_id FOREIGN KEY (tdp_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_tdp_origem_ide_id FOREIGN KEY (tdp_origem_ide_id) REFERENCES organizacao.igreja_departamento(ide_id),
+    CONSTRAINT fk_tdp_destino_ide_id FOREIGN KEY (tdp_destino_ide_id) REFERENCES organizacao.igreja_departamento(ide_id),
+    CONSTRAINT chk_tdp_valor CHECK (tdp_valor > 0),
+    CONSTRAINT chk_tdp_diferentes CHECK (tdp_origem_ide_id <> tdp_destino_ide_id),
+    CONSTRAINT chk_tdp_end_date CHECK (tdp_end_date IS NULL OR tdp_end_date >= tdp_criado_em)
+);
+COMMENT ON TABLE tesouraria.transferencia_departamento IS 'Transferência de saldo entre departamentos da igreja (V50)';
+COMMENT ON COLUMN tesouraria.transferencia_departamento.tdp_igr_id IS 'Copiado do departamento de origem';
+CREATE INDEX idx_tdp_igr_pagina ON tesouraria.transferencia_departamento (tdp_igr_id, tdp_id);
+CREATE INDEX idx_tdp_origem_ide_id ON tesouraria.transferencia_departamento (tdp_origem_ide_id);
+CREATE INDEX idx_tdp_destino_ide_id ON tesouraria.transferencia_departamento (tdp_destino_ide_id);
+
+CREATE TABLE tesouraria.adiantamento (
+    adt_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    adt_igr_id INT NOT NULL,
+    adt_ide_id INT NOT NULL,
+    adt_mem_id INT NOT NULL,
+    adt_data DATE NOT NULL,
+    adt_valor DECIMAL(14,2) NOT NULL,
+    adt_descricao VARCHAR(255) NOT NULL,
+    adt_data_prestacao DATE,
+    adt_valor_devolvido DECIMAL(14,2) NOT NULL DEFAULT 0,
+    adt_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    adt_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    adt_criado_por INT,
+    adt_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    adt_modificado_por INT,
+    adt_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_adt_igr_id FOREIGN KEY (adt_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_adt_ide_id FOREIGN KEY (adt_ide_id) REFERENCES organizacao.igreja_departamento(ide_id),
+    CONSTRAINT fk_adt_mem_id FOREIGN KEY (adt_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_adt_valor CHECK (adt_valor > 0),
+    CONSTRAINT chk_adt_devolvido CHECK (adt_valor_devolvido BETWEEN 0 AND adt_valor),
+    CONSTRAINT chk_adt_prestacao CHECK (adt_data_prestacao IS NULL OR adt_data_prestacao >= adt_data),
+    CONSTRAINT chk_adt_end_date CHECK (adt_end_date IS NULL OR adt_end_date >= adt_criado_em)
+);
+COMMENT ON TABLE tesouraria.adiantamento IS 'Dinheiro adiantado a um responsável do departamento, que presta contas depois (V50)';
+COMMENT ON COLUMN tesouraria.adiantamento.adt_igr_id IS 'Copiado do departamento';
+COMMENT ON COLUMN tesouraria.adiantamento.adt_mem_id IS 'Quem recebeu';
+COMMENT ON COLUMN tesouraria.adiantamento.adt_data_prestacao IS 'Quando prestou contas';
+COMMENT ON COLUMN tesouraria.adiantamento.adt_valor_devolvido IS 'O que sobrou e voltou ao departamento';
+CREATE INDEX idx_adt_igr_pagina ON tesouraria.adiantamento (adt_igr_id, adt_id);
+CREATE INDEX idx_adt_ide_id ON tesouraria.adiantamento (adt_ide_id);
+CREATE INDEX idx_adt_mem_id ON tesouraria.adiantamento (adt_mem_id);
+
+CREATE TRIGGER trg_dpp_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.percentagem_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('dpp', 'tesouraria.percentagem_departamento', 'dpp_igr_id');
+CREATE TRIGGER trg_dpp_00_sem_delete BEFORE DELETE ON tesouraria.percentagem_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('dpp');
+CREATE TRIGGER trg_dpp_00_sem_truncate BEFORE TRUNCATE ON tesouraria.percentagem_departamento FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('dpp');
+CREATE TRIGGER trg_dpp_99_log AFTER UPDATE ON tesouraria.percentagem_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('dpp');
+ALTER TABLE tesouraria.percentagem_departamento ADD CONSTRAINT fk_dpp_criado_por FOREIGN KEY (dpp_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.percentagem_departamento ADD CONSTRAINT fk_dpp_modificado_por FOREIGN KEY (dpp_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_tdp_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.transferencia_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('tdp', 'tesouraria.transferencia_departamento', 'tdp_igr_id');
+CREATE TRIGGER trg_tdp_00_sem_delete BEFORE DELETE ON tesouraria.transferencia_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('tdp');
+CREATE TRIGGER trg_tdp_00_sem_truncate BEFORE TRUNCATE ON tesouraria.transferencia_departamento FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('tdp');
+CREATE TRIGGER trg_tdp_99_log AFTER UPDATE ON tesouraria.transferencia_departamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('tdp');
+ALTER TABLE tesouraria.transferencia_departamento ADD CONSTRAINT fk_tdp_criado_por FOREIGN KEY (tdp_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.transferencia_departamento ADD CONSTRAINT fk_tdp_modificado_por FOREIGN KEY (tdp_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_adt_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.adiantamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('adt', 'tesouraria.adiantamento', 'adt_igr_id');
+CREATE TRIGGER trg_adt_00_sem_delete BEFORE DELETE ON tesouraria.adiantamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('adt');
+CREATE TRIGGER trg_adt_00_sem_truncate BEFORE TRUNCATE ON tesouraria.adiantamento FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('adt');
+CREATE TRIGGER trg_adt_99_log AFTER UPDATE ON tesouraria.adiantamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('adt');
+ALTER TABLE tesouraria.adiantamento ADD CONSTRAINT fk_adt_criado_por FOREIGN KEY (adt_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.adiantamento ADD CONSTRAINT fk_adt_modificado_por FOREIGN KEY (adt_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.percentagem_departamento ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_dpp_ler ON tesouraria.percentagem_departamento FOR SELECT USING (dpp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.percentagem_departamento.ler'))::INT[]));
+CREATE POLICY pol_dpp_criar ON tesouraria.percentagem_departamento FOR INSERT WITH CHECK (dpp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.percentagem_departamento.criar'))::INT[]));
+CREATE POLICY pol_dpp_alterar ON tesouraria.percentagem_departamento FOR UPDATE USING (dpp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.percentagem_departamento.alterar'))::INT[])) WITH CHECK (dpp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.percentagem_departamento.alterar'))::INT[]));
+ALTER TABLE tesouraria.transferencia_departamento ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_tdp_ler ON tesouraria.transferencia_departamento FOR SELECT USING (tdp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transferencia_departamento.ler'))::INT[]));
+CREATE POLICY pol_tdp_criar ON tesouraria.transferencia_departamento FOR INSERT WITH CHECK (tdp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transferencia_departamento.criar'))::INT[]));
+CREATE POLICY pol_tdp_alterar ON tesouraria.transferencia_departamento FOR UPDATE USING (tdp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transferencia_departamento.alterar'))::INT[])) WITH CHECK (tdp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transferencia_departamento.alterar'))::INT[]));
+ALTER TABLE tesouraria.adiantamento ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_adt_ler ON tesouraria.adiantamento FOR SELECT USING (adt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.adiantamento.ler'))::INT[]));
+CREATE POLICY pol_adt_criar ON tesouraria.adiantamento FOR INSERT WITH CHECK (adt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.adiantamento.criar'))::INT[]));
+CREATE POLICY pol_adt_alterar ON tesouraria.adiantamento FOR UPDATE USING (adt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.adiantamento.alterar'))::INT[])) WITH CHECK (adt_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.adiantamento.alterar'))::INT[]));
+
+GRANT SELECT, INSERT, UPDATE ON tesouraria.percentagem_departamento, tesouraria.transferencia_departamento, tesouraria.adiantamento TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA tesouraria TO app_igreja;
+COMMENT ON INDEX tesouraria.uq_dpp_ide_id_ano IS '[departamentoIgrejaId] Este departamento já tem percentagem neste ano.';
+COMMENT ON CONSTRAINT chk_dpp_percentagem ON tesouraria.percentagem_departamento IS '[percentagem] A percentagem é de 0 a 100.';
+COMMENT ON CONSTRAINT chk_dpp_ano ON tesouraria.percentagem_departamento IS '[ano] Ano inválido.';
+COMMENT ON CONSTRAINT chk_tdp_valor ON tesouraria.transferencia_departamento IS '[valor] O valor tem de ser maior do que zero.';
+COMMENT ON CONSTRAINT chk_tdp_diferentes ON tesouraria.transferencia_departamento IS '[destinoDepartamentoIgrejaId] O destino tem de ser outro departamento.';
+COMMENT ON CONSTRAINT chk_adt_valor ON tesouraria.adiantamento IS '[valor] O valor tem de ser maior do que zero.';
+COMMENT ON CONSTRAINT chk_adt_devolvido ON tesouraria.adiantamento IS '[valorDevolvido] O devolvido vai de zero ao valor adiantado.';
+COMMENT ON CONSTRAINT chk_adt_prestacao ON tesouraria.adiantamento IS '[dataPrestacao] A prestação de contas é no dia do adiantamento ou depois.';
+
+-- permissões: as mesmas do orçamento (tesouraria.orcamento.*)
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'tesouraria.' || t.tabela || '.' || a.accao, a.rotulo || t.descricao
+  FROM (VALUES ('percentagem_departamento', 'Parte de cada departamento no ano (V50)'),
+               ('transferencia_departamento', 'Transferência entre departamentos (V50)'),
+               ('adiantamento', 'Adiantamento a um responsável do departamento (V50)')) t(tabela, descricao),
+       (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'tesouraria.orcamento.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo IN (replace(antigo.prm_codigo, '.orcamento.', '.percentagem_departamento.'),
+                                                    replace(antigo.prm_codigo, '.orcamento.', '.transferencia_departamento.'),
+                                                    replace(antigo.prm_codigo, '.orcamento.', '.adiantamento.'))
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- validações: a igreja vem do departamento
+CREATE FUNCTION tesouraria.fn_dpp_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v_soma NUMERIC;
+BEGIN
+    SELECT ide_igr_id INTO NEW.dpp_igr_id FROM organizacao.igreja_departamento WHERE ide_id = NEW.dpp_ide_id;
+    IF NEW.dpp_igr_id IS NULL THEN
+        RAISE EXCEPTION 'O departamento não existe' USING COLUMN = 'dpp_ide_id';
+    END IF;
+    IF NEW.dpp_end_date IS NULL THEN
+        SELECT COALESCE(SUM(dpp_percentagem), 0) INTO v_soma FROM tesouraria.percentagem_departamento
+         WHERE dpp_igr_id = NEW.dpp_igr_id AND dpp_ano = NEW.dpp_ano AND dpp_end_date IS NULL AND dpp_id <> COALESCE(NEW.dpp_id, 0);
+        IF v_soma + NEW.dpp_percentagem > 100 THEN
+            RAISE EXCEPTION 'As percentagens dos departamentos passam de 100%% em %', NEW.dpp_ano USING COLUMN = 'dpp_percentagem';
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_dpp_05_validar BEFORE INSERT OR UPDATE ON tesouraria.percentagem_departamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_dpp_validar();
+
+CREATE FUNCTION tesouraria.fn_tdp_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT ide_igr_id INTO NEW.tdp_igr_id FROM organizacao.igreja_departamento WHERE ide_id = NEW.tdp_origem_ide_id;
+    IF NEW.tdp_igr_id IS NULL THEN
+        RAISE EXCEPTION 'O departamento de origem não existe' USING COLUMN = 'tdp_origem_ide_id';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM organizacao.igreja_departamento WHERE ide_id = NEW.tdp_destino_ide_id AND ide_igr_id = NEW.tdp_igr_id) THEN
+        RAISE EXCEPTION 'O destino tem de ser um departamento da mesma igreja' USING COLUMN = 'tdp_destino_ide_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_tdp_05_validar BEFORE INSERT OR UPDATE OF tdp_origem_ide_id, tdp_destino_ide_id ON tesouraria.transferencia_departamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tdp_validar();
+
+CREATE FUNCTION tesouraria.fn_adt_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT ide_igr_id INTO NEW.adt_igr_id FROM organizacao.igreja_departamento WHERE ide_id = NEW.adt_ide_id;
+    IF NEW.adt_igr_id IS NULL THEN
+        RAISE EXCEPTION 'O departamento não existe' USING COLUMN = 'adt_ide_id';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM secretaria.membro WHERE mem_id = NEW.adt_mem_id AND mem_igr_id = NEW.adt_igr_id AND mem_end_date IS NULL) THEN
+        RAISE EXCEPTION 'Quem recebe tem de ser membro desta igreja' USING COLUMN = 'adt_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_adt_05_validar BEFORE INSERT OR UPDATE OF adt_ide_id, adt_mem_id ON tesouraria.adiantamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_adt_validar();
+
+-- ---------------------------------------------------------------- extracto por departamento num período
+-- Todos os registos até ao fim do período; o que é antes do início vai para o saldo inicial.
+CREATE FUNCTION tesouraria.fn_extracto_departamentos(p_igreja INT, p_inicio DATE, p_fim DATE)
+RETURNS TABLE (departamento_igreja_id INT, departamento VARCHAR, percentagem NUMERIC, saldo_inicial NUMERIC,
+               doacao_directa NUMERIC, doacao_distribuida NUMERIC, despesas NUMERIC, transf_saida NUMERIC,
+               transf_entrada NUMERIC, estornos NUMERIC, adiantamentos NUMERIC, saldo_final NUMERIC)
+LANGUAGE sql STABLE SECURITY INVOKER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+WITH linhas AS (
+    SELECT l.tli_ide_id AS ide, (t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::DATE AS dia, t.tra_tipo::TEXT AS tipo,
+           t.tra_estorno_tra_id IS NOT NULL AS estorno, l.tli_valor AS valor, f.fun_tipo::TEXT AS fundo, f.fun_percentagem_remessa AS remessa
+      FROM tesouraria.transacao t
+      JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+      JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id
+     WHERE t.tra_igr_id = p_igreja AND t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA'
+       AND t.tra_tipo IN ('ENTRADA', 'SAIDA') AND (t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::DATE <= p_fim
+),
+deps AS (
+    SELECT d.ide_id, dp.dep_nome
+      FROM organizacao.igreja_departamento d JOIN organizacao.departamento dp ON dp.dep_id = d.ide_dep_id
+     WHERE d.ide_igr_id = p_igreja AND d.ide_end_date IS NULL
+),
+pct AS (
+    SELECT dpp_ide_id AS ide, dpp_ano AS ano, dpp_percentagem AS p FROM tesouraria.percentagem_departamento
+     WHERE dpp_igr_id = p_igreja AND dpp_end_date IS NULL
+),
+mov AS (
+    -- doação directa, despesas e estornos (linhas com o departamento)
+    SELECT ide, dia, CASE WHEN estorno THEN 'EST' WHEN tipo = 'ENTRADA' THEN 'DIR' ELSE 'DES' END AS col,
+           CASE WHEN tipo = 'ENTRADA' THEN valor ELSE -valor END AS v
+      FROM linhas WHERE ide IS NOT NULL
+    UNION ALL
+    -- doação distribuída: a parte da igreja nas entradas gerais, pela % do departamento nesse ano
+    SELECT pc.ide, l.dia, 'DIS', l.valor * (100 - l.remessa) / 100 * pc.p / 100
+      FROM linhas l JOIN pct pc ON pc.ano = EXTRACT(YEAR FROM l.dia)
+     WHERE l.ide IS NULL AND NOT l.estorno AND l.tipo = 'ENTRADA' AND l.fundo IN ('OFERTA_COMBINADA', 'ORCAMENTO_LOCAL')
+    UNION ALL
+    SELECT tdp_origem_ide_id, tdp_data, 'TSA', -tdp_valor FROM tesouraria.transferencia_departamento
+     WHERE tdp_igr_id = p_igreja AND tdp_end_date IS NULL AND tdp_data <= p_fim
+    UNION ALL
+    SELECT tdp_destino_ide_id, tdp_data, 'TEN', tdp_valor FROM tesouraria.transferencia_departamento
+     WHERE tdp_igr_id = p_igreja AND tdp_end_date IS NULL AND tdp_data <= p_fim
+    UNION ALL
+    SELECT adt_ide_id, adt_data, 'ADI', -(adt_valor - adt_valor_devolvido) FROM tesouraria.adiantamento
+     WHERE adt_igr_id = p_igreja AND adt_end_date IS NULL AND adt_data <= p_fim
+)
+SELECT d.ide_id, d.dep_nome,
+       (SELECT p FROM pct WHERE pct.ide = d.ide_id AND pct.ano = EXTRACT(YEAR FROM p_inicio)),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia < p_inicio), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'DIR'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'DIS'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'DES'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'TSA'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'TEN'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'EST'), 0), 2),
+       ROUND(COALESCE(SUM(m.v) FILTER (WHERE m.dia >= p_inicio AND m.col = 'ADI'), 0), 2),
+       ROUND(COALESCE(SUM(m.v), 0), 2)
+  FROM deps d LEFT JOIN mov m ON m.ide = d.ide_id
+ GROUP BY d.ide_id, d.dep_nome
+ ORDER BY d.dep_nome
+$$;
+COMMENT ON FUNCTION tesouraria.fn_extracto_departamentos(INT, DATE, DATE) IS 'Extracto por departamento num período (V50)';
+GRANT EXECUTE ON FUNCTION tesouraria.fn_extracto_departamentos(INT, DATE, DATE) TO app_igreja;
+
+-- ---------------------------------------------------------------- extracto por fundo num período
+CREATE FUNCTION tesouraria.fn_extracto_fundos(p_igreja INT, p_inicio DATE, p_fim DATE)
+RETURNS TABLE (fundo_id INT, fundo VARCHAR, tipo TEXT, saldo_inicial NUMERIC, entradas NUMERIC, saidas NUMERIC, saldo_final NUMERIC)
+LANGUAGE sql STABLE SECURITY INVOKER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+WITH linhas AS (
+    SELECT l.tli_fun_id AS fun, (t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::DATE AS dia,
+           CASE WHEN t.tra_tipo = 'ENTRADA' THEN l.tli_valor ELSE -l.tli_valor END AS v
+      FROM tesouraria.transacao t
+      JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+     WHERE t.tra_igr_id = p_igreja AND t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA'
+       AND t.tra_tipo IN ('ENTRADA', 'SAIDA') AND (t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::DATE <= p_fim
+)
+SELECT f.fun_id, f.fun_nome, f.fun_tipo::TEXT,
+       ROUND(COALESCE(SUM(l.v) FILTER (WHERE l.dia < p_inicio), 0), 2),
+       ROUND(COALESCE(SUM(l.v) FILTER (WHERE l.dia >= p_inicio AND l.v > 0), 0), 2),
+       ROUND(COALESCE(-SUM(l.v) FILTER (WHERE l.dia >= p_inicio AND l.v < 0), 0), 2),
+       ROUND(COALESCE(SUM(l.v), 0), 2)
+  FROM tesouraria.fundo f JOIN linhas l ON l.fun = f.fun_id
+ GROUP BY f.fun_id, f.fun_nome, f.fun_tipo
+ ORDER BY f.fun_nome
+$$;
+COMMENT ON FUNCTION tesouraria.fn_extracto_fundos(INT, DATE, DATE) IS 'Extracto por fundo num período (V50)';
+GRANT EXECUTE ON FUNCTION tesouraria.fn_extracto_fundos(INT, DATE, DATE) TO app_igreja;
+
+-- >>>>> V51__reavivamento_escalao_e_santa_ceia.sql
+-- =====================================================================
+-- V51 · Reavivamento: quota por escalão (adultos e crianças) · Santa Ceia: acompanhantes do oficiante
+--   quota_escalao_reavivamento  a quota fixada no ano para todos os adultos e/ou todas as crianças (vazio = automático).
+--   vw_reavivamento_pessoas     a quota de cada pessoa passa a ser, por esta ordem: a ajustada à mão, a do seu escalão,
+--                               ou a automática (o resto do alvo repartido igualmente pelas pessoas sem quota fixa).
+--                               Nova coluna origem: AJUSTADA, ESCALAO ou AUTOMATICA.
+--   santa_ceia_acompanhante     quem acompanha o oficiante (os diáconos e as diaconisas), membros da mesma igreja.
+-- Permissões novas: as mesmas das quotas ajustadas (tesouraria.quota_reavivamento.*) e da Santa Ceia
+-- (actividades.santa_ceia.*). Gerado com database/gerador.
+-- =====================================================================
+
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- tabela (gerada: gen.py)
+CREATE TABLE tesouraria.quota_escalao_reavivamento (
+    rqe_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    rqe_igr_id INT NOT NULL,
+    rqe_ano SMALLINT NOT NULL,
+    rqe_quota_adulto DECIMAL(12,2),
+    rqe_quota_crianca DECIMAL(12,2),
+    rqe_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    rqe_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    rqe_criado_por INT,
+    rqe_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    rqe_modificado_por INT,
+    rqe_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_rqe_igr_id FOREIGN KEY (rqe_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT chk_rqe_valores CHECK ((rqe_quota_adulto IS NULL OR rqe_quota_adulto >= 0) AND (rqe_quota_crianca IS NULL OR rqe_quota_crianca >= 0)),
+    CONSTRAINT chk_rqe_ano CHECK (rqe_ano BETWEEN 2000 AND 2100),
+    CONSTRAINT chk_rqe_end_date CHECK (rqe_end_date IS NULL OR rqe_end_date >= rqe_criado_em)
+);
+COMMENT ON TABLE tesouraria.quota_escalao_reavivamento IS 'Quota do reavivamento fixada para todos os adultos e/ou todas as crianças no ano (V51)';
+COMMENT ON COLUMN tesouraria.quota_escalao_reavivamento.rqe_quota_adulto IS 'Vazio = automático (reparte o resto do alvo)';
+COMMENT ON COLUMN tesouraria.quota_escalao_reavivamento.rqe_quota_crianca IS 'Vazio = automático (reparte o resto do alvo)';
+CREATE UNIQUE INDEX uq_rqe_igr_id_ano ON tesouraria.quota_escalao_reavivamento (rqe_igr_id, rqe_ano) WHERE rqe_end_date IS NULL;
+CREATE TRIGGER trg_rqe_00_padrao BEFORE INSERT OR UPDATE ON tesouraria.quota_escalao_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('rqe', 'tesouraria.quota_escalao_reavivamento', 'rqe_igr_id');
+CREATE TRIGGER trg_rqe_00_sem_delete BEFORE DELETE ON tesouraria.quota_escalao_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('rqe');
+CREATE TRIGGER trg_rqe_00_sem_truncate BEFORE TRUNCATE ON tesouraria.quota_escalao_reavivamento FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('rqe');
+CREATE TRIGGER trg_rqe_99_log AFTER UPDATE ON tesouraria.quota_escalao_reavivamento FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('rqe');
+ALTER TABLE tesouraria.quota_escalao_reavivamento ADD CONSTRAINT fk_rqe_criado_por FOREIGN KEY (rqe_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.quota_escalao_reavivamento ADD CONSTRAINT fk_rqe_modificado_por FOREIGN KEY (rqe_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE tesouraria.quota_escalao_reavivamento ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_rqe_ler ON tesouraria.quota_escalao_reavivamento FOR SELECT USING (rqe_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_escalao_reavivamento.ler'))::INT[]));
+CREATE POLICY pol_rqe_criar ON tesouraria.quota_escalao_reavivamento FOR INSERT WITH CHECK (rqe_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_escalao_reavivamento.criar'))::INT[]));
+CREATE POLICY pol_rqe_alterar ON tesouraria.quota_escalao_reavivamento FOR UPDATE USING (rqe_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_escalao_reavivamento.alterar'))::INT[])) WITH CHECK (rqe_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.quota_escalao_reavivamento.alterar'))::INT[]));
+
+GRANT SELECT, INSERT, UPDATE ON tesouraria.quota_escalao_reavivamento TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA tesouraria TO app_igreja;
+COMMENT ON INDEX tesouraria.uq_rqe_igr_id_ano IS '[ano] Esta igreja já tem as quotas por escalão neste ano.';
+COMMENT ON CONSTRAINT chk_rqe_valores ON tesouraria.quota_escalao_reavivamento IS '[quotaAdulto] As quotas não podem ser negativas.';
+COMMENT ON CONSTRAINT chk_rqe_ano ON tesouraria.quota_escalao_reavivamento IS '[ano] Ano inválido.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'tesouraria.quota_escalao_reavivamento.' || a.accao, a.rotulo || 'Quota do reavivamento por escalão (V51)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'tesouraria.quota_reavivamento.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, '.quota_reavivamento.', '.quota_escalao_reavivamento.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- a vista: ajustada → escalão → automática
+CREATE OR REPLACE VIEW tesouraria.vw_reavivamento_pessoas WITH (security_invoker = true) AS
+WITH alvos AS (
+    SELECT a.alv_igr_id AS igr_id, EXTRACT(YEAR FROM a.alv_data_inicio)::INT AS ano, SUM(a.alv_valor_alvo) AS alvo
+      FROM tesouraria.alvo a
+      JOIN tesouraria.fundo f ON f.fun_id = a.alv_fun_id AND f.fun_tipo::TEXT = 'REAVIVAMENTO'
+     WHERE a.alv_end_date IS NULL
+     GROUP BY 1, 2
+),
+anos AS (
+    SELECT igr_id, ano FROM alvos
+    UNION
+    SELECT rqe_igr_id, rqe_ano FROM tesouraria.quota_escalao_reavivamento WHERE rqe_end_date IS NULL
+),
+pessoas AS (
+    SELECT m.mem_igr_id AS igr_id, m.mem_id, m.mem_nome, m.mem_apelido, m.mem_data_nascimento,
+           (m.mem_data_nascimento IS NOT NULL AND m.mem_data_nascimento > current_date - INTERVAL '18 years') AS menor
+      FROM secretaria.membro m
+     WHERE m.mem_end_date IS NULL
+       AND (m.mem_estado::TEXT = 'ACTIVO'
+            OR (m.mem_estado::TEXT = 'INTERESSADO' AND m.mem_data_nascimento > current_date - INTERVAL '18 years'))
+),
+base AS (
+    SELECT p.*, y.ano, COALESCE(a.alvo, 0) AS alvo, q.qrv_id, q.qrv_valor, q.qrv_motivo,
+           CASE WHEN p.menor THEN e.rqe_quota_crianca ELSE e.rqe_quota_adulto END AS fixa
+      FROM pessoas p
+      JOIN anos y ON y.igr_id = p.igr_id
+      LEFT JOIN alvos a ON a.igr_id = y.igr_id AND a.ano = y.ano
+      LEFT JOIN tesouraria.quota_escalao_reavivamento e ON e.rqe_igr_id = y.igr_id AND e.rqe_ano = y.ano AND e.rqe_end_date IS NULL
+      LEFT JOIN tesouraria.quota_reavivamento q ON q.qrv_mem_id = p.mem_id AND q.qrv_ano = y.ano AND q.qrv_end_date IS NULL
+),
+partilha AS (
+    SELECT igr_id, ano,
+           GREATEST(MAX(alvo) - COALESCE(SUM(COALESCE(qrv_valor, fixa)), 0), 0) AS resto,
+           COUNT(*) FILTER (WHERE qrv_id IS NULL AND fixa IS NULL) AS sem_quota
+      FROM base GROUP BY 1, 2
+),
+dado AS (
+    SELECT t.tra_mem_id AS mem_id, EXTRACT(YEAR FROM t.tra_data_hora AT TIME ZONE 'Africa/Maputo')::INT AS ano, SUM(l.tli_valor) AS valor
+      FROM tesouraria.transacao t
+      JOIN tesouraria.transacao_linha l ON l.tli_tra_id = t.tra_id AND l.tli_end_date IS NULL
+      JOIN tesouraria.fundo f ON f.fun_id = l.tli_fun_id AND f.fun_tipo::TEXT = 'REAVIVAMENTO'
+     WHERE t.tra_end_date IS NULL AND t.tra_estado = 'CONFIRMADA' AND t.tra_tipo = 'ENTRADA'
+       AND t.tra_estorno_tra_id IS NULL AND t.tra_mem_id IS NOT NULL
+     GROUP BY 1, 2
+),
+calc AS (
+    SELECT b.*, ROUND(COALESCE(b.qrv_valor, b.fixa, p.resto / NULLIF(p.sem_quota, 0), 0), 2) AS q
+      FROM base b JOIN partilha p ON p.igr_id = b.igr_id AND p.ano = b.ano
+)
+SELECT c.igr_id AS igreja_id, c.ano, c.mem_id AS membro_id, c.mem_nome AS nome, c.mem_apelido AS apelido,
+       c.mem_data_nascimento AS data_nascimento, c.menor, c.alvo AS alvo_igreja,
+       c.qrv_id AS quota_id, c.qrv_valor AS quota_ajustada, c.qrv_motivo AS motivo,
+       c.q AS quota, COALESCE(d.valor, 0) AS contribuido, GREATEST(c.q - COALESCE(d.valor, 0), 0) AS falta,
+       CASE WHEN c.qrv_id IS NOT NULL THEN 'AJUSTADA' WHEN c.fixa IS NOT NULL THEN 'ESCALAO' ELSE 'AUTOMATICA' END AS origem
+  FROM calc c
+  LEFT JOIN dado d ON d.mem_id = c.mem_id AND d.ano = c.ano;
+COMMENT ON VIEW tesouraria.vw_reavivamento_pessoas IS 'Reavivamento por pessoa e ano: quota (ajustada, do escalão ou automática), contribuído e falta (V49, V51)';
+
+-- ---------------------------------------------------------------- Santa Ceia: os acompanhantes (gerada: gen.py)
+CREATE TABLE actividades.santa_ceia_acompanhante (
+    sca_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    sca_stc_id INT NOT NULL,
+    sca_igr_id INT NOT NULL,
+    sca_mem_id INT NOT NULL,
+    sca_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    sca_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sca_criado_por INT,
+    sca_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    sca_modificado_por INT,
+    sca_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_sca_stc_id FOREIGN KEY (sca_stc_id) REFERENCES actividades.santa_ceia(stc_id),
+    CONSTRAINT fk_sca_igr_id FOREIGN KEY (sca_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_sca_mem_id FOREIGN KEY (sca_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_sca_end_date CHECK (sca_end_date IS NULL OR sca_end_date >= sca_criado_em)
+);
+COMMENT ON TABLE actividades.santa_ceia_acompanhante IS 'Quem acompanha o oficiante na Santa Ceia: os diáconos e as diaconisas (V51)';
+COMMENT ON COLUMN actividades.santa_ceia_acompanhante.sca_igr_id IS 'Copiado da Santa Ceia';
+CREATE UNIQUE INDEX uq_sca_stc_id_mem_id ON actividades.santa_ceia_acompanhante (sca_stc_id, sca_mem_id) WHERE sca_end_date IS NULL;
+CREATE INDEX idx_sca_igr_pagina ON actividades.santa_ceia_acompanhante (sca_igr_id, sca_id);
+CREATE INDEX idx_sca_mem_id ON actividades.santa_ceia_acompanhante (sca_mem_id);
+CREATE TRIGGER trg_sca_00_padrao BEFORE INSERT OR UPDATE ON actividades.santa_ceia_acompanhante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('sca', 'actividades.santa_ceia_acompanhante', 'sca_igr_id');
+CREATE TRIGGER trg_sca_00_sem_delete BEFORE DELETE ON actividades.santa_ceia_acompanhante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('sca');
+CREATE TRIGGER trg_sca_00_sem_truncate BEFORE TRUNCATE ON actividades.santa_ceia_acompanhante FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('sca');
+CREATE TRIGGER trg_sca_99_log AFTER UPDATE ON actividades.santa_ceia_acompanhante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('sca');
+ALTER TABLE actividades.santa_ceia_acompanhante ADD CONSTRAINT fk_sca_criado_por FOREIGN KEY (sca_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.santa_ceia_acompanhante ADD CONSTRAINT fk_sca_modificado_por FOREIGN KEY (sca_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.santa_ceia_acompanhante ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_sca_ler ON actividades.santa_ceia_acompanhante FOR SELECT USING (sca_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_acompanhante.ler'))::INT[]));
+CREATE POLICY pol_sca_criar ON actividades.santa_ceia_acompanhante FOR INSERT WITH CHECK (sca_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_acompanhante.criar'))::INT[]));
+CREATE POLICY pol_sca_alterar ON actividades.santa_ceia_acompanhante FOR UPDATE USING (sca_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_acompanhante.alterar'))::INT[])) WITH CHECK (sca_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_acompanhante.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON actividades.santa_ceia_acompanhante TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+COMMENT ON INDEX actividades.uq_sca_stc_id_mem_id IS '[membroId] Esta pessoa já acompanha esta Santa Ceia.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'actividades.santa_ceia_acompanhante.' || a.accao, a.rotulo || 'Acompanhantes da Santa Ceia (V51)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'actividades.santa_ceia.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, '.santa_ceia.', '.santa_ceia_acompanhante.')
+ WHERE pp.ppe_end_date IS NULL;
+
+CREATE FUNCTION actividades.fn_sca_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT stc_igr_id INTO NEW.sca_igr_id FROM actividades.santa_ceia WHERE stc_id = NEW.sca_stc_id;
+    IF NEW.sca_igr_id IS NULL THEN
+        RAISE EXCEPTION 'A Santa Ceia não existe' USING COLUMN = 'sca_stc_id';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM secretaria.membro WHERE mem_id = NEW.sca_mem_id AND mem_igr_id = NEW.sca_igr_id AND mem_end_date IS NULL) THEN
+        RAISE EXCEPTION 'O acompanhante tem de ser membro desta igreja' USING COLUMN = 'sca_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_sca_05_validar BEFORE INSERT OR UPDATE OF sca_stc_id, sca_mem_id ON actividades.santa_ceia_acompanhante
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_sca_validar();
+
+-- >>>>> V52__santa_ceia_equipa_e_participantes.sql
+-- =====================================================================
+-- V52 · Santa Ceia: a equipa de apoio e os participantes pelo nome
+--
+--   santa_ceia_acompanhante.sca_funcao   DIACONO ou DIACONISA (Manual da Igreja: quem dirige é o pastor ou um ancião
+--                                         ordenado; os diáconos e as diaconisas apoiam e servem, sem número fixo).
+--                                         Diácono é homem e diaconisa é mulher, quando o sexo da ficha é conhecido.
+--   santa_ceia_participante (scp)        cada membro que participou, pelo nome (os visitantes continuam só em número).
+--                                         Os homens e as mulheres registados na Santa Ceia não podem ser menos do
+--                                         que os nomes marcados de cada sexo.
+--   vw_santa_ceia                        nova coluna nomeados (quantos participantes têm nome).
+--   vw_santa_ceia_participacao           por membro e ano: em quantas celebrações (com nomes) participou, a última
+--                                         e as faltas. Entram os membros activos e quem participou nesse ano.
+--
+-- Permissões novas (actividades.santa_ceia_participante.*): as mesmas de actividades.santa_ceia.*.
+-- Tabela gerada com database/gerador (defs.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- acompanhantes: a função
+ALTER TABLE actividades.santa_ceia_acompanhante ADD COLUMN sca_funcao VARCHAR(20) NOT NULL DEFAULT 'DIACONO';
+COMMENT ON COLUMN actividades.santa_ceia_acompanhante.sca_funcao IS 'DIACONO ou DIACONISA (V52)';
+ALTER TABLE actividades.santa_ceia_acompanhante ADD CONSTRAINT chk_sca_funcao CHECK (sca_funcao IN ('DIACONO', 'DIACONISA'));
+COMMENT ON CONSTRAINT chk_sca_funcao ON actividades.santa_ceia_acompanhante IS '[funcao] A função tem de ser diácono ou diaconisa.';
+-- os que já existiam: as mulheres passam a diaconisas
+UPDATE actividades.santa_ceia_acompanhante a SET sca_funcao = 'DIACONISA'
+  FROM secretaria.membro m WHERE m.mem_id = a.sca_mem_id AND m.mem_sexo = 'F';
+
+CREATE OR REPLACE FUNCTION actividades.fn_sca_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_sexo nucleo.sexo_t;
+BEGIN
+    SELECT stc_igr_id INTO NEW.sca_igr_id FROM actividades.santa_ceia WHERE stc_id = NEW.sca_stc_id;
+    IF NEW.sca_igr_id IS NULL THEN
+        RAISE EXCEPTION 'A Santa Ceia não existe' USING COLUMN = 'sca_stc_id';
+    END IF;
+    SELECT mem_sexo INTO v_sexo FROM secretaria.membro WHERE mem_id = NEW.sca_mem_id AND mem_igr_id = NEW.sca_igr_id AND mem_end_date IS NULL;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'O acompanhante tem de ser membro desta igreja' USING COLUMN = 'sca_mem_id';
+    END IF;
+    IF v_sexo = 'M' AND NEW.sca_funcao = 'DIACONISA' THEN
+        RAISE EXCEPTION 'Um homem acompanha como diácono, não como diaconisa' USING COLUMN = 'sca_funcao';
+    END IF;
+    IF v_sexo = 'F' AND NEW.sca_funcao = 'DIACONO' THEN
+        RAISE EXCEPTION 'Uma mulher acompanha como diaconisa, não como diácono' USING COLUMN = 'sca_funcao';
+    END IF;
+    RETURN NEW;
+END $$;
+DROP TRIGGER trg_sca_05_validar ON actividades.santa_ceia_acompanhante;
+CREATE TRIGGER trg_sca_05_validar BEFORE INSERT OR UPDATE OF sca_stc_id, sca_mem_id, sca_funcao ON actividades.santa_ceia_acompanhante
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_sca_validar();
+
+-- ---------------------------------------------------------------- participantes pelo nome (gerada: gen.py)
+CREATE TABLE actividades.santa_ceia_participante (
+    scp_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    scp_stc_id INT NOT NULL,
+    scp_igr_id INT NOT NULL,
+    scp_mem_id INT NOT NULL,
+    scp_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    scp_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    scp_criado_por INT,
+    scp_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    scp_modificado_por INT,
+    scp_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_scp_stc_id FOREIGN KEY (scp_stc_id) REFERENCES actividades.santa_ceia(stc_id),
+    CONSTRAINT fk_scp_igr_id FOREIGN KEY (scp_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_scp_mem_id FOREIGN KEY (scp_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_scp_end_date CHECK (scp_end_date IS NULL OR scp_end_date >= scp_criado_em)
+);
+COMMENT ON TABLE actividades.santa_ceia_participante IS 'Membro que participou na Santa Ceia, pelo nome, para o relatório de participação (V52)';
+COMMENT ON COLUMN actividades.santa_ceia_participante.scp_igr_id IS 'Copiado da Santa Ceia';
+CREATE UNIQUE INDEX uq_scp_stc_id_mem_id ON actividades.santa_ceia_participante (scp_stc_id, scp_mem_id) WHERE scp_end_date IS NULL;
+CREATE INDEX idx_scp_igr_pagina ON actividades.santa_ceia_participante (scp_igr_id, scp_id);
+CREATE INDEX idx_scp_mem_id ON actividades.santa_ceia_participante (scp_mem_id);
+CREATE TRIGGER trg_scp_00_padrao BEFORE INSERT OR UPDATE ON actividades.santa_ceia_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('scp', 'actividades.santa_ceia_participante', 'scp_igr_id');
+CREATE TRIGGER trg_scp_00_sem_delete BEFORE DELETE ON actividades.santa_ceia_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('scp');
+CREATE TRIGGER trg_scp_00_sem_truncate BEFORE TRUNCATE ON actividades.santa_ceia_participante FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('scp');
+CREATE TRIGGER trg_scp_99_log AFTER UPDATE ON actividades.santa_ceia_participante FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('scp');
+ALTER TABLE actividades.santa_ceia_participante ADD CONSTRAINT fk_scp_criado_por FOREIGN KEY (scp_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.santa_ceia_participante ADD CONSTRAINT fk_scp_modificado_por FOREIGN KEY (scp_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE actividades.santa_ceia_participante ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_scp_ler ON actividades.santa_ceia_participante FOR SELECT USING (scp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_participante.ler'))::INT[]));
+CREATE POLICY pol_scp_criar ON actividades.santa_ceia_participante FOR INSERT WITH CHECK (scp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_participante.criar'))::INT[]));
+CREATE POLICY pol_scp_alterar ON actividades.santa_ceia_participante FOR UPDATE USING (scp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_participante.alterar'))::INT[])) WITH CHECK (scp_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('actividades.santa_ceia_participante.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON actividades.santa_ceia_participante TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA actividades TO app_igreja;
+COMMENT ON INDEX actividades.uq_scp_stc_id_mem_id IS '[membroId] Esta pessoa já está marcada nesta Santa Ceia.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'actividades.santa_ceia_participante.' || a.accao, a.rotulo || 'Participantes da Santa Ceia pelo nome (V52)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'actividades.santa_ceia.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, '.santa_ceia.', '.santa_ceia_participante.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- ---------------------------------------------------------------- regras dos participantes
+CREATE FUNCTION actividades.fn_scp_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_stc actividades.santa_ceia%ROWTYPE; v_sexo nucleo.sexo_t; v_marcados INT;
+BEGIN
+    SELECT * INTO v_stc FROM actividades.santa_ceia WHERE stc_id = NEW.scp_stc_id AND stc_end_date IS NULL;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'A Santa Ceia não existe' USING COLUMN = 'scp_stc_id';
+    END IF;
+    NEW.scp_igr_id := v_stc.stc_igr_id;
+    IF NEW.scp_end_date IS NOT NULL THEN
+        RETURN NEW; -- desmarcar é sempre possível
+    END IF;
+    IF v_stc.stc_estado = 'CANCELADA' THEN
+        RAISE EXCEPTION 'Esta Santa Ceia foi cancelada' USING COLUMN = 'scp_stc_id';
+    END IF;
+    SELECT mem_sexo INTO v_sexo FROM secretaria.membro WHERE mem_id = NEW.scp_mem_id AND mem_igr_id = NEW.scp_igr_id AND mem_end_date IS NULL;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'O participante tem de ser membro desta igreja (os de fora contam como visitantes)' USING COLUMN = 'scp_mem_id';
+    END IF;
+    -- já realizada: os nomes de cada sexo não passam dos números registados
+    IF v_stc.stc_estado = 'REALIZADA' AND v_sexo IS NOT NULL THEN
+        SELECT count(*) + 1 INTO v_marcados
+          FROM actividades.santa_ceia_participante p JOIN secretaria.membro m ON m.mem_id = p.scp_mem_id
+         WHERE p.scp_stc_id = NEW.scp_stc_id AND p.scp_end_date IS NULL AND p.scp_id IS DISTINCT FROM NEW.scp_id AND m.mem_sexo = v_sexo;
+        IF v_marcados > (CASE v_sexo WHEN 'M' THEN v_stc.stc_homens ELSE v_stc.stc_mulheres END) THEN
+            RAISE EXCEPTION 'Os nomes marcados passam o número de % registado nesta Santa Ceia', (CASE v_sexo WHEN 'M' THEN 'homens' ELSE 'mulheres' END)
+                USING COLUMN = 'scp_mem_id';
+        END IF;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_scp_05_validar BEFORE INSERT OR UPDATE OF scp_stc_id, scp_mem_id, scp_end_date ON actividades.santa_ceia_participante
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_scp_validar();
+
+-- ao registar os números: não podem ficar abaixo dos nomes marcados
+CREATE FUNCTION actividades.fn_stc_participantes() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_h INT; v_m INT;
+BEGIN
+    IF NEW.stc_estado <> 'REALIZADA' THEN
+        RETURN NEW;
+    END IF;
+    SELECT count(*) FILTER (WHERE m.mem_sexo = 'M'), count(*) FILTER (WHERE m.mem_sexo = 'F') INTO v_h, v_m
+      FROM actividades.santa_ceia_participante p JOIN secretaria.membro m ON m.mem_id = p.scp_mem_id
+     WHERE p.scp_stc_id = NEW.stc_id AND p.scp_end_date IS NULL;
+    IF coalesce(NEW.stc_homens, 0) < v_h THEN
+        RAISE EXCEPTION 'Estão marcados % homens pelo nome: o número de homens não pode ser menor', v_h USING COLUMN = 'stc_homens';
+    END IF;
+    IF coalesce(NEW.stc_mulheres, 0) < v_m THEN
+        RAISE EXCEPTION 'Estão marcadas % mulheres pelo nome: o número de mulheres não pode ser menor', v_m USING COLUMN = 'stc_mulheres';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_stc_12_participantes BEFORE UPDATE OF stc_homens, stc_mulheres, stc_estado ON actividades.santa_ceia
+    FOR EACH ROW EXECUTE FUNCTION actividades.fn_stc_participantes();
+
+-- ---------------------------------------------------------------- histórico: quantos têm nome
+CREATE OR REPLACE VIEW actividades.vw_santa_ceia WITH (security_invoker = true) AS
+SELECT s.stc_id, s.stc_igr_id AS igreja_id, i.igr_nome AS igreja, s.stc_data AS data, s.stc_hora AS hora, s.stc_local AS local,
+       s.stc_estado AS estado, EXTRACT(YEAR FROM s.stc_data)::INT AS ano,
+       (SELECT m.mem_nome || ' ' || m.mem_apelido FROM secretaria.membro m WHERE m.mem_id = s.stc_responsavel_mem_id) AS responsavel,
+       s.stc_homens AS homens, s.stc_mulheres AS mulheres, s.stc_visitantes AS visitantes,
+       (coalesce(s.stc_homens, 0) + coalesce(s.stc_mulheres, 0) + coalesce(s.stc_visitantes, 0))::INT AS total,
+       (SELECT count(*) FROM actividades.santa_ceia_participante p WHERE p.scp_stc_id = s.stc_id AND p.scp_end_date IS NULL)::INT AS nomeados
+  FROM actividades.santa_ceia s
+  JOIN organizacao.igreja i ON i.igr_id = s.stc_igr_id
+ WHERE s.stc_end_date IS NULL;
+COMMENT ON VIEW actividades.vw_santa_ceia IS 'V39, V52: celebrações da Santa Ceia com os participantes e quantos têm nome (cada um só vê as igrejas que pode ler)';
+
+-- ---------------------------------------------------------------- relatório de participação por membro
+CREATE VIEW actividades.vw_santa_ceia_participacao WITH (security_invoker = true) AS
+WITH cel AS (   -- celebrações realizadas com os participantes registados pelo nome
+    SELECT s.stc_igr_id AS igr_id, EXTRACT(YEAR FROM s.stc_data)::INT AS ano, count(*)::INT AS n
+      FROM actividades.santa_ceia s
+     WHERE s.stc_end_date IS NULL AND s.stc_estado = 'REALIZADA'
+       AND EXISTS (SELECT 1 FROM actividades.santa_ceia_participante p WHERE p.scp_stc_id = s.stc_id AND p.scp_end_date IS NULL)
+     GROUP BY 1, 2
+), part AS (
+    SELECT p.scp_mem_id AS mem_id, s.stc_igr_id AS igr_id, EXTRACT(YEAR FROM s.stc_data)::INT AS ano,
+           count(*)::INT AS n, max(s.stc_data) AS ultima
+      FROM actividades.santa_ceia_participante p
+      JOIN actividades.santa_ceia s ON s.stc_id = p.scp_stc_id AND s.stc_end_date IS NULL AND s.stc_estado = 'REALIZADA'
+     WHERE p.scp_end_date IS NULL
+     GROUP BY 1, 2, 3
+)
+SELECT c.igr_id AS igreja_id, c.ano, m.mem_id AS membro_id, m.mem_nome || ' ' || m.mem_apelido AS membro,
+       m.mem_sexo AS sexo, m.mem_estado AS estado_membro,
+       c.n AS celebracoes, coalesce(p.n, 0) AS participacoes, (c.n - coalesce(p.n, 0))::INT AS faltas, p.ultima
+  FROM cel c
+  JOIN secretaria.membro m ON m.mem_igr_id = c.igr_id AND m.mem_end_date IS NULL
+  LEFT JOIN part p ON p.mem_id = m.mem_id AND p.igr_id = c.igr_id AND p.ano = c.ano
+ WHERE m.mem_estado = 'ACTIVO' OR p.n IS NOT NULL;
+COMMENT ON VIEW actividades.vw_santa_ceia_participacao IS 'V52: por membro e ano, em quantas Santas Ceias (com nomes registados) participou, as faltas e a última';
+GRANT SELECT ON actividades.vw_santa_ceia_participacao TO app_igreja;
+
+-- >>>>> V53__voto_da_pessoa.sql
+-- =====================================================================
+-- V53 · O voto é da pessoa: o livro de membros não aceita o voto de outra pessoa
+--
+--   voto_membro (vtm)   as pessoas a que o voto se refere (ex.: os admitidos por baptismo nesse voto). Um voto pode
+--                       referir várias pessoas (baptismo de um grupo). As pessoas são membros ou interessados da igreja
+--                       da reunião em que o voto foi tomado.
+--   movimento_membro    uma entrada ou saída com voto (todas menos falecimento e transferência, que se valida na carta)
+--                       exige que o voto indique essa pessoa: "Admissão por baptismo de Amélia" não serve para a Rosa.
+--
+-- Permissões novas (secretaria.voto_membro.*): as mesmas de secretaria.voto.*.
+-- Tabela gerada com database/gerador (defs.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+-- ---------------------------------------------------------------- pessoas do voto (gerada: gen.py)
+CREATE TABLE secretaria.voto_membro (
+    vtm_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    vtm_vot_id INT NOT NULL,
+    vtm_igr_id INT NOT NULL,
+    vtm_mem_id INT NOT NULL,
+    vtm_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    vtm_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    vtm_criado_por INT,
+    vtm_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    vtm_modificado_por INT,
+    vtm_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_vtm_vot_id FOREIGN KEY (vtm_vot_id) REFERENCES secretaria.voto(vot_id),
+    CONSTRAINT fk_vtm_igr_id FOREIGN KEY (vtm_igr_id) REFERENCES organizacao.igreja(igr_id),
+    CONSTRAINT fk_vtm_mem_id FOREIGN KEY (vtm_mem_id) REFERENCES secretaria.membro(mem_id),
+    CONSTRAINT chk_vtm_end_date CHECK (vtm_end_date IS NULL OR vtm_end_date >= vtm_criado_em)
+);
+COMMENT ON TABLE secretaria.voto_membro IS 'Pessoas a que o voto se refere (ex.: os admitidos por baptismo), para o livro não aceitar o voto de outra pessoa (V53)';
+COMMENT ON COLUMN secretaria.voto_membro.vtm_igr_id IS 'Copiado da reunião do voto';
+CREATE UNIQUE INDEX uq_vtm_vot_id_mem_id ON secretaria.voto_membro (vtm_vot_id, vtm_mem_id) WHERE vtm_end_date IS NULL;
+CREATE INDEX idx_vtm_igr_pagina ON secretaria.voto_membro (vtm_igr_id, vtm_id);
+CREATE INDEX idx_vtm_mem_id ON secretaria.voto_membro (vtm_mem_id);
+CREATE TRIGGER trg_vtm_00_padrao BEFORE INSERT OR UPDATE ON secretaria.voto_membro FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('vtm', 'secretaria.voto_membro', 'vtm_igr_id');
+CREATE TRIGGER trg_vtm_00_sem_delete BEFORE DELETE ON secretaria.voto_membro FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('vtm');
+CREATE TRIGGER trg_vtm_00_sem_truncate BEFORE TRUNCATE ON secretaria.voto_membro FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('vtm');
+CREATE TRIGGER trg_vtm_99_log AFTER UPDATE ON secretaria.voto_membro FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('vtm');
+ALTER TABLE secretaria.voto_membro ADD CONSTRAINT fk_vtm_criado_por FOREIGN KEY (vtm_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE secretaria.voto_membro ADD CONSTRAINT fk_vtm_modificado_por FOREIGN KEY (vtm_modificado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE secretaria.voto_membro ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_vtm_ler ON secretaria.voto_membro FOR SELECT USING (vtm_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.voto_membro.ler'))::INT[]));
+CREATE POLICY pol_vtm_criar ON secretaria.voto_membro FOR INSERT WITH CHECK (vtm_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.voto_membro.criar'))::INT[]));
+CREATE POLICY pol_vtm_alterar ON secretaria.voto_membro FOR UPDATE USING (vtm_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.voto_membro.alterar'))::INT[])) WITH CHECK (vtm_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.voto_membro.alterar'))::INT[]));
+GRANT SELECT, INSERT, UPDATE ON secretaria.voto_membro TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA secretaria TO app_igreja;
+COMMENT ON INDEX secretaria.uq_vtm_vot_id_mem_id IS '[membroId] Esta pessoa já está indicada neste voto.';
+
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'secretaria.voto_membro.' || a.accao, a.rotulo || 'Pessoas a que o voto se refere (V53)'
+  FROM (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo);
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT pp.ppe_per_id, novo.prm_id
+  FROM nucleo.perfil_permissao pp
+  JOIN nucleo.permissao antigo ON antigo.prm_id = pp.ppe_prm_id AND antigo.prm_codigo LIKE 'secretaria.voto.%'
+  JOIN nucleo.permissao novo ON novo.prm_codigo = replace(antigo.prm_codigo, '.voto.', '.voto_membro.')
+ WHERE pp.ppe_end_date IS NULL;
+
+-- a igreja vem da reunião do voto; a pessoa é dessa igreja
+CREATE FUNCTION secretaria.fn_vtm_validar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT r.reu_igr_id INTO NEW.vtm_igr_id
+      FROM secretaria.voto v JOIN secretaria.reuniao r ON r.reu_id = v.vot_reu_id
+     WHERE v.vot_id = NEW.vtm_vot_id;
+    IF NEW.vtm_igr_id IS NULL THEN
+        RAISE EXCEPTION 'O voto não existe' USING COLUMN = 'vtm_vot_id';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM secretaria.membro WHERE mem_id = NEW.vtm_mem_id AND mem_igr_id = NEW.vtm_igr_id AND mem_end_date IS NULL) THEN
+        RAISE EXCEPTION 'A pessoa do voto tem de ser membro ou interessado desta igreja' USING COLUMN = 'vtm_mem_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_vtm_05_validar BEFORE INSERT OR UPDATE OF vtm_vot_id, vtm_mem_id ON secretaria.voto_membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_vtm_validar();
+
+-- ---------------------------------------------------------------- livro: o voto tem de ser desta pessoa
+CREATE FUNCTION secretaria.fn_mmb_voto_da_pessoa() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_numero TEXT; v_nome TEXT;
+BEGIN
+    IF NEW.mmb_tme_id IS NOT NULL OR NEW.mmb_tipo = 'FALECIMENTO' OR NEW.mmb_vot_id IS NULL THEN
+        RETURN NEW;                                       -- transferências validam-se na carta; o voto em falta, em fn_mmb_validar
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM secretaria.voto_membro
+                    WHERE vtm_vot_id = NEW.mmb_vot_id AND vtm_mem_id = NEW.mmb_mem_id AND vtm_end_date IS NULL) THEN
+        SELECT vot_numero INTO v_numero FROM secretaria.voto WHERE vot_id = NEW.mmb_vot_id;
+        SELECT mem_nome || ' ' || mem_apelido INTO v_nome FROM secretaria.membro WHERE mem_id = NEW.mmb_mem_id;
+        RAISE EXCEPTION 'O voto n.º % não indica % entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)', v_numero, v_nome
+            USING COLUMN = 'mmb_vot_id';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_mmb_11_voto_da_pessoa BEFORE INSERT ON secretaria.movimento_membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mmb_voto_da_pessoa();
+
+-- >>>>> V54__fluxos_de_aprovacao.sql
+-- =====================================================================
+-- V54 · Fluxos de aprovação e conferência: cada processo com etapas definidas, quem decide cada uma e o estado
+--
+--   fluxo_aprovacao (fap)    que etapas segue cada natureza de processo (DESPESA, SAIDA, CONTAGEM, ORCAMENTO,
+--                            ADMISSAO_MEMBRO, REMOCAO_MEMBRO), a partir de que valor. Vazio na igreja = modelo da
+--                            Associação/Missão; uma igreja com fluxo próprio para um processo deixa de usar os modelos dele.
+--   fluxo_etapa (fae)        as etapas, por ordem: quem decide (PERFIL, PERMISSAO ou ORGAO que vota em reunião), o que faz
+--                            (APRECIAR, CONFERIR, RECOMENDAR, APROVAR, VOTAR) e se tem de ser outra pessoa.
+--   aprovacao (apv)          o processo de cada objecto: fluxo, etapa em curso e estado (EM_CURSO, APROVADO, REJEITADO,
+--                            CANCELADO). Só o sistema escreve (nucleo.fn_aprovacao_*).
+--   aprovacao_decisao (apd)  cada etapa decidida: quem, quando, com que voto, motivo e valor aprovado.
+--
+--   Iniciam-se sozinhos: despesa submetida, saída pendente sem despesa, contagem aberta, orçamento em rascunho, e o primeiro
+--   voto de admissão/remoção que indica uma pessoa (voto_membro). Decide-se com nucleo.fn_aprovacao_decidir (API:
+--   POST /v1/nucleo/aprovacoes/{id}/decidir); as funções antigas (fn_decidir_despesa, fn_aprovar_saida,
+--   fn_aprovar_orcamento) e a mudança de estado à mão decidem a etapa em curso. O objecto só muda de estado quando a
+--   última etapa aprova; uma rejeição termina o processo (contagem e orçamento recomeçam).
+--   Membros: o voto decide a etapa do órgão da reunião, pela ordem do fluxo; o livro só aceita a admissão/remoção com o
+--   voto de um processo aprovado.
+--   Vistas: vw_aprovacoes (o que está por decidir, quem decide, se o utilizador pode) e vw_aprovacao_etapas.
+--
+-- Tabelas geradas com database/gerador (defs.py); as regras são escritas aqui.
+-- =====================================================================
+SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
+
+CREATE TYPE nucleo.processo_aprovacao_t AS ENUM ('DESPESA', 'SAIDA', 'CONTAGEM', 'ORCAMENTO', 'ADMISSAO_MEMBRO', 'REMOCAO_MEMBRO');
+CREATE TYPE nucleo.accao_etapa_t        AS ENUM ('APRECIAR', 'CONFERIR', 'RECOMENDAR', 'APROVAR', 'VOTAR');
+CREATE TYPE nucleo.responsavel_etapa_t  AS ENUM ('PERFIL', 'PERMISSAO', 'ORGAO');
+CREATE TYPE nucleo.estado_aprovacao_t   AS ENUM ('EM_CURSO', 'APROVADO', 'REJEITADO', 'CANCELADO');
+
+-- ---------------------------------------------------------------- tabelas (geradas: gen.py)
+-- Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54)
+CREATE TABLE nucleo.fluxo_aprovacao (
+    fap_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    fap_igr_id INT,
+    fap_processo processo_aprovacao_t NOT NULL,
+    fap_nome VARCHAR(100) NOT NULL,
+    fap_valor_minimo DECIMAL(14,2) NOT NULL DEFAULT 0,
+    fap_descricao VARCHAR(255),
+    fap_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    fap_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    fap_criado_por INT,
+    fap_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    fap_modificado_por INT,
+    fap_end_date TIMESTAMPTZ,
+    CONSTRAINT chk_fap_valor_minimo CHECK (fap_valor_minimo >= 0),
+    CONSTRAINT chk_fap_end_date CHECK (fap_end_date IS NULL OR fap_end_date >= fap_criado_em)
+);
+COMMENT ON TABLE nucleo.fluxo_aprovacao IS 'Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54)';
+COMMENT ON COLUMN nucleo.fluxo_aprovacao.fap_igr_id IS 'Igreja a que o fluxo se aplica; vazio = modelo da Associação/Missão para todas as igrejas sem fluxo próprio';
+COMMENT ON COLUMN nucleo.fluxo_aprovacao.fap_valor_minimo IS 'O fluxo aplica-se a partir deste valor (o de maior valor mínimo que não passe o valor do processo)';
+CREATE INDEX idx_fap_igr_id ON nucleo.fluxo_aprovacao (fap_igr_id);
+CREATE UNIQUE INDEX uq_fap_igr_processo_valor ON nucleo.fluxo_aprovacao (COALESCE(fap_igr_id, 0), fap_processo, fap_valor_minimo) WHERE fap_end_date IS NULL;
+
+-- Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54)
+CREATE TABLE nucleo.fluxo_etapa (
+    fae_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    fae_fap_id INT NOT NULL,
+    fae_igr_id INT,
+    fae_ordem SMALLINT NOT NULL,
+    fae_nome VARCHAR(100) NOT NULL,
+    fae_accao accao_etapa_t NOT NULL DEFAULT 'APROVAR',
+    fae_responsavel responsavel_etapa_t NOT NULL,
+    fae_per_id INT,
+    fae_prm_id INT,
+    fae_orgao tipo_reuniao_t,
+    fae_outra_pessoa BOOLEAN NOT NULL DEFAULT TRUE,
+    fae_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    fae_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    fae_criado_por INT,
+    fae_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    fae_modificado_por INT,
+    fae_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_fae_fap_id FOREIGN KEY (fae_fap_id) REFERENCES nucleo.fluxo_aprovacao(fap_id),
+    CONSTRAINT fk_fae_per_id FOREIGN KEY (fae_per_id) REFERENCES nucleo.perfil(per_id),
+    CONSTRAINT fk_fae_prm_id FOREIGN KEY (fae_prm_id) REFERENCES nucleo.permissao(prm_id),
+    CONSTRAINT chk_fae_ordem CHECK (fae_ordem BETWEEN 1 AND 20),
+    CONSTRAINT chk_fae_responsavel CHECK ((fae_responsavel = 'PERFIL' AND fae_per_id IS NOT NULL) OR (fae_responsavel = 'PERMISSAO' AND fae_prm_id IS NOT NULL) OR (fae_responsavel = 'ORGAO' AND fae_orgao IS NOT NULL)),
+    CONSTRAINT chk_fae_end_date CHECK (fae_end_date IS NULL OR fae_end_date >= fae_criado_em)
+);
+COMMENT ON TABLE nucleo.fluxo_etapa IS 'Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54)';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_igr_id IS 'Copiado do fluxo';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_ordem IS '1 = a primeira a decidir';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_responsavel IS 'PERFIL (quem tem esse perfil na igreja), PERMISSAO (quem tem essa permissão) ou ORGAO (o órgão vota em reunião)';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_per_id IS 'Perfil que decide (responsavel = PERFIL)';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_prm_id IS 'Permissão de quem decide (responsavel = PERMISSAO)';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_orgao IS 'Órgão que vota (responsavel = ORGAO): o voto tem de ser de uma reunião deste tipo';
+COMMENT ON COLUMN nucleo.fluxo_etapa.fae_outra_pessoa IS 'Quem pediu e quem já decidiu outra etapa não decide esta';
+CREATE UNIQUE INDEX uq_fae_fap_id_ordem ON nucleo.fluxo_etapa (fae_fap_id, fae_ordem) WHERE fae_end_date IS NULL;
+CREATE INDEX idx_fae_igr_id ON nucleo.fluxo_etapa (fae_igr_id);
+CREATE INDEX idx_fae_per_id ON nucleo.fluxo_etapa (fae_per_id);
+CREATE INDEX idx_fae_prm_id ON nucleo.fluxo_etapa (fae_prm_id);
+
+-- Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa em que está (V54)
+CREATE TABLE nucleo.aprovacao (
+    apv_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    apv_igr_id INT NOT NULL,
+    apv_fap_id INT NOT NULL,
+    apv_processo processo_aprovacao_t NOT NULL,
+    apv_assunto VARCHAR(255) NOT NULL,
+    apv_valor DECIMAL(14,2),
+    apv_des_id INT,
+    apv_tra_id BIGINT,
+    apv_cnu_id INT,
+    apv_orc_id INT,
+    apv_mem_id INT,
+    apv_pedido_por_usu_id INT,
+    apv_etapa SMALLINT NOT NULL DEFAULT 1,
+    apv_concluido_em TIMESTAMPTZ,
+    apv_estado estado_aprovacao_t NOT NULL DEFAULT 'EM_CURSO',
+    apv_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    apv_criado_por INT,
+    apv_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    apv_modificado_por INT,
+    apv_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_apv_fap_id FOREIGN KEY (apv_fap_id) REFERENCES nucleo.fluxo_aprovacao(fap_id),
+    CONSTRAINT fk_apv_pedido_por_usu_id FOREIGN KEY (apv_pedido_por_usu_id) REFERENCES nucleo.usuario(usu_id),
+    CONSTRAINT chk_apv_objecto CHECK (num_nonnulls(apv_des_id, apv_tra_id, apv_cnu_id, apv_orc_id, apv_mem_id) = 1),
+    CONSTRAINT chk_apv_end_date CHECK (apv_end_date IS NULL OR apv_end_date >= apv_criado_em)
+);
+COMMENT ON TABLE nucleo.aprovacao IS 'Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa em que está (V54)';
+COMMENT ON COLUMN nucleo.aprovacao.apv_mem_id IS 'Membro a admitir ou remover';
+COMMENT ON COLUMN nucleo.aprovacao.apv_pedido_por_usu_id IS 'Quem pediu (não decide as etapas com outra_pessoa)';
+COMMENT ON COLUMN nucleo.aprovacao.apv_etapa IS 'Ordem da etapa actual (a próxima a decidir)';
+CREATE INDEX idx_apv_igr_id ON nucleo.aprovacao (apv_igr_id);
+CREATE INDEX idx_apv_fap_id ON nucleo.aprovacao (apv_fap_id);
+CREATE INDEX idx_apv_des_id ON nucleo.aprovacao (apv_des_id);
+CREATE INDEX idx_apv_tra_id ON nucleo.aprovacao (apv_tra_id);
+CREATE INDEX idx_apv_cnu_id ON nucleo.aprovacao (apv_cnu_id);
+CREATE INDEX idx_apv_orc_id ON nucleo.aprovacao (apv_orc_id);
+CREATE INDEX idx_apv_mem_id ON nucleo.aprovacao (apv_mem_id);
+CREATE INDEX idx_apv_pedido_por_usu_id ON nucleo.aprovacao (apv_pedido_por_usu_id);
+CREATE UNIQUE INDEX uq_apv_em_curso ON nucleo.aprovacao (apv_processo, COALESCE(apv_des_id, 0), COALESCE(apv_tra_id, 0), COALESCE(apv_cnu_id, 0), COALESCE(apv_orc_id, 0), COALESCE(apv_mem_id, 0)) WHERE apv_estado = 'EM_CURSO' AND apv_end_date IS NULL;
+CREATE INDEX idx_apv_igr_estado ON nucleo.aprovacao (apv_igr_id, apv_estado);
+
+-- Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)
+CREATE TABLE nucleo.aprovacao_decisao (
+    apd_id INT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    apd_apv_id INT NOT NULL,
+    apd_igr_id INT NOT NULL,
+    apd_fae_id INT NOT NULL,
+    apd_etapa SMALLINT NOT NULL,
+    apd_aprovado BOOLEAN NOT NULL,
+    apd_usu_id INT NOT NULL,
+    apd_vot_id INT,
+    apd_motivo VARCHAR(255),
+    apd_valor DECIMAL(14,2),
+    apd_estado estado_registo_t NOT NULL DEFAULT 'ACTIVO',
+    apd_criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    apd_criado_por INT,
+    apd_modificado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    apd_modificado_por INT,
+    apd_end_date TIMESTAMPTZ,
+    CONSTRAINT fk_apd_apv_id FOREIGN KEY (apd_apv_id) REFERENCES nucleo.aprovacao(apv_id),
+    CONSTRAINT fk_apd_fae_id FOREIGN KEY (apd_fae_id) REFERENCES nucleo.fluxo_etapa(fae_id),
+    CONSTRAINT fk_apd_usu_id FOREIGN KEY (apd_usu_id) REFERENCES nucleo.usuario(usu_id),
+    CONSTRAINT chk_apd_end_date CHECK (apd_end_date IS NULL OR apd_end_date >= apd_criado_em)
+);
+COMMENT ON TABLE nucleo.aprovacao_decisao IS 'Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)';
+COMMENT ON COLUMN nucleo.aprovacao_decisao.apd_usu_id IS 'Quem decidiu ou registou a decisão do órgão';
+COMMENT ON COLUMN nucleo.aprovacao_decisao.apd_vot_id IS 'Voto do órgão (etapas ORGAO)';
+COMMENT ON COLUMN nucleo.aprovacao_decisao.apd_valor IS 'Valor aprovado, quando a etapa o reduz';
+CREATE UNIQUE INDEX uq_apd_apv_id_etapa ON nucleo.aprovacao_decisao (apd_apv_id, apd_etapa) WHERE apd_end_date IS NULL;
+CREATE INDEX idx_apd_igr_id ON nucleo.aprovacao_decisao (apd_igr_id);
+CREATE INDEX idx_apd_fae_id ON nucleo.aprovacao_decisao (apd_fae_id);
+CREATE INDEX idx_apd_usu_id ON nucleo.aprovacao_decisao (apd_usu_id);
+CREATE INDEX idx_apd_vot_id ON nucleo.aprovacao_decisao (apd_vot_id);
+
+-- chaves estrangeiras para as tabelas dos outros módulos
+ALTER TABLE nucleo.fluxo_aprovacao ADD CONSTRAINT fk_fap_igr_id FOREIGN KEY (fap_igr_id) REFERENCES organizacao.igreja(igr_id);
+ALTER TABLE nucleo.fluxo_etapa ADD CONSTRAINT fk_fae_igr_id FOREIGN KEY (fae_igr_id) REFERENCES organizacao.igreja(igr_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_igr_id FOREIGN KEY (apv_igr_id) REFERENCES organizacao.igreja(igr_id);
+ALTER TABLE nucleo.aprovacao_decisao ADD CONSTRAINT fk_apd_igr_id FOREIGN KEY (apd_igr_id) REFERENCES organizacao.igreja(igr_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_mem_id FOREIGN KEY (apv_mem_id) REFERENCES secretaria.membro(mem_id);
+ALTER TABLE nucleo.aprovacao_decisao ADD CONSTRAINT fk_apd_vot_id FOREIGN KEY (apd_vot_id) REFERENCES secretaria.voto(vot_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_orc_id FOREIGN KEY (apv_orc_id) REFERENCES tesouraria.orcamento(orc_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_des_id FOREIGN KEY (apv_des_id) REFERENCES tesouraria.despesa(des_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_cnu_id FOREIGN KEY (apv_cnu_id) REFERENCES tesouraria.contagem_numerario(cnu_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_tra_id FOREIGN KEY (apv_tra_id) REFERENCES tesouraria.transacao(tra_id);
+
+-- ---------------------------------------------------------------- comportamento comum e segurança (gerados)
+CREATE TRIGGER trg_fap_00_padrao BEFORE INSERT OR UPDATE ON nucleo.fluxo_aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('fap', 'nucleo.fluxo_aprovacao', 'fap_igr_id');
+CREATE TRIGGER trg_fap_00_sem_delete BEFORE DELETE ON nucleo.fluxo_aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('fap');
+CREATE TRIGGER trg_fap_00_sem_truncate BEFORE TRUNCATE ON nucleo.fluxo_aprovacao FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('fap');
+CREATE TRIGGER trg_fap_01_comum BEFORE UPDATE ON nucleo.fluxo_aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_terminar_comum('fap', 'nucleo.fluxo_aprovacao', 'fap_igr_id');
+CREATE TRIGGER trg_fap_99_log AFTER UPDATE ON nucleo.fluxo_aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('fap');
+ALTER TABLE nucleo.fluxo_aprovacao ADD CONSTRAINT fk_fap_criado_por FOREIGN KEY (fap_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.fluxo_aprovacao ADD CONSTRAINT fk_fap_modificado_por FOREIGN KEY (fap_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_fae_00_padrao BEFORE INSERT OR UPDATE ON nucleo.fluxo_etapa FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('fae', 'nucleo.fluxo_etapa', 'fae_igr_id');
+CREATE TRIGGER trg_fae_00_sem_delete BEFORE DELETE ON nucleo.fluxo_etapa FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('fae');
+CREATE TRIGGER trg_fae_00_sem_truncate BEFORE TRUNCATE ON nucleo.fluxo_etapa FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('fae');
+CREATE TRIGGER trg_fae_01_comum BEFORE UPDATE ON nucleo.fluxo_etapa FOR EACH ROW EXECUTE FUNCTION nucleo.fn_terminar_comum('fae', 'nucleo.fluxo_etapa', 'fae_igr_id');
+CREATE TRIGGER trg_fae_99_log AFTER UPDATE ON nucleo.fluxo_etapa FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('fae');
+ALTER TABLE nucleo.fluxo_etapa ADD CONSTRAINT fk_fae_criado_por FOREIGN KEY (fae_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.fluxo_etapa ADD CONSTRAINT fk_fae_modificado_por FOREIGN KEY (fae_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_apv_00_padrao BEFORE INSERT OR UPDATE ON nucleo.aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('apv', '', '');
+CREATE TRIGGER trg_apv_00_sem_delete BEFORE DELETE ON nucleo.aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('apv');
+CREATE TRIGGER trg_apv_00_sem_truncate BEFORE TRUNCATE ON nucleo.aprovacao FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('apv');
+CREATE TRIGGER trg_apv_99_log AFTER UPDATE ON nucleo.aprovacao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('apv');
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_criado_por FOREIGN KEY (apv_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.aprovacao ADD CONSTRAINT fk_apv_modificado_por FOREIGN KEY (apv_modificado_por) REFERENCES nucleo.usuario(usu_id);
+CREATE TRIGGER trg_apd_00_padrao BEFORE INSERT OR UPDATE ON nucleo.aprovacao_decisao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('apd', '', '');
+CREATE TRIGGER trg_apd_00_sem_delete BEFORE DELETE ON nucleo.aprovacao_decisao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete('apd');
+CREATE TRIGGER trg_apd_00_sem_truncate BEFORE TRUNCATE ON nucleo.aprovacao_decisao FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete('apd');
+CREATE TRIGGER trg_apd_99_log AFTER UPDATE ON nucleo.aprovacao_decisao FOR EACH ROW EXECUTE FUNCTION nucleo.fn_log_auditoria('apd');
+ALTER TABLE nucleo.aprovacao_decisao ADD CONSTRAINT fk_apd_criado_por FOREIGN KEY (apd_criado_por) REFERENCES nucleo.usuario(usu_id);
+ALTER TABLE nucleo.aprovacao_decisao ADD CONSTRAINT fk_apd_modificado_por FOREIGN KEY (apd_modificado_por) REFERENCES nucleo.usuario(usu_id);
+REVOKE INSERT, UPDATE ON nucleo.aprovacao_decisao FROM app_igreja;
+REVOKE INSERT, UPDATE ON nucleo.aprovacao FROM app_igreja;
+ALTER TABLE nucleo.fluxo_aprovacao ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_fap_ler ON nucleo.fluxo_aprovacao FOR SELECT USING (fap_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_aprovacao.ler'))::INT[])) OR (fap_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_global('nucleo.fluxo_aprovacao.ler'))));
+CREATE POLICY pol_fap_criar ON nucleo.fluxo_aprovacao FOR INSERT WITH CHECK (fap_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_aprovacao.criar'))::INT[])) OR (fap_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_aprovacao.criar'))));
+CREATE POLICY pol_fap_alterar ON nucleo.fluxo_aprovacao FOR UPDATE USING (fap_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_aprovacao.alterar'))::INT[])) OR (fap_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_aprovacao.alterar')))) WITH CHECK (fap_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_aprovacao.alterar'))::INT[])) OR (fap_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_aprovacao.alterar'))));
+CREATE POLICY pol_fap_proprio ON nucleo.fluxo_aprovacao FOR SELECT USING (TRUE);
+ALTER TABLE nucleo.fluxo_etapa ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_fae_ler ON nucleo.fluxo_etapa FOR SELECT USING (fae_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_etapa.ler'))::INT[])) OR (fae_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_global('nucleo.fluxo_etapa.ler'))));
+CREATE POLICY pol_fae_criar ON nucleo.fluxo_etapa FOR INSERT WITH CHECK (fae_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_etapa.criar'))::INT[])) OR (fae_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_etapa.criar'))));
+CREATE POLICY pol_fae_alterar ON nucleo.fluxo_etapa FOR UPDATE USING (fae_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_etapa.alterar'))::INT[])) OR (fae_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_etapa.alterar')))) WITH CHECK (fae_igr_id = ANY (((SELECT nucleo.fn_igrejas_com_permissao('nucleo.fluxo_etapa.alterar'))::INT[])) OR (fae_igr_id IS NULL AND (SELECT nucleo.fn_tem_permissao_comum('nucleo.fluxo_etapa.alterar'))));
+CREATE POLICY pol_fae_proprio ON nucleo.fluxo_etapa FOR SELECT USING (TRUE);
+ALTER TABLE nucleo.aprovacao ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_apv_ler ON nucleo.aprovacao FOR SELECT USING ((apv_processo = 'DESPESA' AND apv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.despesa.ler'))::INT[])) OR (apv_processo = 'SAIDA' AND apv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.transacao.ler'))::INT[])) OR (apv_processo = 'CONTAGEM' AND apv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.contagem_numerario.ler'))::INT[])) OR (apv_processo = 'ORCAMENTO' AND apv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('tesouraria.orcamento.ler'))::INT[])) OR (apv_processo IN ('ADMISSAO_MEMBRO', 'REMOCAO_MEMBRO') AND apv_igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('secretaria.movimento_membro.ler'))::INT[])));
+ALTER TABLE nucleo.aprovacao_decisao ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pol_apd_ler ON nucleo.aprovacao_decisao FOR SELECT USING (EXISTS (SELECT 1 FROM nucleo.aprovacao a WHERE a.apv_id = apd_apv_id));
+GRANT SELECT ON nucleo.fluxo_aprovacao, nucleo.fluxo_etapa, nucleo.aprovacao, nucleo.aprovacao_decisao TO app_igreja;
+GRANT INSERT, UPDATE ON nucleo.fluxo_aprovacao, nucleo.fluxo_etapa TO app_igreja;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA nucleo TO app_igreja;
+
+-- ---------------------------------------------------------------- frases das restrições (V29)
+COMMENT ON CONSTRAINT chk_fap_valor_minimo ON nucleo.fluxo_aprovacao IS '[valorMinimo] O valor mínimo não pode ser negativo.';
+COMMENT ON INDEX nucleo.uq_fap_igr_processo_valor IS '[valorMinimo] Já existe um fluxo para este processo a partir deste valor.';
+COMMENT ON CONSTRAINT chk_fae_ordem ON nucleo.fluxo_etapa IS '[ordem] A ordem da etapa vai de 1 a 20.';
+COMMENT ON CONSTRAINT chk_fae_responsavel ON nucleo.fluxo_etapa IS '[responsavel] Indique quem decide: o perfil, a permissão ou o órgão, conforme o tipo de responsável.';
+COMMENT ON INDEX nucleo.uq_fae_fap_id_ordem IS '[ordem] Este fluxo já tem uma etapa com esta ordem.';
+COMMENT ON CONSTRAINT chk_apv_objecto ON nucleo.aprovacao IS 'Um processo de aprovação refere-se a um só objecto (despesa, saída, contagem, orçamento ou membro).';
+COMMENT ON INDEX nucleo.uq_apv_em_curso IS 'Este objecto já tem um processo de aprovação em curso.';
+COMMENT ON INDEX nucleo.uq_apd_apv_id_etapa IS 'Esta etapa já foi decidida.';
+
+-- ---------------------------------------------------------------- permissões novas
+INSERT INTO nucleo.permissao (prm_codigo, prm_descricao)
+SELECT 'nucleo.' || t.tabela || '.' || a.accao, a.rotulo || t.descricao
+  FROM (VALUES ('fluxo_aprovacao', 'Fluxos de aprovação (etapas por natureza do processo e valor) (V54)'),
+               ('fluxo_etapa', 'Etapas dos fluxos de aprovação (V54)')) t(tabela, descricao)
+ CROSS JOIN (VALUES ('ler', 'Ler: '), ('criar', 'Criar: '), ('alterar', 'Alterar: '), ('terminar', 'Terminar (end_date): ')) a(accao, rotulo)
+UNION ALL SELECT 'nucleo.aprovacao.ler', 'Ler: Processos de aprovação (V54)'
+UNION ALL SELECT 'nucleo.aprovacao_decisao.ler', 'Ler: Decisões das etapas de aprovação (V54)';
+
+-- configuram os fluxos: o administrador e o pastor na igreja; a administração da Associação nos modelos
+INSERT INTO nucleo.perfil_permissao (ppe_per_id, ppe_prm_id)
+SELECT p.per_id, m.prm_id
+  FROM nucleo.perfil p JOIN nucleo.permissao m ON m.prm_codigo LIKE 'nucleo.fluxo\_%'
+ WHERE p.per_codigo IN ('ADMIN', 'PASTOR', 'ADMIN_ASSOCIACAO')
+UNION ALL
+SELECT p.per_id, m.prm_id
+  FROM nucleo.perfil p JOIN nucleo.permissao m ON m.prm_codigo IN ('nucleo.aprovacao.ler', 'nucleo.aprovacao_decisao.ler')
+ WHERE p.per_codigo IN ('PASTOR', 'ADMIN_ASSOCIACAO');
+
+-- ---------------------------------------------------------------- quem pode decidir uma etapa
+-- (como nucleo.fn_igrejas_com_permissao, mas para qualquer utilizador e não só o da sessão)
+CREATE FUNCTION nucleo.fn_usuario_tem_perfil(p_usu INT, p_per INT, p_igr INT) RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT EXISTS (SELECT 1 FROM nucleo.usuario_igreja u
+                    WHERE u.uig_usu_id = p_usu AND u.uig_per_id = p_per AND u.uig_igr_id = p_igr
+                      AND u.uig_estado = 'ACTIVO' AND u.uig_end_date IS NULL)
+        OR EXISTS (SELECT 1 FROM nucleo.usuario_entidade u JOIN organizacao.igreja i ON i.igr_ent_id = u.uen_ent_id
+                    WHERE u.uen_usu_id = p_usu AND u.uen_per_id = p_per AND i.igr_id = p_igr
+                      AND u.uen_estado = 'ACTIVO' AND u.uen_end_date IS NULL)
+        OR EXISTS (SELECT 1 FROM organizacao.distrito d
+                     JOIN organizacao.igreja i ON i.igr_dst_id = d.dst_id
+                     JOIN nucleo.perfil pf ON pf.per_id = p_per AND pf.per_codigo = 'PASTOR'
+                    WHERE d.dst_pastor_usu_id = p_usu AND i.igr_id = p_igr AND d.dst_end_date IS NULL);
+$$;
+
+CREATE FUNCTION nucleo.fn_usuario_tem_permissao(p_usu INT, p_codigo TEXT, p_igr INT) RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT EXISTS (SELECT 1 FROM nucleo.perfil_permissao pp
+                     JOIN nucleo.permissao pm ON pm.prm_id = pp.ppe_prm_id AND pm.prm_codigo = p_codigo AND pm.prm_end_date IS NULL
+                    WHERE pp.ppe_end_date IS NULL AND nucleo.fn_usuario_tem_perfil(p_usu, pp.ppe_per_id, p_igr));
+$$;
+
+CREATE FUNCTION nucleo.fn_usuario_pode_etapa(p_usu INT, p_fae INT, p_igr INT) RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT CASE e.fae_responsavel
+               WHEN 'PERFIL' THEN nucleo.fn_usuario_tem_perfil(p_usu, e.fae_per_id, p_igr)
+               WHEN 'PERMISSAO' THEN nucleo.fn_usuario_tem_permissao(p_usu, (SELECT prm_codigo FROM nucleo.permissao WHERE prm_id = e.fae_prm_id), p_igr)
+               ELSE FALSE END                                 -- ORGAO: decide o órgão, por voto
+      FROM nucleo.fluxo_etapa e WHERE e.fae_id = p_fae;
+$$;
+
+CREATE FUNCTION nucleo.fn_orgao_nome(p_orgao nucleo.tipo_reuniao_t) RETURNS TEXT
+LANGUAGE sql IMMUTABLE AS $$
+    SELECT CASE p_orgao
+               WHEN 'JUNTA_DIRECTIVA' THEN 'Conselho da Igreja (junta directiva)'
+               WHEN 'REUNIAO_REGULAR' THEN 'Igreja em reunião regular'
+               WHEN 'ASSEMBLEIA_ADMINISTRATIVA' THEN 'Igreja em reunião administrativa'
+               WHEN 'COMISSAO_NOMEACOES' THEN 'Comissão de nomeações'
+               WHEN 'CONSELHO_ES' THEN 'Conselho da Escola Sabatina'
+           END;
+$$;
+
+-- nome de um perfil para mostrar ("Ancião"); os perfis criados pelos utilizadores mostram o nome que têm
+CREATE FUNCTION nucleo.fn_perfil_rotulo(p_per INT) RETURNS TEXT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT CASE per_codigo
+               WHEN 'ADMIN' THEN 'Administrador' WHEN 'PASTOR' THEN 'Pastor' WHEN 'ANCIAO' THEN 'Ancião'
+               WHEN 'SECRETARIO' THEN 'Secretário' WHEN 'TESOUREIRO' THEN 'Tesoureiro'
+               WHEN 'DIRECTOR_ES' THEN 'Director da Escola Sabatina' WHEN 'SECRETARIO_ES' THEN 'Secretário da Escola Sabatina'
+               WHEN 'DIRECTOR_DEPARTAMENTO' THEN 'Director de departamento' WHEN 'MEMBRO' THEN 'Membro'
+               WHEN 'ADMIN_ASSOCIACAO' THEN 'Administração da Associação' WHEN 'TESOUREIRO_ASSOCIACAO' THEN 'Tesoureiro da Associação'
+               WHEN 'SECRETARIO_ASSOCIACAO' THEN 'Secretário da Associação' WHEN 'INTEGRACAO' THEN 'Integração'
+               ELSE per_nome END
+      FROM nucleo.perfil WHERE per_id = p_per;
+$$;
+
+-- nome de um utilizador para mostrar (quem pediu, quem decidiu): o do membro ligado, senão o da conta. Quem vê o processo
+-- vê quem decidiu, mesmo sem poder ler a lista de utilizadores.
+CREATE FUNCTION nucleo.fn_nome_usuario(p_usu INT) RETURNS TEXT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT COALESCE(NULLIF(trim(concat_ws(' ', m.mem_nome, m.mem_apelido)), ''), u.usu_nome, u.usu_email, u.usu_telefone)
+      FROM nucleo.usuario u LEFT JOIN secretaria.membro m ON m.mem_id = u.usu_mem_id
+     WHERE u.usu_id = p_usu;
+$$;
+
+-- quem decide, em palavras: "Tesoureiro", "Pastor ou Ancião", "Conselho da Igreja (junta directiva)"
+CREATE FUNCTION nucleo.fn_etapa_quem(p_fae INT) RETURNS TEXT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT CASE e.fae_responsavel
+               WHEN 'PERFIL' THEN nucleo.fn_perfil_rotulo(e.fae_per_id)
+               WHEN 'PERMISSAO' THEN COALESCE(
+                   (SELECT string_agg(nucleo.fn_perfil_rotulo(pf.per_id), ' ou ' ORDER BY pf.per_id)
+                      FROM nucleo.perfil_permissao pp JOIN nucleo.perfil pf ON pf.per_id = pp.ppe_per_id AND pf.per_end_date IS NULL
+                     WHERE pp.ppe_prm_id = e.fae_prm_id AND pp.ppe_end_date IS NULL AND pf.per_ambito = 'IGREJA'),
+                   (SELECT COALESCE(prm_descricao, prm_codigo) FROM nucleo.permissao WHERE prm_id = e.fae_prm_id))
+               ELSE nucleo.fn_orgao_nome(e.fae_orgao) END
+      FROM nucleo.fluxo_etapa e WHERE e.fae_id = p_fae;
+$$;
+
+-- os nomes de quem pode decidir a etapa nesta igreja (utilizadores da igreja e o pastor do distrito)
+CREATE FUNCTION nucleo.fn_etapa_responsaveis(p_fae INT, p_igr INT) RETURNS TEXT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT string_agg(DISTINCT x.nome, ', ')
+      FROM (SELECT nucleo.fn_nome_usuario(u.usu_id) AS nome
+              FROM nucleo.usuario u
+             WHERE u.usu_end_date IS NULL AND u.usu_estado = 'ACTIVO'
+               AND (u.usu_id IN (SELECT g.uig_usu_id FROM nucleo.usuario_igreja g
+                                  WHERE g.uig_igr_id = p_igr AND g.uig_estado = 'ACTIVO' AND g.uig_end_date IS NULL)
+                    OR u.usu_id IN (SELECT d.dst_pastor_usu_id FROM organizacao.distrito d JOIN organizacao.igreja i ON i.igr_dst_id = d.dst_id
+                                     WHERE i.igr_id = p_igr AND d.dst_end_date IS NULL))
+               AND nucleo.fn_usuario_pode_etapa(u.usu_id, p_fae, p_igr)) x;
+$$;
+
+-- permissão de quem regista a decisão de um órgão (além de quem regista votos)
+CREATE FUNCTION nucleo.fn_aprovacao_permissao(p_processo nucleo.processo_aprovacao_t) RETURNS TEXT
+LANGUAGE sql IMMUTABLE AS $$
+    SELECT CASE p_processo
+               WHEN 'DESPESA' THEN 'tesouraria.despesa.aprovar'
+               WHEN 'SAIDA' THEN 'tesouraria.transacao.aprovar'
+               WHEN 'CONTAGEM' THEN 'tesouraria.contagem_numerario.alterar'
+               WHEN 'ORCAMENTO' THEN 'tesouraria.orcamento.aprovar'
+               ELSE 'secretaria.movimento_membro.criar' END;
+$$;
+
+-- ---------------------------------------------------------------- escolher o fluxo e iniciar o processo
+-- O fluxo da igreja, se tiver algum para o processo; senão o modelo da Associação (igr_id vazio). Dos que se aplicam,
+-- o de maior valor mínimo que não passe o valor. Um fluxo sem etapas activas não conta.
+CREATE FUNCTION nucleo.fn_fluxo_escolher(p_processo nucleo.processo_aprovacao_t, p_igr INT, p_valor NUMERIC) RETURNS INT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    WITH validos AS (
+        SELECT f.* FROM nucleo.fluxo_aprovacao f
+         WHERE f.fap_processo = p_processo AND f.fap_end_date IS NULL AND f.fap_estado = 'ACTIVO'
+           AND (f.fap_igr_id = p_igr OR f.fap_igr_id IS NULL)
+           AND EXISTS (SELECT 1 FROM nucleo.fluxo_etapa e WHERE e.fae_fap_id = f.fap_id AND e.fae_end_date IS NULL))
+    SELECT v.fap_id FROM validos v
+     WHERE (v.fap_igr_id = p_igr OR NOT EXISTS (SELECT 1 FROM validos w WHERE w.fap_igr_id = p_igr))
+       AND v.fap_valor_minimo <= COALESCE(p_valor, 0)
+     ORDER BY v.fap_valor_minimo DESC LIMIT 1;
+$$;
+
+CREATE FUNCTION nucleo.fn_aprovacao_iniciar(p_processo nucleo.processo_aprovacao_t, p_igr INT, p_assunto TEXT, p_valor NUMERIC,
+                                            p_pedido INT, p_des INT DEFAULT NULL, p_tra BIGINT DEFAULT NULL, p_cnu INT DEFAULT NULL,
+                                            p_orc INT DEFAULT NULL, p_mem INT DEFAULT NULL) RETURNS INT
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_fap INT; v_etapa SMALLINT; v_id INT;
+BEGIN
+    v_fap := nucleo.fn_fluxo_escolher(p_processo, p_igr, p_valor);
+    IF v_fap IS NULL THEN
+        RETURN NULL;                                       -- sem fluxo: ficam as regras de antes (uma aprovação)
+    END IF;
+    SELECT min(fae_ordem) INTO v_etapa FROM nucleo.fluxo_etapa WHERE fae_fap_id = v_fap AND fae_end_date IS NULL;
+    INSERT INTO nucleo.aprovacao (apv_igr_id, apv_fap_id, apv_processo, apv_assunto, apv_valor, apv_pedido_por_usu_id, apv_etapa,
+                                  apv_des_id, apv_tra_id, apv_cnu_id, apv_orc_id, apv_mem_id)
+    VALUES (p_igr, v_fap, p_processo, left(COALESCE(NULLIF(trim(p_assunto), ''), p_processo::TEXT), 255), p_valor, p_pedido, v_etapa,
+            p_des, p_tra, p_cnu, p_orc, p_mem)
+    RETURNING apv_id INTO v_id;
+    RETURN v_id;
+END $$;
+
+-- a etapa por decidir (se a etapa guardada foi terminada na configuração, a seguinte)
+CREATE FUNCTION nucleo.fn_aprovacao_etapa(p_apv INT) RETURNS nucleo.fluxo_etapa
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT e.* FROM nucleo.aprovacao a
+      JOIN nucleo.fluxo_etapa e ON e.fae_fap_id = a.apv_fap_id AND e.fae_end_date IS NULL AND e.fae_ordem >= a.apv_etapa
+     WHERE a.apv_id = p_apv
+     ORDER BY e.fae_ordem LIMIT 1;
+$$;
+
+-- "etapa 1 de 2 — Apreciação do tesoureiro (Tesoureiro: Ana Matos)"
+CREATE FUNCTION nucleo.fn_aprovacao_falta(p_apv INT) RETURNS TEXT
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE a nucleo.aprovacao%ROWTYPE; e nucleo.fluxo_etapa; v_total INT; v_nomes TEXT;
+BEGIN
+    SELECT * INTO a FROM nucleo.aprovacao WHERE apv_id = p_apv;
+    e := nucleo.fn_aprovacao_etapa(p_apv);
+    IF e.fae_id IS NULL THEN RETURN 'nenhuma etapa'; END IF;
+    SELECT count(*) INTO v_total FROM nucleo.fluxo_etapa WHERE fae_fap_id = a.apv_fap_id AND fae_end_date IS NULL;
+    v_nomes := nucleo.fn_etapa_responsaveis(e.fae_id, a.apv_igr_id);
+    RETURN format('etapa %s de %s — %s (%s%s)',
+                  (SELECT count(*) FROM nucleo.fluxo_etapa WHERE fae_fap_id = a.apv_fap_id AND fae_end_date IS NULL AND fae_ordem <= e.fae_ordem),
+                  v_total, e.fae_nome, nucleo.fn_etapa_quem(e.fae_id),
+                  CASE WHEN e.fae_responsavel = 'ORGAO' THEN ', por voto em reunião'
+                       WHEN v_nomes IS NULL THEN ': ninguém tem este perfil na igreja'
+                       ELSE ': ' || v_nomes END);
+END $$;
+
+-- ---------------------------------------------------------------- aplicar a decisão final ao objecto
+-- Corre depois de o processo ficar APROVADO ou REJEITADO. As guardas dos objectos (trg_*_09_fluxo e as aprovações de
+-- V7) reconhecem a mudança pelo processo concluído nesta transacção (nucleo.fn_aprovacao_concluida_agora).
+CREATE FUNCTION nucleo.fn_aprovacao_concluida_agora(p_processo nucleo.processo_aprovacao_t, p_id BIGINT) RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT EXISTS (SELECT 1 FROM nucleo.aprovacao a
+                    WHERE a.apv_processo = p_processo AND a.apv_estado IN ('APROVADO', 'REJEITADO') AND a.apv_concluido_em = now()
+                      AND a.apv_end_date IS NULL
+                      AND p_id = CASE p_processo WHEN 'DESPESA' THEN a.apv_des_id WHEN 'SAIDA' THEN a.apv_tra_id
+                                                 WHEN 'CONTAGEM' THEN a.apv_cnu_id WHEN 'ORCAMENTO' THEN a.apv_orc_id ELSE a.apv_mem_id END);
+$$;
+
+CREATE FUNCTION nucleo.fn_aprovacao_aplicar(p_apv INT) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE a nucleo.aprovacao%ROWTYPE; d nucleo.aprovacao_decisao%ROWTYPE; v_vot INT;
+BEGIN
+    SELECT * INTO a FROM nucleo.aprovacao WHERE apv_id = p_apv;
+    SELECT * INTO d FROM nucleo.aprovacao_decisao WHERE apd_apv_id = p_apv AND apd_end_date IS NULL ORDER BY apd_etapa DESC LIMIT 1;
+    SELECT apd_vot_id INTO v_vot FROM nucleo.aprovacao_decisao
+     WHERE apd_apv_id = p_apv AND apd_end_date IS NULL AND apd_vot_id IS NOT NULL ORDER BY apd_etapa DESC LIMIT 1;
+    IF a.apv_processo = 'DESPESA' THEN
+        UPDATE tesouraria.despesa
+           SET des_estado = CASE WHEN a.apv_estado = 'APROVADO' THEN 'APROVADA' ELSE 'REJEITADA' END::nucleo.estado_despesa_t,
+               des_valor_aprovado = CASE WHEN a.apv_estado = 'APROVADO' THEN COALESCE(a.apv_valor, des_valor_solicitado) END,
+               des_motivo_rejeicao = CASE WHEN a.apv_estado = 'REJEITADO'
+                                          THEN COALESCE(d.apd_motivo, 'Rejeitada na etapa ' || d.apd_etapa || ' do fluxo de aprovação') END,
+               des_vot_id = COALESCE(v_vot, des_vot_id)
+         WHERE des_id = a.apv_des_id AND des_estado = 'SUBMETIDA';
+    ELSIF a.apv_processo = 'SAIDA' AND a.apv_estado = 'APROVADO' THEN
+        UPDATE tesouraria.transacao SET tra_aprovado_por_usu_id = nucleo.fn_usuario_sessao()
+         WHERE tra_id = a.apv_tra_id AND tra_estado = 'PENDENTE';
+    ELSIF a.apv_processo = 'CONTAGEM' THEN
+        IF a.apv_estado = 'APROVADO' THEN
+            UPDATE tesouraria.contagem_numerario SET cnu_estado = 'CONFERIDA', cnu_conferido_por_usu_id = nucleo.fn_usuario_sessao()
+             WHERE cnu_id = a.apv_cnu_id AND cnu_estado = 'ABERTA';
+        ELSE                                               -- recontar: a conferência recomeça
+            PERFORM nucleo.fn_aprovacao_iniciar('CONTAGEM', a.apv_igr_id, a.apv_assunto, a.apv_valor, a.apv_pedido_por_usu_id, p_cnu => a.apv_cnu_id);
+        END IF;
+    ELSIF a.apv_processo = 'ORCAMENTO' THEN
+        IF a.apv_estado = 'APROVADO' THEN
+            UPDATE tesouraria.orcamento SET orc_estado = 'APROVADO', orc_vot_id = COALESCE(v_vot, orc_vot_id)
+             WHERE orc_id = a.apv_orc_id AND orc_estado = 'RASCUNHO';
+        ELSE                                               -- rever o orçamento e voltar a submeter
+            PERFORM nucleo.fn_aprovacao_iniciar('ORCAMENTO', a.apv_igr_id, a.apv_assunto, a.apv_valor, a.apv_pedido_por_usu_id, p_orc => a.apv_orc_id);
+        END IF;
+    END IF;
+    -- admissão e remoção: o livro de membros verifica o processo aprovado (secretaria.fn_mmb_fluxo)
+END $$;
+
+-- ---------------------------------------------------------------- decidir a etapa em curso
+-- Etapa PERFIL / PERMISSAO: decide quem tem o perfil (ou a permissão) na igreja; se a etapa pede outra pessoa, nem quem
+-- pediu nem quem já decidiu outra etapa. Etapa ORGAO: decide o órgão, pelo voto de uma reunião desse tipo na igreja (a
+-- decisão é o resultado do voto); regista-o quem regista votos ou tem a permissão de aprovar o objecto.
+CREATE FUNCTION nucleo.fn_aprovacao_registar(p_apv INT, p_aprovar BOOLEAN, p_vot INT, p_motivo TEXT, p_valor NUMERIC,
+                                             p_aplicar BOOLEAN) RETURNS nucleo.estado_aprovacao_t
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    a nucleo.aprovacao%ROWTYPE; e nucleo.fluxo_etapa; v secretaria.voto%ROWTYPE; r secretaria.reuniao%ROWTYPE;
+    v_usr INT := nucleo.fn_usuario_sessao(); v_aprovado BOOLEAN := p_aprovar; v_prox SMALLINT; v_estado nucleo.estado_aprovacao_t;
+BEGIN
+    SELECT * INTO a FROM nucleo.aprovacao WHERE apv_id = p_apv AND apv_end_date IS NULL FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'O processo de aprovação não existe' USING ERRCODE = 'P0002';
+    END IF;
+    IF a.apv_estado <> 'EM_CURSO' THEN
+        RAISE EXCEPTION 'Este processo de aprovação já terminou (%)', lower(a.apv_estado::TEXT);
+    END IF;
+    IF v_usr IS NULL THEN
+        RAISE EXCEPTION 'Sem utilizador identificado na sessão (app.usuario_id)';
+    END IF;
+    e := nucleo.fn_aprovacao_etapa(p_apv);
+    IF e.fae_id IS NULL THEN
+        RAISE EXCEPTION 'O fluxo deste processo já não tem etapas por decidir: reveja a configuração do fluxo';
+    END IF;
+
+    IF e.fae_responsavel = 'ORGAO' THEN
+        IF p_vot IS NULL THEN
+            RAISE EXCEPTION 'A etapa «%» decide-se por voto: % (indique o voto da reunião)', e.fae_nome, nucleo.fn_orgao_nome(e.fae_orgao)
+                USING COLUMN = 'apd_vot_id';
+        END IF;
+        SELECT * INTO v FROM secretaria.voto WHERE vot_id = p_vot AND vot_end_date IS NULL;
+        SELECT * INTO r FROM secretaria.reuniao WHERE reu_id = v.vot_reu_id AND reu_end_date IS NULL;
+        IF v.vot_id IS NULL OR r.reu_id IS NULL OR r.reu_igr_id <> a.apv_igr_id THEN
+            RAISE EXCEPTION 'O voto indicado não existe nesta igreja' USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF r.reu_tipo <> e.fae_orgao THEN
+            RAISE EXCEPTION 'A etapa «%» decide-se por voto: %; o voto n.º % é de outra reunião (%)',
+                e.fae_nome, nucleo.fn_orgao_nome(e.fae_orgao), v.vot_numero, nucleo.fn_orgao_nome(r.reu_tipo) USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF r.reu_estado::TEXT = 'CANCELADA' THEN
+            RAISE EXCEPTION 'A reunião do voto n.º % foi cancelada', v.vot_numero USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF v.vot_estado = 'ADIADO' THEN
+            RAISE EXCEPTION 'O voto n.º % foi adiado: a etapa «%» continua por decidir', v.vot_numero, e.fae_nome USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF a.apv_mem_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM secretaria.voto_membro
+                                                     WHERE vtm_vot_id = p_vot AND vtm_mem_id = a.apv_mem_id AND vtm_end_date IS NULL) THEN
+            RAISE EXCEPTION 'O voto n.º % não indica a pessoa deste processo', v.vot_numero USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF EXISTS (SELECT 1 FROM nucleo.aprovacao_decisao WHERE apd_apv_id = p_apv AND apd_vot_id = p_vot AND apd_end_date IS NULL) THEN
+            RAISE EXCEPTION 'O voto n.º % já decidiu outra etapa deste processo', v.vot_numero USING COLUMN = 'apd_vot_id';
+        END IF;
+        IF NOT (nucleo.fn_tem_permissao(nucleo.fn_aprovacao_permissao(a.apv_processo), a.apv_igr_id)
+                OR nucleo.fn_tem_permissao('secretaria.voto.criar', a.apv_igr_id)) THEN
+            RAISE EXCEPTION 'Sem permissão para registar a decisão de % nesta igreja', nucleo.fn_orgao_nome(e.fae_orgao)
+                USING ERRCODE = 'insufficient_privilege';
+        END IF;
+        v_aprovado := v.vot_estado = 'APROVADO';           -- decide o órgão, não quem regista
+    ELSE
+        IF NOT (nucleo.fn_e_super_admin() OR nucleo.fn_usuario_pode_etapa(v_usr, e.fae_id, a.apv_igr_id)) THEN
+            RAISE EXCEPTION 'A etapa «%» cabe a: %', e.fae_nome,
+                nucleo.fn_etapa_quem(e.fae_id) || COALESCE(' (' || nucleo.fn_etapa_responsaveis(e.fae_id, a.apv_igr_id) || ')', '')
+                USING ERRCODE = 'insufficient_privilege';
+        END IF;
+        IF e.fae_outra_pessoa AND (v_usr = a.apv_pedido_por_usu_id
+                                   OR EXISTS (SELECT 1 FROM nucleo.aprovacao_decisao WHERE apd_apv_id = p_apv AND apd_usu_id = v_usr
+                                                 AND apd_vot_id IS NULL AND apd_end_date IS NULL)) THEN
+            RAISE EXCEPTION 'A etapa «%» tem de ser decidida por outra pessoa: quem pediu, ou já decidiu outra etapa, não a decide', e.fae_nome;
+        END IF;
+        IF p_aprovar IS NULL THEN
+            RAISE EXCEPTION 'Indique se aprova ou rejeita' USING COLUMN = 'apd_aprovado';
+        END IF;
+        IF NOT p_aprovar AND NULLIF(trim(p_motivo), '') IS NULL THEN
+            RAISE EXCEPTION 'Indique o motivo da rejeição' USING COLUMN = 'apd_motivo';
+        END IF;
+    END IF;
+    IF p_valor IS NOT NULL AND (a.apv_valor IS NULL OR p_valor <= 0 OR p_valor > a.apv_valor) THEN
+        RAISE EXCEPTION 'O valor aprovado tem de ser maior que zero e não pode passar o valor pedido (%)', a.apv_valor USING COLUMN = 'apd_valor';
+    END IF;
+
+    INSERT INTO nucleo.aprovacao_decisao (apd_apv_id, apd_igr_id, apd_fae_id, apd_etapa, apd_aprovado, apd_usu_id, apd_vot_id, apd_motivo, apd_valor)
+    VALUES (p_apv, a.apv_igr_id, e.fae_id, e.fae_ordem, v_aprovado, v_usr, p_vot, NULLIF(trim(p_motivo), ''),
+            CASE WHEN v_aprovado THEN p_valor END);
+    IF NOT v_aprovado THEN
+        UPDATE nucleo.aprovacao SET apv_estado = 'REJEITADO', apv_etapa = e.fae_ordem, apv_concluido_em = now() WHERE apv_id = p_apv;
+    ELSE
+        SELECT min(fae_ordem) INTO v_prox FROM nucleo.fluxo_etapa
+         WHERE fae_fap_id = a.apv_fap_id AND fae_end_date IS NULL AND fae_ordem > e.fae_ordem;
+        UPDATE nucleo.aprovacao
+           SET apv_etapa = COALESCE(v_prox, e.fae_ordem), apv_valor = COALESCE(p_valor, apv_valor),
+               apv_estado = CASE WHEN v_prox IS NULL THEN 'APROVADO' ELSE 'EM_CURSO' END::nucleo.estado_aprovacao_t,
+               apv_concluido_em = CASE WHEN v_prox IS NULL THEN now() END
+         WHERE apv_id = p_apv;
+    END IF;
+    SELECT apv_estado INTO v_estado FROM nucleo.aprovacao WHERE apv_id = p_apv;
+    IF p_aplicar AND v_estado <> 'EM_CURSO' THEN
+        PERFORM nucleo.fn_aprovacao_aplicar(p_apv);
+    END IF;
+    RETURN v_estado;
+END $$;
+
+-- API: POST /v1/nucleo/aprovacoes/{id}/decidir
+CREATE FUNCTION nucleo.fn_aprovacao_decidir(p_apv INT, p_aprovar BOOLEAN, p_vot INT DEFAULT NULL, p_motivo TEXT DEFAULT NULL,
+                                            p_valor NUMERIC DEFAULT NULL) RETURNS nucleo.estado_aprovacao_t
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    -- quem não vê o processo recebe "não existe" (404), como na RLS
+    IF NOT EXISTS (SELECT 1 FROM nucleo.aprovacao a WHERE a.apv_id = p_apv AND a.apv_end_date IS NULL
+                      AND a.apv_igr_id = ANY (nucleo.fn_igrejas_com_permissao(
+                          CASE a.apv_processo WHEN 'DESPESA' THEN 'tesouraria.despesa.ler' WHEN 'SAIDA' THEN 'tesouraria.transacao.ler'
+                                              WHEN 'CONTAGEM' THEN 'tesouraria.contagem_numerario.ler' WHEN 'ORCAMENTO' THEN 'tesouraria.orcamento.ler'
+                                              ELSE 'secretaria.movimento_membro.ler' END))) THEN
+        RAISE EXCEPTION 'O processo de aprovação não existe' USING ERRCODE = 'P0002';
+    END IF;
+    RETURN nucleo.fn_aprovacao_registar(p_apv, p_aprovar, p_vot, p_motivo, p_valor, TRUE);
+END $$;
+
+-- o utilizador da sessão pode decidir a etapa em curso? (botões do ecrã; a decisão verifica de novo)
+CREATE FUNCTION nucleo.fn_aprovacao_pode_decidir(p_apv INT) RETURNS BOOLEAN
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE a nucleo.aprovacao%ROWTYPE; e nucleo.fluxo_etapa; v_usr INT := nucleo.fn_usuario_sessao();
+BEGIN
+    SELECT * INTO a FROM nucleo.aprovacao WHERE apv_id = p_apv AND apv_estado = 'EM_CURSO' AND apv_end_date IS NULL;
+    IF NOT FOUND OR v_usr IS NULL THEN RETURN FALSE; END IF;
+    e := nucleo.fn_aprovacao_etapa(p_apv);
+    IF e.fae_id IS NULL THEN RETURN FALSE; END IF;
+    IF e.fae_responsavel = 'ORGAO' THEN
+        RETURN nucleo.fn_tem_permissao(nucleo.fn_aprovacao_permissao(a.apv_processo), a.apv_igr_id)
+            OR nucleo.fn_tem_permissao('secretaria.voto.criar', a.apv_igr_id);
+    END IF;
+    IF NOT (nucleo.fn_e_super_admin() OR nucleo.fn_usuario_pode_etapa(v_usr, e.fae_id, a.apv_igr_id)) THEN RETURN FALSE; END IF;
+    RETURN NOT (e.fae_outra_pessoa AND (v_usr = a.apv_pedido_por_usu_id
+                OR EXISTS (SELECT 1 FROM nucleo.aprovacao_decisao WHERE apd_apv_id = p_apv AND apd_usu_id = v_usr
+                              AND apd_vot_id IS NULL AND apd_end_date IS NULL)));
+END $$;
+
+-- Mudar o estado do objecto à mão (PATCH estado, como antes de V54) conta como decidir a etapa em curso, se for a última e
+-- não for de um órgão (ou se for de um órgão e vier o voto). Com mais etapas por decidir, a mudança é recusada e diz o que falta.
+CREATE FUNCTION nucleo.fn_aprovacao_mudanca_directa(p_apv INT, p_aprovar BOOLEAN, p_vot INT, p_motivo TEXT, p_valor NUMERIC, p_objecto TEXT)
+RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE a nucleo.aprovacao%ROWTYPE; e nucleo.fluxo_etapa; v_restam INT;
+BEGIN
+    SELECT * INTO a FROM nucleo.aprovacao WHERE apv_id = p_apv;
+    e := nucleo.fn_aprovacao_etapa(p_apv);
+    SELECT count(*) INTO v_restam FROM nucleo.fluxo_etapa WHERE fae_fap_id = a.apv_fap_id AND fae_end_date IS NULL AND fae_ordem >= e.fae_ordem;
+    IF p_aprovar AND (v_restam > 1 OR (e.fae_responsavel = 'ORGAO' AND p_vot IS NULL)) THEN
+        RAISE EXCEPTION '% segue o fluxo «%» e ainda não está aprovado: falta a %. Decida em Aprovações.',
+            p_objecto, (SELECT fap_nome FROM nucleo.fluxo_aprovacao WHERE fap_id = a.apv_fap_id), nucleo.fn_aprovacao_falta(p_apv);
+    END IF;
+    PERFORM nucleo.fn_aprovacao_registar(p_apv, p_aprovar, CASE WHEN e.fae_responsavel = 'ORGAO' THEN p_vot END, p_motivo, p_valor, FALSE);
+END $$;
+
+-- o processo em curso de um objecto
+CREATE FUNCTION nucleo.fn_aprovacao_em_curso(p_processo nucleo.processo_aprovacao_t, p_id BIGINT) RETURNS INT
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    SELECT a.apv_id FROM nucleo.aprovacao a
+     WHERE a.apv_processo = p_processo AND a.apv_estado = 'EM_CURSO' AND a.apv_end_date IS NULL
+       AND p_id = CASE p_processo WHEN 'DESPESA' THEN a.apv_des_id WHEN 'SAIDA' THEN a.apv_tra_id
+                                  WHEN 'CONTAGEM' THEN a.apv_cnu_id WHEN 'ORCAMENTO' THEN a.apv_orc_id ELSE a.apv_mem_id END;
+$$;
+
+CREATE FUNCTION nucleo.fn_aprovacao_cancelar(p_processo nucleo.processo_aprovacao_t, p_id BIGINT) RETURNS VOID
+LANGUAGE sql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+    UPDATE nucleo.aprovacao SET apv_estado = 'CANCELADO', apv_concluido_em = now()
+     WHERE apv_id = nucleo.fn_aprovacao_em_curso(p_processo, p_id);
+$$;
+
+-- ================================================================ despesas
+CREATE FUNCTION tesouraria.fn_des_fluxo_iniciar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.des_estado = 'SUBMETIDA' AND NEW.des_end_date IS NULL THEN
+        PERFORM nucleo.fn_aprovacao_iniciar('DESPESA', NEW.des_igr_id, 'Despesa: ' || NEW.des_descricao, NEW.des_valor_solicitado,
+                                            NEW.des_solicitado_por_usu_id, p_des => NEW.des_id);
+    END IF;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_des_50_fluxo_iniciar AFTER INSERT ON tesouraria.despesa
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_des_fluxo_iniciar();
+
+CREATE FUNCTION tesouraria.fn_des_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_apv INT := nucleo.fn_aprovacao_em_curso('DESPESA', OLD.des_id);
+BEGIN
+    IF v_apv IS NULL THEN RETURN NEW; END IF;
+    IF OLD.des_estado = 'SUBMETIDA' AND NEW.des_estado IN ('APROVADA', 'REJEITADA') THEN
+        PERFORM nucleo.fn_aprovacao_mudanca_directa(v_apv, NEW.des_estado = 'APROVADA', NEW.des_vot_id, NEW.des_motivo_rejeicao,
+                                                    NEW.des_valor_aprovado, 'A despesa');
+    ELSIF NEW.des_estado = 'CANCELADA' OR NEW.des_end_date IS NOT NULL THEN
+        PERFORM nucleo.fn_aprovacao_cancelar('DESPESA', OLD.des_id);
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_des_09_fluxo BEFORE UPDATE OF des_estado, des_end_date ON tesouraria.despesa
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_des_fluxo();
+
+-- igual à de V7; a decisão final de um fluxo (V54) já verificou quem decide cada etapa
+CREATE OR REPLACE FUNCTION tesouraria.fn_des_aprovacao() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.des_estado IN ('APROVADA', 'REJEITADA') AND (TG_OP = 'INSERT' OR OLD.des_estado IS DISTINCT FROM NEW.des_estado) THEN
+        IF TG_OP = 'INSERT' OR NOT nucleo.fn_aprovacao_concluida_agora('DESPESA', NEW.des_id) THEN
+            PERFORM nucleo.fn_exigir('tesouraria.despesa.aprovar', NEW.des_igr_id);
+        END IF;
+        NEW.des_aprovado_por_usu_id := COALESCE(nucleo.fn_usuario_sessao(), NEW.des_aprovado_por_usu_id);
+        NEW.des_aprovado_em := now();
+    END IF;
+    RETURN NEW;
+END $$;
+
+-- igual à de V16, mas com fluxo decide a etapa em curso (com várias etapas, chama-se uma vez por etapa)
+CREATE OR REPLACE FUNCTION tesouraria.fn_decidir_despesa(p_des INT, p_aprovar BOOLEAN, p_valor NUMERIC DEFAULT NULL,
+                                                         p_motivo TEXT DEFAULT NULL) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE d tesouraria.despesa%ROWTYPE; v_apv INT;
+BEGIN
+    SELECT * INTO d FROM tesouraria.despesa WHERE des_id = p_des AND des_end_date IS NULL FOR UPDATE;
+    IF NOT FOUND OR d.des_estado <> 'SUBMETIDA' THEN RAISE EXCEPTION 'Só se decide uma despesa submetida'; END IF;
+    v_apv := nucleo.fn_aprovacao_em_curso('DESPESA', p_des);
+    IF v_apv IS NOT NULL THEN
+        PERFORM nucleo.fn_aprovacao_registar(v_apv, p_aprovar, NULL, p_motivo, p_valor, TRUE);
+        RETURN;
+    END IF;
+    PERFORM nucleo.fn_exigir('tesouraria.despesa.aprovar', d.des_igr_id);
+    UPDATE tesouraria.despesa
+       SET des_estado = CASE WHEN p_aprovar THEN 'APROVADA' ELSE 'REJEITADA' END::nucleo.estado_despesa_t,
+           des_valor_aprovado = CASE WHEN p_aprovar THEN COALESCE(p_valor, d.des_valor_solicitado) END,
+           des_motivo_rejeicao = CASE WHEN NOT p_aprovar THEN p_motivo END
+     WHERE des_id = p_des;
+END $$;
+
+-- ================================================================ saídas de dinheiro (sem despesa aprovada)
+CREATE FUNCTION tesouraria.fn_tra_fluxo_iniciar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    PERFORM nucleo.fn_aprovacao_iniciar('SAIDA', NEW.tra_igr_id,
+        CASE WHEN NEW.tra_estorno_tra_id IS NOT NULL THEN 'Estorno: ' ELSE 'Saída: ' END
+            || COALESCE(NULLIF(NEW.tra_descricao, ''), NEW.tra_beneficiario, 'sem descrição'),
+        NEW.tra_valor_total, nucleo.fn_usuario_sessao(), p_tra => NEW.tra_id);
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_tra_50_fluxo_iniciar AFTER INSERT ON tesouraria.transacao FOR EACH ROW
+    WHEN (NEW.tra_tipo = 'SAIDA' AND NEW.tra_estado = 'PENDENTE' AND NEW.tra_des_id IS NULL AND NEW.tra_aprovado_por_usu_id IS NULL
+          AND NEW.tra_end_date IS NULL)
+    EXECUTE FUNCTION tesouraria.fn_tra_fluxo_iniciar();
+
+CREATE FUNCTION tesouraria.fn_tra_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_apv INT := nucleo.fn_aprovacao_em_curso('SAIDA', OLD.tra_id);
+BEGIN
+    IF v_apv IS NULL THEN RETURN NEW; END IF;
+    IF NEW.tra_aprovado_por_usu_id IS NOT NULL AND OLD.tra_aprovado_por_usu_id IS NULL THEN
+        PERFORM nucleo.fn_aprovacao_mudanca_directa(v_apv, TRUE, NULL, NULL, NULL, 'A saída');
+    ELSIF NEW.tra_estado <> 'PENDENTE' OR NEW.tra_des_id IS NOT NULL OR NEW.tra_end_date IS NOT NULL THEN
+        -- confirmada sem aprovação (só remessa à Missão), paga por uma despesa aprovada, anulada ou terminada
+        PERFORM nucleo.fn_aprovacao_cancelar('SAIDA', OLD.tra_id);
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_tra_09_fluxo BEFORE UPDATE OF tra_aprovado_por_usu_id, tra_estado, tra_des_id, tra_end_date ON tesouraria.transacao
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_tra_fluxo();
+
+-- fn_tra_validar (V7) exige "tesouraria.transacao.aprovar" a quem aprova; com fluxo, a última etapa pode ser de outro perfil
+-- ou de um órgão, e o fluxo já verificou quem decide. Troca-se só essa linha na função de V7.
+DO $$
+DECLARE v_def TEXT := pg_get_functiondef('tesouraria.fn_tra_validar()'::regprocedure);
+        v_de TEXT := 'PERFORM nucleo.fn_exigir(''tesouraria.transacao.aprovar'', NEW.tra_igr_id);';
+BEGIN
+    IF position(v_de IN v_def) = 0 THEN
+        RAISE EXCEPTION 'V54: tesouraria.fn_tra_validar mudou; rever a troca da verificação de "aprovar"';
+    END IF;
+    EXECUTE replace(v_def, v_de,
+        'IF TG_OP = ''INSERT'' OR NOT nucleo.fn_aprovacao_concluida_agora(''SAIDA'', NEW.tra_id) THEN ' || v_de || ' END IF;');
+END $$;
+
+-- igual à de V16, mas com fluxo decide a etapa em curso
+CREATE OR REPLACE FUNCTION tesouraria.fn_aprovar_saida(p_tra BIGINT) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE r tesouraria.transacao%ROWTYPE; v_apv INT;
+BEGIN
+    SELECT * INTO r FROM tesouraria.transacao WHERE tra_id = p_tra AND tra_end_date IS NULL FOR UPDATE;
+    IF NOT FOUND OR r.tra_tipo <> 'SAIDA' OR r.tra_estado <> 'PENDENTE' THEN
+        RAISE EXCEPTION 'Só se aprova uma saída pendente';
+    END IF;
+    v_apv := nucleo.fn_aprovacao_em_curso('SAIDA', p_tra);
+    IF v_apv IS NOT NULL THEN
+        PERFORM nucleo.fn_aprovacao_registar(v_apv, TRUE, NULL, NULL, NULL, TRUE);
+        RETURN;
+    END IF;
+    PERFORM nucleo.fn_exigir('tesouraria.transacao.aprovar', r.tra_igr_id);
+    UPDATE tesouraria.transacao SET tra_aprovado_por_usu_id = nucleo.fn_usuario_sessao() WHERE tra_id = p_tra;
+END $$;
+
+-- ================================================================ contagem do numerário (conferência)
+CREATE FUNCTION tesouraria.fn_cnu_fluxo_iniciar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.cnu_estado::TEXT = 'ABERTA' AND NEW.cnu_end_date IS NULL THEN
+        PERFORM nucleo.fn_aprovacao_iniciar('CONTAGEM', NEW.cnu_igr_id,
+            'Contagem de ' || to_char(NEW.cnu_data, 'DD/MM/YYYY') || COALESCE(' · ' || NULLIF(NEW.cnu_ocasiao, ''), ''),
+            NEW.cnu_total_contado, nucleo.fn_usuario_sessao(), p_cnu => NEW.cnu_id);
+    END IF;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_cnu_50_fluxo_iniciar AFTER INSERT ON tesouraria.contagem_numerario
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cnu_fluxo_iniciar();
+
+CREATE FUNCTION tesouraria.fn_cnu_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_apv INT := nucleo.fn_aprovacao_em_curso('CONTAGEM', OLD.cnu_id);
+BEGIN
+    IF OLD.cnu_estado::TEXT = 'ABERTA' AND NEW.cnu_estado::TEXT = 'CONFERIDA' THEN
+        IF nucleo.fn_aprovacao_concluida_agora('CONTAGEM', OLD.cnu_id) THEN
+            RETURN NEW;                                    -- conferida pelo fluxo (fn_aprovacao_aplicar)
+        END IF;
+        IF v_apv IS NULL THEN                              -- contagem anterior a V54
+            v_apv := nucleo.fn_aprovacao_iniciar('CONTAGEM', OLD.cnu_igr_id, 'Contagem de ' || to_char(OLD.cnu_data, 'DD/MM/YYYY'),
+                                                 OLD.cnu_total_contado, OLD.cnu_criado_por, p_cnu => OLD.cnu_id);
+        END IF;
+        IF v_apv IS NOT NULL THEN
+            PERFORM nucleo.fn_aprovacao_mudanca_directa(v_apv, TRUE, NULL, NULL, NULL, 'A contagem');
+        END IF;
+        NEW.cnu_conferido_por_usu_id := COALESCE(nucleo.fn_usuario_sessao(), NEW.cnu_conferido_por_usu_id);
+    ELSIF v_apv IS NOT NULL AND NEW.cnu_end_date IS NOT NULL THEN
+        PERFORM nucleo.fn_aprovacao_cancelar('CONTAGEM', OLD.cnu_id);
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_cnu_09_fluxo BEFORE UPDATE OF cnu_estado, cnu_end_date ON tesouraria.contagem_numerario
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_cnu_fluxo();
+
+-- ================================================================ orçamento
+CREATE FUNCTION tesouraria.fn_orc_fluxo_iniciar() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.orc_estado = 'RASCUNHO' AND NEW.orc_end_date IS NULL THEN
+        PERFORM nucleo.fn_aprovacao_iniciar('ORCAMENTO', NEW.orc_igr_id,
+            'Orçamento de ' || NEW.orc_ano || COALESCE(' · ' || (SELECT d.dep_nome FROM organizacao.igreja_departamento i
+                                                                   JOIN organizacao.departamento d ON d.dep_id = i.ide_dep_id
+                                                                  WHERE i.ide_id = NEW.orc_ide_id), ''),
+            NULL, nucleo.fn_usuario_sessao(), p_orc => NEW.orc_id);
+    END IF;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_orc_50_fluxo_iniciar AFTER INSERT ON tesouraria.orcamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_orc_fluxo_iniciar();
+
+CREATE FUNCTION tesouraria.fn_orc_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_apv INT := nucleo.fn_aprovacao_em_curso('ORCAMENTO', OLD.orc_id);
+BEGIN
+    IF v_apv IS NULL THEN RETURN NEW; END IF;
+    IF OLD.orc_estado = 'RASCUNHO' AND NEW.orc_estado = 'APROVADO' THEN
+        PERFORM nucleo.fn_aprovacao_mudanca_directa(v_apv, TRUE, NEW.orc_vot_id, NULL, NULL, 'O orçamento');
+    ELSIF NEW.orc_end_date IS NOT NULL OR NEW.orc_estado = 'ENCERRADO' THEN
+        PERFORM nucleo.fn_aprovacao_cancelar('ORCAMENTO', OLD.orc_id);
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_orc_09_fluxo BEFORE UPDATE OF orc_estado, orc_end_date ON tesouraria.orcamento
+    FOR EACH ROW EXECUTE FUNCTION tesouraria.fn_orc_fluxo();
+
+CREATE OR REPLACE FUNCTION tesouraria.fn_orc_aprovacao() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.orc_estado = 'APROVADO' AND (TG_OP = 'INSERT' OR OLD.orc_estado IS DISTINCT FROM NEW.orc_estado)
+       AND (TG_OP = 'INSERT' OR NOT nucleo.fn_aprovacao_concluida_agora('ORCAMENTO', NEW.orc_id)) THEN
+        PERFORM nucleo.fn_exigir('tesouraria.orcamento.aprovar', NEW.orc_igr_id);
+    END IF;
+    RETURN NEW;
+END $$;
+
+-- igual à de V16, mas com fluxo decide a etapa em curso (o voto decide as etapas de órgão)
+CREATE OR REPLACE FUNCTION tesouraria.fn_aprovar_orcamento(p_orc INT, p_vot INT) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE o tesouraria.orcamento%ROWTYPE; v_apv INT;
+BEGIN
+    SELECT * INTO o FROM tesouraria.orcamento WHERE orc_id = p_orc AND orc_end_date IS NULL FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'Orçamento inexistente'; END IF;
+    v_apv := nucleo.fn_aprovacao_em_curso('ORCAMENTO', p_orc);
+    IF v_apv IS NOT NULL THEN
+        PERFORM nucleo.fn_aprovacao_registar(v_apv, TRUE, p_vot, NULL, NULL, TRUE);
+        RETURN;
+    END IF;
+    PERFORM nucleo.fn_exigir('tesouraria.orcamento.aprovar', o.orc_igr_id);
+    UPDATE tesouraria.orcamento SET orc_estado = 'APROVADO', orc_vot_id = p_vot WHERE orc_id = p_orc;
+END $$;
+
+-- ================================================================ admissão e remoção de membros (votos)
+-- O voto de admissão ou remoção que indica uma pessoa (voto_membro) decide a etapa em curso do processo dessa pessoa
+-- (e inicia-o, se não houver). Um voto de uma reunião que não é a da etapa em curso é recusado: a sequência é a do fluxo
+-- (ex.: o Conselho da Igreja recomenda, depois a Igreja vota em reunião administrativa).
+CREATE FUNCTION secretaria.fn_aprovacao_pelo_voto(p_vot INT, p_mem INT) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE
+    v secretaria.voto%ROWTYPE; r secretaria.reuniao%ROWTYPE; v_proc nucleo.processo_aprovacao_t; v_apv INT; e nucleo.fluxo_etapa;
+    v_nome TEXT;
+BEGIN
+    SELECT * INTO v FROM secretaria.voto WHERE vot_id = p_vot AND vot_end_date IS NULL;
+    IF NOT FOUND OR v.vot_estado = 'ADIADO' THEN RETURN; END IF;
+    v_proc := CASE v.vot_tipo WHEN 'ADMISSAO' THEN 'ADMISSAO_MEMBRO' WHEN 'REMOCAO' THEN 'REMOCAO_MEMBRO' END;
+    IF v_proc IS NULL THEN RETURN; END IF;
+    IF EXISTS (SELECT 1 FROM nucleo.aprovacao_decisao d JOIN nucleo.aprovacao a ON a.apv_id = d.apd_apv_id
+                WHERE d.apd_vot_id = p_vot AND a.apv_mem_id = p_mem AND d.apd_end_date IS NULL) THEN
+        RETURN;                                            -- este voto já decidiu a etapa desta pessoa
+    END IF;
+    SELECT * INTO r FROM secretaria.reuniao WHERE reu_id = v.vot_reu_id;
+    SELECT trim(concat_ws(' ', mem_nome, mem_apelido)) INTO v_nome FROM secretaria.membro WHERE mem_id = p_mem;
+    v_apv := nucleo.fn_aprovacao_em_curso(v_proc, p_mem);
+    IF v_apv IS NULL THEN
+        v_apv := nucleo.fn_aprovacao_iniciar(v_proc, r.reu_igr_id,
+                     CASE v_proc WHEN 'ADMISSAO_MEMBRO' THEN 'Admissão de ' ELSE 'Remoção de ' END || v_nome,
+                     NULL, nucleo.fn_usuario_sessao(), p_mem => p_mem);
+        IF v_apv IS NULL THEN RETURN; END IF;              -- igreja sem fluxo: só a regra do voto (V4)
+    END IF;
+    e := nucleo.fn_aprovacao_etapa(v_apv);
+    IF e.fae_responsavel <> 'ORGAO' OR e.fae_orgao <> r.reu_tipo THEN
+        RAISE EXCEPTION 'A % de % segue o fluxo «%»: a etapa em curso é a %. O voto n.º % (%) não a decide.',
+            CASE v_proc WHEN 'ADMISSAO_MEMBRO' THEN 'admissão' ELSE 'remoção' END, v_nome,
+            (SELECT f.fap_nome FROM nucleo.aprovacao a JOIN nucleo.fluxo_aprovacao f ON f.fap_id = a.apv_fap_id WHERE a.apv_id = v_apv),
+            nucleo.fn_aprovacao_falta(v_apv), v.vot_numero, nucleo.fn_orgao_nome(r.reu_tipo)
+            USING COLUMN = 'vtm_vot_id';
+    END IF;
+    PERFORM nucleo.fn_aprovacao_registar(v_apv, NULL, p_vot, NULL, NULL, TRUE);
+END $$;
+
+CREATE FUNCTION secretaria.fn_vtm_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    IF NEW.vtm_end_date IS NULL THEN
+        PERFORM secretaria.fn_aprovacao_pelo_voto(NEW.vtm_vot_id, NEW.vtm_mem_id);
+    END IF;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_vtm_50_fluxo AFTER INSERT ON secretaria.voto_membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_vtm_fluxo();
+
+-- um voto adiado que depois se decide (estado APROVADO ou REJEITADO) decide as etapas das pessoas que indica
+CREATE FUNCTION secretaria.fn_vot_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE p RECORD;
+BEGIN
+    FOR p IN SELECT vtm_mem_id FROM secretaria.voto_membro WHERE vtm_vot_id = NEW.vot_id AND vtm_end_date IS NULL LOOP
+        PERFORM secretaria.fn_aprovacao_pelo_voto(NEW.vot_id, p.vtm_mem_id);
+    END LOOP;
+    RETURN NULL;
+END $$;
+CREATE TRIGGER trg_vot_50_fluxo AFTER UPDATE OF vot_estado ON secretaria.voto
+    FOR EACH ROW WHEN (OLD.vot_estado IS DISTINCT FROM NEW.vot_estado) EXECUTE FUNCTION secretaria.fn_vot_fluxo();
+
+-- livro de membros: com fluxo para a admissão (ou remoção), o voto do movimento tem de ser de um processo aprovado
+CREATE FUNCTION secretaria.fn_mmb_fluxo() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+DECLARE v_proc nucleo.processo_aprovacao_t; v_apv INT; v_fap INT; v_nome TEXT;
+BEGIN
+    v_proc := CASE WHEN NEW.mmb_tipo IN ('BAPTISMO', 'REBAPTISMO', 'PROFISSAO_FE') THEN 'ADMISSAO_MEMBRO'
+                   WHEN NEW.mmb_tipo IN ('REMOCAO_PEDIDO', 'REMOCAO_DISCIPLINA', 'DESAPARECIDO') THEN 'REMOCAO_MEMBRO' END;
+    IF v_proc IS NULL OR NEW.mmb_tme_id IS NOT NULL OR NEW.mmb_vot_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+    IF EXISTS (SELECT 1 FROM nucleo.aprovacao a JOIN nucleo.aprovacao_decisao d ON d.apd_apv_id = a.apv_id AND d.apd_end_date IS NULL
+                WHERE a.apv_processo = v_proc AND a.apv_mem_id = NEW.mmb_mem_id AND a.apv_estado = 'APROVADO'
+                  AND a.apv_end_date IS NULL AND d.apd_vot_id = NEW.mmb_vot_id) THEN
+        RETURN NEW;
+    END IF;
+    SELECT trim(concat_ws(' ', mem_nome, mem_apelido)) INTO v_nome FROM secretaria.membro WHERE mem_id = NEW.mmb_mem_id;
+    v_apv := nucleo.fn_aprovacao_em_curso(v_proc, NEW.mmb_mem_id);
+    IF v_apv IS NOT NULL THEN
+        RAISE EXCEPTION 'A % de % ainda não terminou o fluxo de aprovação: falta a %',
+            CASE v_proc WHEN 'ADMISSAO_MEMBRO' THEN 'admissão' ELSE 'remoção' END, v_nome, nucleo.fn_aprovacao_falta(v_apv)
+            USING COLUMN = 'mmb_vot_id';
+    END IF;
+    v_fap := nucleo.fn_fluxo_escolher(v_proc, NEW.mmb_igr_id, 0);
+    IF v_fap IS NULL THEN
+        RETURN NEW;                                        -- igreja sem fluxo: só a regra do voto (V4)
+    END IF;
+    RAISE EXCEPTION 'A % de % segue o fluxo «%» (%): o voto indicado não é de um processo aprovado. Registe os votos pela ordem do fluxo.',
+        CASE v_proc WHEN 'ADMISSAO_MEMBRO' THEN 'admissão' ELSE 'remoção' END, v_nome,
+        (SELECT fap_nome FROM nucleo.fluxo_aprovacao WHERE fap_id = v_fap),
+        (SELECT string_agg(e.fae_ordem || '. ' || e.fae_nome, ', ' ORDER BY e.fae_ordem) FROM nucleo.fluxo_etapa e
+          WHERE e.fae_fap_id = v_fap AND e.fae_end_date IS NULL)
+        USING COLUMN = 'mmb_vot_id';
+END $$;
+CREATE TRIGGER trg_mmb_12_fluxo BEFORE INSERT ON secretaria.movimento_membro
+    FOR EACH ROW EXECUTE FUNCTION secretaria.fn_mmb_fluxo();
+
+-- ================================================================ etapas: a igreja copia-se do fluxo
+CREATE FUNCTION nucleo.fn_fae_igreja() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public
+AS $$
+BEGIN
+    SELECT fap_igr_id INTO NEW.fae_igr_id FROM nucleo.fluxo_aprovacao WHERE fap_id = NEW.fae_fap_id;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_fae_05_igreja BEFORE INSERT OR UPDATE OF fae_fap_id ON nucleo.fluxo_etapa
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_fae_igreja();
+
+-- o fluxo não muda de igreja nem de processo depois de criado (as etapas e os processos dependem disso)
+CREATE FUNCTION nucleo.fn_fap_fixo() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.fap_igr_id IS DISTINCT FROM OLD.fap_igr_id OR NEW.fap_processo IS DISTINCT FROM OLD.fap_processo THEN
+        RAISE EXCEPTION 'A igreja e o processo de um fluxo não mudam: termine este fluxo e crie outro';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER trg_fap_05_fixo BEFORE UPDATE OF fap_igr_id, fap_processo ON nucleo.fluxo_aprovacao
+    FOR EACH ROW EXECUTE FUNCTION nucleo.fn_fap_fixo();
+
+-- ================================================================ vistas: o que está por aprovar e em que etapa
+CREATE VIEW nucleo.vw_aprovacoes WITH (security_invoker = true) AS
+SELECT a.apv_id AS id, a.apv_igr_id AS igreja_id, i.igr_nome AS igreja, a.apv_processo AS processo, a.apv_assunto AS assunto,
+       a.apv_valor AS valor, a.apv_estado AS estado, f.fap_id AS fluxo_id, f.fap_nome AS fluxo,
+       (SELECT count(*) FROM nucleo.fluxo_etapa x WHERE x.fae_fap_id = a.apv_fap_id AND x.fae_end_date IS NULL
+           AND x.fae_ordem <= COALESCE(e.fae_ordem, a.apv_etapa))::INT AS etapa,
+       (SELECT count(*) FROM nucleo.fluxo_etapa x WHERE x.fae_fap_id = a.apv_fap_id AND x.fae_end_date IS NULL)::INT AS total_etapas,
+       e.fae_id AS etapa_id, e.fae_nome AS etapa_nome, e.fae_accao AS etapa_accao, e.fae_responsavel AS responsavel_tipo,
+       e.fae_orgao AS orgao, nucleo.fn_etapa_quem(e.fae_id) AS responsavel,
+       CASE WHEN a.apv_estado = 'EM_CURSO' AND e.fae_responsavel <> 'ORGAO' THEN nucleo.fn_etapa_responsaveis(e.fae_id, a.apv_igr_id) END AS responsaveis,
+       (a.apv_estado = 'EM_CURSO' AND nucleo.fn_aprovacao_pode_decidir(a.apv_id)) AS pode_decidir,
+       a.apv_des_id AS despesa_id, a.apv_tra_id AS transacao_id, a.apv_cnu_id AS contagem_id, a.apv_orc_id AS orcamento_id,
+       a.apv_mem_id AS membro_id,
+       nucleo.fn_nome_usuario(a.apv_pedido_por_usu_id) AS pedido_por,
+       a.apv_criado_em AS criado_em, a.apv_concluido_em AS concluido_em
+  FROM nucleo.aprovacao a
+  JOIN organizacao.igreja i ON i.igr_id = a.apv_igr_id
+  JOIN nucleo.fluxo_aprovacao f ON f.fap_id = a.apv_fap_id
+  LEFT JOIN LATERAL (SELECT x.* FROM nucleo.fluxo_etapa x
+                      WHERE x.fae_fap_id = a.apv_fap_id
+                        AND ((a.apv_estado = 'EM_CURSO' AND x.fae_end_date IS NULL AND x.fae_ordem >= a.apv_etapa)
+                             OR (a.apv_estado <> 'EM_CURSO' AND x.fae_ordem = a.apv_etapa))
+                      ORDER BY x.fae_ordem LIMIT 1) e ON TRUE
+ WHERE a.apv_end_date IS NULL;
+COMMENT ON VIEW nucleo.vw_aprovacoes IS 'Processos de aprovação: estado, etapa em curso, quem decide (e os nomes) e se o utilizador da sessão pode decidir (V54)';
+
+-- as etapas de cada processo: decididas (quem, quando, com que voto), a em curso e as pendentes
+CREATE VIEW nucleo.vw_aprovacao_etapas WITH (security_invoker = true) AS
+SELECT a.apv_id AS aprovacao_id, e.fae_id AS etapa_id, e.fae_ordem AS ordem, e.fae_nome AS nome, e.fae_accao AS accao,
+       e.fae_responsavel AS responsavel_tipo, e.fae_orgao AS orgao, nucleo.fn_etapa_quem(e.fae_id) AS responsavel,
+       CASE WHEN d.apd_id IS NOT NULL THEN CASE WHEN d.apd_aprovado THEN 'APROVADA' ELSE 'REJEITADA' END
+            WHEN a.apv_estado = 'EM_CURSO' AND e.fae_ordem = (SELECT min(y.fae_ordem) FROM nucleo.fluxo_etapa y
+                                                               WHERE y.fae_fap_id = a.apv_fap_id AND y.fae_end_date IS NULL AND y.fae_ordem >= a.apv_etapa)
+                 THEN 'EM_CURSO'
+            WHEN a.apv_estado = 'EM_CURSO' THEN 'PENDENTE'
+            ELSE 'NAO_DECIDIDA' END AS situacao,
+       CASE WHEN d.apd_id IS NULL AND a.apv_estado = 'EM_CURSO' AND e.fae_responsavel <> 'ORGAO'
+            THEN nucleo.fn_etapa_responsaveis(e.fae_id, a.apv_igr_id) END AS responsaveis,
+       nucleo.fn_nome_usuario(d.apd_usu_id) AS decidido_por,
+       d.apd_criado_em AS decidido_em, v.vot_numero AS voto_numero, d.apd_vot_id AS voto_id, d.apd_motivo AS motivo,
+       d.apd_valor AS valor_aprovado
+  FROM nucleo.aprovacao a
+  JOIN nucleo.fluxo_etapa e ON e.fae_fap_id = a.apv_fap_id
+  LEFT JOIN nucleo.aprovacao_decisao d ON d.apd_apv_id = a.apv_id AND d.apd_fae_id = e.fae_id AND d.apd_end_date IS NULL
+  LEFT JOIN secretaria.voto v ON v.vot_id = d.apd_vot_id
+ WHERE a.apv_end_date IS NULL AND (e.fae_end_date IS NULL OR d.apd_id IS NOT NULL);
+COMMENT ON VIEW nucleo.vw_aprovacao_etapas IS 'Etapas de cada processo de aprovação: decididas, em curso e pendentes (V54)';
+
+GRANT SELECT ON nucleo.vw_aprovacoes, nucleo.vw_aprovacao_etapas TO app_igreja;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA nucleo, secretaria, tesouraria TO app_igreja;
+
+-- ================================================================ fluxos por defeito (modelos da Associação/Missão)
+-- Cada igreja pode ter os seus (ecrã Fluxos de aprovação): com um fluxo próprio para um processo, os modelos deixam de
+-- se aplicar a esse processo nessa igreja. Valores em meticais; ajustáveis.
+DO $$
+DECLARE f INT;
+    p_tes INT := (SELECT per_id FROM nucleo.perfil WHERE per_codigo = 'TESOUREIRO');
+    m_des INT := (SELECT prm_id FROM nucleo.permissao WHERE prm_codigo = 'tesouraria.despesa.aprovar');
+    m_tra INT := (SELECT prm_id FROM nucleo.permissao WHERE prm_codigo = 'tesouraria.transacao.aprovar');
+BEGIN
+    -- despesas: o tesoureiro aprecia (fundo e orçamento); decide quem aprova despesas, o Conselho ou a Igreja, pelo valor
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('DESPESA', 'Despesa corrente', 0, 'Até 10 000 MT: o tesoureiro aprecia e o pastor ou um ancião aprova') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_per_id, fae_prm_id, fae_outra_pessoa) VALUES
+        (f, 1, 'Apreciação do tesoureiro', 'APRECIAR', 'PERFIL', p_tes, NULL, FALSE),
+        (f, 2, 'Aprovação do pastor ou ancião', 'APROVAR', 'PERMISSAO', NULL, m_des, TRUE);
+
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('DESPESA', 'Despesa do Conselho', 10000, 'De 10 000 MT: o tesoureiro aprecia e o Conselho da Igreja vota') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_per_id, fae_orgao, fae_outra_pessoa) VALUES
+        (f, 1, 'Apreciação do tesoureiro', 'APRECIAR', 'PERFIL', p_tes, NULL, FALSE),
+        (f, 2, 'Voto do Conselho da Igreja', 'VOTAR', 'ORGAO', NULL, 'JUNTA_DIRECTIVA', TRUE);
+
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('DESPESA', 'Despesa extraordinária', 100000, 'De 100 000 MT: o tesoureiro aprecia, o Conselho recomenda e a Igreja vota em reunião administrativa')
+    RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_per_id, fae_orgao, fae_outra_pessoa) VALUES
+        (f, 1, 'Apreciação do tesoureiro', 'APRECIAR', 'PERFIL', p_tes, NULL, FALSE),
+        (f, 2, 'Recomendação do Conselho da Igreja', 'RECOMENDAR', 'ORGAO', NULL, 'JUNTA_DIRECTIVA', TRUE),
+        (f, 3, 'Voto da Igreja em reunião administrativa', 'VOTAR', 'ORGAO', NULL, 'ASSEMBLEIA_ADMINISTRATIVA', TRUE);
+
+    -- saídas sem despesa aprovada (e estornos): outra pessoa aprova; a partir de 10 000 MT também o Conselho
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('SAIDA', 'Saída de dinheiro', 0, 'O pastor ou um ancião aprova (nunca quem registou)') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_prm_id, fae_outra_pessoa) VALUES
+        (f, 1, 'Aprovação do pastor ou ancião', 'APROVAR', 'PERMISSAO', m_tra, TRUE);
+
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('SAIDA', 'Saída do Conselho', 10000, 'De 10 000 MT: o pastor ou um ancião aprecia e o Conselho da Igreja vota') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_prm_id, fae_orgao, fae_outra_pessoa) VALUES
+        (f, 1, 'Apreciação do pastor ou ancião', 'APRECIAR', 'PERMISSAO', m_tra, NULL, TRUE),
+        (f, 2, 'Voto do Conselho da Igreja', 'VOTAR', 'ORGAO', NULL, 'JUNTA_DIRECTIVA', TRUE);
+
+    -- contagem: o tesoureiro confere (contou com o diácono e o representante da Escola Sabatina)
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('CONTAGEM', 'Conferência da contagem', 0, 'O tesoureiro confere o lançado com o contado') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_per_id, fae_outra_pessoa) VALUES
+        (f, 1, 'Conferência do tesoureiro', 'CONFERIR', 'PERFIL', p_tes, FALSE);
+
+    -- orçamento: o Conselho recomenda, a Igreja aprova em reunião administrativa
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('ORCAMENTO', 'Orçamento anual', 0, 'O Conselho da Igreja recomenda e a Igreja aprova em reunião administrativa') RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_orgao) VALUES
+        (f, 1, 'Recomendação do Conselho da Igreja', 'RECOMENDAR', 'ORGAO', 'JUNTA_DIRECTIVA'),
+        (f, 2, 'Aprovação da Igreja em reunião administrativa', 'VOTAR', 'ORGAO', 'ASSEMBLEIA_ADMINISTRATIVA');
+
+    -- membros: o Conselho da Igreja aprecia e vota; depois a Igreja vota em reunião administrativa
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('ADMISSAO_MEMBRO', 'Admissão de membro', 0, 'Baptismo, rebaptismo e profissão de fé: o Conselho da Igreja vota e depois a Igreja, em reunião administrativa')
+    RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_orgao) VALUES
+        (f, 1, 'Voto do Conselho da Igreja', 'RECOMENDAR', 'ORGAO', 'JUNTA_DIRECTIVA'),
+        (f, 2, 'Voto da Igreja em reunião administrativa', 'VOTAR', 'ORGAO', 'ASSEMBLEIA_ADMINISTRATIVA');
+
+    INSERT INTO nucleo.fluxo_aprovacao (fap_processo, fap_nome, fap_valor_minimo, fap_descricao)
+    VALUES ('REMOCAO_MEMBRO', 'Remoção de membro', 0, 'Remoção a pedido, por disciplina ou por desaparecimento: o Conselho recomenda e a Igreja vota em reunião administrativa')
+    RETURNING fap_id INTO f;
+    INSERT INTO nucleo.fluxo_etapa (fae_fap_id, fae_ordem, fae_nome, fae_accao, fae_responsavel, fae_orgao) VALUES
+        (f, 1, 'Recomendação do Conselho da Igreja', 'RECOMENDAR', 'ORGAO', 'JUNTA_DIRECTIVA'),
+        (f, 2, 'Voto da Igreja em reunião administrativa', 'VOTAR', 'ORGAO', 'ASSEMBLEIA_ADMINISTRATIVA');
+END $$;
+
+-- os processos que já estavam à espera quando esta migração correu entram no fluxo (despesas submetidas, saídas pendentes,
+-- contagens abertas e orçamentos em rascunho)
+SELECT nucleo.fn_aprovacao_iniciar('DESPESA', des_igr_id, 'Despesa: ' || des_descricao, des_valor_solicitado, des_solicitado_por_usu_id, p_des => des_id)
+  FROM tesouraria.despesa WHERE des_estado = 'SUBMETIDA' AND des_end_date IS NULL;
+SELECT nucleo.fn_aprovacao_iniciar('SAIDA', tra_igr_id, 'Saída: ' || COALESCE(NULLIF(tra_descricao, ''), tra_beneficiario, 'sem descrição'),
+                                   tra_valor_total, tra_criado_por, p_tra => tra_id)
+  FROM tesouraria.transacao
+ WHERE tra_tipo = 'SAIDA' AND tra_estado = 'PENDENTE' AND tra_des_id IS NULL AND tra_aprovado_por_usu_id IS NULL AND tra_end_date IS NULL;
+SELECT nucleo.fn_aprovacao_iniciar('CONTAGEM', cnu_igr_id, 'Contagem de ' || to_char(cnu_data, 'DD/MM/YYYY'), cnu_total_contado, cnu_criado_por, p_cnu => cnu_id)
+  FROM tesouraria.contagem_numerario WHERE cnu_estado::TEXT = 'ABERTA' AND cnu_end_date IS NULL;
+SELECT nucleo.fn_aprovacao_iniciar('ORCAMENTO', orc_igr_id, 'Orçamento de ' || orc_ano, NULL, orc_criado_por, p_orc => orc_id)
+  FROM tesouraria.orcamento WHERE orc_estado = 'RASCUNHO' AND orc_end_date IS NULL;

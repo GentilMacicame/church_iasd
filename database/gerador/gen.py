@@ -115,8 +115,8 @@ for t in ALL:
     codigo = '' if t.name in SYSTEM_WRITE else q(t)
     sc = SCOPE.get(t.name)
     igrcol = f'{t.p}_{sc[1]}' if sc and sc[0] == 'direct' else ''
-    if t.name == 'fundo':
-        igrcol = 'fun_igr_id'   # V23: os fundos de uma igreja terminam-se com a permissão nessa igreja
+    if t.name in ('fundo', 'fluxo_aprovacao', 'fluxo_etapa'):
+        igrcol = f'{t.p}_igr_id'   # V23/V54: as linhas de uma igreja terminam-se com a permissão nessa igreja
     v += [f"CREATE TRIGGER trg_{t.p}_00_padrao BEFORE INSERT OR UPDATE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_campos_padrao('{t.p}', '{codigo}', '{igrcol}');",
           f'CREATE TRIGGER trg_{t.p}_00_sem_delete BEFORE DELETE ON {q(t)} FOR EACH ROW EXECUTE FUNCTION nucleo.fn_proibir_delete(\'{t.p}\');',
           f'CREATE TRIGGER trg_{t.p}_00_sem_truncate BEFORE TRUNCATE ON {q(t)} FOR EACH STATEMENT EXECUTE FUNCTION nucleo.fn_proibir_delete(\'{t.p}\');']

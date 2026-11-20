@@ -6850,6 +6850,238 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/acompanhamento-aprovacoes:
+    get:
+      summary: 'Relatório: Acompanhamento aprovacoes'
+      tags:
+      - Aprovações
+      x-permissao: ler o objecto do processo (despesas, transacções, contagens, orçamentos, livro de membros)
+      operationId: relVNucleoAcompanhamentoAprovacoes
+      description: Lido da vista nucleo.vw_aprovacoes.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: despesaId
+        in: query
+        schema:
+          type: integer
+      - name: transacaoId
+        in: query
+        schema:
+          type: integer
+      - name: contagemId
+        in: query
+        schema:
+          type: integer
+      - name: orcamentoId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      x-vista: nucleo.vw_aprovacoes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/aprovacoes:
+    get:
+      summary: 'Aprovacoes: listar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.aprovacao.ler
+      operationId: listarAprovacao
+      description: 'Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa
+        em que está (V54)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: fluxoAprovacaoId
+        in: query
+        schema:
+          type: integer
+      - name: processo
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumProcessoAprovacao'
+      - name: despesaId
+        in: query
+        schema:
+          type: integer
+      - name: transacaoId
+        in: query
+        schema:
+          type: integer
+      - name: contagemId
+        in: query
+        schema:
+          type: integer
+      - name: orcamentoId
+        in: query
+        schema:
+          type: integer
+      - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: pedidoPorUsuarioId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoAprovacao'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Aprovacao'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/aprovacoes/{id}:
+    get:
+      summary: 'Aprovacoes: ler um'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.aprovacao.ler
+      operationId: lerAprovacao
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Aprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/aprovacoes/{id}/decidir:
+    post:
+      summary: Decidir a etapa em curso de um processo de aprovação
+      tags:
+      - Aprovações
+      x-permissao: 'quem a etapa indica (perfil ou permissão na igreja); etapas de um órgão: quem regista votos ou aprova o objecto, com o voto'
+      operationId: VNucleoAprovacoesIdDecidir
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                aprovar:
+                  type: boolean
+                  description: Obrigatório nas etapas de perfil/permissão; nas de órgão decide o voto
+                votoId:
+                  type: integer
+                  description: Voto da reunião (etapas ORGAO)
+                motivo:
+                  type: string
+                  description: Obrigatório ao rejeitar
+                valor:
+                  type: string
+                  pattern: ^-?\d{1,14}(\.\d{1,2})?$
+                  example: '650.00'
+                  description: Valor aprovado, se a etapa o reduzir
+      x-funcao-bd: nucleo.fn_aprovacao_decidir
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - estado
+                properties:
+                  estado:
+                    $ref: '#/components/schemas/EnumEstadoAprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/nucleo/auditoria:
     get:
       summary: 'Auditoria: listar'
@@ -7345,6 +7577,599 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Comunicado'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/decisoes-aprovacao:
+    get:
+      summary: 'Decisoes aprovacao: listar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.aprovacao_decisao.ler
+      operationId: listarAprovacaoDecisao
+      description: 'Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: aprovacaoId
+        in: query
+        schema:
+          type: integer
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: fluxoEtapaId
+        in: query
+        schema:
+          type: integer
+      - name: usuarioId
+        in: query
+        schema:
+          type: integer
+      - name: votoId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AprovacaoDecisao'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/decisoes-aprovacao/{id}:
+    get:
+      summary: 'Decisoes aprovacao: ler um'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.aprovacao_decisao.ler
+      operationId: lerAprovacaoDecisao
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AprovacaoDecisao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/etapas-aprovacao:
+    get:
+      summary: 'Relatório: Etapas aprovacao'
+      tags:
+      - Aprovações
+      x-permissao: ler o processo de aprovação
+      operationId: relVNucleoEtapasAprovacao
+      description: Lido da vista nucleo.vw_aprovacao_etapas.
+      parameters:
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: formato
+        in: query
+        schema:
+          type: string
+          enum:
+          - json
+          - csv
+          - pdf
+          default: json
+      - name: aprovacaoId
+        in: query
+        schema:
+          type: integer
+      x-vista: nucleo.vw_aprovacao_etapas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/etapas-fluxo:
+    get:
+      summary: 'Etapas fluxo: listar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.ler
+      operationId: listarFluxoEtapa
+      description: 'Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz
+        (V54)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: fluxoAprovacaoId
+        in: query
+        schema:
+          type: integer
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: accao
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumAccaoEtapa'
+      - name: responsavel
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumResponsavelEtapa'
+      - name: perfilId
+        in: query
+        schema:
+          type: integer
+      - name: permissaoId
+        in: query
+        schema:
+          type: integer
+      - name: orgao
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumTipoReuniao'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FluxoEtapa'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Etapas fluxo: criar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.criar
+      operationId: criarFluxoEtapa
+      description: 'Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz
+        (V54)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/FluxoEtapa'
+              required:
+              - fluxoAprovacaoId
+              - ordem
+              - nome
+              - responsavel
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoEtapa'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/etapas-fluxo/{id}:
+    get:
+      summary: 'Etapas fluxo: ler um'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.ler
+      operationId: lerFluxoEtapa
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoEtapa'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Etapas fluxo: alterar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.alterar
+      operationId: alterarFluxoEtapa
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FluxoEtapa'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoEtapa'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/etapas-fluxo/{id}/reactivar:
+    post:
+      summary: 'Etapas fluxo: reactivar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.terminar
+      operationId: reactivarFluxoEtapa
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoEtapa'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/etapas-fluxo/{id}/terminar:
+    post:
+      summary: 'Etapas fluxo: terminar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_etapa.terminar
+      operationId: terminarFluxoEtapa
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoEtapa'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/fluxos-aprovacao:
+    get:
+      summary: 'Fluxos aprovacao: listar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.ler
+      operationId: listarFluxoAprovacao
+      description: 'Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de
+        membros), a partir de que valor (V54)'
+      parameters:
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: igrejaId
+        in: query
+        schema:
+          type: integer
+      - name: processo
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumProcessoAprovacao'
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FluxoAprovacao'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Fluxos aprovacao: criar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.criar
+      operationId: criarFluxoAprovacao
+      description: 'Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de
+        membros), a partir de que valor (V54)'
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/FluxoAprovacao'
+              required:
+              - processo
+              - nome
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoAprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/fluxos-aprovacao/{id}:
+    get:
+      summary: 'Fluxos aprovacao: ler um'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.ler
+      operationId: lerFluxoAprovacao
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoAprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Fluxos aprovacao: alterar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.alterar
+      operationId: alterarFluxoAprovacao
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FluxoAprovacao'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoAprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/fluxos-aprovacao/{id}/reactivar:
+    post:
+      summary: 'Fluxos aprovacao: reactivar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.terminar
+      operationId: reactivarFluxoAprovacao
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoAprovacao'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/nucleo/fluxos-aprovacao/{id}/terminar:
+    post:
+      summary: 'Fluxos aprovacao: terminar'
+      tags:
+      - 'Núcleo: acesso e auditoria'
+      x-permissao: nucleo.fluxo_aprovacao.terminar
+      operationId: terminarFluxoAprovacao
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FluxoAprovacao'
         '400':
           $ref: '#/components/responses/PedidoInvalido'
         '401':
@@ -23127,6 +23952,164 @@ components:
       - valorAlvo
       - dataInicio
       - dataFim
+    Aprovacao:
+      type: object
+      description: 'Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa
+        em que está (V54)'
+      x-tabela: nucleo.aprovacao
+      x-prefixo: apv
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        fluxoAprovacaoId:
+          type: integer
+          format: int32
+          description: → nucleo.fluxo_aprovacao
+        processo:
+          $ref: '#/components/schemas/EnumProcessoAprovacao'
+        assunto:
+          type: string
+          maxLength: 255
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+        despesaId:
+          type: integer
+          format: int32
+          description: → tesouraria.despesa
+        transacaoId:
+          type: integer
+          format: int64
+          description: → tesouraria.transacao
+        contagemId:
+          type: integer
+          format: int32
+          description: → tesouraria.contagem_numerario
+        orcamentoId:
+          type: integer
+          format: int32
+          description: → tesouraria.orcamento
+        membroId:
+          type: integer
+          format: int32
+          description: → secretaria.membro · Membro a admitir ou remover
+        pedidoPorUsuarioId:
+          type: integer
+          format: int32
+          description: → nucleo.usuario · Quem pediu (não decide as etapas com outra_pessoa)
+        etapa:
+          type: integer
+          description: Ordem da etapa actual (a próxima a decidir)
+        concluidoEm:
+          type: string
+          format: date-time
+        estado:
+          $ref: '#/components/schemas/EnumEstadoAprovacao'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - fluxoAprovacaoId
+      - processo
+      - assunto
+    AprovacaoDecisao:
+      type: object
+      description: 'Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)'
+      x-tabela: nucleo.aprovacao_decisao
+      x-prefixo: apd
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        aprovacaoId:
+          type: integer
+          format: int32
+          description: → nucleo.aprovacao
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        fluxoEtapaId:
+          type: integer
+          format: int32
+          description: → nucleo.fluxo_etapa
+        etapa:
+          type: integer
+        aprovado:
+          type: boolean
+        usuarioId:
+          type: integer
+          format: int32
+          description: → nucleo.usuario · Quem decidiu ou registou a decisão do órgão
+        votoId:
+          type: integer
+          format: int32
+          description: → secretaria.voto · Voto do órgão (etapas ORGAO)
+        motivo:
+          type: string
+          maxLength: 255
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Valor aprovado, quando a etapa o reduz
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - aprovacaoId
+      - igrejaId
+      - fluxoEtapaId
+      - etapa
+      - aprovado
+      - usuarioId
     Baptismo:
       type: object
       description: Baptismos e rebaptismos
@@ -24336,6 +25319,14 @@ components:
       x-obrigatorios-ao-criar:
       - tipo
       - nome
+    EnumAccaoEtapa:
+      type: string
+      enum:
+      - APRECIAR
+      - CONFERIR
+      - RECOMENDAR
+      - APROVAR
+      - VOTAR
     EnumCanalNotificacao:
       type: string
       enum:
@@ -24367,6 +25358,13 @@ components:
       - EM_CURSO
       - CONCLUIDA
       - CANCELADA
+    EnumEstadoAprovacao:
+      type: string
+      enum:
+      - EM_CURSO
+      - APROVADO
+      - REJEITADO
+      - CANCELADO
     EnumEstadoCivil:
       type: string
       enum:
@@ -24516,6 +25514,21 @@ components:
       - EMOLA
       - BANCO
       - NUMERARIO
+    EnumProcessoAprovacao:
+      type: string
+      enum:
+      - DESPESA
+      - SAIDA
+      - CONTAGEM
+      - ORCAMENTO
+      - ADMISSAO_MEMBRO
+      - REMOCAO_MEMBRO
+    EnumResponsavelEtapa:
+      type: string
+      enum:
+      - PERFIL
+      - PERMISSAO
+      - ORGAO
     EnumResultadoVoto:
       type: string
       enum:
@@ -25090,6 +26103,135 @@ components:
       - igrejaId
       - ano
       - mes
+    FluxoAprovacao:
+      type: object
+      description: 'Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de
+        membros), a partir de que valor (V54)'
+      x-tabela: nucleo.fluxo_aprovacao
+      x-prefixo: fap
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Igreja a que o fluxo se aplica; vazio = modelo da Associação/Missão para todas as igrejas sem fluxo
+            próprio
+        processo:
+          $ref: '#/components/schemas/EnumProcessoAprovacao'
+        nome:
+          type: string
+          maxLength: 100
+        valorMinimo:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: O fluxo aplica-se a partir deste valor (o de maior valor mínimo que não passe o valor do processo)
+        descricao:
+          type: string
+          maxLength: 255
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - processo
+      - nome
+    FluxoEtapa:
+      type: object
+      description: 'Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz
+        (V54)'
+      x-tabela: nucleo.fluxo_etapa
+      x-prefixo: fae
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        fluxoAprovacaoId:
+          type: integer
+          format: int32
+          description: → nucleo.fluxo_aprovacao
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja · Copiado do fluxo
+        ordem:
+          type: integer
+          description: 1 = a primeira a decidir
+        nome:
+          type: string
+          maxLength: 100
+        accao:
+          $ref: '#/components/schemas/EnumAccaoEtapa'
+        responsavel:
+          allOf:
+          - $ref: '#/components/schemas/EnumResponsavelEtapa'
+          description: PERFIL (quem tem esse perfil na igreja), PERMISSAO (quem tem essa permissão) ou ORGAO (o órgão vota em reunião)
+        perfilId:
+          type: integer
+          format: int32
+          description: → nucleo.perfil · Perfil que decide (responsavel = PERFIL)
+        permissaoId:
+          type: integer
+          format: int32
+          description: → nucleo.permissao · Permissão de quem decide (responsavel = PERMISSAO)
+        orgao:
+          allOf:
+          - $ref: '#/components/schemas/EnumTipoReuniao'
+          description: 'Órgão que vota (responsavel = ORGAO): o voto tem de ser de uma reunião deste tipo'
+        outraPessoa:
+          type: boolean
+          description: Quem pediu e quem já decidiu outra etapa não decide esta
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - fluxoAprovacaoId
+      - ordem
+      - nome
+      - responsavel
     Fundo:
       type: object
       description: 'Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais'

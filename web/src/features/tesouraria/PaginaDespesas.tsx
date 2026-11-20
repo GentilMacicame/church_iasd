@@ -3,8 +3,10 @@
  * Um departamento pede; quem tem a permissão decide (aprova, pode reduzir o valor, ou rejeita com motivo; quem
  * pede não decide); a tesouraria paga com uma saída ligada à despesa, que não precisa de outra aprovação. A
  * despesa passa a PAGA quando o pagamento é confirmado (a base de dados faz isso).
+ * V54: a decisão segue o fluxo de aprovação (ex.: o tesoureiro aprecia, depois o pastor ou um ancião aprova; com valores
+ * maiores, o Conselho da Igreja vota). Cada despesa por decidir mostra a etapa, quem decide e, a quem cabe, o botão.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +30,8 @@ import { rotulos, t } from '@/i18n/pt-MZ'
 import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/formatos'
 import { cn } from '@/lib/utils'
 import { METODO_DA_CONTA } from './PaginaEntrada'
+import { useAprovacoes, type ProcessoAprovacao } from '@/features/aprovacoes/api'
+import { DialogoDecidirEtapa, LinhaEtapa, QuemDecide } from '@/features/aprovacoes/EtapasAprovacao'
 import { fundosDaIgreja, useCategorias, useContasIgreja as useContas, useCriarMovimento, useDespesas, useDespesasMut, useFundos, useSaldosFundos, type Despesa } from './api'
 
 const VALOR = z.string().regex(/^\d{1,14}(\.\d{1,2})?$/, 'Escreva o valor, por exemplo 1 500,00').refine((v) => Number(v) > 0, 'O valor tem de ser maior que zero')
@@ -55,6 +59,25 @@ export default function PaginaDespesas() {
   const [aba, setAba] = useState<Aba>('decidir')
   const [pedir, setPedir] = useState(false)
   const [decidir, setDecidir] = useState<Despesa | null>(null)
+  const [etapa, setEtapa] = useState<ProcessoAprovacao | null>(null)
+  // o processo de aprovação de cada despesa (o mais recente): etapa em curso, quem decide, se o utilizador pode
+  const processos = useAprovacoes()
+  const processoDe = useMemo(() => {
+    const m = new Map<number, ProcessoAprovacao>()
+    for (const p of processos.data ?? []) {
+      if (p.despesaId && (!m.has(p.despesaId) || p.estado === 'EM_CURSO')) m.set(p.despesaId, p)
+    }
+    return m
+  }, [processos.data])
+  const abrirDecisao = (d: Despesa) => {
+    const p = processoDe.get(d.id)
+    if (p?.estado === 'EM_CURSO') setEtapa(p)
+    else setDecidir(d)
+  }
+  const podeDecidir = (d: Despesa) => {
+    const p = processoDe.get(d.id)
+    return p?.estado === 'EM_CURSO' ? p.podeDecidir : pode('tesouraria.despesa.aprovar') && d.solicitadoPorUsuarioId !== usuario?.id
+  }
   const [pagar, setPagar] = useState<Despesa | null>(null)
   const [cancelar, setCancelar] = useState<Despesa | null>(null)
   const mut = useDespesasMut()
@@ -62,11 +85,11 @@ export default function PaginaDespesas() {
   const [params, setParams] = useSearchParams()
   const pedida = Number(params.get('despesa')) || null
   useEffect(() => {
-    if (!pedida || !q.data) return
+    if (!pedida || !q.data || processos.isPending) return
     const d = q.data.find((x) => x.id === pedida)
     if (d && !d.endDate && d.estado === 'SUBMETIDA') {
       setAba('decidir')
-      if (pode('tesouraria.despesa.aprovar') && d.solicitadoPorUsuarioId !== usuario?.id) setDecidir(d)
+      if (podeDecidir(d)) abrirDecisao(d)
     } else if (d && !d.endDate && d.estado === 'APROVADA') {
       setAba('pagar')
       if (pode('tesouraria.transacao.criar')) setPagar(d)
@@ -74,7 +97,8 @@ export default function PaginaDespesas() {
       toast.info('Essa despesa já não está pendente.')
     }
     setParams((p) => { const n = new URLSearchParams(p); n.delete('despesa'); return n }, { replace: true })
-  }, [pedida, q.data, pode, usuario?.id, setParams])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedida, q.data, processos.isPending, setParams])
 
   const lista = q.data ?? []
   const soma = (l: Despesa[], campo: 'valorSolicitado' | 'valorAprovado') => deCentimos(l.reduce((s, d) => s + centimos(d[campo] ?? d.valorSolicitado), 0))
@@ -123,6 +147,8 @@ export default function PaginaDespesas() {
                 <tbody>
                   {visiveis.map((d) => {
                     const minha = d.solicitadoPorUsuarioId === usuario?.id
+                    const proc = processoDe.get(d.id)
+                    const porDecidirAqui = !d.endDate && d.estado === 'SUBMETIDA'
                     return (
                       <tr key={d.id} className={cn(d.endDate && 'opacity-60')}>
                         <td className="sm:pl-6">
@@ -133,15 +159,23 @@ export default function PaginaDespesas() {
                           </p>
                         </td>
                         <td className="hidden text-muted-foreground md:table-cell">{fundoDe(d.fundoId)}</td>
-                        <td><PilulaDespesa d={d} /></td>
+                        <td>
+                          <PilulaDespesa d={d} />
+                          {porDecidirAqui && proc?.estado === 'EM_CURSO' && (
+                            <div className="mt-1 grid max-w-64 gap-0.5">
+                              <LinhaEtapa p={proc} className="text-xs" />
+                              <span className="truncate text-xs text-muted-foreground"><QuemDecide p={proc} /></span>
+                            </div>
+                          )}
+                        </td>
                         <td className="num whitespace-nowrap">
                           <Dinheiro valor={d.valorAprovado ?? d.valorSolicitado} />
                           {d.valorAprovado && d.valorAprovado !== d.valorSolicitado && <p className="text-xs text-muted-foreground line-through"><Dinheiro valor={d.valorSolicitado} /></p>}
                         </td>
                         <td className="sm:pr-6">
                           <div className="flex justify-end gap-2">
-                            {!d.endDate && d.estado === 'SUBMETIDA' && pode('tesouraria.despesa.aprovar') && !minha && (
-                              <Button size="sm" className="alvo" onClick={() => setDecidir(d)}><Gavel className="size-4" />Decidir</Button>
+                            {porDecidirAqui && podeDecidir(d) && (
+                              <Button size="sm" className="alvo" onClick={() => abrirDecisao(d)}><Gavel className="size-4" />Decidir</Button>
                             )}
                             {!d.endDate && d.estado === 'APROVADA' && pode('tesouraria.transacao.criar') && (
                               <Button size="sm" className="alvo" onClick={() => setPagar(d)}><Banknote className="size-4" />Pagar</Button>
@@ -150,7 +184,7 @@ export default function PaginaDespesas() {
                               <Button size="sm" variant="ghost" className="alvo text-muted-foreground" aria-label={`Cancelar ${d.descricao}`} onClick={() => setCancelar(d)}><Ban className="size-4" /></Button>
                             )}
                           </div>
-                          {!d.endDate && d.estado === 'SUBMETIDA' && minha && <p className="text-right text-xs text-muted-foreground">outra pessoa decide</p>}
+                          {porDecidirAqui && minha && !podeDecidir(d) && <p className="text-right text-xs text-muted-foreground">outra pessoa decide</p>}
                         </td>
                       </tr>
                     )
@@ -166,6 +200,7 @@ export default function PaginaDespesas() {
 
       {pedir && <DialogoPedir aberto={pedir} aoMudar={setPedir} />}
       {decidir && <DialogoDecidir d={decidir} aoFechar={() => setDecidir(null)} />}
+      {etapa && <DialogoDecidirEtapa p={etapa} aoFechar={() => setEtapa(null)} />}
       {pagar && <DialogoPagar d={pagar} aoFechar={() => setPagar(null)} />}
       <DialogoConfirmar aberto={!!cancelar} aoMudar={(v) => !v && setCancelar(null)} titulo="Cancelar este pedido de despesa?"
         texto={<>“{cancelar?.descricao}” deixa de poder ser paga e fica no histórico como cancelada.</>} accao="Cancelar pedido" perigo
@@ -238,7 +273,7 @@ export function DialogoPedir({ aberto, aoMudar, actividade }: {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Pedir despesa</DialogTitle>
-          <DialogDescription>{actividade ? `Para a actividade «${actividade.nome}». ` : ''}O pedido fica por decidir até um ancião, o pastor ou a comissão o aprovar.</DialogDescription>
+          <DialogDescription>{actividade ? `Para a actividade «${actividade.nome}». ` : ''}O pedido segue o fluxo de aprovação da igreja (ex.: o tesoureiro aprecia, o pastor ou um ancião aprova; valores maiores vão ao Conselho).</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />

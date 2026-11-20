@@ -4,10 +4,10 @@
               1
 (1 row)
 
-psql:database/tests/38_voto_da_pessoa.sql:17: ERROR:  duplicate key value violates unique constraint "uq_vtm_vot_id_mem_id"
-psql:database/tests/38_voto_da_pessoa.sql:18: ERROR:  A pessoa do voto tem de ser membro ou interessado desta igreja
+psql:database/tests/38_voto_da_pessoa.sql:21: ERROR:  duplicate key value violates unique constraint "uq_vtm_vot_id_mem_id"
+psql:database/tests/38_voto_da_pessoa.sql:22: ERROR:  A pessoa do voto tem de ser membro ou interessado desta igreja
 2. a Rosa com o voto da Amélia: recusado
-psql:database/tests/38_voto_da_pessoa.sql:21: ERROR:  O voto n.º 2026-381 não indica Rosa Macamo entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)
+psql:database/tests/38_voto_da_pessoa.sql:25: ERROR:  O voto n.º 2026-381 não indica Rosa Macamo entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)
  mem_estado  
 -------------
  INTERESSADO

@@ -12,8 +12,8 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 84 tabelas, 6 schemas, migrações V1–V51 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (415 caminhos, 577 operações) |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 90 tabelas, 6 schemas, migrações V1–V54 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (439 caminhos, 609 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, mandatos com conselho e direcção, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
@@ -49,10 +49,10 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V51 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V54 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
-scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–36 (tem de dar 37× ok)
+scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–39 (tem de dar 40× ok)
 scripts/gerar-schema-completo.sh              # database/schema_completo.sql (todas as migrações num ficheiro)
 ACTUALIZAR=1 scripts/db-test.sh               # aceitar novo resultado esperado (só se a mudança for intencional)
 
@@ -352,6 +352,23 @@ Nunca devolver stack traces nem SQL ao cliente.
   Doação distribuída = parte da igreja nas entradas sem departamento (OFERTA_COMBINADA e ORCAMENTO_LOCAL) × % do ano.
 - V51: `quota_escalao_reavivamento` (rqe, quota fixa por ano para adultos e/ou crianças; a quota de cada pessoa é a
   ajustada → a do escalão → a automática; coluna `origem` na vista) e `santa_ceia_acompanhante` (sca, diáconos).
+- Fluxos de aprovação (V54, `nucleo.fluxo_aprovacao` fap, `fluxo_etapa` fae, `aprovacao` apv, `aprovacao_decisao` apd): cada
+  DESPESA, SAIDA (sem despesa, e estornos), CONTAGEM (conferência), ORCAMENTO, ADMISSAO_MEMBRO e REMOCAO_MEMBRO segue etapas por
+  ordem; cada etapa é decidida por um PERFIL, por quem tem uma PERMISSAO, ou por um ORGAO (voto numa reunião desse tipo;
+  a decisão é o resultado do voto). `fae_outra_pessoa`: nem quem pediu nem quem já decidiu outra etapa. O fluxo escolhe-se por
+  valor (`fap_valor_minimo`, o maior que não passe o valor); com fluxo próprio da igreja para um processo, os modelos da
+  Associação (`fap_igr_id` vazio) deixam de se aplicar a esse processo nela. Os processos iniciam-se por trigger (despesa
+  submetida, saída pendente, contagem aberta, orçamento em rascunho, primeiro voto de admissão/remoção em `voto_membro`) e
+  decidem-se com `nucleo.fn_aprovacao_decidir(apv, aprovar, vot, motivo, valor)` (POST `/v1/nucleo/aprovacoes/{id}/decidir`).
+  `fn_decidir_despesa`, `fn_aprovar_saida`, `fn_aprovar_orcamento` e o PATCH do estado decidem a etapa em curso (o PATCH só
+  se for a última e não for de um órgão). O objecto só muda quando a última etapa aprova (as guardas reconhecem-no por
+  `nucleo.fn_aprovacao_concluida_agora`). Membros: o voto decide a etapa do órgão da reunião, pela ordem (Conselho → Igreja em
+  reunião administrativa); o livro só aceita o movimento com um voto de um processo aprovado (`trg_mmb_12_fluxo`).
+  Acompanhamento: `vw_aprovacoes` (etapa em curso, quem decide com os nomes, `pode_decidir`) e `vw_aprovacao_etapas`
+  (`/v1/nucleo/acompanhamento-aprovacoes`, `etapas-aprovacao`). Frontend: `/aprovacoes` e `/aprovacoes/fluxos`.
+  Modelos por defeito: despesa até 10 000 MT tesoureiro aprecia + pastor/ancião aprova; de 10 000 o Conselho vota; de
+  100 000 Conselho recomenda + Igreja vota; saída pastor/ancião (de 10 000 também o Conselho); contagem o tesoureiro;
+  orçamento, admissão e remoção Conselho → Igreja em reunião administrativa.
 - Colunas de vistas: a API tira o prefixo de 3 letras (`act_id` → `id`, `igr_id` → `id`!). Numa vista com mais de um
   id, dê nomes sem prefixo (`igreja_id`, `departamento_igreja_id`), senão os campos sobrepõem-se no JSON.
 - Conselho e reuniões: os cargos do conselho (`car_conselho`) e a duração dos mandatos da igreja (`igr_mandato_anos`);
@@ -376,7 +393,7 @@ Uma funcionalidade só está pronta quando:
 - tem testes de integração contra PostgreSQL real com **um perfil autorizado e um não autorizado**
   para cada endpoint novo (o não autorizado recebe 403/404);
 - os processos afectados (P-xx) têm teste ponta-a-ponta;
-- `scripts/db-test.sh` dá 35× ok e os testes da API passam;
+- `scripts/db-test.sh` dá 40× ok e os testes da API passam;
 - as mensagens de erro aparecem em português no ecrã;
 - funciona em largura de telemóvel.
 

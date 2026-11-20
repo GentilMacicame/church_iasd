@@ -11,7 +11,7 @@ INSERT INTO usuario_igreja (uig_usu_id, uig_igr_id, uig_per_id) VALUES (2,1,5),(
 INSERT INTO membro (mem_id, mem_igr_id, mem_nome, mem_apelido, mem_data_nascimento, mem_estado) VALUES (100,1,'Ana','Cossa','1980-01-01','ACTIVO'),(101,1,'Rui','Mabote','1975-05-05','ACTIVO'),(102,1,'Lia','Cossa','2012-03-03','INTERESSADO'),(103,1,'Tito','Langa','1990-01-01','INTERESSADO'),(200,2,'Zé','Matola','1990-01-01','ACTIVO');
 
 \echo '== SECRETARIA'
-INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (1,1,'JUNTA_DIRECTIVA','2026-10-04 15:00+02'),(2,1,'REUNIAO_REGULAR','2026-10-10 11:00+02'),(3,1,'REUNIAO_REGULAR','2026-10-17 11:00+02'),(4,2,'REUNIAO_REGULAR','2026-11-07 11:00+02'),(5,1,'ASSEMBLEIA_ADMINISTRATIVA','2026-10-24 15:00+02');
+INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (1,1,'JUNTA_DIRECTIVA','2026-10-04 15:00+02'),(2,1,'ASSEMBLEIA_ADMINISTRATIVA','2026-10-10 11:00+02'),(3,1,'REUNIAO_REGULAR','2026-10-17 11:00+02'),(4,2,'REUNIAO_REGULAR','2026-11-07 11:00+02'),(5,1,'ASSEMBLEIA_ADMINISTRATIVA','2026-10-24 15:00+02');
 INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto, vot_leitura) VALUES
  (1,1,'J-001','ADMISSAO','Recomenda baptismo de Tito',1),
  (2,2,'2026-010','ADMISSAO','Admissão de Tito por baptismo',1),

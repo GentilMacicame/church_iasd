@@ -435,6 +435,21 @@ paths['/v1/organizacao/painel-periodo'] = {'get': op(
     parameters=[{'name': 'inicio', 'in': 'query', 'required': True, 'schema': D}, {'name': 'fim', 'in': 'query', 'required': True, 'schema': D},
                 {'name': 'entidadeId', 'in': 'query', 'schema': I}, {'name': 'distritoId', 'in': 'query', 'schema': I}],
     responses=resp('200', {'type': 'array', 'items': PAINEL_LINHA}))}
+# V54: fluxos de aprovação e conferência
+APV = 'Aprovações'
+acao('/v1/nucleo/aprovacoes/{id}/decidir', 'Decidir a etapa em curso de um processo de aprovação', APV,
+     'quem a etapa indica (perfil ou permissão na igreja); etapas de um órgão: quem regista votos ou aprova o objecto, com o voto',
+     obj([], aprovar={'type': 'boolean', 'description': 'Obrigatório nas etapas de perfil/permissão; nas de órgão decide o voto'},
+         votoId={**I, 'description': 'Voto da reunião (etapas ORGAO)'}, motivo={**STR, 'description': 'Obrigatório ao rejeitar'},
+         valor={**MONEY, 'description': 'Valor aprovado, se a etapa o reduzir'}),
+     obj(['estado'], estado=ref('EnumEstadoAprovacao')), 'nucleo.fn_aprovacao_decidir')
+rel('/v1/nucleo/acompanhamento-aprovacoes', 'nucleo.vw_aprovacoes', APV,
+    'ler o objecto do processo (despesas, transacções, contagens, orçamentos, livro de membros)',
+    [{'name': 'despesaId', 'in': 'query', 'schema': I}, {'name': 'transacaoId', 'in': 'query', 'schema': I},
+     {'name': 'contagemId', 'in': 'query', 'schema': I}, {'name': 'orcamentoId', 'in': 'query', 'schema': I},
+     {'name': 'membroId', 'in': 'query', 'schema': I}])
+rel('/v1/nucleo/etapas-aprovacao', 'nucleo.vw_aprovacao_etapas', APV, 'ler o processo de aprovação',
+    [{'name': 'aprovacaoId', 'in': 'query', 'schema': I}])
 # V34: programa anual com a execução financeira e conflitos de calendário
 rel('/v1/actividades/programa', 'actividades.vw_actividades_execucao', TITULO['actividades'], 'actividades.actividade.ler', ANO)
 DT_N = {**DT, 'nullable': True}

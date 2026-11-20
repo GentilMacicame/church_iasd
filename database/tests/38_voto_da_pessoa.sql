@@ -6,10 +6,14 @@ SELECT set_config('app.usuario_id', '1', false) \g /dev/null
 INSERT INTO membro (mem_id, mem_igr_id, mem_nome, mem_apelido, mem_data_nascimento, mem_estado) VALUES
  (3801, 1, 'Rosa', 'Macamo', '1995-02-02', 'INTERESSADO'), (3802, 1, 'Amélia', 'Chirindza', '1996-03-03', 'INTERESSADO'),
  (3803, 1, 'Paulo', 'Nhaca', '1997-04-04', 'INTERESSADO');
-INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (3801, 1, 'REUNIAO_REGULAR', '2026-11-07 11:00+02');
+-- V54: a admissão segue o fluxo: o Conselho da Igreja vota (junta directiva), depois a Igreja em reunião administrativa
+INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (3800, 1, 'JUNTA_DIRECTIVA', '2026-11-01 15:00+02'),
+ (3801, 1, 'ASSEMBLEIA_ADMINISTRATIVA', '2026-11-07 11:00+02');
 INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto, vot_leitura) VALUES
+ (3800, 3800, 'J-380', 'ADMISSAO', 'Recomenda o baptismo de Amélia, Paulo e Rosa', 1),
  (3801, 3801, '2026-381', 'ADMISSAO', 'Admissão por baptismo de Amélia Chirindza', 1),
  (3802, 3801, '2026-382', 'ADMISSAO', 'Admissão por baptismo de Paulo Nhaca e Rosa Macamo', 1);
+INSERT INTO voto_membro (vtm_vot_id, vtm_igr_id, vtm_mem_id) VALUES (3800, 1, 3801), (3800, 1, 3802), (3800, 1, 3803);
 
 \echo '1. pessoas do voto: a Amélia num voto, o Paulo e a Rosa noutro; repetida e de outra igreja recusadas'
 INSERT INTO voto_membro (vtm_vot_id, vtm_igr_id, vtm_mem_id) VALUES (3801, 999, 3802) RETURNING vtm_igr_id AS igreja_copiada;

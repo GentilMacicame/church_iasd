@@ -23,6 +23,7 @@ import { DialogoBaptismo, DialogoContacto } from './Dialogos'
 import { AcompanhamentoMembro } from './Acompanhamento'
 import { CartaoLivro } from '@/features/livro/MovimentosMembro'
 import { CartaoConsentimentos } from '@/features/secretaria/Consentimentos'
+import { ResumoAprovacao } from '@/features/aprovacoes/EtapasAprovacao'
 import {
   useBaptismos, useCargosDoMembro, useContactos, useMatriculasDoMembro, useMembro, useMembrosBasicos, useParticipacao, useTerminarMembro, useValidarMembro,
   type Membro,
@@ -65,6 +66,8 @@ function Cabecalho({ m }: { m: Membro }) {
             {m.bairro && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" />{m.bairro}</span>}
             {m.dataEntrada && <span className="inline-flex items-center gap-1.5"><CalendarCheck className="size-4" />Na igreja desde {data(m.dataEntrada)}</span>}
           </div>
+          {/* V54: admissão ou remoção em curso — em que etapa está (Conselho da Igreja → Igreja em reunião administrativa) */}
+          {pode('secretaria.movimento_membro.ler') && <div className="mt-2"><ResumoAprovacao filtro={{ membroId: m.id }} compacto mostrarProcesso rotuloBotao="Registar a decisão" /></div>}
         </div>
         <div className="flex flex-wrap gap-2">
           {podeAprovar && (

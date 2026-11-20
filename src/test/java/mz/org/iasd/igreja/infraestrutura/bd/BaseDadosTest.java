@@ -1594,6 +1594,68 @@ class BaseDadosTest {
         assertEquals(0, anonimo.size());
     }
 
+    // ------------------------------------------------------------------ V54: fluxos de aprovação
+
+    /**
+     * P-07 com o fluxo «Despesa corrente»: o tesoureiro aprecia (etapa 1), o ancião aprova (etapa 2). Quem não vê despesas
+     * recebe 404; quem não é o responsável da etapa recebe 403; o acompanhamento diz a etapa, quem decide e se pode.
+     */
+    @Test
+    void despesaSegueOFluxoDeAprovacaoComPerfis() throws Exception {
+        Tesouraria tes = prepararTesouraria();
+        int anciao = criarUsuarioComDono("anciao.v54@teste.mz", null, "ANCIAO");
+        int secretario = criarUsuarioComDono("secretario.v54@teste.mz", null, "SECRETARIO");
+        var despesas = Catalogo.de(mz.org.iasd.igreja.models.tesouraria.Despesa.class);
+        JsonObject despesa = ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.criar(c, despesas, Json.createObjectBuilder()
+                .add("igrejaId", igrejaCentral).add("categoriaId", tes.categoriaLuz()).add("fundoId", tes.fundoLocal())
+                .add("descricao", "Lâmpadas do templo V54").add("valorSolicitado", "1200.00").add("solicitadoPorUsuarioId", tesoureiro).build()));
+        int des = despesa.getInt("id");
+        Map<String, String> filtro = Map.of("igrejaId", Integer.toString(igrejaCentral), "despesaId", Integer.toString(des));
+
+        JsonObject processo = ExecutorTransaccao.executar(api, tesoureiro,
+                c -> mz.org.iasd.igreja.controllers.nucleo.RelatoriosNucleoController.ACOMPANHAMENTO_APROVACOES.consultar(c, filtro)).getJsonObject(0);
+        int apv = processo.getInt("id");
+        assertEquals("Despesa corrente", processo.getString("fluxo"));
+        assertEquals("Apreciação do tesoureiro", processo.getString("etapaNome"));
+        assertEquals(2, processo.getInt("totalEtapas"));
+        assertTrue(processo.getBoolean("podeDecidir"));
+        // o ancião vê o processo mas não decide a etapa do tesoureiro
+        JsonObject vistoPeloAnciao = ExecutorTransaccao.executar(api, anciao,
+                c -> mz.org.iasd.igreja.controllers.nucleo.RelatoriosNucleoController.ACOMPANHAMENTO_APROVACOES.consultar(c, filtro)).getJsonObject(0);
+        assertFalse(vistoPeloAnciao.getBoolean("podeDecidir"));
+
+        SQLException naoVe = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, secretario, c -> decidir(c, apv, true)));
+        assertEquals(404, TradutorErrosSql.traduzir(naoVe).estadoHttp());
+        SQLException etapaErrada = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, anciao, c -> decidir(c, apv, true)));
+        assertEquals(403, TradutorErrosSql.traduzir(etapaErrada).estadoHttp());
+        assertTrue(TradutorErrosSql.traduzir(etapaErrada).mensagem().contains("Tesoureiro"), TradutorErrosSql.traduzir(etapaErrada).mensagem());
+
+        assertEquals("EM_CURSO", ExecutorTransaccao.executar(api, tesoureiro, c -> decidir(c, apv, true)));
+        // o tesoureiro já decidiu a etapa 1: a 2 é de outra pessoa (e de quem aprova despesas)
+        SQLException outraPessoa = assertThrows(SQLException.class, () -> ExecutorTransaccao.executar(api, tesoureiro, c -> decidir(c, apv, true)));
+        assertEquals(403, TradutorErrosSql.traduzir(outraPessoa).estadoHttp());
+        assertEquals("APROVADO", ExecutorTransaccao.executar(api, anciao, c -> decidir(c, apv, true)));
+
+        assertEquals("APROVADA", ExecutorTransaccao.executar(api, tesoureiro, c -> TabelaRepository.obterOu404(c, despesas, des)).getString("estado"));
+        JsonArray etapas = ExecutorTransaccao.executar(api, anciao,
+                c -> mz.org.iasd.igreja.controllers.nucleo.RelatoriosNucleoController.ETAPAS_APROVACAO.consultar(c,
+                        Map.of("aprovacaoId", Integer.toString(apv))));
+        assertEquals(2, etapas.size());
+        assertTrue(etapas.stream().map(JsonValue::asJsonObject).allMatch(o -> "APROVADA".equals(o.getString("situacao"))), etapas.toString());
+    }
+
+    /** Igual a {@code AprovacoesController.decidir}: devolve o estado do processo. */
+    private static String decidir(Connection c, int aprovacao, boolean aprovar) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT nucleo.fn_aprovacao_decidir(?::integer, ?::boolean)::text")) {
+            ps.setInt(1, aprovacao);
+            ps.setBoolean(2, aprovar);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getString(1);
+            }
+        }
+    }
+
     /** P-06: comprovativo com ficheiro (talão / print M-Pesa) junto ao movimento; quem vê o ficheiro decide-o a RLS. */
     @Test
     void comprovativoComFicheiroComPerfis() throws Exception {

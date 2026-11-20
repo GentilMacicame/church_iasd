@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 590 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 609 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -204,6 +204,10 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | --- | --- | --- | --- |
 | GET | `/v1/nucleo/acessos-confidenciais` | AcessosConfidenciaisController · listar | `nucleo.acesso_confidencial.ler` |
 | GET | `/v1/nucleo/acessos-confidenciais/{id}` | AcessosConfidenciaisController · obter | `nucleo.acesso_confidencial.ler` |
+| GET | `/v1/nucleo/acompanhamento-aprovacoes` | RelatoriosNucleoController · acompanhamentoAprovacoes | `ler o objecto do processo (despesas, transacções, contagens, orçamentos, livro de membros)` |
+| GET | `/v1/nucleo/aprovacoes` | AprovacoesController · listar | `nucleo.aprovacao.ler` |
+| GET | `/v1/nucleo/aprovacoes/{id}` | AprovacoesController · obter | `nucleo.aprovacao.ler` |
+| POST | `/v1/nucleo/aprovacoes/{id}/decidir` | AprovacoesController · decidir | `'quem a etapa indica (perfil ou permissão na igreja); etapas de um órgão: quem regista votos ou aprova o objecto, com o voto'` |
 | GET | `/v1/nucleo/auditoria` | AuditoriaController · listar | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/auditoria/{id}` | AuditoriaController · obter | `nucleo.log_auditoria.ler` |
 | GET | `/v1/nucleo/comunicados` | ComunicadosController · listar | `nucleo.comunicado.ler` |
@@ -218,6 +222,21 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | PATCH | `/v1/nucleo/comunicados/{id}` | ComunicadosController · alterar | `nucleo.comunicado.alterar` |
 | POST | `/v1/nucleo/comunicados/{id}/reactivar` | ComunicadosController · reactivar | `nucleo.comunicado.terminar` |
 | POST | `/v1/nucleo/comunicados/{id}/terminar` | ComunicadosController · terminar | `nucleo.comunicado.terminar` |
+| GET | `/v1/nucleo/decisoes-aprovacao` | DecisoesAprovacaoController · listar | `nucleo.aprovacao_decisao.ler` |
+| GET | `/v1/nucleo/decisoes-aprovacao/{id}` | DecisoesAprovacaoController · obter | `nucleo.aprovacao_decisao.ler` |
+| GET | `/v1/nucleo/etapas-aprovacao` | RelatoriosNucleoController · etapasAprovacao | `ler o processo de aprovação` |
+| GET | `/v1/nucleo/etapas-fluxo` | EtapasFluxoController · listar | `nucleo.fluxo_etapa.ler` |
+| POST | `/v1/nucleo/etapas-fluxo` | EtapasFluxoController · criar | `nucleo.fluxo_etapa.criar` |
+| GET | `/v1/nucleo/etapas-fluxo/{id}` | EtapasFluxoController · obter | `nucleo.fluxo_etapa.ler` |
+| PATCH | `/v1/nucleo/etapas-fluxo/{id}` | EtapasFluxoController · alterar | `nucleo.fluxo_etapa.alterar` |
+| POST | `/v1/nucleo/etapas-fluxo/{id}/reactivar` | EtapasFluxoController · reactivar | `nucleo.fluxo_etapa.terminar` |
+| POST | `/v1/nucleo/etapas-fluxo/{id}/terminar` | EtapasFluxoController · terminar | `nucleo.fluxo_etapa.terminar` |
+| GET | `/v1/nucleo/fluxos-aprovacao` | FluxosAprovacaoController · listar | `nucleo.fluxo_aprovacao.ler` |
+| POST | `/v1/nucleo/fluxos-aprovacao` | FluxosAprovacaoController · criar | `nucleo.fluxo_aprovacao.criar` |
+| GET | `/v1/nucleo/fluxos-aprovacao/{id}` | FluxosAprovacaoController · obter | `nucleo.fluxo_aprovacao.ler` |
+| PATCH | `/v1/nucleo/fluxos-aprovacao/{id}` | FluxosAprovacaoController · alterar | `nucleo.fluxo_aprovacao.alterar` |
+| POST | `/v1/nucleo/fluxos-aprovacao/{id}/reactivar` | FluxosAprovacaoController · reactivar | `nucleo.fluxo_aprovacao.terminar` |
+| POST | `/v1/nucleo/fluxos-aprovacao/{id}/terminar` | FluxosAprovacaoController · terminar | `nucleo.fluxo_aprovacao.terminar` |
 | GET | `/v1/nucleo/notificacoes` | NotificacoesController · listar | `nucleo.notificacao.ler` |
 | POST | `/v1/nucleo/notificacoes` | NotificacoesController · criar | `nucleo.notificacao.criar` |
 | GET | `/v1/nucleo/notificacoes-a-enviar` | RelatoriosNucleoController · notificacoesAEnviar | `nucleo.notificacao.ler` |

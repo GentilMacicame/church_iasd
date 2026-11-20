@@ -2640,6 +2640,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/nucleo/acompanhamento-aprovacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Acompanhamento aprovacoes
+         * @description Lido da vista nucleo.vw_aprovacoes.
+         */
+        get: operations["relVNucleoAcompanhamentoAprovacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/aprovacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Aprovacoes: listar
+         * @description Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa em que está (V54)
+         */
+        get: operations["listarAprovacao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/aprovacoes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aprovacoes: ler um */
+        get: operations["lerAprovacao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/aprovacoes/{id}/decidir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decidir a etapa em curso de um processo de aprovação */
+        post: operations["VNucleoAprovacoesIdDecidir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/nucleo/auditoria": {
         parameters: {
             query?: never;
@@ -2841,6 +2915,233 @@ export interface paths {
          * @description Preenche endDate; nada se apaga.
          */
         post: operations["terminarComunicado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/decisoes-aprovacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Decisoes aprovacao: listar
+         * @description Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)
+         */
+        get: operations["listarAprovacaoDecisao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/decisoes-aprovacao/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decisoes aprovacao: ler um */
+        get: operations["lerAprovacaoDecisao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/etapas-aprovacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório: Etapas aprovacao
+         * @description Lido da vista nucleo.vw_aprovacao_etapas.
+         */
+        get: operations["relVNucleoEtapasAprovacao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/etapas-fluxo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Etapas fluxo: listar
+         * @description Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54)
+         */
+        get: operations["listarFluxoEtapa"];
+        put?: never;
+        /**
+         * Etapas fluxo: criar
+         * @description Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54)
+         */
+        post: operations["criarFluxoEtapa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/etapas-fluxo/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Etapas fluxo: ler um */
+        get: operations["lerFluxoEtapa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Etapas fluxo: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarFluxoEtapa"];
+        trace?: never;
+    };
+    "/v1/nucleo/etapas-fluxo/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Etapas fluxo: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarFluxoEtapa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/etapas-fluxo/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Etapas fluxo: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarFluxoEtapa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/fluxos-aprovacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fluxos aprovacao: listar
+         * @description Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54)
+         */
+        get: operations["listarFluxoAprovacao"];
+        put?: never;
+        /**
+         * Fluxos aprovacao: criar
+         * @description Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54)
+         */
+        post: operations["criarFluxoAprovacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/fluxos-aprovacao/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fluxos aprovacao: ler um */
+        get: operations["lerFluxoAprovacao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Fluxos aprovacao: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarFluxoAprovacao"];
+        trace?: never;
+    };
+    "/v1/nucleo/fluxos-aprovacao/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fluxos aprovacao: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarFluxoAprovacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/nucleo/fluxos-aprovacao/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fluxos aprovacao: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarFluxoAprovacao"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8957,6 +9258,115 @@ export interface components {
             readonly criadoPor?: number | null;
             readonly modificadoPor?: number | null;
         };
+        /** @description Processos de aprovação em curso e concluídos: o objecto (despesa, saída, contagem, orçamento ou membro), o fluxo e a etapa em que está (V54) */
+        Aprovacao: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.fluxo_aprovacao
+             */
+            fluxoAprovacaoId?: number;
+            processo?: components["schemas"]["EnumProcessoAprovacao"];
+            assunto?: string;
+            /** @example 650.00 */
+            valor?: string;
+            /**
+             * Format: int32
+             * @description → tesouraria.despesa
+             */
+            despesaId?: number;
+            /**
+             * Format: int64
+             * @description → tesouraria.transacao
+             */
+            transacaoId?: number;
+            /**
+             * Format: int32
+             * @description → tesouraria.contagem_numerario
+             */
+            contagemId?: number;
+            /**
+             * Format: int32
+             * @description → tesouraria.orcamento
+             */
+            orcamentoId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.membro · Membro a admitir ou remover
+             */
+            membroId?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.usuario · Quem pediu (não decide as etapas com outra_pessoa)
+             */
+            pedidoPorUsuarioId?: number;
+            /** @description Ordem da etapa actual (a próxima a decidir) */
+            etapa?: number;
+            /** Format: date-time */
+            concluidoEm?: string;
+            estado?: components["schemas"]["EnumEstadoAprovacao"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54) */
+        AprovacaoDecisao: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.aprovacao
+             */
+            aprovacaoId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.fluxo_etapa
+             */
+            fluxoEtapaId?: number;
+            etapa?: number;
+            aprovado?: boolean;
+            /**
+             * Format: int32
+             * @description → nucleo.usuario · Quem decidiu ou registou a decisão do órgão
+             */
+            usuarioId?: number;
+            /**
+             * Format: int32
+             * @description → secretaria.voto · Voto do órgão (etapas ORGAO)
+             */
+            votoId?: number;
+            motivo?: string;
+            /**
+             * @description Valor aprovado, quando a etapa o reduz
+             * @example 650.00
+             */
+            valor?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
         /** @description Baptismos e rebaptismos */
         Baptismo: {
             /** Format: int32 */
@@ -9638,6 +10048,8 @@ export interface components {
             readonly modificadoPor?: number | null;
         };
         /** @enum {string} */
+        EnumAccaoEtapa: "APRECIAR" | "CONFERIR" | "RECOMENDAR" | "APROVAR" | "VOTAR";
+        /** @enum {string} */
         EnumCanalNotificacao: "SMS" | "WHATSAPP" | "EMAIL";
         /** @enum {string} */
         EnumEsDivisao: "ROL_DO_BERCO" | "JARDIM_DE_INFANCIA" | "PRIMARIOS" | "JUVENIS" | "ADOLESCENTES" | "JOVENS" | "ADULTOS";
@@ -9645,6 +10057,8 @@ export interface components {
         EnumEscolaridade: "NENHUMA" | "PRIMARIO" | "SECUNDARIO" | "TECNICO_PROFISSIONAL" | "SUPERIOR";
         /** @enum {string} */
         EnumEstadoActividade: "PLANEADA" | "EM_CURSO" | "CONCLUIDA" | "CANCELADA";
+        /** @enum {string} */
+        EnumEstadoAprovacao: "EM_CURSO" | "APROVADO" | "REJEITADO" | "CANCELADO";
         /** @enum {string} */
         EnumEstadoCivil: "SOLTEIRO" | "CASADO" | "DIVORCIADO" | "VIUVO" | "UNIAO_FACTO" | "NOIVO";
         /** @enum {string} */
@@ -9683,6 +10097,10 @@ export interface components {
         EnumFuncaoEscala: "PREGADOR" | "ANCIAO_DO_DIA" | "DIACONO" | "DIACONISA" | "RECEPCAO" | "MUSICA" | "SONOPLASTIA" | "PROFESSOR_ES" | "DIRECTOR_ES" | "LIMPEZA" | "OUTRA" | "TRADUTOR" | "ACOMPANHANTE_VISITAS" | "ACOMPANHANTE_OFERTAS" | "ACOMPANHANTE_BOAS_VINDAS" | "APRESENTADOR_ES" | "APRESENTADOR_CULTO" | "SERMAO_CRIANCA" | "ORACAO_INICIAL" | "ORACAO_FINAL" | "APRESENTADOR_JA" | "MEDITACAO_JA";
         /** @enum {string} */
         EnumMetodoPagamento: "MPESA" | "EMOLA" | "BANCO" | "NUMERARIO";
+        /** @enum {string} */
+        EnumProcessoAprovacao: "DESPESA" | "SAIDA" | "CONTAGEM" | "ORCAMENTO" | "ADMISSAO_MEMBRO" | "REMOCAO_MEMBRO";
+        /** @enum {string} */
+        EnumResponsavelEtapa: "PERFIL" | "PERMISSAO" | "ORGAO";
         /** @enum {string} */
         EnumResultadoVoto: "APROVADO" | "REJEITADO" | "ADIADO";
         /** @enum {string} */
@@ -9947,6 +10365,77 @@ export interface components {
             igrejaId?: number;
             ano?: number;
             mes?: number;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Fluxos de aprovação: que etapas segue cada natureza de processo (despesa, saída, contagem, orçamento, admissão e remoção de membros), a partir de que valor (V54) */
+        FluxoAprovacao: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Igreja a que o fluxo se aplica; vazio = modelo da Associação/Missão para todas as igrejas sem fluxo próprio
+             */
+            igrejaId?: number;
+            processo?: components["schemas"]["EnumProcessoAprovacao"];
+            nome?: string;
+            /**
+             * @description O fluxo aplica-se a partir deste valor (o de maior valor mínimo que não passe o valor do processo)
+             * @example 650.00
+             */
+            valorMinimo?: string;
+            descricao?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Etapas de um fluxo de aprovação, pela ordem em que se decidem: quem decide (perfil, permissão ou órgão que vota) e o que faz (V54) */
+        FluxoEtapa: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.fluxo_aprovacao
+             */
+            fluxoAprovacaoId?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja · Copiado do fluxo
+             */
+            igrejaId?: number;
+            /** @description 1 = a primeira a decidir */
+            ordem?: number;
+            nome?: string;
+            accao?: components["schemas"]["EnumAccaoEtapa"];
+            /** @description PERFIL (quem tem esse perfil na igreja), PERMISSAO (quem tem essa permissão) ou ORGAO (o órgão vota em reunião) */
+            responsavel?: components["schemas"]["EnumResponsavelEtapa"];
+            /**
+             * Format: int32
+             * @description → nucleo.perfil · Perfil que decide (responsavel = PERFIL)
+             */
+            perfilId?: number;
+            /**
+             * Format: int32
+             * @description → nucleo.permissao · Permissão de quem decide (responsavel = PERMISSAO)
+             */
+            permissaoId?: number;
+            /** @description Órgão que vota (responsavel = ORGAO): o voto tem de ser de uma reunião deste tipo */
+            orgao?: components["schemas"]["EnumTipoReuniao"];
+            /** @description Quem pediu e quem já decidiu outra etapa não decide esta */
+            outraPessoa?: boolean;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -14399,6 +14888,7 @@ export interface operations {
                 igrejaId?: number;
                 formato?: "json" | "csv" | "pdf";
                 ano?: number;
+                membroId?: number;
             };
             header?: never;
             path?: never;
@@ -17444,6 +17934,160 @@ export interface operations {
             422: components["responses"]["RegraNegocio"];
         };
     };
+    relVNucleoAcompanhamentoAprovacoes: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                despesaId?: number;
+                transacaoId?: number;
+                contagemId?: number;
+                orcamentoId?: number;
+                membroId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarAprovacao: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                igrejaId?: number;
+                fluxoAprovacaoId?: number;
+                processo?: components["schemas"]["EnumProcessoAprovacao"];
+                despesaId?: number;
+                transacaoId?: number;
+                contagemId?: number;
+                orcamentoId?: number;
+                membroId?: number;
+                pedidoPorUsuarioId?: number;
+                estado?: components["schemas"]["EnumEstadoAprovacao"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["Aprovacao"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Aprovacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    VNucleoAprovacoesIdDecidir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Obrigatório nas etapas de perfil/permissão; nas de órgão decide o voto */
+                    aprovar?: boolean;
+                    /** @description Voto da reunião (etapas ORGAO) */
+                    votoId?: number;
+                    /** @description Obrigatório ao rejeitar */
+                    motivo?: string;
+                    /**
+                     * @description Valor aprovado, se a etapa o reduzir
+                     * @example 650.00
+                     */
+                    valor?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        estado: components["schemas"]["EnumEstadoAprovacao"];
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
     listarLog: {
         parameters: {
             query?: {
@@ -17871,6 +18515,481 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Comunicado"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarAprovacaoDecisao: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                aprovacaoId?: number;
+                igrejaId?: number;
+                fluxoEtapaId?: number;
+                usuarioId?: number;
+                votoId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["AprovacaoDecisao"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerAprovacaoDecisao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AprovacaoDecisao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    relVNucleoEtapasAprovacao: {
+        parameters: {
+            query?: {
+                igrejaId?: number;
+                formato?: "json" | "csv" | "pdf";
+                aprovacaoId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarFluxoEtapa: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                fluxoAprovacaoId?: number;
+                igrejaId?: number;
+                accao?: components["schemas"]["EnumAccaoEtapa"];
+                responsavel?: components["schemas"]["EnumResponsavelEtapa"];
+                perfilId?: number;
+                permissaoId?: number;
+                orgao?: components["schemas"]["EnumTipoReuniao"];
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["FluxoEtapa"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarFluxoEtapa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["FluxoEtapa"], "fluxoAprovacaoId" | "ordem" | "nome" | "responsavel">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoEtapa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerFluxoEtapa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoEtapa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarFluxoEtapa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FluxoEtapa"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoEtapa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarFluxoEtapa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoEtapa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarFluxoEtapa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoEtapa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarFluxoAprovacao: {
+        parameters: {
+            query?: {
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                igrejaId?: number;
+                processo?: components["schemas"]["EnumProcessoAprovacao"];
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["FluxoAprovacao"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarFluxoAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["FluxoAprovacao"], "processo" | "nome">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoAprovacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerFluxoAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoAprovacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarFluxoAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FluxoAprovacao"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoAprovacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarFluxoAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoAprovacao"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarFluxoAprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FluxoAprovacao"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];
@@ -25719,6 +26838,7 @@ export interface operations {
                 formato?: "json" | "csv" | "pdf";
                 ano?: number;
                 mes?: number;
+                membroId?: number;
             };
             header?: never;
             path?: never;
@@ -29203,6 +30323,7 @@ export interface operations {
                 formato?: "json" | "csv" | "pdf";
                 ano?: number;
                 mes?: number;
+                membroId?: number;
             };
             header?: never;
             path?: never;

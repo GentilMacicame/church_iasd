@@ -70,6 +70,11 @@ SELECT set_config('app.usuario_id','11',false) \g /dev/null
 INSERT INTO despesa (des_id, des_igr_id, des_ide_id, des_cat_id, des_fun_id, des_descricao, des_valor_solicitado, des_solicitado_por_usu_id)
 VALUES (10, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo='D4'), (SELECT fun_id FROM fundo WHERE fun_codigo='OLOC'), 'Acampamento de jovens', 3000, 11);
 SELECT tesouraria.fn_decidir_despesa(10, true);
+-- V54: fluxo «Despesa corrente»: o tesoureiro aprecia (etapa 1), depois o ancião aprova (etapa 2)
+SELECT set_config('app.usuario_id','3',false) \g /dev/null
+SELECT tesouraria.fn_decidir_despesa(10, true, 2500);
+SELECT set_config('app.usuario_id','2',false) \g /dev/null
+SELECT tesouraria.fn_decidir_despesa(10, true);
 SELECT set_config('app.usuario_id','3',false) \g /dev/null
 SELECT tesouraria.fn_decidir_despesa(10, true, 2500);
 SELECT des_estado, des_valor_aprovado, des_aprovado_por_usu_id FROM despesa WHERE des_id = 10;

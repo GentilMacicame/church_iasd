@@ -6,6 +6,8 @@
  * Cada contagem mostra, parte a parte, o contado, o lançado e quanto falta lançar, e quem participou (V42).
  * V43: contam no mínimo o tesoureiro, um representante da Escola Sabatina e um diácono (o ancião pode juntar-se); sem os
  * três a contagem não se confere (a base de dados recusa). Os dois primeiros ficam também como os contadores 1 e 2.
+ * V54: a conferência é uma etapa do fluxo «Conferência da contagem» (por defeito, o tesoureiro): o cartão diz quem confere,
+ * com os nomes, e porque o botão ainda não está disponível.
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -28,6 +30,8 @@ import { centimos, data, deCentimos, dinheiro, hojeIso, qtd } from '@/lib/format
 import { cn } from '@/lib/utils'
 import { useMembrosBasicos } from '@/features/membros/api'
 import { DialogoTransferencia } from './DialogoTransferencia'
+import { useAprovacaoDe, useDecidir } from '@/features/aprovacoes/api'
+import { QuemDecide } from '@/features/aprovacoes/EtapasAprovacao'
 import { FUNCOES_CONTAGEM, MINIMO_CONTAGEM, PARTES_CONTAGEM, useConferencia, useContagens, useContagensMut, useContasIgreja as useContas, useParticipantesContagem, useParticipantesContagemMut, type Conferencia, type ParticipanteContagem } from './api'
 
 const ESTADO = {
@@ -115,6 +119,7 @@ export default function PaginaContagens() {
 function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores: string; nomeDe: (id: number) => string | undefined }) {
   const { pode } = useSessao()
   const { mudarEstado } = useContagensMut()
+  const decidir = useDecidir()
   const contagens = useContagens()
   const participantes = useParticipantesContagem(c.id)
   const [depositar, setDepositar] = useState(false)
@@ -126,14 +131,20 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
   const contado = centimos(c.totalContado), lancado = centimos(c.totalLancado), falta = contado - lancado
   const pct = contado ? Math.min(100, Math.round((lancado / contado) * 100)) : 0
   const aberta = c.estado === 'ABERTA'
+  // o processo de conferência (V54): quem confere e se o utilizador pode conferir
+  const processo = useAprovacaoDe({ contagemId: c.id }, aberta).data
+  const conferencia = aberta && processo?.estado === 'EM_CURSO' ? processo : null
   const est = ESTADO[c.estado as keyof typeof ESTADO] ?? ESTADO.ABERTA
   // com partes (contagens novas) mostra-se cada uma; nas antigas, só o total
   const partes = c.dizimos != null
     ? PARTES_CONTAGEM.map((p) => ({ rotulo: p.rotulo, contado: centimos(c[p.campo] ?? '0'), lancado: centimos(c[`${p.campo}Lancado`] ?? '0') })).filter((p) => p.contado || p.lancado)
     : [{ rotulo: 'Total (contagem sem partes)', contado, lancado }]
-  const conferir = () => mudarEstado.mutate({ id: c.id, estado: 'CONFERIDA' }, {
-    onSuccess: () => toast.success('Contagem conferida.'), onError: (e) => toast.error(mensagemDe(e)),
-  })
+  const aoConferir = { onSuccess: () => toast.success('Contagem conferida.'), onError: (e: unknown) => toast.error(mensagemDe(e)) }
+  // com fluxo decide-se a etapa em curso; sem fluxo (igreja sem fluxo de contagem), muda-se o estado como antes
+  const conferir = () => conferencia ? decidir.mutate({ id: conferencia.id, aprovar: true }, aoConferir)
+    : mudarEstado.mutate({ id: c.id, estado: 'CONFERIDA' }, aoConferir)
+  const podeConferir = conferencia ? conferencia.podeDecidir : pode('tesouraria.contagem_numerario.alterar')
+  const quemConfere = conferencia ? <QuemDecide p={conferencia} /> : 'o tesoureiro'
 
   // os quatro passos: quem contou → lançar → conferir → depositar
   const okQuem = !participantes.isPending && faltam.length === 0
@@ -142,14 +153,15 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
   const passos = [
     { r: 'Quem contou', d: !aberta ? 'registado' : okQuem ? `${activos.length} pessoas` : `faltam ${faltam.length}`, ok: okQuem || !aberta },
     { r: 'Lançar entradas', d: okLancar ? 'tudo lançado' : `${pct}% lançado`, ok: okLancar || !aberta },
-    { r: 'Conferir', d: aberta ? 'tesoureiro confere' : 'conferida', ok: !aberta },
+    { r: 'Conferir', d: !aberta ? 'conferida' : conferencia ? (conferencia.responsaveis ?? conferencia.responsavel ?? 'tesoureiro') : 'tesoureiro confere', ok: !aberta },
     { r: 'Depositar', d: c.estado === 'DEPOSITADA' ? 'depositada' : 'no banco', ok: c.estado === 'DEPOSITADA' },
   ]
   const dica = !aberta ? 'Quando levar o dinheiro ao banco, registe o depósito com o n.º do talão.'
     : !okQuem ? `Junte ${faltam.map((f) => f.rotulo).join(', ').replace(/, ([^,]*)$/, ' e $1')}.`
     : falta > 0 ? `Faltam ${dinheiro(deCentimos(falta))} por lançar: em "Lançar entrada", escolha esta contagem.`
     : falta < 0 ? 'Lançou-se mais do que o contado: verifique as entradas desta contagem.'
-    : 'Está tudo lançado: pode conferir.'
+    : podeConferir ? 'Está tudo lançado: pode conferir.'
+    : <>Está tudo lançado: falta a conferência de {quemConfere}.</>
 
   return (
     <section className={cn('relative min-w-0 overflow-hidden rounded-2xl border bg-card shadow-card transition-shadow hover:shadow-[0_6px_20px_-8px_rgb(15_23_42/0.18)]',
@@ -228,13 +240,17 @@ function CartaoContagem({ c, contadores, nomeDe }: { c: Conferencia; contadores:
       )}
 
       <footer className={cn('flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-5 py-3 sm:px-6', expandido && !aberta && 'mt-4')}>
-        <p className="text-sm text-muted-foreground">{dica}</p>
+        <div className="grid gap-0.5">
+          <p className="text-sm text-muted-foreground">{dica}</p>
+          {aberta && passo !== 3 && <p className="text-xs text-muted-foreground">Quem confere: {quemConfere}. O botão fica disponível quando estiverem os três que contam e tudo estiver lançado.</p>}
+        </div>
         <div className="flex flex-wrap gap-2">
           {aberta && passo === 2 && falta > 0 && pode('tesouraria.transacao.criar') && (
             <Button asChild size="sm" className="alvo"><Link to={`/tesouraria/entrada?contagem=${c.id}`}><HandCoins className="size-4" />Lançar entradas</Link></Button>
           )}
-          {aberta && pode('tesouraria.contagem_numerario.alterar') && (
-            <Button size="sm" variant={passo === 3 ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || passo !== 3} onClick={conferir}>
+          {aberta && podeConferir && (
+            <Button size="sm" variant={passo === 3 ? 'default' : 'outline'} className="alvo" disabled={mudarEstado.isPending || decidir.isPending || passo !== 3} onClick={conferir}
+              title={passo === 1 ? `Falta juntar ${faltam.map((f) => f.rotulo).join(', ')}` : passo === 2 ? 'Falta lançar o contado' : undefined}>
               <CircleCheck className="size-4" />Conferir
             </Button>
           )}

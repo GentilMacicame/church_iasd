@@ -7,7 +7,7 @@
 psql:database/tests/02_permissoes_por_perfil.sql:18: ERROR:  new row violates row-level security policy for table "membro"
 psql:database/tests/02_permissoes_por_perfil.sql:19: ERROR:  permission denied for table usuario
 psql:database/tests/02_permissoes_por_perfil.sql:20: ERROR:  permission denied for table saldo_diario_conta
-psql:database/tests/02_permissoes_por_perfil.sql:23: ERROR:  Sem permissão: Aprovar uma saída de dinheiro (tesouraria.transacao.aprovar) na igreja 1
+psql:database/tests/02_permissoes_por_perfil.sql:23: ERROR:  A etapa «Aprovação do pastor ou ancião» cabe a: Pastor ou Ancião (Ancião, Pastor)
 psql:database/tests/02_permissoes_por_perfil.sql:24: ERROR:  new row violates row-level security policy for table "transacao"
    (terminou a saída pendente 20: tem tesouraria.transacao.terminar)
 psql:database/tests/02_permissoes_por_perfil.sql:30: ERROR:  Sem permissão: Confirmar a recepção de uma remessa (Associação) (tesouraria.remessa.confirmar) na igreja 1
@@ -72,7 +72,13 @@ psql:database/tests/02_permissoes_por_perfil.sql:65: ERROR:  Sem permissão: Ter
 (1 row)
 
 === DIRECTOR DE DEPARTAMENTO (igreja 1)
-psql:database/tests/02_permissoes_por_perfil.sql:72: ERROR:  Sem permissão: Aprovar ou rejeitar requisições de despesa (tesouraria.despesa.aprovar) na igreja 1
+psql:database/tests/02_permissoes_por_perfil.sql:72: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Tesoureiro)
+psql:database/tests/02_permissoes_por_perfil.sql:75: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Tesoureiro)
+ fn_decidir_despesa 
+--------------------
+ 
+(1 row)
+
  fn_decidir_despesa 
 --------------------
  
@@ -89,18 +95,18 @@ psql:database/tests/02_permissoes_por_perfil.sql:72: ERROR:  Sem permissão: Apr
                 1 | Tito |                 2 |            600.00
 (1 row)
 
-psql:database/tests/02_permissoes_por_perfil.sql:82: ERROR:  Só um super-administrador pode criar outro
+psql:database/tests/02_permissoes_por_perfil.sql:87: ERROR:  Só um super-administrador pode criar outro
 === ADMIN da igreja 1
                   ok                   
 ---------------------------------------
  admin deu TESOUREIRO ao utilizador 12
 (1 row)
 
-psql:database/tests/02_permissoes_por_perfil.sql:88: ERROR:  Não pode dar um perfil com permissões que não tem nesta igreja: nucleo.usuario_entidade.ler, secretaria.disciplina.ler, secretaria.disciplina.criar, secretaria.disciplina.alterar, secretaria.disciplina.terminar, secretaria.membro.validar, secretaria.transferencia_membro.emitir_carta, secretaria.transferencia_membro.aceitar, tesouraria.transacao.aprovar, tesourar
-psql:database/tests/02_permissoes_por_perfil.sql:89: ERROR:  Ninguém altera os seus próprios perfis
-psql:database/tests/02_permissoes_por_perfil.sql:90: ERROR:  Não pode dar um perfil com permissões que não tem nesta igreja: organizacao.igreja.ler, organizacao.igreja_departamento.ler, secretaria.familia.ler, secretaria.membro.ler, secretaria.contacto.ler, actividades.actividade.ler, escola_sabatina.classe.ler, escola_sabatina.classe_trimestre.ler, escola_sabatina.relatorio_sabado.ler, tesouraria.conta_financeira.ler, te
-psql:database/tests/02_permissoes_por_perfil.sql:91: ERROR:  Só um super-administrador pode criar outro
-psql:database/tests/02_permissoes_por_perfil.sql:92: ERROR:  Este utilizador tem perfis em igrejas que não administra
+psql:database/tests/02_permissoes_por_perfil.sql:93: ERROR:  Não pode dar um perfil com permissões que não tem nesta igreja: nucleo.usuario_entidade.ler, secretaria.disciplina.ler, secretaria.disciplina.criar, secretaria.disciplina.alterar, secretaria.disciplina.terminar, secretaria.membro.validar, secretaria.transferencia_membro.emitir_carta, secretaria.transferencia_membro.aceitar, tesouraria.transacao.aprovar, tesourar
+psql:database/tests/02_permissoes_por_perfil.sql:94: ERROR:  Ninguém altera os seus próprios perfis
+psql:database/tests/02_permissoes_por_perfil.sql:95: ERROR:  Não pode dar um perfil com permissões que não tem nesta igreja: organizacao.igreja.ler, organizacao.igreja_departamento.ler, secretaria.familia.ler, secretaria.membro.ler, secretaria.contacto.ler, actividades.actividade.ler, escola_sabatina.classe.ler, escola_sabatina.classe_trimestre.ler, escola_sabatina.relatorio_sabado.ler, tesouraria.conta_financeira.ler, te
+psql:database/tests/02_permissoes_por_perfil.sql:96: ERROR:  Só um super-administrador pode criar outro
+psql:database/tests/02_permissoes_por_perfil.sql:97: ERROR:  Este utilizador tem perfis em igrejas que não administra
  disciplina_visivel | log_visivel 
 --------------------+-------------
                   0 |           0

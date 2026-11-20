@@ -28,8 +28,12 @@ import mz.org.iasd.igreja.models.escolasabatina.SemanaEspecial;
 import mz.org.iasd.igreja.models.escolasabatina.Trimestre;
 import mz.org.iasd.igreja.models.escolasabatina.Visitante;
 import mz.org.iasd.igreja.models.nucleo.AcessoConfidencial;
+import mz.org.iasd.igreja.models.nucleo.Aprovacao;
+import mz.org.iasd.igreja.models.nucleo.AprovacaoDecisao;
 import mz.org.iasd.igreja.models.nucleo.Comunicado;
 import mz.org.iasd.igreja.models.nucleo.ComunicadoIgreja;
+import mz.org.iasd.igreja.models.nucleo.FluxoAprovacao;
+import mz.org.iasd.igreja.models.nucleo.FluxoEtapa;
 import mz.org.iasd.igreja.models.nucleo.LogAuditoria;
 import mz.org.iasd.igreja.models.nucleo.Notificacao;
 import mz.org.iasd.igreja.models.nucleo.Perfil;
@@ -89,10 +93,12 @@ import mz.org.iasd.igreja.models.tesouraria.SaldoDiarioFundo;
 import mz.org.iasd.igreja.models.tesouraria.Transacao;
 import mz.org.iasd.igreja.models.tesouraria.TransacaoLinha;
 import mz.org.iasd.igreja.models.tesouraria.TransferenciaDepartamento;
+import mz.org.iasd.igreja.models.tipos.AccaoEtapa;
 import mz.org.iasd.igreja.models.tipos.CanalNotificacao;
 import mz.org.iasd.igreja.models.tipos.EsDivisao;
 import mz.org.iasd.igreja.models.tipos.Escolaridade;
 import mz.org.iasd.igreja.models.tipos.EstadoActividade;
+import mz.org.iasd.igreja.models.tipos.EstadoAprovacao;
 import mz.org.iasd.igreja.models.tipos.EstadoCivil;
 import mz.org.iasd.igreja.models.tipos.EstadoComunicado;
 import mz.org.iasd.igreja.models.tipos.EstadoContagem;
@@ -112,6 +118,8 @@ import mz.org.iasd.igreja.models.tipos.EstadoTransferencia;
 import mz.org.iasd.igreja.models.tipos.EstadoValidacao;
 import mz.org.iasd.igreja.models.tipos.FuncaoEscala;
 import mz.org.iasd.igreja.models.tipos.MetodoPagamento;
+import mz.org.iasd.igreja.models.tipos.ProcessoAprovacao;
+import mz.org.iasd.igreja.models.tipos.ResponsavelEtapa;
 import mz.org.iasd.igreja.models.tipos.ResultadoVoto;
 import mz.org.iasd.igreja.models.tipos.Sexo;
 import mz.org.iasd.igreja.models.tipos.TipoCategoria;
@@ -140,10 +148,12 @@ public final class CatalogoGerado {
     }
 
     public static final List<Class<? extends Enum<?>>> TIPOS = List.of(
+            AccaoEtapa.class,
             CanalNotificacao.class,
             EsDivisao.class,
             Escolaridade.class,
             EstadoActividade.class,
+            EstadoAprovacao.class,
             EstadoCivil.class,
             EstadoComunicado.class,
             EstadoContagem.class,
@@ -163,6 +173,8 @@ public final class CatalogoGerado {
             EstadoValidacao.class,
             FuncaoEscala.class,
             MetodoPagamento.class,
+            ProcessoAprovacao.class,
+            ResponsavelEtapa.class,
             ResultadoVoto.class,
             Sexo.class,
             TipoCategoria.class,
@@ -188,6 +200,10 @@ public final class CatalogoGerado {
             UsuarioEntidade.class,
             LogAuditoria.class,
             AcessoConfidencial.class,
+            FluxoAprovacao.class,
+            FluxoEtapa.class,
+            Aprovacao.class,
+            AprovacaoDecisao.class,
             Entidade.class,
             Distrito.class,
             Provincia.class,
