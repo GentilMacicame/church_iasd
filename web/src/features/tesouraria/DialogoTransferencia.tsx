@@ -3,8 +3,8 @@
  * caixa, passar do M-Pesa para o banco. Não tem linhas de fundo — o dinheiro continua nos mesmos fundos, só muda
  * de conta. A base de dados recusa contas de outra igreja, moedas diferentes, a conta da Missão e meses fechados.
  *
- * Também serve para "Depositar no banco" a contagem conferida: no fim marca a contagem como DEPOSITADA, e para repor o
- * fundo de maneio (V42): o destino já vem escolhido.
+ * Também serve para "Depositar no banco" a contagem conferida: no fim marca a contagem como DEPOSITADA.
+ * O fundo de maneio (V56) não é destino de transferências: repõe-se com a reposição aprovada pelo Conselho (Contas).
  */
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
@@ -113,7 +113,7 @@ export function DialogoTransferencia({ aoFechar, origem, destino, valor: valorIn
             <ArrowRight aria-hidden className="mx-auto mb-2.5 hidden size-4 text-muted-foreground sm:block" />
             <div className="campo-flutuante grid gap-1.5">
               <label htmlFor="trf-para" className="text-sm font-medium">Para</label>
-              <CampoEscolha id="trf-para" valor={paraId} aoMudar={setPara} opcoes={lista.filter((c) => String(c.id) !== deId).map(opcao)} vazio="Conta de destino…" />
+              <CampoEscolha id="trf-para" valor={paraId} aoMudar={setPara} opcoes={lista.filter((c) => String(c.id) !== deId && c.tipo !== 'FUNDO_MANEIO').map(opcao)} vazio="Conta de destino…" />
             </div>
           </div>
           {saldoDe != null && <p className="-mt-2 text-xs text-muted-foreground">Saldo em {contaDe?.nome}: <Dinheiro valor={saldoDe} /></p>}

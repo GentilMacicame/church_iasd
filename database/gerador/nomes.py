@@ -11,7 +11,7 @@ RES = {  # nome do recurso na API (plural, com hífen)
  'actividade':'actividades','material':'materiais','actividade_responsavel':'responsaveis-actividade','escala':'escalas','escala_plano':'planos-escala','escala_dia':'dias-escala','escala_coluna':'colunas-escala','santa_ceia':'santas-ceias','santa_ceia_acompanhante':'acompanhantes-santa-ceia','santa_ceia_participante':'participantes-santa-ceia','programa_dia':'programas-dia','programa_parte':'partes-programa','programa_item':'itens-programa',
  'trimestre':'trimestres','sabado':'sabados','classe':'classes','classe_trimestre':'classes-trimestre','matricula':'matriculas','meta_individual':'metas-individuais','quota_reavivamento':'quotas-reavivamento','quota_escalao_reavivamento':'quotas-escalao-reavivamento','percentagem_departamento':'percentagens-departamento','transferencia_departamento':'transferencias-departamento','adiantamento':'adiantamentos','semana_especial':'semanas-especiais',
  'relatorio_sabado':'relatorios-sabado','presenca':'presencas','visitante':'visitantes','pontuacao_config':'pesos-pontuacao',
- 'conta_financeira':'contas','fundo':'fundos','calendario_oferta':'calendario-ofertas','categoria':'categorias','alvo':'alvos',
+ 'conta_financeira':'contas','reposicao_maneio':'reposicoes-maneio','fundo':'fundos','calendario_oferta':'calendario-ofertas','categoria':'categorias','alvo':'alvos',
  'orcamento':'orcamentos','orcamento_linha':'linhas-orcamento','despesa':'despesas','contagem_numerario':'contagens','contagem_participante':'participantes-contagem',
  'transacao':'transacoes','transacao_linha':'linhas-transacao','saldo_diario_conta':'saldos-diarios-conta',
  'saldo_diario_fundo':'saldos-diarios-fundo','recibo':'recibos','documento':'documentos','remessa':'remessas',

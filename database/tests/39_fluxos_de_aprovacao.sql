@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP 0
 \set VERBOSITY terse
 SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina, tesouraria, public;
--- V54: fluxos de aprovação e conferência. Utilizadores dos testes 01/02 na igreja 1: 2 tesoureiro, 3 ancião, 5 pastor do
+-- V54/V56: fluxos de aprovação e conferência. Utilizadores dos testes 01/02 na igreja 1: 2 tesoureiro, 3 ancião, 5 pastor do
 -- distrito, 6 secretária, 9 administrador, 11 director de departamento, 8 Tito (membro, sem perfil).
 SELECT set_config('app.usuario_id', '1', false) \g /dev/null
 INSERT INTO membro (mem_id, mem_igr_id, mem_nome, mem_apelido, mem_data_nascimento, mem_estado) VALUES
@@ -13,7 +13,9 @@ INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto) VALUES
  (3901, 3901, '2026-391', 'ADMISSAO', 'Admissão por baptismo de Celeste Mondlane'),
  (3903, 3900, 'J-391', 'FINANCEIRO', 'Compra de cadeiras para o templo'),
  (3904, 3902, '2026-392', 'FINANCEIRO', 'Compra de cadeiras (reunião regular)'),
- (3905, 3900, 'J-392', 'FINANCEIRO', 'Pintura da igreja (rejeitada)');
+ (3905, 3900, 'J-392', 'FINANCEIRO', 'Pintura da igreja (rejeitada)'),
+ (3906, 3901, '2026-393', 'FINANCEIRO', 'Material do clube'),
+ (3907, 3900, 'J-393', 'FINANCEIRO', 'Reposição do fundo de maneio');
 SET ROLE app_igreja;
 
 \echo '1. modelos da Associação: um fluxo por natureza e valor, com as etapas por ordem'
@@ -21,7 +23,7 @@ SELECT f.fap_processo, f.fap_nome, f.fap_valor_minimo, string_agg(e.fae_ordem ||
   FROM fluxo_aprovacao f JOIN fluxo_etapa e ON e.fae_fap_id = f.fap_id AND e.fae_end_date IS NULL
  WHERE f.fap_igr_id IS NULL GROUP BY f.fap_id ORDER BY f.fap_processo, f.fap_valor_minimo;
 
-\echo '2. despesa de 3 000 (director pede): fluxo «Despesa corrente», etapa 1 do tesoureiro, com o nome de quem decide'
+\echo '2. despesa de 3 000 (director pede): fluxo «Despesa da igreja», etapa 1 do tesoureiro, com o nome de quem decide'
 SELECT set_config('app.usuario_id', '11', false) \g /dev/null
 INSERT INTO despesa (des_id, des_igr_id, des_ide_id, des_cat_id, des_fun_id, des_descricao, des_valor_solicitado, des_solicitado_por_usu_id)
 VALUES (3901, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo = 'D4'), (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), 'Material do clube', 3000, 11);
@@ -30,42 +32,36 @@ SELECT fluxo, etapa, total_etapas, etapa_nome, responsavel, responsaveis, pode_d
 SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true);
 SELECT set_config('app.usuario_id', '3', false) \g /dev/null
 UPDATE despesa SET des_estado = 'APROVADA', des_valor_aprovado = 3000 WHERE des_id = 3901;
-\echo '   o ancião também não aprecia (é do tesoureiro); o tesoureiro aprecia; o ancião aprova'
+\echo '   o ancião não aprecia (é do tesoureiro); o tesoureiro aprecia; o tesoureiro não regista o voto do Conselho'
 SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true);
 SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 SELECT pode_decidir FROM vw_aprovacoes WHERE despesa_id = 3901;
 SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true);
-\echo '   o tesoureiro já decidiu: não decide a etapa 2 (outra pessoa)'
-SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true);
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), NULL, 3903);
+\echo '   o ancião não aprova sozinho (falta o voto); voto de uma reunião regular recusado; a Igreja antes do Conselho recusado'
 SELECT set_config('app.usuario_id', '3', false) \g /dev/null
-SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true, NULL, NULL, 2800);
-SELECT des_estado, des_valor_aprovado, des_aprovado_por_usu_id FROM despesa WHERE des_id = 3901;
-SELECT ordem, nome, situacao, decidido_por, valor_aprovado FROM vw_aprovacao_etapas
+SELECT tesouraria.fn_decidir_despesa(3901, true);
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), NULL, 3904);
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), NULL, 3906);
+\echo '   o Conselho vota; depois a Igreja: aprovada'
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), NULL, 3903);
+SELECT etapa, etapa_nome, responsavel FROM vw_aprovacoes WHERE despesa_id = 3901;
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), NULL, 3906);
+SELECT des_estado, des_valor_aprovado, des_vot_id FROM despesa WHERE des_id = 3901;
+SELECT ordem, nome, situacao, decidido_por, voto_numero FROM vw_aprovacao_etapas
  WHERE aprovacao_id = (SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901) ORDER BY ordem;
 \echo '   concluído: não se decide outra vez'
 SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3901), true);
 
-\echo '3. despesa de 15 000: fluxo «Despesa do Conselho» (o tesoureiro aprecia, o Conselho vota)'
-SELECT set_config('app.usuario_id', '11', false) \g /dev/null
-INSERT INTO despesa (des_id, des_igr_id, des_ide_id, des_cat_id, des_fun_id, des_descricao, des_valor_solicitado, des_solicitado_por_usu_id)
-VALUES (3902, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo = 'D4'), (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), 'Cadeiras do templo', 15000, 11);
-SELECT set_config('app.usuario_id', '2', false) \g /dev/null
-SELECT tesouraria.fn_decidir_despesa(3902, true);
-SELECT fluxo, etapa, etapa_nome, responsavel, responsaveis, pode_decidir FROM vw_aprovacoes WHERE despesa_id = 3902;
-\echo '   o ancião sem voto (recusado), com o voto de uma reunião regular (recusado), com o voto do Conselho (aprovada)'
-SELECT set_config('app.usuario_id', '3', false) \g /dev/null
-SELECT tesouraria.fn_decidir_despesa(3902, true);
-SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3902), true, 3904);
-SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE despesa_id = 3902), true, 3903);
-SELECT des_estado, des_valor_aprovado, des_vot_id FROM despesa WHERE des_id = 3902;
-\echo '   o mesmo voto não decide outra despesa à toa: a decisão é a do voto (rejeitado → despesa rejeitada)'
+\echo '3. despesa de 150 000: o mesmo fluxo (qualquer valor); o Conselho rejeita → despesa rejeitada'
 SELECT set_config('app.usuario_id', '1', false) \g /dev/null
 RESET ROLE;
 UPDATE voto SET vot_estado = 'REJEITADO' WHERE vot_id = 3905;
 SET ROLE app_igreja;
 SELECT set_config('app.usuario_id', '11', false) \g /dev/null
 INSERT INTO despesa (des_id, des_igr_id, des_ide_id, des_cat_id, des_fun_id, des_descricao, des_valor_solicitado, des_solicitado_por_usu_id)
-VALUES (3903, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo = 'D4'), (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), 'Pintura', 20000, 11);
+VALUES (3903, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo = 'D4'), (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), 'Pintura', 150000, 11);
+SELECT fluxo, total_etapas FROM vw_aprovacoes WHERE despesa_id = 3903;
 SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 SELECT tesouraria.fn_decidir_despesa(3903, false);
 SELECT tesouraria.fn_decidir_despesa(3903, true);
@@ -140,4 +136,58 @@ SELECT fn_aprovacao_decidir((SELECT apv_id FROM aprovacao WHERE apv_cnu_id = 390
 SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 UPDATE contagem_numerario SET cnu_end_date = now() WHERE cnu_id = 3901;
 SELECT apv_estado FROM aprovacao WHERE apv_cnu_id = 3901;
+
+\echo '8. estorno: corrige uma entrada errada; o pastor ou um ancião confirma (não vai ao Conselho)'
+SELECT set_config('app.usuario_id', '2', false) \g /dev/null
+BEGIN;
+INSERT INTO transacao (tra_id, tra_igr_id, tra_tipo, tra_metodo, tra_valor_total, tra_cfi_id, tra_estorno_tra_id, tra_mem_id, tra_data_hora)
+VALUES (3902, 1, 'SAIDA', 'MPESA', 10, 1, 1, 103, '2026-11-20 10:00+02');
+INSERT INTO transacao_linha (tli_tra_id, tli_fun_id, tli_cat_id, tli_valor) VALUES (3902, (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), 2, 10);
+COMMIT;
+SELECT processo, fluxo, etapa_nome, responsavel FROM vw_aprovacoes WHERE transacao_id = 3902;
+SELECT set_config('app.usuario_id', '3', false) \g /dev/null
+SELECT tesouraria.fn_aprovar_saida(3902);
+SELECT tra_aprovado_por_usu_id FROM transacao WHERE tra_id = 3902;
+
+\echo '9. fundo de maneio: a igreja define o valor; repõe-se só o gasto, com o voto do Conselho'
+SELECT set_config('app.usuario_id', '2', false) \g /dev/null
+INSERT INTO conta_financeira (cfi_id, cfi_igr_id, cfi_tipo, cfi_nome, cfi_data_saldo_inicial) VALUES (3901, 1, 'FUNDO_MANEIO', 'Maneio V56', '2026-11-01');
+\echo '   sem o valor definido, não há reposição; um valor de maneio numa conta que não é fundo de maneio: recusado'
+INSERT INTO reposicao_maneio (rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (1, 3901, 2026, 11, 2000);
+UPDATE conta_financeira SET cfi_valor_maneio = 2000 WHERE cfi_id = 2;
+UPDATE conta_financeira SET cfi_valor_maneio = 2000 WHERE cfi_id = 3901 RETURNING cfi_valor_maneio;
+\echo '   dinheiro não entra no maneio sem reposição aprovada'
+INSERT INTO transacao (tra_id, tra_igr_id, tra_tipo, tra_metodo, tra_estado, tra_valor_total, tra_cfi_id, tra_destino_cfi_id, tra_data_hora)
+VALUES (3904, 1, 'TRANSFERENCIA', 'NUMERARIO', 'CONFIRMADA', 2000, 2, 3901, '2026-11-20 10:00+02');
+\echo '   a secretária não pede; o tesoureiro pede mais do que o gasto (recusado) e o gasto (2 000, o fundo está vazio)'
+SELECT set_config('app.usuario_id', '6', false) \g /dev/null
+INSERT INTO reposicao_maneio (rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (1, 3901, 2026, 11, 2000);
+SELECT set_config('app.usuario_id', '2', false) \g /dev/null
+INSERT INTO reposicao_maneio (rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (1, 3901, 2026, 11, 2500);
+INSERT INTO reposicao_maneio (rpm_id, rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (3901, 1, 3901, 2026, 11, 2000)
+RETURNING rpm_valor_fundo, rpm_saldo, rpm_gasto;
+SELECT processo, fluxo, etapa_nome, responsavel, pode_decidir FROM vw_aprovacoes WHERE reposicao_id = 3901;
+\echo '   repor antes do voto: recusado; o ancião regista o voto do Conselho; o tesoureiro repõe da caixa (uma vez)'
+SELECT tesouraria.fn_repor_maneio(3901, 2, '2026-11-21 10:00+02');
+SELECT set_config('app.usuario_id', '3', false) \g /dev/null
+SELECT fn_aprovacao_decidir((SELECT id FROM vw_aprovacoes WHERE reposicao_id = 3901), NULL, 3907);
+SELECT set_config('app.usuario_id', '2', false) \g /dev/null
+SELECT tesouraria.fn_repor_maneio(3901, 2, '2026-11-21 10:00+02') IS NOT NULL AS reposto;
+SELECT tesouraria.fn_repor_maneio(3901, 2, '2026-11-21 10:00+02');
+SELECT saldo FROM vw_saldo_conta WHERE cfi_id = 3901;
+\echo '   o fundo cheio (não usado): não há reposição a aprovar'
+INSERT INTO reposicao_maneio (rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (1, 3901, 2026, 12, 100);
+\echo '   uma despesa urgente de 300 pelo maneio não precisa de outra aprovação; em Dezembro repõem-se só os 300'
+BEGIN;
+INSERT INTO transacao (tra_id, tra_igr_id, tra_tipo, tra_metodo, tra_estado, tra_valor_total, tra_cfi_id, tra_descricao, tra_data_hora)
+VALUES (3903, 1, 'SAIDA', 'NUMERARIO', 'CONFIRMADA', 300, 3901, 'Reparação urgente da porta', '2026-11-25 10:00+02');
+INSERT INTO transacao_linha (tli_tra_id, tli_fun_id, tli_cat_id, tli_valor)
+VALUES (3903, (SELECT fun_id FROM fundo WHERE fun_codigo = 'OLOC'), (SELECT cat_id FROM categoria WHERE cat_codigo = 'D2'), 300);
+COMMIT;
+SELECT tra_estado, (SELECT count(*) FROM aprovacao WHERE apv_tra_id = 3903) AS processos FROM transacao WHERE tra_id = 3903;
+INSERT INTO reposicao_maneio (rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (1, 3901, 2026, 12, 500);
+INSERT INTO reposicao_maneio (rpm_id, rpm_igr_id, rpm_cfi_id, rpm_ano, rpm_mes, rpm_valor) VALUES (3902, 1, 3901, 2026, 12, 300) RETURNING rpm_gasto;
+\echo '   terminar a reposição por fazer cancela o processo'
+UPDATE reposicao_maneio SET rpm_end_date = now() WHERE rpm_id = 3902;
+SELECT apv_estado FROM aprovacao WHERE apv_rpm_id = 3902;
 RESET ROLE;

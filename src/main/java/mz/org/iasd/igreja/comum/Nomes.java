@@ -32,7 +32,7 @@ public final class Nomes {
             Map.entry("etr", "trimestre"), Map.entry("esa", "sabado"), Map.entry("ecl", "classe"),
             Map.entry("ect", "classe_trimestre"), Map.entry("ema", "matricula"), Map.entry("ers", "relatorio_sabado"),
             Map.entry("epr", "presenca"), Map.entry("evi", "visitante"), Map.entry("epc", "pontuacao_config"),
-            Map.entry("cfi", "conta_financeira"), Map.entry("fun", "fundo"), Map.entry("cof", "calendario_oferta"),
+            Map.entry("cfi", "conta_financeira"), Map.entry("rpm", "reposicao_maneio"), Map.entry("fun", "fundo"), Map.entry("cof", "calendario_oferta"),
             Map.entry("cat", "categoria"), Map.entry("alv", "alvo"), Map.entry("orc", "orcamento"),
             Map.entry("orl", "orcamento_linha"), Map.entry("des", "despesa"), Map.entry("cnu", "contagem_numerario"),
             Map.entry("tra", "transacao"), Map.entry("tli", "transacao_linha"), Map.entry("sdc", "saldo_diario_conta"),

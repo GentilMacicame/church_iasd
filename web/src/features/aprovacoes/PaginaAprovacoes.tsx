@@ -26,6 +26,7 @@ function ligacao(p: ProcessoAprovacao): { para: string; rotulo: string } | null 
   if (p.contagemId) return { para: '/tesouraria/contagens', rotulo: 'Ver as contagens' }
   if (p.orcamentoId) return { para: '/tesouraria/orcamento', rotulo: 'Ver o orçamento' }
   if (p.membroId) return { para: `/membros/${p.membroId}`, rotulo: 'Ver a ficha' }
+  if (p.reposicaoId) return { para: '/tesouraria/contas', rotulo: 'Ver o fundo de maneio' }
   return null
 }
 

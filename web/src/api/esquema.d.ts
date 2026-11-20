@@ -8711,6 +8711,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tesouraria/reposicoes-maneio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reposicoes maneio: listar
+         * @description Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja; depois de aprovada, uma transferência repõe o dinheiro (V56)
+         */
+        get: operations["listarReposicaoManeio"];
+        put?: never;
+        /**
+         * Reposicoes maneio: criar
+         * @description Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja; depois de aprovada, uma transferência repõe o dinheiro (V56)
+         */
+        post: operations["criarReposicaoManeio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/reposicoes-maneio/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reposicoes maneio: ler um */
+        get: operations["lerReposicaoManeio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Reposicoes maneio: alterar
+         * @description Só os campos enviados mudam.
+         */
+        patch: operations["alterarReposicaoManeio"];
+        trace?: never;
+    };
+    "/v1/tesouraria/reposicoes-maneio/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reposicoes maneio: reactivar
+         * @description Limpa endDate.
+         */
+        post: operations["reactivarReposicaoManeio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/reposicoes-maneio/{id}/repor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Repor o fundo de maneio (depois de aprovada a reposição) */
+        post: operations["VTesourariaReposicoesManeioIdRepor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tesouraria/reposicoes-maneio/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reposicoes maneio: terminar
+         * @description Preenche endDate; nada se apaga.
+         */
+        post: operations["terminarReposicaoManeio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tesouraria/saldos-contas": {
         parameters: {
             query?: never;
@@ -9303,6 +9405,11 @@ export interface components {
             membroId?: number;
             /**
              * Format: int32
+             * @description → tesouraria.reposicao_maneio · Reposição mensal do fundo de maneio (V56)
+             */
+            reposicaoManeioId?: number;
+            /**
+             * Format: int32
              * @description → nucleo.usuario · Quem pediu (não decide as etapas com outra_pessoa)
              */
             pedidoPorUsuarioId?: number;
@@ -9682,6 +9789,11 @@ export interface components {
              * @description → organizacao.entidade · Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja
              */
             entidadeId?: number;
+            /**
+             * @description Fundo de maneio: o valor definido pela igreja; cada mês repõe-se só o que foi gasto (V56)
+             * @example 650.00
+             */
+            valorManeio?: string;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -10098,7 +10210,7 @@ export interface components {
         /** @enum {string} */
         EnumMetodoPagamento: "MPESA" | "EMOLA" | "BANCO" | "NUMERARIO";
         /** @enum {string} */
-        EnumProcessoAprovacao: "DESPESA" | "SAIDA" | "CONTAGEM" | "ORCAMENTO" | "ADMISSAO_MEMBRO" | "REMOCAO_MEMBRO";
+        EnumProcessoAprovacao: "DESPESA" | "SAIDA" | "CONTAGEM" | "ORCAMENTO" | "ADMISSAO_MEMBRO" | "REMOCAO_MEMBRO" | "ESTORNO" | "MANEIO";
         /** @enum {string} */
         EnumResponsavelEtapa: "PERFIL" | "PERMISSAO" | "ORGAO";
         /** @enum {string} */
@@ -11520,6 +11632,58 @@ export interface components {
             fundoId?: number;
             /** @example 650.00 */
             valor?: string;
+            estado?: components["schemas"]["EnumEstadoRegisto"];
+            /** Format: date-time */
+            readonly criadoEm?: string;
+            /** Format: date-time */
+            readonly modificadoEm?: string;
+            /** Format: date-time */
+            readonly endDate?: string | null;
+            readonly criadoPor?: number | null;
+            readonly modificadoPor?: number | null;
+        };
+        /** @description Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja; depois de aprovada, uma transferência repõe o dinheiro (V56) */
+        ReposicaoManeio: {
+            /** Format: int32 */
+            readonly id?: number;
+            /**
+             * Format: int32
+             * @description → organizacao.igreja
+             */
+            igrejaId?: number;
+            /**
+             * Format: int32
+             * @description → tesouraria.conta_financeira · A conta do fundo de maneio
+             */
+            contaId?: number;
+            ano?: number;
+            mes?: number;
+            /**
+             * @description O valor definido do fundo, quando se pediu (preenchido pela base de dados)
+             * @example 650.00
+             */
+            valorFundo?: string;
+            /**
+             * @description Saldo do fundo quando se pediu (preenchido pela base de dados)
+             * @example 650.00
+             */
+            saldo?: string;
+            /**
+             * @description O que se gastou: valor do fundo menos o saldo; é o máximo a repor (preenchido pela base de dados)
+             * @example 650.00
+             */
+            gasto?: string;
+            /**
+             * @description Valor a repor (até ao gasto)
+             * @example 650.00
+             */
+            valor?: string;
+            observacoes?: string;
+            /**
+             * Format: int64
+             * @description → tesouraria.transacao · Transferência que repôs o dinheiro (tesouraria.fn_repor_maneio)
+             */
+            transacaoId?: number;
             estado?: components["schemas"]["EnumEstadoRegisto"];
             /** Format: date-time */
             readonly criadoEm?: string;
@@ -17944,6 +18108,7 @@ export interface operations {
                 contagemId?: number;
                 orcamentoId?: number;
                 membroId?: number;
+                reposicaoId?: number;
             };
             header?: never;
             path?: never;
@@ -17985,6 +18150,7 @@ export interface operations {
                 contagemId?: number;
                 orcamentoId?: number;
                 membroId?: number;
+                reposicaoManeioId?: number;
                 pedidoPorUsuarioId?: number;
                 estado?: components["schemas"]["EnumEstadoAprovacao"];
             };
@@ -30846,6 +31012,235 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Remessa"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    listarReposicaoManeio: {
+        parameters: {
+            query: {
+                igrejaId: number;
+                limite?: components["parameters"]["Limite"];
+                /** @description Cursor devolvido em `proximo` */
+                depois?: components["parameters"]["Depois"];
+                /** @description Campo de ordenação; "-" inverte (ex.: -dataHora) */
+                ordem?: components["parameters"]["Ordem"];
+                incluirTerminados?: components["parameters"]["IncluirTerminados"];
+                contaId?: number;
+                transacaoId?: number;
+                estado?: components["schemas"]["EnumEstadoRegisto"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        dados: components["schemas"]["ReposicaoManeio"][];
+                        proximo: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    criarReposicaoManeio: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": WithRequired<components["schemas"]["ReposicaoManeio"], "igrejaId" | "contaId" | "ano" | "mes" | "valor">;
+            };
+        };
+        responses: {
+            /** @description Criado */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    lerReposicaoManeio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    alterarReposicaoManeio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReposicaoManeio"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    reactivarReposicaoManeio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    VTesourariaReposicoesManeioIdRepor: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description UUID gerado no frontend; o mesmo pedido repetido devolve a mesma resposta durante 24 horas */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Caixa, banco ou carteira móvel da igreja de onde sai o dinheiro */
+                    contaOrigemId: number;
+                    /** Format: date-time */
+                    dataHora?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
+                };
+            };
+            400: components["responses"]["PedidoInvalido"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["SemPermissao"];
+            404: components["responses"]["NaoEncontrado"];
+            409: components["responses"]["Duplicado"];
+            422: components["responses"]["RegraNegocio"];
+        };
+    };
+    terminarReposicaoManeio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReposicaoManeio"];
                 };
             };
             400: components["responses"]["PedidoInvalido"];

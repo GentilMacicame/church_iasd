@@ -1,6 +1,7 @@
 /**
- * Registar saída (P-08): um pagamento da igreja. Fica PENDENTE até outra pessoa a aprovar (quem regista não
- * aprova) e depois confirma-se. Só a parte da igreja: os fundos 100% da Missão saem só como remessa, e nos
+ * Registar saída (P-08): um pagamento da igreja. Fica PENDENTE até o fluxo a aprovar (V56: o tesoureiro aprecia, o Conselho
+ * da Igreja vota e a Igreja vota em reunião administrativa) e depois confirma-se. Uma despesa urgente do fundo de maneio não
+ * precisa de outra aprovação: o dinheiro já foi aprovado na reposição do fundo. Só a parte da igreja: os fundos 100% da Missão saem só como remessa, e nos
  * repartidos (oferta combinada) só o que não é da Missão (a base de dados recusa o resto, com a mensagem no topo).
  *
  * ?conta= escolhe a conta (ex.: "Despesa urgente" do fundo de maneio, V42: pede quem fez a despesa; o comprovativo junta-se
@@ -86,7 +87,8 @@ export default function PaginaSaida() {
           linhas: [{ fundoId: Number(v.fundoId), categoriaId: Number(v.categoriaId), valor: v.valor }],
         } as never,
       })
-      toast.success(doManeio ? 'Despesa registada. Junte o comprovativo aqui; fica à espera da aprovação de outra pessoa.' : 'Saída registada. Fica à espera da aprovação de outra pessoa.')
+      toast.success(doManeio ? 'Despesa registada. Junte o comprovativo e confirme-a: o fundo de maneio já está aprovado.'
+        : 'Saída registada. Segue para aprovação: o tesoureiro aprecia, o Conselho e a Igreja votam.')
       navigate(`/tesouraria/movimentos/${transacao.id}`)
     } catch (err) {
       setErro(aplicarErroApi(form, err))
@@ -101,7 +103,7 @@ export default function PaginaSaida() {
     <form onSubmit={submeter} noValidate>
       <TituloPagina
         antes={<Link to="/tesouraria" className="alvo mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> {t.tesouraria.titulo}</Link>}
-        icone={Banknote} titulo={t.tesouraria.saida} descricao="Outra pessoa aprova antes de o dinheiro sair"
+        icone={Banknote} titulo={t.tesouraria.saida} descricao={doManeio ? 'Despesa urgente do fundo de maneio' : 'O Conselho e a Igreja aprovam antes de o dinheiro sair'}
       />
       <div className="mx-auto grid w-full max-w-4xl items-start gap-6">
         <div className="grid gap-6">
@@ -161,7 +163,7 @@ export default function PaginaSaida() {
             <p className="text-xs font-medium text-muted-foreground">Valor a pagar</p>
             <p className="num text-2xl font-bold tracking-tight">{dinheiro(form.watch('valor') || '0')}</p>
           </div>
-          <p className="hidden items-center gap-1.5 text-sm text-muted-foreground md:flex"><ShieldCheck className="size-4" />Fica pendente até outra pessoa aprovar</p>
+          <p className="hidden items-center gap-1.5 text-sm text-muted-foreground md:flex"><ShieldCheck className="size-4" />{doManeio ? 'Do fundo de maneio: não precisa de outra aprovação' : 'Fica pendente até ser aprovada'}</p>
           <div className="ml-auto flex items-center gap-2">
             <Button type="button" variant="ghost" className="alvo" onClick={() => navigate('/tesouraria')}>{t.comum.cancelar}</Button>
             <Button type="submit" disabled={form.formState.isSubmitting} className="alvo h-11 px-6 text-base">{form.formState.isSubmitting ? t.comum.aGravar : 'Registar saída'}</Button>

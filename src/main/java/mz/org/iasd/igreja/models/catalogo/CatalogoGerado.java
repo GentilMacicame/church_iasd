@@ -88,6 +88,7 @@ import mz.org.iasd.igreja.models.tesouraria.QuotaReavivamento;
 import mz.org.iasd.igreja.models.tesouraria.Recibo;
 import mz.org.iasd.igreja.models.tesouraria.Remessa;
 import mz.org.iasd.igreja.models.tesouraria.RemessaLinha;
+import mz.org.iasd.igreja.models.tesouraria.ReposicaoManeio;
 import mz.org.iasd.igreja.models.tesouraria.SaldoDiarioConta;
 import mz.org.iasd.igreja.models.tesouraria.SaldoDiarioFundo;
 import mz.org.iasd.igreja.models.tesouraria.Transacao;
@@ -252,6 +253,7 @@ public final class CatalogoGerado {
             Visitante.class,
             PontuacaoConfig.class,
             ContaFinanceira.class,
+            ReposicaoManeio.class,
             Fundo.class,
             CalendarioOferta.class,
             Categoria.class,

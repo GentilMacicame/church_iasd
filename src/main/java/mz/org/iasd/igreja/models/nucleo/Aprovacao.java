@@ -31,6 +31,7 @@ import mz.org.iasd.igreja.models.tipos.ProcessoAprovacao;
  * @param contagemId Referência a tesouraria.contagem_numerario
  * @param orcamentoId Referência a tesouraria.orcamento
  * @param membroId Membro a admitir ou remover
+ * @param reposicaoManeioId Reposição mensal do fundo de maneio (V56)
  * @param pedidoPorUsuarioId Quem pediu (não decide as etapas com outra_pessoa)
  * @param etapa Ordem da etapa actual (a próxima a decidir)
  * @param concluidoEm coluna {@code apv_concluido_em}
@@ -65,6 +66,8 @@ public record Aprovacao(
         Integer orcamentoId,
         @ColunaBd(value = "apv_mem_id", tipo = Tipo.INT)
         Integer membroId,
+        @ColunaBd(value = "apv_rpm_id", tipo = Tipo.INT)
+        Integer reposicaoManeioId,
         @ColunaBd(value = "apv_pedido_por_usu_id", tipo = Tipo.INT)
         Integer pedidoPorUsuarioId,
         @ColunaBd(value = "apv_etapa", tipo = Tipo.INT, naoNula = true)

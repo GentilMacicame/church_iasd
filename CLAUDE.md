@@ -12,8 +12,8 @@ português. Termos técnicos genéricos (controller, service, hook) podem ficar 
 
 | Parte | Estado |
 | --- | --- |
-| Base de dados (PostgreSQL 16) | **Concluída e testada.** 90 tabelas, 6 schemas, migrações V1–V54 |
-| Contrato da API | **Concluído.** `api/openapi.yaml` (439 caminhos, 609 operações) |
+| Base de dados (PostgreSQL 16) | **Concluída e testada.** 91 tabelas, 6 schemas, migrações V1–V56 |
+| Contrato da API | **Concluído.** `api/openapi.yaml` (444 caminhos, 616 operações) |
 | API (Jakarta EE 10 / Java 21) | **Contrato inteiro ligado** (na raiz do repositório): auth, `/v1/eu`, CRUD genérico das 61 tabelas, as 29 vistas como relatórios, acções de negócio, escalas com lembretes por SMS, tarefas de manutenção, correcções da auditoria (`docs/AUDITORIA.md`). Testada contra PostgreSQL real (CI). Relatórios em `?formato=json|csv|pdf` (PDF com OpenPDF). Por fazer: M-Pesa (Fase 4), escolher o fornecedor de SMS, teste de carga |
 | Frontend (React) | Em `web/`: secretaria (membros, livro, reuniões, mandatos com conselho e direcção, famílias, transferências, disciplina, relatório), tesouraria (entradas, saídas, despesas, contagens, depósitos à Missão, fecho, orçamento, reconciliação, contas, fundos e alvos), escalas, igrejas e acessos. Ver `web/README.md` |
 
@@ -49,7 +49,7 @@ docs/                     especificação, modelo de dados, ROTAS.md (gerado pel
 ```bash
 cp .env.exemplo .env                          # TODA a configuração (base de dados e API) está só no .env
 docker compose up -d db                       # PostgreSQL 16 (porta e administrador do .env)
-scripts/db-reset.sh                           # base BD_NOME com V1–V54 (apaga-a se existir) — SÓ no PC
+scripts/db-reset.sh                           # base BD_NOME com V1–V56 (apaga-a se existir) — SÓ no PC
 scripts/db-migrar.sh                          # servidor: aplica só as migrações que faltam (não apaga nada)
 scripts/criar-papel-api.sh                    # utilizador da API (BD_UTILIZADOR / BD_SENHA)
 scripts/db-test.sh                            # base BD_NOME_TESTE + testes 00–39 (tem de dar 40× ok)
@@ -366,9 +366,16 @@ Nunca devolver stack traces nem SQL ao cliente.
   reunião administrativa); o livro só aceita o movimento com um voto de um processo aprovado (`trg_mmb_12_fluxo`).
   Acompanhamento: `vw_aprovacoes` (etapa em curso, quem decide com os nomes, `pode_decidir`) e `vw_aprovacao_etapas`
   (`/v1/nucleo/acompanhamento-aprovacoes`, `etapas-aprovacao`). Frontend: `/aprovacoes` e `/aprovacoes/fluxos`.
-  Modelos por defeito: despesa até 10 000 MT tesoureiro aprecia + pastor/ancião aprova; de 10 000 o Conselho vota; de
-  100 000 Conselho recomenda + Igreja vota; saída pastor/ancião (de 10 000 também o Conselho); contagem o tesoureiro;
-  orçamento, admissão e remoção Conselho → Igreja em reunião administrativa.
+  Modelos por defeito (V56, decisão do utilizador): **todo o dinheiro que sai dos fundos da igreja, seja qual for o valor**
+  (despesa e saída sem despesa): tesoureiro aprecia → Conselho da Igreja vota → Igreja vota em reunião administrativa; o pastor
+  e o ancião não aprovam despesas nem saídas (só registam os votos). Estorno (processo ESTORNO): pastor ou ancião confirma.
+  Contagem: o tesoureiro. Orçamento, admissão e remoção: Conselho → Igreja em reunião administrativa.
+- Fundo de maneio (V56): `cfi_valor_maneio` = o valor que a igreja definiu. `tesouraria.reposicao_maneio` (rpm): cada mês
+  pede-se a reposição do gasto (valor definido − saldo, calculado pela base); se o fundo não foi usado não há reposição; se
+  as despesas passaram o valor, repõe-se o gasto (mais do que o valor). Uma reposição pendente de cada vez, uma por mês
+  (salvo rejeitada). O Conselho vota (processo MANEIO); depois `tesouraria.fn_repor_maneio(rpm, conta_origem)` (POST
+  `/v1/tesouraria/reposicoes-maneio/{id}/repor`) faz a transferência. Só entra dinheiro no fundo de maneio por uma reposição
+  aprovada (`trg_tra_91_maneio`, no COMMIT); as saídas do fundo de maneio não precisam de aprovação (fn_tra_soma_linhas).
 - Colunas de vistas: a API tira o prefixo de 3 letras (`act_id` → `id`, `igr_id` → `id`!). Numa vista com mais de um
   id, dê nomes sem prefixo (`igreja_id`, `departamento_igreja_id`), senão os campos sobrepõem-se no JSON.
 - Conselho e reuniões: os cargos do conselho (`car_conselho`) e a duração dos mandatos da igreja (`igr_mandato_anos`);

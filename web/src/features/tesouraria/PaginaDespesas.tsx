@@ -3,8 +3,8 @@
  * Um departamento pede; quem tem a permissão decide (aprova, pode reduzir o valor, ou rejeita com motivo; quem
  * pede não decide); a tesouraria paga com uma saída ligada à despesa, que não precisa de outra aprovação. A
  * despesa passa a PAGA quando o pagamento é confirmado (a base de dados faz isso).
- * V54: a decisão segue o fluxo de aprovação (ex.: o tesoureiro aprecia, depois o pastor ou um ancião aprova; com valores
- * maiores, o Conselho da Igreja vota). Cada despesa por decidir mostra a etapa, quem decide e, a quem cabe, o botão.
+ * V54/V56: a decisão segue o fluxo de aprovação (o tesoureiro aprecia, o Conselho da Igreja vota, a Igreja vota em reunião
+ * administrativa; o pastor e o ancião não aprovam sozinhos). Cada despesa por decidir mostra a etapa, quem decide e o botão.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -273,7 +273,7 @@ export function DialogoPedir({ aberto, aoMudar, actividade }: {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Pedir despesa</DialogTitle>
-          <DialogDescription>{actividade ? `Para a actividade «${actividade.nome}». ` : ''}O pedido segue o fluxo de aprovação da igreja (ex.: o tesoureiro aprecia, o pastor ou um ancião aprova; valores maiores vão ao Conselho).</DialogDescription>
+          <DialogDescription>{actividade ? `Para a actividade «${actividade.nome}». ` : ''}O pedido segue o fluxo de aprovação da igreja: o tesoureiro aprecia, o Conselho da Igreja vota e por fim a Igreja vota em reunião administrativa.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submeter} noValidate className="grid gap-4">
           <ErroFormulario mensagem={erro} />

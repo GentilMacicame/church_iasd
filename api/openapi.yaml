@@ -6892,6 +6892,10 @@ paths:
         in: query
         schema:
           type: integer
+      - name: reposicaoId
+        in: query
+        schema:
+          type: integer
       x-vista: nucleo.vw_aprovacoes
       responses:
         '200':
@@ -6957,6 +6961,10 @@ paths:
         schema:
           type: integer
       - name: membroId
+        in: query
+        schema:
+          type: integer
+      - name: reposicaoManeioId
         in: query
         schema:
           type: integer
@@ -22566,6 +22574,274 @@ paths:
           $ref: '#/components/responses/Duplicado'
         '422':
           $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reposicoes-maneio:
+    get:
+      summary: 'Reposicoes maneio: listar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.ler
+      operationId: listarReposicaoManeio
+      description: 'Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja;
+        depois de aprovada, uma transferência repõe o dinheiro (V56)'
+      parameters:
+      - name: igrejaId
+        in: query
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/Limite'
+      - $ref: '#/components/parameters/Depois'
+      - $ref: '#/components/parameters/Ordem'
+      - $ref: '#/components/parameters/IncluirTerminados'
+      - name: contaId
+        in: query
+        schema:
+          type: integer
+      - name: transacaoId
+        in: query
+        schema:
+          type: integer
+      - name: estado
+        in: query
+        schema:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - dados
+                - proximo
+                properties:
+                  dados:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReposicaoManeio'
+                  proximo:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    post:
+      summary: 'Reposicoes maneio: criar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.criar
+      operationId: criarReposicaoManeio
+      description: 'Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja;
+        depois de aprovada, uma transferência repõe o dinheiro (V56)'
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ReposicaoManeio'
+              required:
+              - igrejaId
+              - contaId
+              - ano
+              - mes
+              - valor
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reposicoes-maneio/{id}:
+    get:
+      summary: 'Reposicoes maneio: ler um'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.ler
+      operationId: lerReposicaoManeio
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+    patch:
+      summary: 'Reposicoes maneio: alterar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.alterar
+      operationId: alterarReposicaoManeio
+      description: Só os campos enviados mudam.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReposicaoManeio'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reposicoes-maneio/{id}/reactivar:
+    post:
+      summary: 'Reposicoes maneio: reactivar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.terminar
+      operationId: reactivarReposicaoManeio
+      description: Limpa endDate.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reposicoes-maneio/{id}/repor:
+    post:
+      summary: Repor o fundo de maneio (depois de aprovada a reposição)
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.transacao.criar
+      operationId: VTesourariaReposicoesManeioIdRepor
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - contaOrigemId
+              properties:
+                contaOrigemId:
+                  type: integer
+                  description: Caixa, banco ou carteira móvel da igreja de onde sai o dinheiro
+                dataHora:
+                  type: string
+                  format: date-time
+      x-funcao-bd: tesouraria.fn_repor_maneio
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
+  /v1/tesouraria/reposicoes-maneio/{id}/terminar:
+    post:
+      summary: 'Reposicoes maneio: terminar'
+      tags:
+      - Tesouraria
+      x-permissao: tesouraria.reposicao_maneio.terminar
+      operationId: terminarReposicaoManeio
+      description: Preenche endDate; nada se apaga.
+      parameters:
+      - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReposicaoManeio'
+        '400':
+          $ref: '#/components/responses/PedidoInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Duplicado'
+        '422':
+          $ref: '#/components/responses/RegraNegocio'
   /v1/tesouraria/saldos-contas:
     get:
       summary: 'Relatório: Saldos contas'
@@ -24000,6 +24276,10 @@ components:
           type: integer
           format: int32
           description: → secretaria.membro · Membro a admitir ou remover
+        reposicaoManeioId:
+          type: integer
+          format: int32
+          description: → tesouraria.reposicao_maneio · Reposição mensal do fundo de maneio (V56)
         pedidoPorUsuarioId:
           type: integer
           format: int32
@@ -24660,6 +24940,11 @@ components:
           format: int32
           description: '→ organizacao.entidade · Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam
             directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja'
+        valorManeio:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'Fundo de maneio: o valor definido pela igreja; cada mês repõe-se só o que foi gasto (V56)'
         estado:
           $ref: '#/components/schemas/EnumEstadoRegisto'
         criadoEm:
@@ -25523,6 +25808,8 @@ components:
       - ORCAMENTO
       - ADMISSAO_MEMBRO
       - REMOCAO_MEMBRO
+      - ESTORNO
+      - MANEIO
     EnumResponsavelEtapa:
       type: string
       enum:
@@ -28219,6 +28506,85 @@ components:
       x-obrigatorios-ao-criar:
       - remessaId
       - fundoId
+      - valor
+    ReposicaoManeio:
+      type: object
+      description: 'Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja;
+        depois de aprovada, uma transferência repõe o dinheiro (V56)'
+      x-tabela: tesouraria.reposicao_maneio
+      x-prefixo: rpm
+      properties:
+        id:
+          type: integer
+          format: int32
+          readOnly: true
+        igrejaId:
+          type: integer
+          format: int32
+          description: → organizacao.igreja
+        contaId:
+          type: integer
+          format: int32
+          description: → tesouraria.conta_financeira · A conta do fundo de maneio
+        ano:
+          type: integer
+        mes:
+          type: integer
+        valorFundo:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: O valor definido do fundo, quando se pediu (preenchido pela base de dados)
+        saldo:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Saldo do fundo quando se pediu (preenchido pela base de dados)
+        gasto:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: 'O que se gastou: valor do fundo menos o saldo; é o máximo a repor (preenchido pela base de dados)'
+        valor:
+          type: string
+          pattern: ^-?\d{1,14}(\.\d{1,2})?$
+          example: '650.00'
+          description: Valor a repor (até ao gasto)
+        observacoes:
+          type: string
+          maxLength: 255
+        transacaoId:
+          type: integer
+          format: int64
+          description: → tesouraria.transacao · Transferência que repôs o dinheiro (tesouraria.fn_repor_maneio)
+        estado:
+          $ref: '#/components/schemas/EnumEstadoRegisto'
+        criadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        modificadoEm:
+          type: string
+          format: date-time
+          readOnly: true
+        endDate:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        criadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+        modificadoPor:
+          type: integer
+          readOnly: true
+          nullable: true
+      x-obrigatorios-ao-criar:
+      - igrejaId
+      - contaId
+      - ano
+      - mes
       - valor
     Reuniao:
       type: object

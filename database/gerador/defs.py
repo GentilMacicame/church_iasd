@@ -84,13 +84,14 @@ M('V2__nucleo', 'nucleo', 'Núcleo: acesso e auditoria',
    ('assunto', 'VARCHAR(255)', NN), ('valor', 'DECIMAL(14,2)'),
    ('des_id', 'fk:despesa'), ('tra_id', 'fk:transacao'), ('cnu_id', 'fk:contagem_numerario'), ('orc_id', 'fk:orcamento'),
    ('mem_id', 'fk:membro', '', 'Membro a admitir ou remover'),
+   ('rpm_id', 'fk:reposicao_maneio', '', 'Reposição mensal do fundo de maneio (V56)'),
    ('pedido_por_usu_id', 'fk:usuario', '', 'Quem pediu (não decide as etapas com outra_pessoa)'),
    ('etapa', 'SMALLINT', 'NOT NULL DEFAULT 1', 'Ordem da etapa actual (a próxima a decidir)'),
    ('concluido_em', 'TIMESTAMPTZ')],
-   checks=[('chk_apv_objecto', 'num_nonnulls(@des_id, @tra_id, @cnu_id, @orc_id, @mem_id) = 1')],
+   checks=[('chk_apv_objecto', 'num_nonnulls(@des_id, @tra_id, @cnu_id, @orc_id, @mem_id, @rpm_id) = 1')],
    estado=('estado_aprovacao_t', "'EM_CURSO'"),
    extra=["CREATE UNIQUE INDEX uq_apv_em_curso ON {t} (@processo, COALESCE(@des_id, 0), COALESCE(@tra_id, 0), COALESCE(@cnu_id, 0), "
-          "COALESCE(@orc_id, 0), COALESCE(@mem_id, 0)) WHERE @estado = 'EM_CURSO' AND @end_date IS NULL",
+          "COALESCE(@orc_id, 0), COALESCE(@mem_id, 0), COALESCE(@rpm_id, 0)) WHERE @estado = 'EM_CURSO' AND @end_date IS NULL",
           'CREATE INDEX idx_apv_igr_estado ON {t} (@igr_id, @estado)']),
  T('aprovacao_decisao', 'apd', 'Decisões de cada etapa de um processo de aprovação: quem decidiu, quando, com que voto (V54)', [
    ('apv_id', 'fk:aprovacao', NN), ('igr_id', 'fk:igreja', NN), ('fae_id', 'fk:fluxo_etapa', NN),
@@ -495,8 +496,20 @@ M('V7__tesouraria', 'tesouraria', 'Tesouraria',
    ('moeda', 'CHAR(3)', "NOT NULL DEFAULT 'MZN'"),
    ('saldo_inicial', 'DECIMAL(14,2)', 'NOT NULL DEFAULT 0'),
    ('data_saldo_inicial', 'DATE', NN, 'Movimentos anteriores a esta data não entram no saldo'),
-   ('ent_id', 'fk:entidade', '', 'Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja')],
-   uniq=[['igr_id', 'nome']]),
+   ('ent_id', 'fk:entidade', '', 'Conta da Associação/Missão (ex.: a conta bancária da Missão): regista o que os membros pagam directamente lá. Só recebe entradas dos fundos dessa entidade; o dinheiro já não está na igreja'),
+   ('valor_maneio', 'DECIMAL(14,2)', '', 'Fundo de maneio: o valor definido pela igreja; cada mês repõe-se só o que foi gasto (V56)')],
+   uniq=[['igr_id', 'nome']],
+   checks=[('chk_cfi_valor_maneio', "@valor_maneio IS NULL OR (@valor_maneio > 0 AND @tipo::TEXT = 'FUNDO_MANEIO')")]),
+ T('reposicao_maneio', 'rpm', 'Reposição mensal do fundo de maneio: repõe-se só o gasto (o valor definido menos o saldo), aprovada pelo Conselho da Igreja; depois de aprovada, uma transferência repõe o dinheiro (V56)', [
+   ('igr_id', 'fk:igreja', NN), ('cfi_id', 'fk:conta_financeira', NN, 'A conta do fundo de maneio'),
+   ('ano', 'SMALLINT', NN), ('mes', 'SMALLINT', NN),
+   ('valor_fundo', 'DECIMAL(14,2)', '', 'O valor definido do fundo, quando se pediu (preenchido pela base de dados)'),
+   ('saldo', 'DECIMAL(14,2)', '', 'Saldo do fundo quando se pediu (preenchido pela base de dados)'),
+   ('gasto', 'DECIMAL(14,2)', '', 'O que se gastou: valor do fundo menos o saldo; é o máximo a repor (preenchido pela base de dados)'),
+   ('valor', 'DECIMAL(14,2)', NN, 'Valor a repor (até ao gasto)'),
+   ('observacoes', 'VARCHAR(255)'),
+   ('tra_id', 'fk:transacao', '', 'Transferência que repôs o dinheiro (tesouraria.fn_repor_maneio)')],
+   checks=[('chk_rpm_mes', '@mes BETWEEN 1 AND 12'), ('chk_rpm_valor', '@valor > 0')]),
  T('fundo', 'fun', 'Fundos: da Associação (dízimo, ofertas missionárias, 13º sábado) ou locais', [
    ('igr_id', 'fk:igreja', '', 'NULL = fundo geral'),
    ('codigo', 'VARCHAR(20)', NN), ('nome', 'VARCHAR(100)', NN), ('tipo', 'tipo_fundo_t', NN),
@@ -743,7 +756,7 @@ CMC = ('nucleo.fn_comunicado_emissor(@igr_id, @dst_id, @ent_id, {C}) '
        "OR ({C} LIKE '%.ler' AND @estado = 'PUBLICADO' AND nucleo.fn_comunicado_para_mim(@id))")
 def _apv(processo, codigo):
     return f"(@processo {processo} AND @igr_id = ANY ((SELECT nucleo.fn_igrejas_com_permissao('{codigo}'))::INT[]))"
-APV = ' OR '.join([_apv("= 'DESPESA'", 'tesouraria.despesa.ler'), _apv("= 'SAIDA'", 'tesouraria.transacao.ler'),
+APV = ' OR '.join([_apv("= 'DESPESA'", 'tesouraria.despesa.ler'), _apv("IN ('SAIDA', 'ESTORNO', 'MANEIO')", 'tesouraria.transacao.ler'),
                    _apv("= 'CONTAGEM'", 'tesouraria.contagem_numerario.ler'), _apv("= 'ORCAMENTO'", 'tesouraria.orcamento.ler'),
                    _apv("IN ('ADMISSAO_MEMBRO', 'REMOCAO_MEMBRO')", 'secretaria.movimento_membro.ler')])
 SCOPE = {
@@ -753,7 +766,7 @@ SCOPE = {
  'escala_plano': ('direct', 'igr_id'), 'escala_coluna': ('direct', 'igr_id'), 'santa_ceia': ('direct', 'igr_id'), 'santa_ceia_acompanhante': ('direct', 'igr_id'), 'santa_ceia_participante': ('direct', 'igr_id'), 'programa_dia': ('direct', 'igr_id'),
  'programa_parte': ('parent', 'pgd_id', 'programa_dia'), 'programa_item': ('parent', 'pgd_id', 'programa_dia'), 'escala_dia': ('parent', 'epl_id', 'escala_plano'),
  'classe': ('direct', 'igr_id'), 'classe_trimestre': ('direct', 'igr_id'), 'meta_individual': ('direct', 'igr_id'), 'semana_especial': ('direct', 'igr_id'), 'relatorio_sabado': ('direct', 'igr_id'),
- 'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'), 'quota_reavivamento': ('direct', 'igr_id'), 'quota_escalao_reavivamento': ('direct', 'igr_id'), 'percentagem_departamento': ('direct', 'igr_id'), 'transferencia_departamento': ('direct', 'igr_id'), 'adiantamento': ('direct', 'igr_id'),
+ 'presenca': ('direct', 'igr_id'), 'conta_financeira': ('direct', 'igr_id'), 'reposicao_maneio': ('direct', 'igr_id'), 'alvo': ('direct', 'igr_id'), 'quota_reavivamento': ('direct', 'igr_id'), 'quota_escalao_reavivamento': ('direct', 'igr_id'), 'percentagem_departamento': ('direct', 'igr_id'), 'transferencia_departamento': ('direct', 'igr_id'), 'adiantamento': ('direct', 'igr_id'),
  'orcamento': ('direct', 'igr_id'), 'despesa': ('direct', 'igr_id'), 'contagem_numerario': ('direct', 'igr_id'), 'contagem_participante': ('parent', 'cnu_id', 'contagem_numerario'),
  'transacao': ('direct', 'igr_id'), 'transacao_linha': ('direct', 'igr_id'),
  'saldo_diario_conta': ('direct', 'igr_id'), 'saldo_diario_fundo': ('direct', 'igr_id'),

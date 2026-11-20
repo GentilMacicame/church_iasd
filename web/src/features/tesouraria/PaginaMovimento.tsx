@@ -1,6 +1,7 @@
 /**
- * Um movimento: cabeçalho, linhas por fundo e as acções que o seu estado permite — confirmar, aprovar (saída,
- * por outra pessoa), emitir e imprimir o recibo, anular um pendente. Um movimento confirmado não se altera:
+ * Um movimento: cabeçalho, linhas por fundo e as acções que o seu estado permite — confirmar, a etapa de aprovação da
+ * saída (V56: tesoureiro, Conselho, Igreja; o estorno, pelo pastor ou ancião; as do fundo de maneio não precisam), emitir e
+ * imprimir o recibo, anular um pendente. Um movimento confirmado não se altera:
  * corrige-se com um estorno (a base de dados garante-o).
  */
 import { CabecalhoDocumento } from '@/components/layout/Marca'
@@ -22,6 +23,8 @@ import { useAccao, useCategorias, useContas, useEstornosDe, useFundos, useLinhas
 import { DialogoEstorno } from './Estorno'
 import { CartaoComprovativos } from './Comprovativos'
 import { PilulaEstado, Valor, quem } from './comum'
+import { useAprovacaoDe } from '@/features/aprovacoes/api'
+import { ResumoAprovacao } from '@/features/aprovacoes/EtapasAprovacao'
 
 export default function PaginaMovimento() {
   const id = Number(useParams().id)
@@ -38,6 +41,7 @@ export default function PaginaMovimento() {
   const [anular, setAnular] = useState(false)
   const [estorno, setEstorno] = useState(false)
   const estornos = useEstornosDe(id)
+  const processo = useAprovacaoDe({ transacaoId: id }, id > 0).data
   const nomeDe = (mid: number) => { const m = basicos.data?.find((x) => x.id === mid); return m && `${m.nome} ${m.apelido}` }
   const familias = useFamiliasResumo()
   const nomeFamilia = (fid: number) => familias.data?.find((f) => f.id === fid)?.nome
@@ -51,10 +55,13 @@ export default function PaginaMovimento() {
   const tr = q.data
   const pendente = tr.estado === 'PENDENTE' && !tr.endDate
   const saida = tr.tipo === 'SAIDA'
-  const aprovada = !!tr.aprovadoPorUsuarioId
+  // V56: a saída do fundo de maneio não precisa de aprovação (o fundo foi aprovado na reposição)
+  const doManeio = contas.data?.find((c) => c.id === tr.contaId)?.tipo === 'FUNDO_MANEIO'
+  const aprovada = !!tr.aprovadoPorUsuarioId || doManeio
   const fuiEu = tr.criadoPor === usuario?.id
   const podeConfirmar = pendente && pode('tesouraria.transacao.alterar') && (!saida || aprovada)
-  const podeAprovar = pendente && saida && !aprovada && pode('tesouraria.transacao.aprovar')
+  // sem processo (registo antigo ou igreja sem fluxo) aprova-se como antes
+  const podeAprovar = pendente && saida && !aprovada && !processo && pode('tesouraria.transacao.aprovar')
   const podeRecibo = tr.estado === 'CONFIRMADA' && tr.tipo === 'ENTRADA' && !!(tr.membroId || tr.familiaId) && !recibo.data && recibo.isSuccess && pode('tesouraria.recibo.criar')
   const estornosValidos = (estornos.data ?? []).filter((x) => !x.endDate)
   const podeEstornar = tr.estado === 'CONFIRMADA' && !tr.endDate && !tr.estornoTransacaoId && tr.tipo !== 'TRANSFERENCIA' && pode('tesouraria.transacao.criar') && linhas.isSuccess
@@ -108,11 +115,16 @@ export default function PaginaMovimento() {
               )}
             </div>
           )}
-          {pendente && saida && !aprovada && (
+          {pendente && saida && !aprovada && (processo ? (
+            <div className="mt-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-3">
+              <p className="mb-2 text-sm text-warning-text">Esta saída espera aprovação antes de ser confirmada.</p>
+              <ResumoAprovacao filtro={{ transacaoId: id }} />
+            </div>
+          ) : (
             <p className="mt-4 rounded-lg border border-warning/30 bg-tint-warning px-4 py-3 text-sm text-warning-text">
-              {fuiEu ? 'Foi você que registou esta saída: tem de ser aprovada por outra pessoa (ancião ou pastor).' : 'Esta saída espera aprovação antes de ser confirmada.'}
+              {fuiEu ? 'Foi você que registou esta saída: tem de ser aprovada por outra pessoa.' : 'Esta saída espera aprovação antes de ser confirmada.'}
             </p>
-          )}
+          ))}
           {tr.estornoTransacaoId && (
             <p className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
               Estorno do <Link to={`/tesouraria/movimentos/${tr.estornoTransacaoId}`} className="font-medium text-primary hover:underline">movimento n.º {tr.estornoTransacaoId}</Link>.
@@ -158,7 +170,7 @@ export default function PaginaMovimento() {
               <Campo rotulo="Conta">{tr.contaId ? contas.data?.find((c) => c.id === tr.contaId)?.nome : null}</Campo>
               <Campo rotulo="Referência">{tr.referencia}</Campo>
               <Campo rotulo="Recibo">{recibo.data ? `n.º ${recibo.data.numero}/${recibo.data.ano}` : null}</Campo>
-              {saida && <Campo rotulo="Aprovação">{aprovada ? 'Aprovada por outra pessoa' : 'Por aprovar'}</Campo>}
+              {saida && <Campo rotulo="Aprovação">{doManeio ? 'Do fundo de maneio (aprovado na reposição)' : aprovada ? 'Aprovada' : 'Por aprovar'}</Campo>}
             </dl>
           </Cartao>
           <CartaoComprovativos transacaoId={id} />

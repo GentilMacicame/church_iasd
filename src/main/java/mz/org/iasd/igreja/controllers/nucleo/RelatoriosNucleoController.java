@@ -31,7 +31,7 @@ public class RelatoriosNucleoController extends BaseRelatoriosController {
     public static final Relatorio ACOMPANHAMENTO_APROVACOES = Relatorio.porIgreja("nucleo.vw_aprovacoes", "igreja_id = ?",
             "estado <> 'EM_CURSO', criado_em DESC, id DESC")
             .comFiltro("despesaId", "despesa_id").comFiltro("transacaoId", "transacao_id").comFiltro("contagemId", "contagem_id")
-            .comFiltro("orcamentoId", "orcamento_id").comFiltro("membroId", "membro_id");
+            .comFiltro("orcamentoId", "orcamento_id").comFiltro("membroId", "membro_id").comFiltro("reposicaoId", "reposicao_id");
 
     public static final Relatorio ETAPAS_APROVACAO = Relatorio.porIgreja("nucleo.vw_aprovacao_etapas", null, "aprovacao_id, ordem")
             .comFiltro("aprovacaoId", "aprovacao_id");

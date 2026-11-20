@@ -10,6 +10,11 @@ INSERT INTO usuario_igreja (uig_usu_id, uig_igr_id, uig_per_id) SELECT u, 1, (SE
 INSERT INTO usuario_entidade (uen_usu_id, uen_ent_id, uen_per_id) VALUES (10, 1, (SELECT per_id FROM perfil WHERE per_nome='TESOUREIRO_ASSOCIACAO'));
 INSERT INTO igreja_departamento (ide_id, ide_igr_id, ide_dep_id) VALUES (1, 1, (SELECT dep_id FROM departamento WHERE dep_nome='Ministério Jovem'));
 INSERT INTO conta_financeira (cfi_id, cfi_igr_id, cfi_tipo, cfi_nome, cfi_data_saldo_inicial) VALUES (9,2,'CAIXA','Caixa Matola','2026-01-01');
+-- V56: despesas e saídas = tesoureiro aprecia, Conselho da Igreja vota, Igreja vota em reunião administrativa
+INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (200, 1, 'JUNTA_DIRECTIVA', '2026-10-25 15:00+02'),
+ (201, 1, 'ASSEMBLEIA_ADMINISTRATIVA', '2026-10-31 15:00+02');
+INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto) VALUES
+ (200, 200, 'J-200', 'FINANCEIRO', 'Saída e acampamento de jovens'), (201, 201, '2026-201', 'FINANCEIRO', 'Saída e acampamento de jovens');
 SET ROLE app_igreja;
 
 \echo '=== TESOUREIRO (igreja 1)'
@@ -26,18 +31,23 @@ UPDATE transacao SET tra_end_date = now() WHERE tra_id = 20;
 \echo '   (terminou a saída pendente 20: tem tesouraria.transacao.terminar)'
 BEGIN; INSERT INTO transacao (tra_id,tra_tipo,tra_metodo,tra_valor_total,tra_cfi_id,tra_data_hora) VALUES (21,'SAIDA','NUMERARIO',100,2,'2026-11-01 10:00+02');
 INSERT INTO transacao_linha (tli_tra_id,tli_fun_id,tli_cat_id,tli_valor) VALUES (21,(SELECT fun_id FROM fundo WHERE fun_codigo='OLOC'),(SELECT cat_id FROM categoria WHERE cat_codigo='D2'),100); COMMIT;
+\echo '   o tesoureiro aprecia a saída 21 (etapa 1); quem a aprova são o Conselho e a Igreja'
+SELECT tesouraria.fn_aprovar_saida(21);
 INSERT INTO remessa (rem_id, rem_igr_id, rem_ent_id, rem_ano, rem_mes, rem_estado) VALUES (1,1,1,2026,10,'ENVIADA');
 SELECT tesouraria.fn_confirmar_remessa(1);
 
 \echo '=== ANCIÃO (igreja 1)'
 SELECT set_config('app.usuario_id','3',false) \g /dev/null
+\echo '   o ancião não aprova a saída sozinho; regista os votos do Conselho e da Igreja'
 SELECT tesouraria.fn_aprovar_saida(21);
+SELECT fn_aprovacao_decidir(apv_id, NULL, 200) AS conselho FROM aprovacao WHERE apv_tra_id = 21 AND apv_estado = 'EM_CURSO';
+SELECT fn_aprovacao_decidir(apv_id, NULL, 201) AS igreja FROM aprovacao WHERE apv_tra_id = 21 AND apv_estado = 'EM_CURSO';
 INSERT INTO transacao (tra_tipo,tra_metodo,tra_valor_total,tra_cfi_id) VALUES ('ENTRADA','NUMERARIO',10,2);
 INSERT INTO fecho_periodo (fpe_igr_id, fpe_ano, fpe_mes) VALUES (1, 2026, 9);
 UPDATE fecho_periodo SET fpe_end_date = now() WHERE fpe_igr_id = 1 AND fpe_mes = 9;
 SELECT 'ancião fechou e reabriu Setembro' ok;
 
-\echo '=== TESOUREIRO confirma a saída aprovada pelo ancião'
+\echo '=== TESOUREIRO confirma a saída aprovada pelo Conselho e pela Igreja'
 SELECT set_config('app.usuario_id','2',false) \g /dev/null
 UPDATE transacao SET tra_estado = 'CONFIRMADA' WHERE tra_id = 21;
 SELECT tra_estado, tra_aprovado_por_usu_id FROM transacao WHERE tra_id = 21;
@@ -70,13 +80,15 @@ SELECT set_config('app.usuario_id','11',false) \g /dev/null
 INSERT INTO despesa (des_id, des_igr_id, des_ide_id, des_cat_id, des_fun_id, des_descricao, des_valor_solicitado, des_solicitado_por_usu_id)
 VALUES (10, 1, 1, (SELECT cat_id FROM categoria WHERE cat_codigo='D4'), (SELECT fun_id FROM fundo WHERE fun_codigo='OLOC'), 'Acampamento de jovens', 3000, 11);
 SELECT tesouraria.fn_decidir_despesa(10, true);
--- V54: fluxo «Despesa corrente»: o tesoureiro aprecia (etapa 1), depois o ancião aprova (etapa 2)
+-- V56: fluxo «Despesa da igreja»: o tesoureiro aprecia, o Conselho vota, a Igreja vota (o ancião não aprova)
 SELECT set_config('app.usuario_id','3',false) \g /dev/null
 SELECT tesouraria.fn_decidir_despesa(10, true, 2500);
 SELECT set_config('app.usuario_id','2',false) \g /dev/null
 SELECT tesouraria.fn_decidir_despesa(10, true);
 SELECT set_config('app.usuario_id','3',false) \g /dev/null
 SELECT tesouraria.fn_decidir_despesa(10, true, 2500);
+SELECT fn_aprovacao_decidir(apv_id, NULL, 200) AS conselho FROM aprovacao WHERE apv_des_id = 10 AND apv_estado = 'EM_CURSO';
+SELECT fn_aprovacao_decidir(apv_id, NULL, 201) AS igreja FROM aprovacao WHERE apv_des_id = 10 AND apv_estado = 'EM_CURSO';
 SELECT des_estado, des_valor_aprovado, des_aprovado_por_usu_id FROM despesa WHERE des_id = 10;
 
 \echo '=== MEMBRO sem perfil (Tito, membro 103)'

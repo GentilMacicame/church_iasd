@@ -14,5 +14,7 @@ public enum ProcessoAprovacao {
     CONTAGEM,
     ORCAMENTO,
     ADMISSAO_MEMBRO,
-    REMOCAO_MEMBRO
+    REMOCAO_MEMBRO,
+    ESTORNO,
+    MANEIO
 }

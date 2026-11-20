@@ -443,11 +443,15 @@ acao('/v1/nucleo/aprovacoes/{id}/decidir', 'Decidir a etapa em curso de um proce
          votoId={**I, 'description': 'Voto da reunião (etapas ORGAO)'}, motivo={**STR, 'description': 'Obrigatório ao rejeitar'},
          valor={**MONEY, 'description': 'Valor aprovado, se a etapa o reduzir'}),
      obj(['estado'], estado=ref('EnumEstadoAprovacao')), 'nucleo.fn_aprovacao_decidir')
+# V56: fazer a reposição do fundo de maneio aprovada pelo Conselho (transferência da conta de origem)
+acao('/v1/tesouraria/reposicoes-maneio/{id}/repor', 'Repor o fundo de maneio (depois de aprovada a reposição)', TES, 'tesouraria.transacao.criar',
+     obj(['contaOrigemId'], contaOrigemId={**I, 'description': 'Caixa, banco ou carteira móvel da igreja de onde sai o dinheiro'}, dataHora=DT),
+     ref('ReposicaoManeio'), 'tesouraria.fn_repor_maneio', idemp=True)
 rel('/v1/nucleo/acompanhamento-aprovacoes', 'nucleo.vw_aprovacoes', APV,
     'ler o objecto do processo (despesas, transacções, contagens, orçamentos, livro de membros)',
     [{'name': 'despesaId', 'in': 'query', 'schema': I}, {'name': 'transacaoId', 'in': 'query', 'schema': I},
      {'name': 'contagemId', 'in': 'query', 'schema': I}, {'name': 'orcamentoId', 'in': 'query', 'schema': I},
-     {'name': 'membroId', 'in': 'query', 'schema': I}])
+     {'name': 'membroId', 'in': 'query', 'schema': I}, {'name': 'reposicaoId', 'in': 'query', 'schema': I}])
 rel('/v1/nucleo/etapas-aprovacao', 'nucleo.vw_aprovacao_etapas', APV, 'ler o processo de aprovação',
     [{'name': 'aprovacaoId', 'in': 'query', 'schema': I}])
 # V34: programa anual com a execução financeira e conflitos de calendário

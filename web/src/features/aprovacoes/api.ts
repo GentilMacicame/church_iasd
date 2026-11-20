@@ -24,7 +24,7 @@ export interface ProcessoAprovacao {
   etapaId: number | null; etapaNome: string | null; etapaAccao: AccaoEtapa | null; responsavelTipo: ResponsavelEtapa | null
   orgao: TipoReuniao | null; responsavel: string | null; responsaveis: string | null; podeDecidir: boolean
   despesaId: number | null; transacaoId: number | null; contagemId: number | null; orcamentoId: number | null; membroId: number | null
-  pedidoPor: string | null; criadoEm: string; concluidoEm: string | null
+  pedidoPor: string | null; criadoEm: string; concluidoEm: string | null; reposicaoId: number | null
 }
 
 /** Uma linha de nucleo.vw_aprovacao_etapas. */
@@ -42,6 +42,8 @@ export const PROCESSOS: Record<Processo, { rotulo: string; plural: string; ler: 
   ORCAMENTO: { rotulo: 'Orçamento', plural: 'Orçamentos', ler: 'tesouraria.orcamento.ler' },
   ADMISSAO_MEMBRO: { rotulo: 'Admissão de membro', plural: 'Admissões de membros', ler: 'secretaria.movimento_membro.ler' },
   REMOCAO_MEMBRO: { rotulo: 'Remoção de membro', plural: 'Remoções de membros', ler: 'secretaria.movimento_membro.ler' },
+  ESTORNO: { rotulo: 'Estorno', plural: 'Estornos', ler: 'tesouraria.transacao.ler' },
+  MANEIO: { rotulo: 'Reposição do fundo de maneio', plural: 'Reposições do fundo de maneio', ler: 'tesouraria.transacao.ler' },
 }
 export { PERMISSOES_APROVACOES } from './permissoes'
 
@@ -64,7 +66,7 @@ export const ORGAOS: Record<TipoReuniao, string> = {
 
 const k = { todos: (igreja: number) => ['aprovacoes', igreja] as const }
 
-type Filtro = Partial<Record<'despesaId' | 'transacaoId' | 'contagemId' | 'orcamentoId' | 'membroId', number>>
+type Filtro = Partial<Record<'despesaId' | 'transacaoId' | 'contagemId' | 'orcamentoId' | 'membroId' | 'reposicaoId', number>>
 
 /** Os processos da igreja (em curso primeiro). Com um filtro, só os desse objecto (o último é o mais recente). */
 export function useAprovacoes(filtro: Filtro = {}, activo = true) {

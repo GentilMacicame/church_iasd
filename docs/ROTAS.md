@@ -1,6 +1,6 @@
 # Rotas da API
 
-Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 609 rotas, iguais às operações de `api/openapi.yaml`.
+Gerado por `ContratoTest` a partir das classes `*Controller` (não editar à mão). 616 rotas, iguais às operações de `api/openapi.yaml`.
 Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a correr).
 
 ## actividades
@@ -628,6 +628,13 @@ Documentação interactiva: `http://localhost:9080/openapi/ui` (servidor a corre
 | POST | `/v1/tesouraria/remessas/{id}/enviar` | RemessasController · enviar | `tesouraria.remessa.alterar` |
 | POST | `/v1/tesouraria/remessas/{id}/reactivar` | RemessasController · reactivar | `tesouraria.remessa.terminar` |
 | POST | `/v1/tesouraria/remessas/{id}/terminar` | RemessasController · terminar | `tesouraria.remessa.terminar` |
+| GET | `/v1/tesouraria/reposicoes-maneio` | ReposicoesManeioController · listar | `tesouraria.reposicao_maneio.ler` |
+| POST | `/v1/tesouraria/reposicoes-maneio` | ReposicoesManeioController · criar | `tesouraria.reposicao_maneio.criar` |
+| GET | `/v1/tesouraria/reposicoes-maneio/{id}` | ReposicoesManeioController · obter | `tesouraria.reposicao_maneio.ler` |
+| PATCH | `/v1/tesouraria/reposicoes-maneio/{id}` | ReposicoesManeioController · alterar | `tesouraria.reposicao_maneio.alterar` |
+| POST | `/v1/tesouraria/reposicoes-maneio/{id}/reactivar` | ReposicoesManeioController · reactivar | `tesouraria.reposicao_maneio.terminar` |
+| POST | `/v1/tesouraria/reposicoes-maneio/{id}/repor` | ReposicoesManeioController · repor | `tesouraria.transacao.criar` |
+| POST | `/v1/tesouraria/reposicoes-maneio/{id}/terminar` | ReposicoesManeioController · terminar | `tesouraria.reposicao_maneio.terminar` |
 | GET | `/v1/tesouraria/saldos-contas` | RelatoriosTesourariaController · saldosContas | `tesouraria.conta_financeira.ler` |
 | GET | `/v1/tesouraria/saldos-diarios-conta` | SaldosDiariosContaController · listar | `tesouraria.saldo_diario_conta.ler` |
 | GET | `/v1/tesouraria/saldos-diarios-conta/{id}` | SaldosDiariosContaController · obter | `tesouraria.saldo_diario_conta.ler` |

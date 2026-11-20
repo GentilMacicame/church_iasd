@@ -602,7 +602,50 @@ export function useContasMut() {
     mutationFn: (corpo: Corpo<'/v1/tesouraria/contas', 'post'>) => dados(api.POST('/v1/tesouraria/contas', { body: corpo })) as Promise<Conta>,
     onSuccess: () => { invalidar(); qc.invalidateQueries({ queryKey: ['tesouraria'] }) },
   })
-  return { criar }
+  /** V56: o valor do fundo de maneio (definido pela igreja), entre outros campos da conta */
+  const alterar = useMutation({
+    mutationFn: ({ id, ...corpo }: { id: number } & Corpo<'/v1/tesouraria/contas/{id}', 'patch'>) =>
+      dados(api.PATCH('/v1/tesouraria/contas/{id}', { params: { path: { id } }, body: corpo })) as Promise<Conta>,
+    onSuccess: () => { invalidar(); qc.invalidateQueries({ queryKey: ['tesouraria'] }) },
+  })
+  return { criar, alterar }
+}
+
+/* ===================================================================== reposição do fundo de maneio (V56) */
+export type ReposicaoManeio = Esquema<'ReposicaoManeio'> & { id: number; contaId: number; ano: number; mes: number; valor: string }
+
+export function useReposicoesManeio() {
+  const igreja = useIgreja()
+  return useQuery({
+    queryKey: [...k.todos(igreja.id), 'reposicoes-maneio'],
+    queryFn: async () => (await dados(api.GET('/v1/tesouraria/reposicoes-maneio', {
+      params: { query: { igrejaId: igreja.id, limite: 100, ordem: '-id' } as never },
+    }))).dados as ReposicaoManeio[],
+  })
+}
+
+export function useReposicoesManeioMut() {
+  const qc = useQueryClient()
+  const tudo = () => qc.invalidateQueries()
+  /** Pede a reposição do gasto: a base de dados calcula o gasto e recusa mais do que isso (ou nada, se não foi usado). */
+  const pedir = useMutation({
+    mutationFn: (corpo: Corpo<'/v1/tesouraria/reposicoes-maneio', 'post'>) =>
+      dados(api.POST('/v1/tesouraria/reposicoes-maneio', { body: corpo })) as Promise<ReposicaoManeio>,
+    onSuccess: tudo,
+  })
+  /** Depois de o Conselho aprovar: transferência da conta de origem para o fundo de maneio. */
+  const repor = useMutation({
+    mutationFn: ({ id, contaOrigemId }: { id: number; contaOrigemId: number }) =>
+      dados(api.POST('/v1/tesouraria/reposicoes-maneio/{id}/repor', {
+        params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } } as never, body: { contaOrigemId },
+      })) as Promise<ReposicaoManeio>,
+    onSuccess: tudo,
+  })
+  const terminar = useMutation({
+    mutationFn: (id: number) => dados(api.POST('/v1/tesouraria/reposicoes-maneio/{id}/terminar', { params: { path: { id } } })),
+    onSuccess: tudo,
+  })
+  return { pedir, repor, terminar }
 }
 
 /* ===================================================================== resumo para gráficos */

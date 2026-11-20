@@ -426,6 +426,12 @@ public final class Rotas {
         /** ContasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String CONTAS = "/v1/tesouraria/contas";
 
+        /** ReposicoesManeioController · rotas-padrão + repor (V56): reposição mensal do fundo de maneio */
+        public static final String REPOSICOES_MANEIO = "/v1/tesouraria/reposicoes-maneio";
+
+        /** POST /v1/tesouraria/reposicoes-maneio/{id}/repor  (ReposicoesManeioController.repor) */
+        public static final String REPOSICOES_MANEIO_REPOR = "{id: \\d+}/repor";
+
         /** DespesasController · rotas-padrão: listar, ler, criar, alterar, terminar, reactivar */
         public static final String DESPESAS = "/v1/tesouraria/despesas";
 

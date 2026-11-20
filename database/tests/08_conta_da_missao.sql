@@ -6,6 +6,12 @@ SET search_path TO nucleo, organizacao, secretaria, actividades, escola_sabatina
 -- 2 = tesoureiro da igreja 1, 3 = ancião da igreja 1, 4 = tesoureiro da igreja 2; 100 e 103 = membros da igreja 1;
 -- conta 2 = caixa da igreja 1. Tudo em Dezembro de 2026 (mês sem movimentos dos outros testes).
 
+-- V56: saídas = tesoureiro aprecia, Conselho da Igreja vota, Igreja vota em reunião administrativa
+SELECT set_config('app.usuario_id', '1', false) \g /dev/null
+INSERT INTO reuniao (reu_id, reu_igr_id, reu_tipo, reu_data) VALUES (800, 1, 'JUNTA_DIRECTIVA', '2026-12-06 15:00+02'),
+ (801, 1, 'ASSEMBLEIA_ADMINISTRATIVA', '2026-12-09 15:00+02');
+INSERT INTO voto (vot_id, vot_reu_id, vot_numero, vot_tipo, vot_assunto) VALUES
+ (800, 800, 'J-800', 'FINANCEIRO', 'Compra na ferragem'), (801, 801, '2026-801', 'FINANCEIRO', 'Compra na ferragem');
 SET ROLE app_igreja;
 SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 
@@ -70,8 +76,10 @@ VALUES (510, 'SAIDA', 'NUMERARIO', :disponivel_ocomb + 1, 2, 'Ferragem', '2026-1
 INSERT INTO transacao_linha (tli_tra_id, tli_fun_id, tli_cat_id, tli_valor)
 VALUES (510, (SELECT fun_id FROM fundo WHERE fun_codigo = 'OCOMB'), (SELECT cat_id FROM categoria WHERE cat_codigo = 'D3'), :disponivel_ocomb + 1);
 COMMIT;
+SELECT tesouraria.fn_aprovar_saida(510) IS NOT NULL AS apreciada_pelo_tesoureiro;
 SELECT set_config('app.usuario_id', '3', false) \g /dev/null
-SELECT tesouraria.fn_aprovar_saida(510) IS NOT NULL AS aprovada;
+SELECT fn_aprovacao_decidir(apv_id, NULL, 800) AS conselho FROM aprovacao WHERE apv_tra_id = 510 AND apv_estado = 'EM_CURSO';
+SELECT fn_aprovacao_decidir(apv_id, NULL, 801) AS igreja FROM aprovacao WHERE apv_tra_id = 510 AND apv_estado = 'EM_CURSO';
 SELECT set_config('app.usuario_id', '2', false) \g /dev/null
 UPDATE transacao SET tra_estado = 'CONFIRMADA' WHERE tra_id = 510;
 SELECT tra_estado AS continua FROM transacao WHERE tra_id = 510;

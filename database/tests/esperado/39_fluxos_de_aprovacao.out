@@ -1,28 +1,27 @@
 1. modelos da Associação: um fluxo por natureza e valor, com as etapas por ordem
-  fap_processo   |        fap_nome         | fap_valor_minimo |                                                                   etapas                                                                   
------------------+-------------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------
- DESPESA         | Despesa corrente        |             0.00 | 1. Apreciação do tesoureiro [PERFIL] → 2. Aprovação do pastor ou ancião [PERMISSAO]
- DESPESA         | Despesa do Conselho     |         10000.00 | 1. Apreciação do tesoureiro [PERFIL] → 2. Voto do Conselho da Igreja [ORGAO]
- DESPESA         | Despesa extraordinária  |        100000.00 | 1. Apreciação do tesoureiro [PERFIL] → 2. Recomendação do Conselho da Igreja [ORGAO] → 3. Voto da Igreja em reunião administrativa [ORGAO]
- SAIDA           | Saída de dinheiro       |             0.00 | 1. Aprovação do pastor ou ancião [PERMISSAO]
- SAIDA           | Saída do Conselho       |         10000.00 | 1. Apreciação do pastor ou ancião [PERMISSAO] → 2. Voto do Conselho da Igreja [ORGAO]
- CONTAGEM        | Conferência da contagem |             0.00 | 1. Conferência do tesoureiro [PERFIL]
- ORCAMENTO       | Orçamento anual         |             0.00 | 1. Recomendação do Conselho da Igreja [ORGAO] → 2. Aprovação da Igreja em reunião administrativa [ORGAO]
- ADMISSAO_MEMBRO | Admissão de membro      |             0.00 | 1. Voto do Conselho da Igreja [ORGAO] → 2. Voto da Igreja em reunião administrativa [ORGAO]
- REMOCAO_MEMBRO  | Remoção de membro       |             0.00 | 1. Recomendação do Conselho da Igreja [ORGAO] → 2. Voto da Igreja em reunião administrativa [ORGAO]
-(9 rows)
+  fap_processo   |           fap_nome           | fap_valor_minimo |                                                               etapas                                                               
+-----------------+------------------------------+------------------+------------------------------------------------------------------------------------------------------------------------------------
+ DESPESA         | Despesa da igreja            |             0.00 | 1. Apreciação do tesoureiro [PERFIL] → 2. Voto do Conselho da Igreja [ORGAO] → 3. Voto da Igreja em reunião administrativa [ORGAO]
+ SAIDA           | Saída de dinheiro            |             0.00 | 1. Apreciação do tesoureiro [PERFIL] → 2. Voto do Conselho da Igreja [ORGAO] → 3. Voto da Igreja em reunião administrativa [ORGAO]
+ CONTAGEM        | Conferência da contagem      |             0.00 | 1. Conferência do tesoureiro [PERFIL]
+ ORCAMENTO       | Orçamento anual              |             0.00 | 1. Recomendação do Conselho da Igreja [ORGAO] → 2. Aprovação da Igreja em reunião administrativa [ORGAO]
+ ADMISSAO_MEMBRO | Admissão de membro           |             0.00 | 1. Voto do Conselho da Igreja [ORGAO] → 2. Voto da Igreja em reunião administrativa [ORGAO]
+ REMOCAO_MEMBRO  | Remoção de membro            |             0.00 | 1. Recomendação do Conselho da Igreja [ORGAO] → 2. Voto da Igreja em reunião administrativa [ORGAO]
+ ESTORNO         | Estorno                      |             0.00 | 1. Confirmação do pastor ou ancião [PERMISSAO]
+ MANEIO          | Reposição do fundo de maneio |             0.00 | 1. Voto do Conselho da Igreja [ORGAO]
+(8 rows)
 
-2. despesa de 3 000 (director pede): fluxo «Despesa corrente», etapa 1 do tesoureiro, com o nome de quem decide
-      fluxo       | etapa | total_etapas |        etapa_nome        | responsavel |   responsaveis   | pode_decidir 
-------------------+-------+--------------+--------------------------+-------------+------------------+--------------
- Despesa corrente |     1 |            2 | Apreciação do tesoureiro | Tesoureiro  | Novo, Tesoureiro | f
+2. despesa de 3 000 (director pede): fluxo «Despesa da igreja», etapa 1 do tesoureiro, com o nome de quem decide
+       fluxo       | etapa | total_etapas |        etapa_nome        | responsavel |   responsaveis   | pode_decidir 
+-------------------+-------+--------------+--------------------------+-------------+------------------+--------------
+ Despesa da igreja |     1 |            3 | Apreciação do tesoureiro | Tesoureiro  | Novo, Tesoureiro | f
 (1 row)
 
    o director (quem pediu, sem o perfil) não decide; a mudança à mão diz o que falta
-psql:database/tests/39_fluxos_de_aprovacao.sql:30: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
-psql:database/tests/39_fluxos_de_aprovacao.sql:32: ERROR:  A despesa segue o fluxo «Despesa corrente» e ainda não está aprovado: falta a etapa 1 de 2 — Apreciação do tesoureiro (Tesoureiro: Novo, Tesoureiro). Decida em Aprovações.
-   o ancião também não aprecia (é do tesoureiro); o tesoureiro aprecia; o ancião aprova
-psql:database/tests/39_fluxos_de_aprovacao.sql:34: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
+psql:database/tests/39_fluxos_de_aprovacao.sql:32: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
+psql:database/tests/39_fluxos_de_aprovacao.sql:34: ERROR:  A despesa segue o fluxo «Despesa da igreja» e ainda não está aprovado: falta a etapa 1 de 3 — Apreciação do tesoureiro (Tesoureiro: Novo, Tesoureiro). Decida em Aprovações.
+   o ancião não aprecia (é do tesoureiro); o tesoureiro aprecia; o tesoureiro não regista o voto do Conselho
+psql:database/tests/39_fluxos_de_aprovacao.sql:36: ERROR:  A etapa «Apreciação do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
  pode_decidir 
 --------------
  t
@@ -33,40 +32,22 @@ psql:database/tests/39_fluxos_de_aprovacao.sql:34: ERROR:  A etapa «Apreciaçã
  EM_CURSO
 (1 row)
 
-   o tesoureiro já decidiu: não decide a etapa 2 (outra pessoa)
-psql:database/tests/39_fluxos_de_aprovacao.sql:39: ERROR:  A etapa «Aprovação do pastor ou ancião» cabe a: Pastor ou Ancião (Ancião, Pastor)
+psql:database/tests/39_fluxos_de_aprovacao.sql:40: ERROR:  Sem permissão para registar a decisão de Conselho da Igreja (junta directiva) nesta igreja
+   o ancião não aprova sozinho (falta o voto); voto de uma reunião regular recusado; a Igreja antes do Conselho recusado
+psql:database/tests/39_fluxos_de_aprovacao.sql:43: ERROR:  A etapa «Voto do Conselho da Igreja» decide-se por voto: Conselho da Igreja (junta directiva) (indique o voto da reunião)
+psql:database/tests/39_fluxos_de_aprovacao.sql:44: ERROR:  A etapa «Voto do Conselho da Igreja» decide-se por voto: Conselho da Igreja (junta directiva); o voto n.º 2026-392 é de outra reunião (Igreja em reunião regular)
+psql:database/tests/39_fluxos_de_aprovacao.sql:45: ERROR:  A etapa «Voto do Conselho da Igreja» decide-se por voto: Conselho da Igreja (junta directiva); o voto n.º 2026-393 é de outra reunião (Igreja em reunião administrativa)
+   o Conselho vota; depois a Igreja: aprovada
  fn_aprovacao_decidir 
 ----------------------
- APROVADO
+ EM_CURSO
 (1 row)
 
- des_estado | des_valor_aprovado | des_aprovado_por_usu_id 
-------------+--------------------+-------------------------
- APROVADA   |            2800.00 |                       3
+ etapa |                etapa_nome                |           responsavel            
+-------+------------------------------------------+----------------------------------
+     3 | Voto da Igreja em reunião administrativa | Igreja em reunião administrativa
 (1 row)
 
- ordem |             nome              | situacao | decidido_por | valor_aprovado 
--------+-------------------------------+----------+--------------+----------------
-     1 | Apreciação do tesoureiro      | APROVADA | Tesoureiro   |               
-     2 | Aprovação do pastor ou ancião | APROVADA | Ancião       |        2800.00
-(2 rows)
-
-   concluído: não se decide outra vez
-psql:database/tests/39_fluxos_de_aprovacao.sql:46: ERROR:  Este processo de aprovação já terminou (aprovado)
-3. despesa de 15 000: fluxo «Despesa do Conselho» (o tesoureiro aprecia, o Conselho vota)
- fn_decidir_despesa 
---------------------
- 
-(1 row)
-
-        fluxo        | etapa |         etapa_nome         |             responsavel              | responsaveis | pode_decidir 
----------------------+-------+----------------------------+--------------------------------------+--------------+--------------
- Despesa do Conselho |     2 | Voto do Conselho da Igreja | Conselho da Igreja (junta directiva) |              | f
-(1 row)
-
-   o ancião sem voto (recusado), com o voto de uma reunião regular (recusado), com o voto do Conselho (aprovada)
-psql:database/tests/39_fluxos_de_aprovacao.sql:57: ERROR:  A etapa «Voto do Conselho da Igreja» decide-se por voto: Conselho da Igreja (junta directiva) (indique o voto da reunião)
-psql:database/tests/39_fluxos_de_aprovacao.sql:58: ERROR:  A etapa «Voto do Conselho da Igreja» decide-se por voto: Conselho da Igreja (junta directiva); o voto n.º 2026-392 é de outra reunião (Igreja em reunião regular)
  fn_aprovacao_decidir 
 ----------------------
  APROVADO
@@ -74,18 +55,32 @@ psql:database/tests/39_fluxos_de_aprovacao.sql:58: ERROR:  A etapa «Voto do Con
 
  des_estado | des_valor_aprovado | des_vot_id 
 ------------+--------------------+------------
- APROVADA   |           15000.00 |       3903
+ APROVADA   |            3000.00 |       3906
 (1 row)
 
-   o mesmo voto não decide outra despesa à toa: a decisão é a do voto (rejeitado → despesa rejeitada)
-psql:database/tests/39_fluxos_de_aprovacao.sql:70: ERROR:  Indique o motivo da rejeição
+ ordem |                   nome                   | situacao | decidido_por | voto_numero 
+-------+------------------------------------------+----------+--------------+-------------
+     1 | Apreciação do tesoureiro                 | APROVADA | Tesoureiro   | 
+     2 | Voto do Conselho da Igreja               | APROVADA | Ancião       | J-391
+     3 | Voto da Igreja em reunião administrativa | APROVADA | Ancião       | 2026-393
+(3 rows)
+
+   concluído: não se decide outra vez
+psql:database/tests/39_fluxos_de_aprovacao.sql:54: ERROR:  Este processo de aprovação já terminou (aprovado)
+3. despesa de 150 000: o mesmo fluxo (qualquer valor); o Conselho rejeita → despesa rejeitada
+       fluxo       | total_etapas 
+-------------------+--------------
+ Despesa da igreja |            3
+(1 row)
+
+psql:database/tests/39_fluxos_de_aprovacao.sql:66: ERROR:  Indique o motivo da rejeição
  fn_decidir_despesa 
 --------------------
  
 (1 row)
 
    a secretária regista votos mas não vê despesas: "não existe"; o ancião regista o voto do Conselho
-psql:database/tests/39_fluxos_de_aprovacao.sql:74: ERROR:  O processo de aprovação não existe
+psql:database/tests/39_fluxos_de_aprovacao.sql:70: ERROR:  O processo de aprovação não existe
  fn_aprovacao_decidir 
 ----------------------
  REJEITADO
@@ -102,20 +97,20 @@ psql:database/tests/39_fluxos_de_aprovacao.sql:74: ERROR:  O processo de aprova�
                   0
 (1 row)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:82: ERROR:  O processo de aprovação não existe
-psql:database/tests/39_fluxos_de_aprovacao.sql:83: ERROR:  O processo de aprovação não existe
+psql:database/tests/39_fluxos_de_aprovacao.sql:78: ERROR:  O processo de aprovação não existe
+psql:database/tests/39_fluxos_de_aprovacao.sql:79: ERROR:  O processo de aprovação não existe
    e ninguém escreve nos processos directamente
-psql:database/tests/39_fluxos_de_aprovacao.sql:86: ERROR:  permission denied for table aprovacao
-psql:database/tests/39_fluxos_de_aprovacao.sql:87: ERROR:  permission denied for table aprovacao_decisao
+psql:database/tests/39_fluxos_de_aprovacao.sql:82: ERROR:  permission denied for table aprovacao
+psql:database/tests/39_fluxos_de_aprovacao.sql:83: ERROR:  permission denied for table aprovacao_decisao
 5. admissão de membro: a Igreja não vota antes do Conselho; depois do Conselho, sim; o livro aceita
-psql:database/tests/39_fluxos_de_aprovacao.sql:91: ERROR:  A admissão de Celeste Mondlane segue o fluxo «Admissão de membro»: a etapa em curso é a etapa 1 de 2 — Voto do Conselho da Igreja (Conselho da Igreja (junta directiva), por voto em reunião). O voto n.º 2026-391 (Igreja em reunião administrativa) não a decide.
-psql:database/tests/39_fluxos_de_aprovacao.sql:92: ERROR:  O voto n.º 2026-391 não indica Celeste Mondlane entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)
+psql:database/tests/39_fluxos_de_aprovacao.sql:87: ERROR:  A admissão de Celeste Mondlane segue o fluxo «Admissão de membro»: a etapa em curso é a etapa 1 de 2 — Voto do Conselho da Igreja (Conselho da Igreja (junta directiva), por voto em reunião). O voto n.º 2026-391 (Igreja em reunião administrativa) não a decide.
+psql:database/tests/39_fluxos_de_aprovacao.sql:88: ERROR:  O voto n.º 2026-391 não indica Celeste Mondlane entre as pessoas a que se refere: escolha o voto desta pessoa (ou acrescente-a ao voto, na reunião)
   estado  | etapa |                etapa_nome                |           responsavel            
 ----------+-------+------------------------------------------+----------------------------------
  EM_CURSO |     2 | Voto da Igreja em reunião administrativa | Igreja em reunião administrativa
 (1 row)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:95: ERROR:  Movimento BAPTISMO do membro 3901: o voto foi tomado em JUNTA_DIRECTIVA; este acto exige REUNIAO_REGULAR ou ASSEMBLEIA_ADMINISTRATIVA
+psql:database/tests/39_fluxos_de_aprovacao.sql:91: ERROR:  Movimento BAPTISMO do membro 3901: o voto foi tomado em JUNTA_DIRECTIVA; este acto exige REUNIAO_REGULAR ou ASSEMBLEIA_ADMINISTRATIVA
   estado  | etapa | total_etapas 
 ----------+-------+--------------
  APROVADO |     2 |            2
@@ -133,28 +128,28 @@ psql:database/tests/39_fluxos_de_aprovacao.sql:95: ERROR:  Movimento BAPTISMO do
 (1 row)
 
 6. fluxo próprio da igreja: o tesoureiro não configura; o pastor sim; o modelo comum só a Associação
-psql:database/tests/39_fluxos_de_aprovacao.sql:105: ERROR:  new row violates row-level security policy for table "fluxo_aprovacao"
-psql:database/tests/39_fluxos_de_aprovacao.sql:107: ERROR:  new row violates row-level security policy for table "fluxo_aprovacao"
+psql:database/tests/39_fluxos_de_aprovacao.sql:101: ERROR:  new row violates row-level security policy for table "fluxo_aprovacao"
+psql:database/tests/39_fluxos_de_aprovacao.sql:103: ERROR:  new row violates row-level security policy for table "fluxo_aprovacao"
      fap_nome      
 -------------------
  Saída da igreja 1
 (1 row)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:109: ERROR:  new row for relation "fluxo_etapa" violates check constraint "chk_fae_responsavel"
+psql:database/tests/39_fluxos_de_aprovacao.sql:105: ERROR:  new row for relation "fluxo_etapa" violates check constraint "chk_fae_responsavel"
  fae_ordem | fae_igr_id 
 -----------+------------
          1 |          1
          2 |          1
 (2 rows)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:114: ERROR:  A igreja e o processo de um fluxo não mudam: termine este fluxo e crie outro
+psql:database/tests/39_fluxos_de_aprovacao.sql:110: ERROR:  A igreja e o processo de um fluxo não mudam: termine este fluxo e crie outro
    a saída nova da igreja 1 segue o fluxo da igreja (não o modelo); o ancião já não aprova sozinho
        fluxo       | etapa | total_etapas |     etapa_nome      |      responsaveis      
 -------------------+-------+--------------+---------------------+------------------------
  Saída da igreja 1 |     1 |            2 | Visto do secretário | Secretária, Secretário
 (1 row)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:125: ERROR:  A etapa «Visto do secretário» cabe a: Secretário (Secretária, Secretário)
+psql:database/tests/39_fluxos_de_aprovacao.sql:121: ERROR:  A etapa «Visto do secretário» cabe a: Secretário (Secretária, Secretário)
  fn_aprovar_saida 
 ------------------
  
@@ -176,8 +171,86 @@ psql:database/tests/39_fluxos_de_aprovacao.sql:125: ERROR:  A etapa «Visto do s
  CONTAGEM | Conferência da contagem | Conferência do tesoureiro | Tesoureiro  | t
 (1 row)
 
-psql:database/tests/39_fluxos_de_aprovacao.sql:138: ERROR:  A etapa «Conferência do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
+psql:database/tests/39_fluxos_de_aprovacao.sql:134: ERROR:  A etapa «Conferência do tesoureiro» cabe a: Tesoureiro (Novo, Tesoureiro)
    um terminar cancela o processo
+ apv_estado 
+------------
+ CANCELADO
+(1 row)
+
+8. estorno: corrige uma entrada errada; o pastor ou um ancião confirma (não vai ao Conselho)
+ processo |  fluxo  |           etapa_nome            |   responsavel    
+----------+---------+---------------------------------+------------------
+ ESTORNO  | Estorno | Confirmação do pastor ou ancião | Pastor ou Ancião
+(1 row)
+
+ fn_aprovar_saida 
+------------------
+ 
+(1 row)
+
+ tra_aprovado_por_usu_id 
+-------------------------
+                       3
+(1 row)
+
+9. fundo de maneio: a igreja define o valor; repõe-se só o gasto, com o voto do Conselho
+   sem o valor definido, não há reposição; um valor de maneio numa conta que não é fundo de maneio: recusado
+psql:database/tests/39_fluxos_de_aprovacao.sql:156: ERROR:  Defina primeiro o valor do fundo de maneio "Maneio V56" (a igreja decide o valor)
+psql:database/tests/39_fluxos_de_aprovacao.sql:157: ERROR:  new row for relation "conta_financeira" violates check constraint "chk_cfi_valor_maneio"
+ cfi_valor_maneio 
+------------------
+          2000.00
+(1 row)
+
+   dinheiro não entra no maneio sem reposição aprovada
+psql:database/tests/39_fluxos_de_aprovacao.sql:161: ERROR:  O fundo de maneio só se repõe com uma reposição aprovada pelo Conselho da Igreja (Contas → Fundo de maneio → Pedir reposição)
+   a secretária não pede; o tesoureiro pede mais do que o gasto (recusado) e o gasto (2 000, o fundo está vazio)
+psql:database/tests/39_fluxos_de_aprovacao.sql:164: ERROR:  new row violates row-level security policy for table "reposicao_maneio"
+psql:database/tests/39_fluxos_de_aprovacao.sql:166: ERROR:  Só se repõe o que foi gasto: até 2 000,00 (o fundo é de 2 000,00 e tem 0,00)
+ rpm_valor_fundo | rpm_saldo | rpm_gasto 
+-----------------+-----------+-----------
+         2000.00 |      0.00 |   2000.00
+(1 row)
+
+ processo |            fluxo             |         etapa_nome         |             responsavel              | pode_decidir 
+----------+------------------------------+----------------------------+--------------------------------------+--------------
+ MANEIO   | Reposição do fundo de maneio | Voto do Conselho da Igreja | Conselho da Igreja (junta directiva) | f
+(1 row)
+
+   repor antes do voto: recusado; o ancião regista o voto do Conselho; o tesoureiro repõe da caixa (uma vez)
+psql:database/tests/39_fluxos_de_aprovacao.sql:171: ERROR:  A reposição ainda não foi aprovada: falta a etapa 1 de 1 — Voto do Conselho da Igreja (Conselho da Igreja (junta directiva), por voto em reunião)
+ fn_aprovacao_decidir 
+----------------------
+ APROVADO
+(1 row)
+
+psql:database/tests/39_fluxos_de_aprovacao.sql:175: ERROR:  duplicate key value violates unique constraint "transacao_pkey"
+ fn_repor_maneio 
+-----------------
+               9
+(1 row)
+
+  saldo  
+---------
+ 2000.00
+(1 row)
+
+   o fundo cheio (não usado): não há reposição a aprovar
+psql:database/tests/39_fluxos_de_aprovacao.sql:179: ERROR:  O fundo de maneio não foi usado (saldo 2 000,00 de 2 000,00): não há reposição a aprovar
+   uma despesa urgente de 300 pelo maneio não precisa de outra aprovação; em Dezembro repõem-se só os 300
+ tra_estado | processos 
+------------+-----------
+ CONFIRMADA |         0
+(1 row)
+
+psql:database/tests/39_fluxos_de_aprovacao.sql:188: ERROR:  Só se repõe o que foi gasto: até 300,00 (o fundo é de 2 000,00 e tem 1 700,00)
+ rpm_gasto 
+-----------
+    300.00
+(1 row)
+
+   terminar a reposição por fazer cancela o processo
  apv_estado 
 ------------
  CANCELADO
